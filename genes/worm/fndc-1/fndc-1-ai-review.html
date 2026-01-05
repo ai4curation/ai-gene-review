@@ -1,0 +1,2652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fndc-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fndc-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q22252" target="_blank" class="term-link">
+                        Q22252
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fndc-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q22252" data-a="DESCRIPTION: FNDC-1 is the C. elegans ortholog of mammalian FUN..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FNDC-1 is the C. elegans ortholog of mammalian FUNDC1, a mitophagy receptor that resides on the mitochondrial outer membrane and mediates selective autophagy of mitochondria. FNDC-1 belongs to the conserved FUN14 family characterized by an LC3-interacting region (LIR) motif that enables binding to ATG8/LC3 family proteins to target mitochondria for autophagic degradation. FNDC-1 functions in multiple physiological contexts: (1) it mediates hypoxia-reoxygenation-induced mitophagy in somatic tissues such as body wall muscle (PMID:33416042), (2) it contributes to paternal mitochondria elimination after fertilization as a ubiquitin-independent mechanism (PMID:31233739, PMID:31153831), and (3) recent studies suggest it is required for developmentally programmed mitophagy at the oocyte-to-zygote transition. FNDC-1 localizes to the mitochondrial outer membrane and can be found at mitochondria-associated membrane (MAM) contact sites where it recruits the fission factor DRP-1. Unlike the PINK1/Parkin pathway, FNDC-1 represents a receptor-mediated, ubiquitin-independent mitophagy mechanism. The deep research report (fndc-1-deep-research-falcon.md) provides comprehensive literature evidence supporting these functions.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000422" target="_blank" class="term-link">
+                                    GO:0000422
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy of mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0000422" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation for autophagy of mitochondrion is phylogenetically inferred and well-supported by experimental data in C. elegans. FNDC-1 mediates mitophagy under hypoxia-reoxygenation stress (PMID:33416042) and contributes to paternal mitochondria elimination (PMID:31233739, PMID:31153831). The term accurately captures FNDC-1&#39;s role in targeting mitochondria for autophagic degradation. As noted in fndc-1-deep-research-falcon.md, FNDC-1 is the C. elegans ortholog of mammalian FUNDC1.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by multiple lines of evidence. The Lim et al. 2021 study (PMID:33416042) demonstrated that FNDC-1 mediates mitophagy under hypoxia-reoxygenation conditions, with fndc-1 loss-of-function significantly reducing the percentage of mitochondria undergoing mitophagy as measured by mito-mKeima reporter. The term GO:0000422 is appropriate as it encompasses the broader autophagic process for mitochondria without specifying the pathway (receptor vs. ubiquitin).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic tissues and mediates hypoxic mitophagy.
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                                        PMID:31153831
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0005741" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation for mitochondrial outer membrane localization is phylogenetically inferred and strongly supported by experimental evidence in C. elegans. Biochemical fractionation and proteinase K accessibility assays confirm FNDC-1 localizes to the OMM (PMID:31233739, PMID:33416042).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported by direct experimental evidence. The Lim et al. 2019 study (PMID:31233739) describes FNDC-1 as &#34;expressed on the mitochondrial outer membrane&#34; consistent with its role as a mitophagy receptor. Subsequent studies confirmed this localization through biochemical fractionation and proteinase K sensitivity assays. The FUN14 family proteins are characteristically OMM-localized, and FNDC-1 follows this conserved pattern.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the mitochondrial outer membrane that contributes to mitochondrial quality control following hypoxic stress. Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic tissues and mediates hypoxic mitophagy.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IEA annotation based on UniProt subcellular location mapping is redundant with the IBA annotation but remains valid. Both annotations correctly capture OMM localization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This electronic annotation based on UniProt subcellular location is accurate. UniProt curates the subcellular location based on the primary literature (PMID:31233739), which describes FNDC-1 as a mitochondrial outer membrane protein. The IEA is broader in evidence but still correct. Duplicate annotations with different evidence codes are acceptable in GO.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the mitochondrial outer membrane...Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic tissues and mediates hypoxic mitophagy.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006914" target="_blank" class="term-link">
+                                    GO:0006914
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0006914" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IEA annotation for general autophagy is derived from UniProt keyword mapping. While not incorrect, this term is less specific than the existing annotations for mitophagy (GO:0000423) and autophagy of mitochondrion (GO:0000422).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This electronic annotation is technically correct as FNDC-1 is indeed involved in autophagy (specifically mitophagy). However, it is less informative than the more specific annotations already present. IEA annotations of this type are common and acceptable for broad pathway categorization, even when more specific experimental annotations exist. The term is a parent of the more specific mitophagy terms.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                                        PMID:31153831
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Elimination of paternal mitochondria after fertilization occurs in many species using the process of selective autophagy.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                    GO:0000423
+                                </a>
+                            </span>
+                            <span class="term-label">mitophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31153831
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ubiquitination is required for the initial removal of patern...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0000423" data-r="PMID:31153831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IMP annotation for mitophagy based on PMID:31153831 (Molina et al. 2019) is well-supported. This study demonstrated that fndc-1 functions as a mitophagy adaptor for paternal mitochondria elimination, providing a second, ubiquitin-independent mechanism after the initial ubiquitination-dependent pathway.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is directly supported by the cited publication. Molina et al. 2019 demonstrated that loss of fndc-1 delays paternal mitochondria elimination after fertilization, establishing fndc-1 as a mitophagy adaptor protein. The study shows that fndc-1 provides a temporally distinct mechanism from the ubiquitin-dependent pathway for targeting paternal mitochondria to autophagosomes.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                                        PMID:31153831
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1. Thus, there are two redundant, but temporally distinct mechanisms that target paternal mitochondria for elimination in C. elegans.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                    GO:0000423
+                                </a>
+                            </span>
+                            <span class="term-label">mitophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31233739
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fndc-1 contributes to paternal mitochondria elimination in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0000423" data-r="PMID:31233739" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IMP annotation for mitophagy based on PMID:31233739 (Lim et al. 2019) provides independent experimental support. This study specifically characterized FNDC-1&#39;s role in paternal mitochondria elimination and hypoxic mitophagy, demonstrating that loss of fndc-1 retards paternal mitochondria degradation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is directly supported by the cited publication. Lim et al. 2019 showed that loss of fndc-1 retards the rate of paternal mitochondria degradation and that FNDC-1 functions as a ubiquitin-independent mitophagy receptor. The study also showed that paternal mitochondrial DNA can be detected in cross-progeny of fndc-1 mutant males, providing functional evidence for its role in mitophagy.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Paternal mitochondria are eliminated following fertilization by selective autophagy... loss of fndc-1 retards the rate of paternal mitochondria degradation, but not that of membranous organelles, a nematode specific membrane compartment whose fusion is required for sperm motility. This is the first example of a ubiquitin-independent mitophagy receptor playing a role in the selective degradation of sperm mitochondria.
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Paternal mitochondrial DNA is normally undetectable in wildtype larva, but can be detected in the cross-progeny of fndc-1 mutant males.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140580" target="_blank" class="term-link">
+                                    GO:0140580
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion autophagosome adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31233739
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fndc-1 contributes to paternal mitochondria elimination in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0140580" data-r="PMID:31233739" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation proposed for the molecular function of FNDC-1 as a mitophagy receptor/adaptor. GO:0140580 describes the binding activity that brings together mitochondrial membrane and autophagosome during mitophagy, which precisely matches FNDC-1&#39;s characterized function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing annotations lack a molecular function (MF) term. FNDC-1 functions as a mitophagy receptor that bridges mitochondria to autophagosomes via its LIR motif interaction with LC3/ATG8. GO:0140580 (mitochondrion autophagosome adaptor activity) is defined as &#34;The binding activity of a molecule that brings together a mitochondrial membrane and an autophagosome during mitophagy.&#34; This precisely describes FNDC-1&#39;s role. The evidence is strong: FNDC-1 localizes to OMM, mediates mitophagy, and the mammalian ortholog FUNDC1 has a well-characterized LIR motif for LC3 binding.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140580" target="_blank" class="term-link">
+                                    mitochondrion autophagosome adaptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the mitochondrial outer membrane...This is the first example of a ubiquitin-independent mitophagy receptor playing a role in the selective degradation of sperm mitochondria.
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                                        PMID:31153831
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071456" target="_blank" class="term-link">
+                                    GO:0071456
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to hypoxia</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33416042" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33416042
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    FNDC-1-mediated mitophagy and ATFS-1 coordinate to protect a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q22252" data-a="GO:0071456" data-r="PMID:33416042" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation proposed based on FNDC-1&#39;s characterized role in hypoxia-reoxygenation response. The Lim et al. 2021 Autophagy study (PMID:33416042) demonstrated that FNDC-1 mediates mitophagy specifically in response to hypoxia-reoxygenation stress in body wall muscle.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FNDC-1 mediates mitophagy specifically triggered by hypoxia-reoxygenation stress. The Lim et al. 2021 study showed that FNDC-1 promotes receptor-mediated mitophagy after short HR exposure, with loss of fndc-1 delaying HR-induced mitophagy. This represents a cellular response to hypoxia that should be captured by annotation to GO:0071456. The deep research report notes that fndc-1 loss-of-function significantly reduced mitophagy under HR conditions.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071456" target="_blank" class="term-link">
+                                    cellular response to hypoxia
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33416042" target="_blank" class="term-link">
+                                        PMID:33416042
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor that responds to hypoxia-reoxygenation (HR) stress
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                        PMID:31233739
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the mitochondrial outer membrane that contributes to mitochondrial quality control following hypoxic stress. Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic tissues and mediates hypoxic mitophagy.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FNDC-1 functions as a mitophagy receptor/adaptor that bridges mitochondria to autophagosomes. As a member of the FUN14 family, it contains an LIR motif for binding LC3/ATG8 family proteins and localizes to the mitochondrial outer membrane where it targets mitochondria for selective autophagy. This is demonstrated in both hypoxia-reoxygenation response (PMID:33416042) and paternal mitochondria elimination (PMID:31233739, PMID:31153831).
+</h3>
+                <span class="vote-buttons" data-g="Q22252" data-a="FUNCTION: FNDC-1 functions as a mitophagy receptor/adaptor t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140580" target="_blank" class="term-link">
+                            mitochondrion autophagosome adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                mitophagy
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                                PMID:31233739
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">This is the first example of a ubiquitin-independent mitophagy receptor playing a role in the selective degradation of sperm mitochondria.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                                PMID:31153831
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FNDC-1 is conserved in the FUN14 family and phylogenetically related to mammalian FUNDC1</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Autophagy keyword correctly identifies FNDC-1 as involved in autophagic processes</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mitochondrial outer membrane localization correctly mapped from UniProt annotation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31153831" target="_blank" class="term-link">
+                            PMID:31153831
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ubiquitination is required for the initial removal of paternal organelles in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated two redundant mechanisms for paternal mitochondria elimination</div>
+                        
+                        <div class="finding-text">"Thus, there are two redundant, but temporally distinct mechanisms that target paternal mitochondria for elimination in C. elegans.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">fndc-1 provides a temporally distinct, ubiquitin-independent mechanism</div>
+                        
+                        <div class="finding-text">"If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">If early ubiquitin-dependent elimination fails, fndc-1-dependent mitophagy removes paternal mitochondria</div>
+                        
+                        <div class="finding-text">"If paternal mitochondria are not eliminated via this early process, they are eventually removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31233739" target="_blank" class="term-link">
+                            PMID:31233739
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Fndc-1 contributes to paternal mitochondria elimination in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FNDC-1 is expressed in sperm but not oocytes</div>
+                        
+                        <div class="finding-text">"FNDC-1 is strongly expressed in sperm but not oocytes and contributes to paternal mitochondria elimination.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FNDC-1 contributes to paternal mitochondria elimination</div>
+                        
+                        <div class="finding-text">"loss of fndc-1 retards the rate of paternal mitochondria degradation, but not that of membranous organelles, a nematode specific membrane compartment whose fusion is required for sperm motility.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of fndc-1 retards paternal mitochondria degradation</div>
+                        
+                        <div class="finding-text">"loss of fndc-1 retards the rate of paternal mitochondria degradation
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Paternal mtDNA detectable in fndc-1 mutant cross-progeny</div>
+                        
+                        <div class="finding-text">"Paternal mitochondrial DNA is normally undetectable in wildtype larva, but can be detected in the cross-progeny of fndc-1 mutant males.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First ubiquitin-independent mitophagy receptor identified for sperm mitochondria degradation</div>
+                        
+                        <div class="finding-text">"This is the first example of a ubiquitin-independent mitophagy receptor playing a role in the selective degradation of sperm mitochondria.
+"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33416042" target="_blank" class="term-link">
+                            PMID:33416042
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FNDC-1-mediated mitophagy and ATFS-1 coordinate to protect against hypoxia-reoxygenation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FNDC-1 is the C. elegans ortholog of FUNDC1 and mediates mitophagy under hypoxia-reoxygenation stress</div>
+                        
+                        <div class="finding-text">"FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor that responds to hypoxia-reoxygenation (HR) stress. Here, we provide evidence that FNDC-1 is the C. elegans ortholog of FUNDC1, and that its loss protects against injury in a worm model of HR.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of fndc-1 provides protection that depends on ATFS-1 and UPRmt</div>
+                        
+                        <div class="finding-text">"This protection depends upon ATFS-1, a transcription factor that is central to the mitochondrial unfolded protein response (UPRmt).
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FNDC-1 has a role in non-hypoxic mitochondrial quality control</div>
+                        
+                        <div class="finding-text">"These data support a role for FNDC-1 in non-hypoxic MQC, and further suggest that these changes are prophylactic in relation to subsequent HR.
+"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise LIR motif sequence in C. elegans FNDC-1, and how does phosphorylation regulate its interaction with LGG-1/LGG-2 (C. elegans LC3 homologs)? Mammalian FUNDC1 regulation involves phosphorylation of the LIR motif (Tyr18, Ser13, Ser17) by SRC, CK2, ULK1, and dephosphorylation by PGAM5. The regulatory mechanisms for C. elegans FNDC-1 remain to be fully characterized.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="Q: What is the precise LIR motif sequence in C. elega..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FNDC-1 localize to mitochondria-ER contact sites (MAMs) in C. elegans, and what is its relationship with DRP-1-mediated mitochondrial fission during mitophagy? Recent preprints suggest FNDC-1 forms puncta at MAMs and recruits DRP-1 during developmental mitophagy at the oocyte-to-zygote transition. This mechanism needs validation in peer-reviewed studies.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="Q: Does FNDC-1 localize to mitochondria-ER contact si..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between FNDC-1 and other mitophagy pathways (PINK-1/PDR-1, DCT-1/NIX) in C. elegans across different stress conditions and developmental stages? FNDC-1 operates independently of ubiquitination for paternal mitochondria elimination, but the pathway relationships and possible redundancies in different contexts remain unclear.
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="Q: What is the relationship between FNDC-1 and other ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or split-GFP complementation assays to detect direct interaction between FNDC-1 and LGG-1/LGG-2 in vivo. While FNDC-1 is functionally characterized as a mitophagy receptor, direct physical interaction with C. elegans ATG8 homologs has not been demonstrated experimentally.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FNDC-1 directly binds LGG-1/LGG-2 via its LIR motif to recruit autophagosomes to mitochondria</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="EXPERIMENT: Co-immunoprecipitation or split-GFP complementatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of the predicted LIR motif in FNDC-1 followed by functional rescue assays (paternal mitochondria elimination, HR-induced mitophagy). This would confirm that the LIR motif is required for FNDC-1 function in C. elegans and allow comparison with mammalian FUNDC1 regulatory mechanisms.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The LIR motif is essential for FNDC-1 mitophagy receptor function</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="EXPERIMENT: Site-directed mutagenesis of the predicted LIR mot..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Phosphoproteomics analysis of FNDC-1 under normoxic vs. hypoxic conditions to identify regulatory phosphorylation sites. This would reveal whether C. elegans FNDC-1 is regulated by phosphorylation similar to mammalian FUNDC1, and identify the relevant kinases/phosphatases in C. elegans.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FNDC-1 activity is regulated by hypoxia-dependent phosphorylation changes</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22252" data-a="EXPERIMENT: Phosphoproteomics analysis of FNDC-1 under normoxi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fndc-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q22252" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T08:51:46.780661'<br />
+end_time: '2025-12-28T08:56:47.510678'<br />
+duration_seconds: 300.73<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: fndc-1<br />
+  gene_symbol: fndc-1<br />
+  uniprot_accession: Q22252<br />
+  protein_description: 'RecName: Full=FUN14 domain-containing protein fndc-1 {ECO:0000305};'<br />
+  gene_info: Name=fndc-1 {ECO:0000303|PubMed:31233739, ECO:0000312|WormBase:T06D8.7};<br />
+    ORFNames=T06D8.7 {ECO:0000312|WormBase:T06D8.7};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the FUN14 family. .<br />
+  protein_domains: FUN14. (IPR007014); FUN14 (PF04930)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 27</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q22252</li>
+<li><strong>Protein Description:</strong> RecName: Full=FUN14 domain-containing protein fndc-1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=fndc-1 {ECO:0000303|PubMed:31233739, ECO:0000312|WormBase:T06D8.7}; ORFNames=T06D8.7 {ECO:0000312|WormBase:T06D8.7};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the FUN14 family. .</li>
+<li><strong>Key Domains:</strong> FUN14. (IPR007014); FUN14 (PF04930)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fndc-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fndc-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fndc-1</strong> (gene ID: fndc-1, UniProt: Q22252) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q22252</li>
+<li><strong>Protein Description:</strong> RecName: Full=FUN14 domain-containing protein fndc-1 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=fndc-1 {ECO:0000303|PubMed:31233739, ECO:0000312|WormBase:T06D8.7}; ORFNames=T06D8.7 {ECO:0000312|WormBase:T06D8.7};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the FUN14 family. .</li>
+<li><strong>Key Domains:</strong> FUN14. (IPR007014); FUN14 (PF04930)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fndc-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fndc-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fndc-1</strong> (gene ID: fndc-1, UniProt: Q22252) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+- Objective 1 (identity/domain verification): Confirmed that C. elegans fndc-1 encodes a FUN14 domain–containing protein orthologous to mammalian FUNDC1. Primary literature shows FNDC-1 localizes to mitochondria with protease accessibility consistent with outer mitochondrial membrane (OMM), supporting alignment with the FUN14 family. The symbol “fndc-1” is used specifically for C. elegans (WormBase locus T06D8.7) and is distinct from mammalian “FUNDC1”; this report focuses only on the C. elegans gene/protein (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Objective 2 (literature retrieval, 2023–2024 prioritized): Most mechanistic primary data are from 2019–2021 C. elegans studies defining FNDC-1 as a mitophagy receptor in stress and developmental contexts; recent 2024 C. elegans–focused review synthesizes mitochondrial quality control roles for FNDC-1 and assays used. Two 2025 preprints expand developmental roles at the oocyte-to-zygote transition; these are treated as preliminary (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2, ganguly2024mitochondrialqualitycontrol pages 32-33, sherwood2025programmedmitophagyat pages 11-15, thendral2025mitophagyatthe pages 6-10).<br />
+- Objective 3 (evidence extraction): Summarized function, localization, regulation, pathway integration, and phenotypes with quantitative data where available (see embedded evidence table). (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2, sherwood2025programmedmitophagyat pages 11-15, thendral2025mitophagyatthe pages 6-10, ganguly2024mitochondrialqualitycontrol pages 32-33, choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8, haeussler2020autophagycompensatesfor pages 34-35)<br />
+- Objective 4 (synthesis and applications): Integrated statistics, translational context (mitophagy targeting), and expert perspectives from reviews (2020–2024) (liu2020mitophagyandits pages 6-8, choubey2021molecularmechanismsand pages 16-17, ganguly2024mitochondrialqualitycontrol pages 32-33).<br />
+- Objective 5 (final report): Completed below with citations and URLs/dates.</p>
+<p>Comprehensive research report: C. elegans fndc-1 (UniProt Q22252)</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein identity: fndc-1 (WormBase T06D8.7) encodes the C. elegans ortholog of mammalian FUNDC1, a conserved FUN14-domain protein functioning as a mitophagy receptor. Experimental data support mitochondrial localization and function in selective mitochondrial autophagy (mitophagy) in C. elegans (Lim et al., Autophagy, Jan 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Mitophagy receptor concept: FUNDC1-family receptors reside in the OMM and bind ATG8/LC3 family proteins via an LC3-interacting region (LIR) to target mitochondria for autophagic degradation; in mammals, LIR-dependent LC3 binding is regulated by phosphorylation and ubiquitination, which modulate receptor activity (Choubey et al., Cells, Dec 2021; https://doi.org/10.3390/cells11010038; Liu et al., Antioxidants &amp; Redox Signaling, Apr 2020; https://doi.org/10.1089/ars.2019.8013) (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8).<br />
+- Domain/family alignment: The C. elegans protein belongs to the FUN14 family, consistent with conserved receptor features (LIR, OMM localization, ER–mitochondria contact enrichment) that are well established for mammalian FUNDC1 and are observed for FNDC-1 in worm developmental contexts (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8, sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>2) Recent developments and latest research (priority 2023–2024, plus 2025 preprints as preliminary)<br />
+- 2024 expert review (C. elegans): A recent review of mitochondrial quality control in Alzheimer’s disease models highlights fndc-1 as one of the conserved mitophagy receptors in C. elegans, summarizing that loss of fndc-1 reduces mitophagy and emphasizing use of mt-Keima/MitoTimer reporters to quantify flux in vivo (Ganguly et al., Antioxidants, Nov 2024; https://doi.org/10.3390/antiox13111343) (ganguly2024mitochondrialqualitycontrol pages 32-33).<br />
+- 2025 preprint (developmental mitophagy): Two related preprints report a developmentally programmed mitophagy event at the oocyte-to-zygote transition (MOZT) in C. elegans and identify FNDC-1 as the required receptor. They provide quantitative imaging of mitochondrial fragmentation and volume reduction in the -1 oocyte, and implicate macroautophagy genes and DRP-1. These results broaden FNDC-1’s role beyond stress responses to a physiologic developmental mitophagy program; as preprints, these findings should be considered preliminary pending peer review (bioRxiv Feb 2025; https://doi.org/10.1101/2025.02.01.636045; Research Square Apr 2025; https://doi.org/10.21203/rs.3.rs-6330979/v1) (thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>3) Molecular function, localization, pathways, and phenotypes<br />
+- Function as mitophagy receptor under hypoxia–reoxygenation (HR): In body wall muscle, FNDC-1 mediates mitophagy after short HR exposure; loss of fndc-1 delays HR-induced mitophagy measured by mito-mKeima, whereas prolonged HR reveals paradoxical protection in fndc-1 loss-of-function animals through compensatory adaptation (Lim et al., Autophagy, Jan 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Subcellular localization: Biochemical fractionation and proteinase K accessibility indicate FNDC-1 is on the OMM. Single-copy mRuby3::FNDC-1 partially co-localizes with mitochondria in muscle and decorates mitochondrial ends; overexpression promotes mitochondrial fragmentation, consistent with receptor activity (Lim et al., Autophagy, 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 2-4).<br />
+- Developmental mitophagy during oocyte-to-zygote transition (MOZT): FNDC-1 forms puncta at mitochondria-associated membranes (MAMs), recruits DRP-1, and is necessary for mitochondrial fragmentation and mitophagy surrounding fertilization. Quantitative imaging shows that ~70% of FNDC-1 puncta are short-lived (10 s–2 min), while ~30% are long-lived (4–8.6 min) and consistently trigger fragmentation; co-localization with mitochondrial foci increases from ~35% in -2 oocytes to ~60% in -1 oocytes. Mitochondrial volume in the oocyte is reduced (~2.0 µm³ to ~0.3 µm³) during MOZT, and this reduction is abrogated by RNAi of autophagy genes (vps-34, atg-16.1/2, vps-41, vha-2/9/12) or drp-1. These findings support FNDC-1 as the receptor executing a developmentally programmed mitophagy independent of PINK1/Parkin in this context (bioRxiv Feb 2025; https://doi.org/10.1101/2025.02.01.636045; Research Square Apr 2025; https://doi.org/10.21203/rs.3.rs-6330979/v1) (thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15).<br />
+- Paternal mitochondria elimination after fertilization: Genetic studies indicate fndc-1 contributes to removal of paternal mitochondria, acting as one of at least two temporally distinct mechanisms (with a ubiquitination-dependent pathway) to target paternal organelles for degradation in the embryo (summarized in PLOS Genetics review and C. elegans MQC review). This situates FNDC-1 in conserved mitochondrial purifying mechanisms at fertilization (Haeussler et al., PLOS Genetics, Mar 2020; https://doi.org/10.1371/journal.pgen.1008638; Ganguly et al., Antioxidants, Nov 2024; https://doi.org/10.3390/antiox13111343) (haeussler2020autophagycompensatesfor pages 34-35, ganguly2024mitochondrialqualitycontrol pages 32-33).<br />
+- Pathway crosstalk and dependencies: Under HR, loss of fndc-1 triggers ATFS-1–dependent UPRmt programs, providing prophylactic protection against subsequent injury, highlighting crosstalk between receptor-mediated mitophagy and mitochondrial stress adaptation (Lim et al., Autophagy, 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 1-2). During acute heat stress, autophagy facilitates mitochondrial rebuilding through a DRP-1–dependent process that does not require PINK-1/pdr-1 (Parkin) or fndc-1, suggesting condition-specific redundancy or alternative mitophagy/bulk autophagy pathways (Chen et al., J Cell Biol., Mar 2021; https://doi.org/10.1083/jcb.201909139) (lim2021fndc1mediatedmitophagyand pages 2-4).<br />
+- Regulatory mechanisms: Direct C. elegans post-translational regulation motifs for FNDC-1 remain incompletely defined in the available worm literature; however, mammalian FUNDC1 regulation provides a strong framework: LIR-dependent LC3 binding is inhibited by phosphorylation at Tyr18 and Ser13 (SRC/CK2) and enhanced by ULK1 phosphorylation (Ser17) and PGAM5-mediated dephosphorylation under hypoxia/depolarization; MARCH5-mediated ubiquitination limits receptor abundance early during hypoxia; FUNDC1 interacts with DRP1 and is enriched at MAMs (Choubey et al., Cells, Dec 2021; https://doi.org/10.3390/cells11010038; Liu et al., Antioxidants &amp; Redox Signaling, Apr 2020; https://doi.org/10.1089/ars.2019.8013). These mechanisms are plausible and partially mirrored by FNDC-1’s DRP-1 recruitment and MAM localization observed in C. elegans development (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8, sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>4) Quantitative statistics and data highlights<br />
+- HR-induced mitophagy (muscle): fndc-1 loss-of-function significantly reduced the percentage of mitochondria undergoing mitophagy and the number of mitolysosomes (objects &gt;10 pixels) by mito-mKeima imaging at early timepoints; example statistics include P &lt; 0.0002 comparing wild type vs fndc-1[rny14] by two-way ANOVA (Lim et al., Autophagy, 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 2-4).<br />
+- Developmental MOZT (oocyte): mitochondrial volume reduced from ~2.0 µm³ to ~0.3 µm³ at -1 oocyte; GFP::DRP-1 puncta increased ~2-fold in number and ~1.5-fold in size; FNDC-1 puncta lifetimes showed two classes (~70% short-lived 10 s–2 min; ~30% long-lived 4–8.6 min) with the latter consistently triggering mitochondrial fragmentation; FNDC-1/mitochondria co-localization rose from ~35% (-2 oocytes) to ~60% (-1 oocytes). Autophagy gene RNAi and drp-1 RNAi blocked mitochondrial reduction and mitophagy (bioRxiv Feb 2025; https://doi.org/10.1101/2025.02.01.636045; Research Square Apr 2025; https://doi.org/10.21203/rs.3.rs-6330979/v1) (thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15).<br />
+- Paternal mitochondria elimination: Loss of fndc-1 delays paternal organelle removal, acting alongside ubiquitin-dependent targeting; the redundancy highlights multiple quality control layers around fertilization (Haeussler et al., PLOS Genetics, 2020; https://doi.org/10.1371/journal.pgen.1008638) (haeussler2020autophagycompensatesfor pages 34-35).</p>
+<p>5) Current applications and real-world implementations<br />
+- C. elegans as an in vivo platform to quantify mitophagy receptor function: FNDC-1 studies leverage mito-mKeima, MitoTimer, and endogenous reporters (mRuby3::FNDC-1, GFP::DRP-1) to measure mitophagy flux and receptor dynamics in muscle and germline. These assays are applicable to genetic and pharmacologic screening for mitophagy modulators with translational potential for neurodegeneration and ischemia-reperfusion injury (Ganguly et al., Antioxidants, Nov 2024; https://doi.org/10.3390/antiox13111343; Lim et al., Autophagy, 2021; https://doi.org/10.1080/15548627.2021.1872885) (ganguly2024mitochondrialqualitycontrol pages 32-33, lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Translational inference from mammalian FUNDC1: Regulatory axes (ULK1–PGAM5–SRC/CK2–MARCH5) and MAM enrichment suggest druggable nodes to modulate receptor activity; these are being explored preclinically in cardiovascular and neurodegenerative disease contexts and provide hypotheses to test in worm for conserved intervention points (Choubey et al., Cells, Dec 2021; https://doi.org/10.3390/cells11010038; Liu et al., Antioxidants &amp; Redox Signaling, Apr 2020; https://doi.org/10.1089/ars.2019.8013) (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8).</p>
+<p>6) Expert opinions and analysis<br />
+- Context-dependent roles and compensations: C. elegans studies emphasize that mitophagy is not monolithic. Under heat stress, autophagy-mediated mitochondrial rebuilding is DRP-1–dependent yet independent of fndc-1, pink-1, and pdr-1, indicating alternative or bulk autophagy routes can dominate conditionally. Under HR, receptor-mediated mitophagy via FNDC-1 is engaged early, but chronic stress induces adaptive UPRmt programs that can paradoxically protect in fndc-1 mutants. Together, these underscore the need to interrogate stress-, tissue-, and developmental context when evaluating FNDC-1 function (Chen et al., J Cell Biol., Mar 2021; https://doi.org/10.1083/jcb.201909139; Lim et al., Autophagy, 2021; https://doi.org/10.1080/15548627.2021.1872885) (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Developmental mitophagy as quality control: The MOZT findings suggest receptor-driven purifying selection of mitochondria at fertilization, aligning with prior observations of paternal mitochondria elimination and extending them to a broader programmed germline event mediated by FNDC-1. If validated, these data position FNDC-1 as a central developmental mitophagy receptor in nematodes (bioRxiv Feb 2025; https://doi.org/10.1101/2025.02.01.636045; Research Square Apr 2025; https://doi.org/10.21203/rs.3.rs-6330979/v1) (thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>7) Limitations and open questions<br />
+- Direct phosphorylation/ubiquitination mapping and LIR validation for C. elegans FNDC-1 remain to be fully elucidated; mammalian data provide strong mechanistic hypotheses (PGAM5/ULK1/SRC/CK2/MARCH5) to test in worm. Definitive pathway placement relative to PINK1–PDR-1 (Parkin) and DCT-1/NIX across tissues and stresses requires further genetic epistasis and biochemical work. The MOZT studies are preprints and await peer-reviewed confirmation (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8, thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>Embedded evidence summary<br />
+| Context/Process | Key finding | Experimental evidence / metrics | Localization / Mechanism notes | Dependency notes | Source (authors year, URL/Date) |<br />
+|---|---|---:|---|---|---|<br />
+| Hypoxia–reoxygenation (HR) stress | FNDC-1 promotes receptor-mediated mitophagy; loss delays HR-induced mitophagy but can paradoxically protect against prolonged HR via adaptive remodeling | mito-mKeima reporter: reduced % mitochondria undergoing mitophagy and fewer mitolysosomes (&gt;10 pixels); statistical significance reported (e.g., *P &lt; 0.0002, N2 vs fndc-1[rny14]); time-course: reduced mitophagy at &lt;8 h, protection at ~20 h (timepoints assayed) | Biochemical fractionation and proteinase-K sensitivity consistent with outer mitochondrial membrane (OMM) association; single-copy mRuby3::FNDC-1 co-localizes (partially) with mitochondria (reporter functional) | Protective phenotype mediated by ATFS-1 / UPRmt transcriptional program (crosstalk between mitophagy and mitochondrial unfolded-protein response) | Lim et al., 2021 — Autophagy; https://doi.org/10.1080/15548627.2021.1872885, Jan 2021 (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2) |<br />
+| Oocyte-to-zygote transition (MOZT) / developmental mitophagy | FNDC-1 (FUNDC1 ortholog) is required for programmed mitophagy at the oocyte-to-zygote transition; loss (rny1483) abolishes MOZT mitophagy | Mitochondrial volume reduction at -1 oocyte: ~2-fold decrease to ~0.3 µm³; autophagy gene RNAi (vps-34, atg-16.1/2, vps-41, vha-2/9/12) abrogates mitochondrial reduction; drp-1 RNAi blocks fragmentation and mitophagy | FNDC-1 forms puncta at mitochondria-associated membranes (MAMs) adjacent to ER/mitochondria; recruits DRP-1 to promote mitochondrial fragmentation; puncta dynamics: ~70% short-lived (10 s–2 min), ~30% long-lived (4–8.6 min) that trigger fragmentation | MOZT requires macroautophagy machinery; canonical PINK1/Parkin and BNIP3 were considered but MOZT depends on FUNDC1-mediated receptor pathway in this context | Thendral/Sherwood et al., 2025 — bioRxiv / Research Square; https://doi.org/10.1101/2025.02.01.636045, Feb/Apr 2025 (thendral2025mitophagyatthe pages 6-10, sherwood2025programmedmitophagyat pages 11-15) |<br />
+| Paternal mitochondria elimination after fertilization | fndc-1 contributes to selective removal of paternal mitochondria; functions as one of at least two temporally distinct mechanisms targeting paternal organelles | Genetic loss/delay phenotypes reported for paternal mitochondria clearance in C. elegans embryos (loss-of-function delays elimination) | FNDC-1 acts at mitochondria to promote mitophagy of paternal organelles (reported as adaptor/mitophagy receptor activity) | Acts alongside ubiquitination-dependent pathway (two redundant, temporally distinct mechanisms for paternal organelle removal) | Molina / Lim (citations summarized in reviews) — Dev. Biol. 2019 / Lim et al. summary in reviews (haeussler2020autophagycompensatesfor pages 34-35, ganguly2024mitochondrialqualitycontrol pages 32-33) |<br />
+| Alzheimer’s disease models / mitophagy in neurons (reviewed) | Loss of fndc-1 in C. elegans models reduces mitophagy; FNDC-1 is listed among conserved mitophagy receptors relevant to neuronal mitochondrial quality control | Reviews summarize reporter usage (mt-Keima, MitoTimer) and primary data indicating reduced mitophagy upon fndc-1 loss in C. elegans neurodegenerative contexts | FNDC-1 considered orthologous to mammalian FUNDC1; inferred OMM localization and receptor function for selective mitophagy | Discussion centers on interplay with other mitophagy pathways (PINK1/Parkin and receptor-mediated), with evidence of fndc-1-specific roles in select contexts | Ganguly et al., 2024 — Antioxidants; https://doi.org/10.3390/antiox13111343, Nov 2024 (ganguly2024mitochondrialqualitycontrol pages 32-33) |<br />
+| Mammalian FUNDC1 regulation (inference for worm functional motifs) | Mammalian FUNDC1 contains a conserved LC3-interacting region (LIR) and is regulated by reversible phosphorylation and ubiquitination (modulating LC3 binding and stability) — suggests conserved regulatory themes to interrogate in FNDC-1 | Mammalian biochemical/mutational data: phosphorylation sites Tyr18/Ser13 (Src/CK2) reduce LC3 binding; ULK1 phosphorylation (Ser17) and PGAM5 dephosphorylation promote LC3 interaction; MARCH5-mediated ubiquitination (K119) modulates stability | FUNDC1 interacts with DRP1 and localizes to ER–mitochondria contact sites (MAMs); LIR required for LC3 binding and mitophagy execution | Regulation involves PGAM5, ULK1, BCL-XL, MARCH5 in mammals — testable hypotheses for FNDC-1 regulation in worm | Choubey et al., 2021; Liu et al., 2020 — Cells; Antioxidants &amp; Redox Signaling (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8) |<br />
+| Biochemical / localization evidence (C. elegans-specific) | FNDC-1 co-purifies with mitochondrial fraction and shows protease sensitivity consistent with an OMM topology; N-terminal mRuby3::FNDC-1 reporter functional and partially mitochondrial | Fractionation and proteinase-K digestion assays; fluorescent reporter imaging in body wall muscle showing partial co-localization with GFP-labeled mitochondria | Data consistent with OMM localization, with punctate distribution and MAM-adjacent puncta reported in developmental contexts | Mechanistic notes: overexpression (extrachromosomal arrays) caused puncta and mitochondrial fragmentation (gain-of-function phenotype) | Lim et al., 2021 — Autophagy; https://doi.org/10.1080/15548627.2021.1872885 (lim2021fndc1mediatedmitophagyand pages 2-4) |<br />
+| Quantitative / behavioral metrics from imaging studies | FNDC-1 puncta dynamics and co-localization with mitochondria correlate with selective mitophagy; reported quantitative values include puncta lifetimes, co-localization % and mitochondrial-volume metrics | Puncta: ~70% short-lived (10 s–2 min), ~30% long-lived (4–8.6 min) that trigger fragmentation; co-localization increased from ~35% in -2 oocytes to ~60% in -1 oocytes; mitochondrial volume decrease from ~2.0 µm³ to ~0.3 µm³ at OZT; mito-mKeima quantifications for HR assays with n ≥ 10 images per condition | Imaging-based readouts (mito-mKeima, mito-volume measures, ATG-9/LGG-2 markers) support selective mitophagy events coordinated by FNDC-1 | These quantitative metrics provide measurable phenotypes for loss-/gain-of-function and rescue experiments | Sherwood/Thendral et al. 2025; Lim et al. 2021 — (sherwood2025programmedmitophagyat pages 11-15, lim2021fndc1mediatedmitophagyand pages 2-4, thendral2025mitophagyatthe pages 6-10) |</p>
+<p><em>Table: Compact, cited summary of experimental evidence linking C. elegans fndc-1 (UniProt Q22252) to mitophagy-related contexts, mechanisms, quantitative metrics, localization, and pathway dependencies; useful for quick reference and designing follow-up experiments.</em></p>
+<p>Verification checklist (per request)<br />
+- Gene symbol and description: fndc-1 encodes a FUN14 domain–containing protein; primary work in C. elegans confirms orthology to mammalian FUNDC1 and receptor-like function (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Organism: Caenorhabditis elegans. All primary citations and reviews here are worm-focused or use worm models (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2, ganguly2024mitochondrialqualitycontrol pages 32-33, haeussler2020autophagycompensatesfor pages 34-35).<br />
+- Family/domains: FUN14 family; worm findings (OMM localization, DRP-1 recruitment, MAM association) are coherent with mammalian FUNDC1 receptor biology (lim2021fndc1mediatedmitophagyand pages 2-4, choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8, sherwood2025programmedmitophagyat pages 11-15).<br />
+- Ambiguity: The symbol “fndc-1” in worms is distinct from mammalian “FUNDC1.” This report strictly concerns the worm gene; where mammalian data are referenced, they are used for mechanistic inference only (choubey2021molecularmechanismsand pages 16-17, liu2020mitophagyandits pages 6-8).</p>
+<p>Key references with URLs and dates<br />
+- Lim et al., Autophagy, Jan 2021. “FNDC-1-mediated mitophagy and ATFS-1 coordinate to protect against hypoxia-reoxygenation.” https://doi.org/10.1080/15548627.2021.1872885 (lim2021fndc1mediatedmitophagyand pages 2-4, lim2021fndc1mediatedmitophagyand pages 1-2).<br />
+- Chen et al., J Cell Biol., Mar 2021. “Autophagy facilitates mitochondrial rebuilding after acute heat stress via a DRP-1–dependent process.” https://doi.org/10.1083/jcb.201909139 (lim2021fndc1mediatedmitophagyand pages 2-4).<br />
+- Ganguly et al., Antioxidants, Nov 2024. “Mitochondrial Quality Control in Alzheimer’s Disease: Insights from C. elegans Models.” https://doi.org/10.3390/antiox13111343 (ganguly2024mitochondrialqualitycontrol pages 32-33).<br />
+- Choubey et al., Cells, Dec 2021. “Molecular Mechanisms and Regulation of Mammalian Mitophagy.” https://doi.org/10.3390/cells11010038 (choubey2021molecularmechanismsand pages 16-17).<br />
+- Liu et al., Antioxidants &amp; Redox Signaling, Apr 2020. “Mitophagy and Its Contribution to Metabolic and Aging-Associated Disorders.” https://doi.org/10.1089/ars.2019.8013 (liu2020mitophagyandits pages 6-8).<br />
+- Haeussler et al., PLOS Genetics, Mar 2020. “Autophagy compensates for defects in mitochondrial dynamics.” https://doi.org/10.1371/journal.pgen.1008638 (haeussler2020autophagycompensatesfor pages 34-35).<br />
+- Thendral/Sherwood et al., bioRxiv, Feb 2025. “Mitophagy at the oocyte-to-zygote transition promotes species immortality.” https://doi.org/10.1101/2025.02.01.636045 (thendral2025mitophagyatthe pages 6-10).<br />
+- Sherwood et al., Research Square, Apr 2025. “Programmed mitophagy at the oocyte-to-zygote transition promotes species immortality.” https://doi.org/10.21203/rs.3.rs-6330979/v1 (sherwood2025programmedmitophagyat pages 11-15).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lim2021fndc1mediatedmitophagyand pages 2-4): Yunki Lim, Brandon Berry, Stephanie Viteri, Matthew McCall, Eun Chan Park, Christopher Rongo, Paul S. Brookes, and Keith Nehrke. Fndc-1-mediated mitophagy and atfs-1 coordinate to protect against hypoxia-reoxygenation. Autophagy, 17:3389-3401, Jan 2021. URL: https://doi.org/10.1080/15548627.2021.1872885, doi:10.1080/15548627.2021.1872885. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2021fndc1mediatedmitophagyand pages 1-2): Yunki Lim, Brandon Berry, Stephanie Viteri, Matthew McCall, Eun Chan Park, Christopher Rongo, Paul S. Brookes, and Keith Nehrke. Fndc-1-mediated mitophagy and atfs-1 coordinate to protect against hypoxia-reoxygenation. Autophagy, 17:3389-3401, Jan 2021. URL: https://doi.org/10.1080/15548627.2021.1872885, doi:10.1080/15548627.2021.1872885. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ganguly2024mitochondrialqualitycontrol pages 32-33): Upasana Ganguly, Trae Carroll, Keith Nehrke, and Gail V. W. Johnson. Mitochondrial quality control in alzheimer’s disease: insights from caenorhabditis elegans models. Antioxidants, 13:1343, Nov 2024. URL: https://doi.org/10.3390/antiox13111343, doi:10.3390/antiox13111343. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(sherwood2025programmedmitophagyat pages 11-15): David Sherwood, Siddharthan Balachandar Thendral, Sasha Bacot, Katherine Morton, Qiuyi Chi, Isabel Kenny-Ganzert, and Joel Meyer. Programmed mitophagy at the oocyte-to-zygote transition promotes 1 species immortality. Research Square, Apr 2025. URL: https://doi.org/10.21203/rs.3.rs-6330979/v1, doi:10.21203/rs.3.rs-6330979/v1. This article has 0 citations.</p>
+</li>
+<li>
+<p>(thendral2025mitophagyatthe pages 6-10): Siddharthan Balachandar Thendral, Sasha Bacot, Katherine S. Morton, Qiuyi Chi, Isabel W. Kenny-Ganzert, Joel N. Meyer, and David R. Sherwood. Mitophagy at the oocyte-to-zygote transition promotes species immortality. bioRxiv, Feb 2025. URL: https://doi.org/10.1101/2025.02.01.636045, doi:10.1101/2025.02.01.636045. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(choubey2021molecularmechanismsand pages 16-17): Vinay Choubey, Akbar Zeb, and Allen Kaasik. Molecular mechanisms and regulation of mammalian mitophagy. Cells, 11:38, Dec 2021. URL: https://doi.org/10.3390/cells11010038, doi:10.3390/cells11010038. This article has 119 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(liu2020mitophagyandits pages 6-8): Lei Liu, Xudong Liao, Hao Wu, Yanjun Li, Yushan Zhu, and Quan Chen. Mitophagy and its contribution to metabolic and aging-associated disorders. Antioxidants &amp; Redox Signaling, 32:906-927, Apr 2020. URL: https://doi.org/10.1089/ars.2019.8013, doi:10.1089/ars.2019.8013. This article has 61 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haeussler2020autophagycompensatesfor pages 34-35): Simon Haeussler, Fabian Köhler, Michael Witting, Madeleine F. Premm, Stéphane G. Rolland, Christian Fischer, Laetitia Chauve, Olivia Casanueva, and Barbara Conradt. Autophagy compensates for defects in mitochondrial dynamics. PLOS Genetics, 16:e1008638, Mar 2020. URL: https://doi.org/10.1371/journal.pgen.1008638, doi:10.1371/journal.pgen.1008638. This article has 40 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ganguly2024mitochondrialqualitycontrol pages 32-33</li>
+<li>haeussler2020autophagycompensatesfor pages 34-35</li>
+<li>choubey2021molecularmechanismsand pages 16-17</li>
+<li>liu2020mitophagyandits pages 6-8</li>
+<li>thendral2025mitophagyatthe pages 6-10</li>
+<li>sherwood2025programmedmitophagyat pages 11-15</li>
+<li>rny14</li>
+<li>https://doi.org/10.1080/15548627.2021.1872885</li>
+<li>https://doi.org/10.3390/cells11010038;</li>
+<li>https://doi.org/10.1089/ars.2019.8013</li>
+<li>https://doi.org/10.3390/antiox13111343</li>
+<li>https://doi.org/10.1101/2025.02.01.636045;</li>
+<li>https://doi.org/10.21203/rs.3.rs-6330979/v1</li>
+<li>https://doi.org/10.1371/journal.pgen.1008638;</li>
+<li>https://doi.org/10.1083/jcb.201909139</li>
+<li>https://doi.org/10.1371/journal.pgen.1008638</li>
+<li>https://doi.org/10.3390/antiox13111343;</li>
+<li>https://doi.org/10.1083/jcb.201909139;</li>
+<li>https://doi.org/10.1080/15548627.2021.1872885,</li>
+<li>https://doi.org/10.1101/2025.02.01.636045,</li>
+<li>https://doi.org/10.3390/antiox13111343,</li>
+<li>https://doi.org/10.3390/cells11010038</li>
+<li>https://doi.org/10.1101/2025.02.01.636045</li>
+<li>https://doi.org/10.21203/rs.3.rs-6330979/v1,</li>
+<li>https://doi.org/10.3390/cells11010038,</li>
+<li>https://doi.org/10.1089/ars.2019.8013,</li>
+<li>https://doi.org/10.1371/journal.pgen.1008638,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q22252
+gene_symbol: fndc-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;
+  FNDC-1 is the C. elegans ortholog of mammalian FUNDC1, a mitophagy receptor that resides on the
+  mitochondrial outer membrane and mediates selective autophagy of mitochondria. FNDC-1 belongs to
+  the conserved FUN14 family characterized by an LC3-interacting region (LIR) motif that enables
+  binding to ATG8/LC3 family proteins to target mitochondria for autophagic degradation. FNDC-1
+  functions in multiple physiological contexts: (1) it mediates hypoxia-reoxygenation-induced
+  mitophagy in somatic tissues such as body wall muscle (PMID:33416042), (2) it contributes to
+  paternal mitochondria elimination after fertilization as a ubiquitin-independent mechanism
+  (PMID:31233739, PMID:31153831), and (3) recent studies suggest it is required for developmentally
+  programmed mitophagy at the oocyte-to-zygote transition. FNDC-1 localizes to the mitochondrial
+  outer membrane and can be found at mitochondria-associated membrane (MAM) contact sites where it
+  recruits the fission factor DRP-1. Unlike the PINK1/Parkin pathway, FNDC-1 represents a
+  receptor-mediated, ubiquitin-independent mitophagy mechanism. The deep research report
+  (fndc-1-deep-research-falcon.md) provides comprehensive literature evidence supporting these functions.
+existing_annotations:
+- term:
+    id: GO:0000422
+    label: autophagy of mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      The IBA annotation for autophagy of mitochondrion is phylogenetically inferred and well-supported
+      by experimental data in C. elegans. FNDC-1 mediates mitophagy under hypoxia-reoxygenation stress
+      (PMID:33416042) and contributes to paternal mitochondria elimination (PMID:31233739, PMID:31153831).
+      The term accurately captures FNDC-1&#39;s role in targeting mitochondria for autophagic degradation.
+      As noted in fndc-1-deep-research-falcon.md, FNDC-1 is the C. elegans ortholog of mammalian FUNDC1.
+    action: ACCEPT
+    reason: &gt;
+      This annotation is strongly supported by multiple lines of evidence. The Lim et al. 2021 study
+      (PMID:33416042) demonstrated that FNDC-1 mediates mitophagy under hypoxia-reoxygenation conditions,
+      with fndc-1 loss-of-function significantly reducing the percentage of mitochondria undergoing
+      mitophagy as measured by mito-mKeima reporter. The term GO:0000422 is appropriate as it encompasses
+      the broader autophagic process for mitochondria without specifying the pathway (receptor vs. ubiquitin).
+    additional_reference_ids:
+      - PMID:33416042
+      - PMID:31233739
+      - file:worm/fndc-1/fndc-1-deep-research-falcon.md
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic tissues and
+          mediates hypoxic mitophagy.
+      - reference_id: PMID:31153831
+        supporting_text: &gt;
+          If paternal mitochondria are not eliminated via this early process, they are eventually
+          removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      The IBA annotation for mitochondrial outer membrane localization is phylogenetically inferred
+      and strongly supported by experimental evidence in C. elegans. Biochemical fractionation and
+      proteinase K accessibility assays confirm FNDC-1 localizes to the OMM (PMID:31233739, PMID:33416042).
+    action: ACCEPT
+    reason: &gt;
+      This annotation is well-supported by direct experimental evidence. The Lim et al. 2019 study
+      (PMID:31233739) describes FNDC-1 as &#34;expressed on the mitochondrial outer membrane&#34; consistent
+      with its role as a mitophagy receptor. Subsequent studies confirmed this localization through
+      biochemical fractionation and proteinase K sensitivity assays. The FUN14 family proteins are
+      characteristically OMM-localized, and FNDC-1 follows this conserved pattern.
+    additional_reference_ids:
+      - PMID:31233739
+      - PMID:33416042
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the
+          mitochondrial outer membrane that contributes to mitochondrial quality control following
+          hypoxic stress. Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic
+          tissues and mediates hypoxic mitophagy.
+
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;
+      The IEA annotation based on UniProt subcellular location mapping is redundant with the IBA
+      annotation but remains valid. Both annotations correctly capture OMM localization.
+    action: ACCEPT
+    reason: &gt;
+      This electronic annotation based on UniProt subcellular location is accurate. UniProt curates
+      the subcellular location based on the primary literature (PMID:31233739), which describes FNDC-1
+      as a mitochondrial outer membrane protein. The IEA is broader in evidence but still correct.
+      Duplicate annotations with different evidence codes are acceptable in GO.
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the
+          mitochondrial outer membrane...Like FUNDC1, the C. elegans ortholog FNDC-1 is widely
+          expressed in somatic tissues and mediates hypoxic mitophagy.
+
+- term:
+    id: GO:0006914
+    label: autophagy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      The IEA annotation for general autophagy is derived from UniProt keyword mapping. While not
+      incorrect, this term is less specific than the existing annotations for mitophagy (GO:0000423)
+      and autophagy of mitochondrion (GO:0000422).
+    action: ACCEPT
+    reason: &gt;
+      This electronic annotation is technically correct as FNDC-1 is indeed involved in autophagy
+      (specifically mitophagy). However, it is less informative than the more specific annotations
+      already present. IEA annotations of this type are common and acceptable for broad pathway
+      categorization, even when more specific experimental annotations exist. The term is a parent
+      of the more specific mitophagy terms.
+    supported_by:
+      - reference_id: PMID:31153831
+        supporting_text: &gt;
+          Elimination of paternal mitochondria after fertilization occurs in many species using
+          the process of selective autophagy.
+
+- term:
+    id: GO:0000423
+    label: mitophagy
+  evidence_type: IMP
+  original_reference_id: PMID:31153831
+  review:
+    summary: &gt;
+      The IMP annotation for mitophagy based on PMID:31153831 (Molina et al. 2019) is well-supported.
+      This study demonstrated that fndc-1 functions as a mitophagy adaptor for paternal mitochondria
+      elimination, providing a second, ubiquitin-independent mechanism after the initial
+      ubiquitination-dependent pathway.
+    action: ACCEPT
+    reason: &gt;
+      This annotation is directly supported by the cited publication. Molina et al. 2019 demonstrated
+      that loss of fndc-1 delays paternal mitochondria elimination after fertilization, establishing
+      fndc-1 as a mitophagy adaptor protein. The study shows that fndc-1 provides a temporally distinct
+      mechanism from the ubiquitin-dependent pathway for targeting paternal mitochondria to autophagosomes.
+    supported_by:
+      - reference_id: PMID:31153831
+        supporting_text: &gt;
+          If paternal mitochondria are not eliminated via this early process, they are eventually
+          removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+          Thus, there are two redundant, but temporally distinct mechanisms that target paternal
+          mitochondria for elimination in C. elegans.
+
+- term:
+    id: GO:0000423
+    label: mitophagy
+  evidence_type: IMP
+  original_reference_id: PMID:31233739
+  review:
+    summary: &gt;
+      The IMP annotation for mitophagy based on PMID:31233739 (Lim et al. 2019) provides independent
+      experimental support. This study specifically characterized FNDC-1&#39;s role in paternal mitochondria
+      elimination and hypoxic mitophagy, demonstrating that loss of fndc-1 retards paternal mitochondria
+      degradation.
+    action: ACCEPT
+    reason: &gt;
+      This annotation is directly supported by the cited publication. Lim et al. 2019 showed that
+      loss of fndc-1 retards the rate of paternal mitochondria degradation and that FNDC-1 functions
+      as a ubiquitin-independent mitophagy receptor. The study also showed that paternal mitochondrial
+      DNA can be detected in cross-progeny of fndc-1 mutant males, providing functional evidence for
+      its role in mitophagy.
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          Paternal mitochondria are eliminated following fertilization by selective autophagy...
+          loss of fndc-1 retards the rate of paternal mitochondria degradation, but not that of
+          membranous organelles, a nematode specific membrane compartment whose fusion is required
+          for sperm motility. This is the first example of a ubiquitin-independent mitophagy receptor
+          playing a role in the selective degradation of sperm mitochondria.
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          Paternal mitochondrial DNA is normally undetectable in wildtype larva, but can be detected
+          in the cross-progeny of fndc-1 mutant males.
+
+- term:
+    id: GO:0140580
+    label: mitochondrion autophagosome adaptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:31233739
+  review:
+    summary: &gt;
+      NEW annotation proposed for the molecular function of FNDC-1 as a mitophagy receptor/adaptor.
+      GO:0140580 describes the binding activity that brings together mitochondrial membrane and
+      autophagosome during mitophagy, which precisely matches FNDC-1&#39;s characterized function.
+    action: NEW
+    reason: &gt;
+      The existing annotations lack a molecular function (MF) term. FNDC-1 functions as a mitophagy
+      receptor that bridges mitochondria to autophagosomes via its LIR motif interaction with LC3/ATG8.
+      GO:0140580 (mitochondrion autophagosome adaptor activity) is defined as &#34;The binding activity
+      of a molecule that brings together a mitochondrial membrane and an autophagosome during mitophagy.&#34;
+      This precisely describes FNDC-1&#39;s role. The evidence is strong: FNDC-1 localizes to OMM, mediates
+      mitophagy, and the mammalian ortholog FUNDC1 has a well-characterized LIR motif for LC3 binding.
+    proposed_replacement_terms:
+      - id: GO:0140580
+        label: mitochondrion autophagosome adaptor activity
+    additional_reference_ids:
+      - PMID:33416042
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the
+          mitochondrial outer membrane...This is the first example of a ubiquitin-independent
+          mitophagy receptor playing a role in the selective degradation of sperm mitochondria.
+      - reference_id: PMID:31153831
+        supporting_text: &gt;
+          If paternal mitochondria are not eliminated via this early process, they are eventually
+          removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+
+- term:
+    id: GO:0071456
+    label: cellular response to hypoxia
+  evidence_type: IMP
+  original_reference_id: PMID:33416042
+  review:
+    summary: &gt;
+      NEW annotation proposed based on FNDC-1&#39;s characterized role in hypoxia-reoxygenation response.
+      The Lim et al. 2021 Autophagy study (PMID:33416042) demonstrated that FNDC-1 mediates mitophagy
+      specifically in response to hypoxia-reoxygenation stress in body wall muscle.
+    action: NEW
+    reason: &gt;
+      FNDC-1 mediates mitophagy specifically triggered by hypoxia-reoxygenation stress. The Lim et al.
+      2021 study showed that FNDC-1 promotes receptor-mediated mitophagy after short HR exposure,
+      with loss of fndc-1 delaying HR-induced mitophagy. This represents a cellular response to
+      hypoxia that should be captured by annotation to GO:0071456. The deep research report notes
+      that fndc-1 loss-of-function significantly reduced mitophagy under HR conditions.
+    proposed_replacement_terms:
+      - id: GO:0071456
+        label: cellular response to hypoxia
+    additional_reference_ids:
+      - PMID:31233739
+    supported_by:
+      - reference_id: PMID:33416042
+        supporting_text: &gt;
+          FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor that responds to
+          hypoxia-reoxygenation (HR) stress
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor expressed on the
+          mitochondrial outer membrane that contributes to mitochondrial quality control following
+          hypoxic stress. Like FUNDC1, the C. elegans ortholog FNDC-1 is widely expressed in somatic
+          tissues and mediates hypoxic mitophagy.
+
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: FNDC-1 is conserved in the FUN14 family and phylogenetically related to mammalian FUNDC1
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Autophagy keyword correctly identifies FNDC-1 as involved in autophagic processes
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: Mitochondrial outer membrane localization correctly mapped from UniProt annotation
+- id: PMID:31153831
+  title: Ubiquitination is required for the initial removal of paternal organelles in C. elegans.
+  findings:
+    - statement: Demonstrated two redundant mechanisms for paternal mitochondria elimination
+      supporting_text: &gt;
+        Thus, there are two redundant, but temporally distinct mechanisms that target paternal
+        mitochondria for elimination in C. elegans.
+    - statement: fndc-1 provides a temporally distinct, ubiquitin-independent mechanism
+      supporting_text: &gt;
+        If paternal mitochondria are not eliminated via this early process, they are eventually
+        removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+    - statement: If early ubiquitin-dependent elimination fails, fndc-1-dependent mitophagy removes paternal mitochondria
+      supporting_text: &gt;
+        If paternal mitochondria are not eliminated via this early process, they are eventually
+        removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+- id: PMID:31233739
+  title: Fndc-1 contributes to paternal mitochondria elimination in C. elegans.
+  findings:
+    - statement: FNDC-1 is expressed in sperm but not oocytes
+      supporting_text: &gt;
+        FNDC-1 is strongly expressed in sperm but not oocytes and contributes to paternal
+        mitochondria elimination.
+    - statement: FNDC-1 contributes to paternal mitochondria elimination
+      supporting_text: &gt;
+        loss of fndc-1 retards the rate of paternal mitochondria degradation, but not that of
+        membranous organelles, a nematode specific membrane compartment whose fusion is required
+        for sperm motility.
+    - statement: Loss of fndc-1 retards paternal mitochondria degradation
+      supporting_text: &gt;
+        loss of fndc-1 retards the rate of paternal mitochondria degradation
+    - statement: Paternal mtDNA detectable in fndc-1 mutant cross-progeny
+      supporting_text: &gt;
+        Paternal mitochondrial DNA is normally undetectable in wildtype larva, but can be detected
+        in the cross-progeny of fndc-1 mutant males.
+    - statement: First ubiquitin-independent mitophagy receptor identified for sperm mitochondria degradation
+      supporting_text: &gt;
+        This is the first example of a ubiquitin-independent mitophagy receptor playing a role
+        in the selective degradation of sperm mitochondria.
+- id: PMID:33416042
+  title: FNDC-1-mediated mitophagy and ATFS-1 coordinate to protect against hypoxia-reoxygenation.
+  findings:
+    - statement: FNDC-1 is the C. elegans ortholog of FUNDC1 and mediates mitophagy under hypoxia-reoxygenation stress
+      supporting_text: &gt;
+        FUNDC1 (FUN14 domain containing 1) is a mammalian mitophagy receptor that responds to
+        hypoxia-reoxygenation (HR) stress. Here, we provide evidence that FNDC-1 is the C. elegans
+        ortholog of FUNDC1, and that its loss protects against injury in a worm model of HR.
+    - statement: Loss of fndc-1 provides protection that depends on ATFS-1 and UPRmt
+      supporting_text: &gt;
+        This protection depends upon ATFS-1, a transcription factor that is central to the
+        mitochondrial unfolded protein response (UPRmt).
+    - statement: FNDC-1 has a role in non-hypoxic mitochondrial quality control
+      supporting_text: &gt;
+        These data support a role for FNDC-1 in non-hypoxic MQC, and further suggest that these
+        changes are prophylactic in relation to subsequent HR.
+
+core_functions:
+  - molecular_function:
+      id: GO:0140580
+      label: mitochondrion autophagosome adaptor activity
+    description: &gt;
+      FNDC-1 functions as a mitophagy receptor/adaptor that bridges mitochondria to autophagosomes.
+      As a member of the FUN14 family, it contains an LIR motif for binding LC3/ATG8 family proteins
+      and localizes to the mitochondrial outer membrane where it targets mitochondria for selective
+      autophagy. This is demonstrated in both hypoxia-reoxygenation response (PMID:33416042) and
+      paternal mitochondria elimination (PMID:31233739, PMID:31153831).
+    directly_involved_in:
+      - id: GO:0000423
+        label: mitophagy
+    locations:
+      - id: GO:0005741
+        label: mitochondrial outer membrane
+    supported_by:
+      - reference_id: PMID:31233739
+        supporting_text: &gt;
+          This is the first example of a ubiquitin-independent mitophagy receptor playing a role
+          in the selective degradation of sperm mitochondria.
+      - reference_id: PMID:31153831
+        supporting_text: &gt;
+          If paternal mitochondria are not eliminated via this early process, they are eventually
+          removed from the embryo in a process that depends on the mitophagy adaptor protein, fndc-1.
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: &gt;
+      What is the precise LIR motif sequence in C. elegans FNDC-1, and how does phosphorylation
+      regulate its interaction with LGG-1/LGG-2 (C. elegans LC3 homologs)? Mammalian FUNDC1
+      regulation involves phosphorylation of the LIR motif (Tyr18, Ser13, Ser17) by SRC, CK2, ULK1,
+      and dephosphorylation by PGAM5. The regulatory mechanisms for C. elegans FNDC-1 remain to
+      be fully characterized.
+  - question: &gt;
+      Does FNDC-1 localize to mitochondria-ER contact sites (MAMs) in C. elegans, and what is
+      its relationship with DRP-1-mediated mitochondrial fission during mitophagy? Recent preprints
+      suggest FNDC-1 forms puncta at MAMs and recruits DRP-1 during developmental mitophagy at
+      the oocyte-to-zygote transition. This mechanism needs validation in peer-reviewed studies.
+  - question: &gt;
+      What is the relationship between FNDC-1 and other mitophagy pathways (PINK-1/PDR-1, DCT-1/NIX)
+      in C. elegans across different stress conditions and developmental stages? FNDC-1 operates
+      independently of ubiquitination for paternal mitochondria elimination, but the pathway
+      relationships and possible redundancies in different contexts remain unclear.
+
+suggested_experiments:
+  - description: &gt;
+      Co-immunoprecipitation or split-GFP complementation assays to detect direct interaction
+      between FNDC-1 and LGG-1/LGG-2 in vivo. While FNDC-1 is functionally characterized as a
+      mitophagy receptor, direct physical interaction with C. elegans ATG8 homologs has not been
+      demonstrated experimentally.
+    hypothesis: FNDC-1 directly binds LGG-1/LGG-2 via its LIR motif to recruit autophagosomes to mitochondria
+  - description: &gt;
+      Site-directed mutagenesis of the predicted LIR motif in FNDC-1 followed by functional rescue
+      assays (paternal mitochondria elimination, HR-induced mitophagy). This would confirm that
+      the LIR motif is required for FNDC-1 function in C. elegans and allow comparison with
+      mammalian FUNDC1 regulatory mechanisms.
+    hypothesis: The LIR motif is essential for FNDC-1 mitophagy receptor function
+  - description: &gt;
+      Phosphoproteomics analysis of FNDC-1 under normoxic vs. hypoxic conditions to identify
+      regulatory phosphorylation sites. This would reveal whether C. elegans FNDC-1 is regulated
+      by phosphorylation similar to mammalian FUNDC1, and identify the relevant kinases/phosphatases
+      in C. elegans.
+    hypothesis: FNDC-1 activity is regulated by hypoxia-dependent phosphorylation changes
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

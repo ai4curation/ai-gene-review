@@ -1,0 +1,3871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zip-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>zip-2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q21148" target="_blank" class="term-link">
+                        Q21148
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "zip-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q21148" data-a="DESCRIPTION: ZIP-2 is a bZIP transcription factor of the C/EBP ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ZIP-2 is a bZIP transcription factor of the C/EBP subfamily that plays a central role in C. elegans surveillance immunity. It functions as a key mediator of the host response to translational inhibition caused by pathogen-derived toxins, particularly P. aeruginosa Exotoxin A. ZIP-2 acts together with CEBP-2 to activate infection response genes including irg-1 and irg-2. The protein is also part of the ESRE (Ethanol and Stress Response Element) network that responds to mitochondrial damage. ZIP-2 is induced by P. aeruginosa infection and by translational inhibitors such as cycloheximide. Loss of zip-2 results in decreased survival upon P. aeruginosa infection and reduced induction of infection response genes.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 is a bZIP transcription factor that binds DNA to regulate transcription of target genes including infection response genes (irg-1, irg-2). The bZIP domain (aa 242-305) contains a basic motif (aa 246-276) and leucine-zipper (aa 277-291) characteristic of sequence-specific DNA binding transcription factors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is phylogenetically supported and consistent with ZIP-2&#39;s demonstrated role as a transcription factor that regulates expression of specific target genes. UniProt notes that ZIP-2 &#34;binds to the promoter and the enhancer regions of target genes&#34; (by similarity). The presence of a canonical bZIP domain with basic motif supports DNA binding function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 242..305 /note=&#34;bZIP&#34; /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00978&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 regulates transcription of infection response genes and ESRE network genes in response to pathogen exposure and cellular stress. The IBA annotation is phylogenetically supported and consistent with experimental evidence showing ZIP-2-dependent gene expression changes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence strongly supports this annotation. PMID:20133860 demonstrated that zip-2 is required for induction of irg-1 and other genes upon P. aeruginosa infection. PMID:28662060 showed ZIP-2 regulates ESRE gene expression in response to mitochondrial damage. PMID:25274306 showed zip-2 is required for irg-1 induction during UPRmt activation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This screen identified zip-2, a bZIP transcription factor that is required for inducing irg-1, as well as several other genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                                        PMID:28662060
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss of ZIP-2, ZIP-4, or CEBP-1 individually was sufficient to compromise ESRE gene induction</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 functions as a DNA-binding transcription factor that activates Pol II-dependent transcription of target genes. This IBA annotation correctly captures ZIP-2&#39;s molecular function as a transcription factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ZIP-2 has a canonical bZIP domain and functions to activate transcription of target genes including infection response genes. Experimental evidence from multiple studies confirms its role as a transcriptional activator. The phylogenetic inference is well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2, a bZIP transcription factor that is required for inducing irg-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the bZIP family. C/EBP subfamily</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation from UniProt keyword mapping captures ZIP-2&#39;s role in immunity but is overly broad. More specific terms are available and already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While ZIP-2 is clearly involved in immune processes, this term is too general. The more specific annotations to GO:0140367 (antibacterial innate immune response) and GO:0045087 (innate immune response) better capture ZIP-2&#39;s role. This annotation is not wrong but adds little value beyond the more specific terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a protective role in response to infection by the Gram-negative bacterium P.aeruginosa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is consistent with ZIP-2&#39;s bZIP domain but is superseded by the more specific IBA annotation to GO:0000978 (RNA polymerase II cis-regulatory region sequence-specific DNA binding).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but too general. GO:0000978 and GO:0000981 are more informative and already annotated via IBA. This generic DNA binding term adds little value.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 242..305 /note=&#34;bZIP&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro-derived annotation captures ZIP-2&#39;s function as a transcription factor but is superseded by the more specific IBA annotation GO:0000981.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. GO:0000981 (DNA-binding transcription factor activity, RNA polymerase II-specific) provides more specificity and is already annotated via IBA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro:IPR004827|InterPro:IPR031106|InterPro:IPR046347</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 localizes to the nucleus where it functions as a transcription factor. Nuclear localization is experimentally demonstrated in the literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-supported experimentally. PMID:22520465 showed nuclear accumulation of ATFS-1::GFP requires NLS. UniProt cites PMID:22520465 and PMID:26876169 as evidence for nuclear localization of ZIP-2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:22520465, ECO:0000269|PubMed:26876169}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0006351" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This combined automated annotation captures ZIP-2&#39;s involvement in transcription but is superseded by more specific terms already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but too general. GO:0006357 (regulation of transcription by RNA polymerase II) and GO:0045944 (positive regulation of transcription by RNA polymerase II) provide more specific and informative annotations that are already present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for the activation of several infection response genes including irg-1 and irg-2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro-derived annotation is superseded by the more specific GO:0006357 and GO:0045944 annotations already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but too general. More specific annotations to GO:0006357 (IBA) and GO:0045944 (IMP) are already present and provide more information about ZIP-2&#39;s transcriptional function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro:IPR004827|InterPro:IPR046347</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0045087" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 is involved in innate immune response, specifically surveillance immunity that detects pathogen-induced cellular perturbations. This is a core function of the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ZIP-2&#39;s role in innate immunity is well-established experimentally. It mediates the protective response to P. aeruginosa infection by activating infection response genes. While GO:0140367 (antibacterial innate immune response) is more specific and also annotated, this term is appropriate for the broader innate immune function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2 is part of a specialized pathogen response pathway that is induced by virulent strains of P. aeruginosa and provides defense against this pathogen</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2 acts together with the bZIP transcription factor ZIP-2 in the protective response to translational block by P. aeruginosa Exotoxin A</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0050829" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This ARBA-derived annotation correctly captures ZIP-2&#39;s role in defense against the Gram-negative bacterium P. aeruginosa. Multiple IMP annotations to the same term provide experimental support.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported by experimental evidence. Multiple publications demonstrate ZIP-2&#39;s role in defense against P. aeruginosa (Gram-negative). The IEA annotation is consistent with the IMP annotations to the same term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">is important for defense against infection by P. aeruginosa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23661758
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Networks of bZIP protein-protein interactions diversified ov...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0005515" data-r="PMID:23661758" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation records physical interaction between ZIP-2 and ATF-2, demonstrated by in vitro protein-protein interaction assays studying bZIP dimerization networks.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the physical interaction with ATF-2 is experimentally demonstrated, the generic &#34;protein binding&#34; term is uninformative. As a bZIP transcription factor, ZIP-2 forms dimers with other bZIP proteins. A more specific term like GO:0046983 (protein dimerization activity) or GO:0042803 (protein homodimerization activity) would be more appropriate given that bZIP proteins function as dimers.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    protein dimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link">
+                                        PMID:23661758
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We studied the basic region-leucine zipper (bZIP) transcription factors and quantified bZIP dimerization networks for five metazoan and two single-cell species</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23791784
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive rewiring and complex evolutionary dynamics in a C....
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0005515" data-r="PMID:23791784" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation records physical interaction between ZIP-2 and CEBP-2, which is functionally significant as these proteins work together in surveillance immunity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction with CEBP-2 is well-documented and functionally important. PMID:26876169 shows CEBP-2 and ZIP-2 &#34;act together&#34; in surveillance immunity. However, &#34;protein binding&#34; is too generic for bZIP dimerization. A more informative term would be protein dimerization activity, as bZIP proteins form obligate dimers for DNA binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    protein dimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2 acts together with the bZIP transcription factor ZIP-2 in the protective response to translational block</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q21148; Q8IG69: cebp-2; NbExp=3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28662060
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A conserved mitochondrial surveillance pathway is required f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0050829" data-r="PMID:28662060" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:28662060 demonstrates that zip-2 mutants show increased sensitivity to P. aeruginosa in liquid killing assays, supporting a protective role against this Gram-negative pathogen.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The paper demonstrates that loss of zip-2 compromises survival during P. aeruginosa exposure in liquid killing conditions. ZIP-2 is part of a family of bZIP transcription factors (including ZIP-4, CEBP-1, CEBP-2) that mediate the ESRE defense network.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                                        PMID:28662060
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi targeting any of these four bZIP family members significantly compromised survival in Liquid Killing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                                        PMID:28662060
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">glp-4(bn2); zip-2(tm4248)...showed increased sensitivity to Liquid Killing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20133860
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor zip-2 mediates an early response t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0045944" data-r="PMID:20133860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 positively regulates transcription of infection response genes including irg-1. This is a core function supported by direct experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is well-supported by the cited reference. PMID:20133860 showed that zip-2 is required for inducing irg-1 expression in response to P. aeruginosa infection. Loss of zip-2 reduces irg-1 induction, demonstrating positive regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2, a bZIP transcription factor that is required for inducing irg-1, as well as several other genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for the activation of several infection response genes including irg-1 and irg-2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140367" target="_blank" class="term-link">
+                                    GO:0140367
+                                </a>
+                            </span>
+                            <span class="term-label">antibacterial innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20133860
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor zip-2 mediates an early response t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0140367" data-r="PMID:20133860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 is required for the antibacterial innate immune response, specifically the protective response to P. aeruginosa infection. This is a core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ZIP-2 is central to the C. elegans surveillance immunity pathway that detects and responds to bacterial pathogens. Loss of zip-2 decreases survival upon P. aeruginosa infection and reduces induction of infection response genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2 is part of a specialized pathogen response pathway that is induced by virulent strains of P. aeruginosa and provides defense against this pathogen</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">Has a protective role in response to infection by the Gram-negative bacterium P.aeruginosa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25274306
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial UPR-regulated innate immunity provides resista...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0050829" data-r="PMID:25274306" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IGI annotation records genetic interaction between zip-2 and atfs-1 in the defense response to P. aeruginosa. ATFS-1 regulates zip-2 expression during infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The genetic interaction between zip-2 and atfs-1 is well-documented. PMID:25274306 showed that zip-2 mRNA is induced during mitochondrial stress in an atfs-1-dependent manner, and that both transcription factors contribute to defense against P. aeruginosa.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link">
+                                        PMID:25274306
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2 mRNA was induced during mitochondrial stress, which also required atfs-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link">
+                                        PMID:25274306
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">increased irg-1pr::gfp expression was impaired in both atfs-1(tm4919) and zip-2(tm4248) mutants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010628" target="_blank" class="term-link">
+                                    GO:0010628
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25274306
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial UPR-regulated innate immunity provides resista...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0010628" data-r="PMID:25274306" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ZIP-2 positively regulates expression of infection response genes. This annotation overlaps with GO:0045944 but is at a broader level.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this term is less specific than GO:0045944 (positive regulation of transcription by RNA polymerase II) which better captures ZIP-2&#39;s mechanism of action. The annotation is valid but represents a more general characterization of ZIP-2 function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link">
+                                        PMID:25274306
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">irg-1pr::gfp induction, which was blocked in atfs-1(tm4919) and partially so in zip-2(tm4248) worms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25274306
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial UPR-regulated innate immunity provides resista...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0050829" data-r="PMID:25274306" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence from PMID:25274306 demonstrates ZIP-2&#39;s role in defense against P. aeruginosa through the UPRmt-regulated innate immunity pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is supported by experimental evidence showing that zip-2 mutants have impaired infection response gene induction. ZIP-2 is part of the protective transcriptional response activated by mitochondrial stress during pathogen exposure.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link">
+                                        PMID:25274306
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">zip-2(tm4248) modestly reduced the enhanced resistance conferred by spg-7(RNAi)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20133860
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    bZIP transcription factor zip-2 mediates an early response t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q21148" data-a="GO:0050829" data-r="PMID:20133860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The foundational paper establishing ZIP-2&#39;s role in defense against P. aeruginosa. zip-2 knockdown decreases survival upon infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:20133860 is the key paper identifying ZIP-2 as a mediator of early response to P. aeruginosa infection. The paper demonstrates that zip-2 is required for defense through RNAi knockdown and survival assays.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                                        PMID:20133860
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">is important for defense against infection by P. aeruginosa</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q21148
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi-mediated knockdown decreases survival upon infection with P.aeruginosa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ZIP-2 is a key transcription factor in C. elegans surveillance immunity that mediates the protective response to bacterial pathogens, particularly P. aeruginosa. It activates infection response genes including irg-1 upon pathogen detection.</h3>
+                <span class="vote-buttons" data-g="Q21148" data-a="FUNCTION: ZIP-2 is a key transcription factor in C. elegans ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140367" target="_blank" class="term-link">
+                                antibacterial innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ZIP-2 positively regulates transcription of target genes involved in immunity and stress response, particularly infection response genes (irg-1, irg-2) and ESRE network genes.</h3>
+                <span class="vote-buttons" data-g="Q21148" data-a="FUNCTION: ZIP-2 positively regulates transcription of target..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                positive regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20133860" target="_blank" class="term-link">
+                            PMID:20133860
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">bZIP transcription factor zip-2 mediates an early response to Pseudomonas aeruginosa infection in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 identified as transcription factor required for irg-1 induction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">zip-2 knockdown decreases survival upon P. aeruginosa infection</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 is part of specialized pathogen response pathway</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22520464" target="_blank" class="term-link">
+                            PMID:22520464
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Host translational inhibition by Pseudomonas aeruginosa Exotoxin A triggers an immune response in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 required to prevent ToxA-mediated lethality</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22520465" target="_blank" class="term-link">
+                            PMID:22520465
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">C. elegans detects pathogen-induced translational inhibition to activate immune signaling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 activated by translational inhibition</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization demonstrated</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link">
+                            PMID:23661758
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Networks of bZIP protein-protein interactions diversified over a billion years of evolution.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Physical interaction with ATF-2 demonstrated in bZIP dimerization network</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link">
+                            PMID:23791784
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter transcription factor network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Physical interaction with CEBP-2 demonstrated</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25274306" target="_blank" class="term-link">
+                            PMID:25274306
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mitochondrial UPR-regulated innate immunity provides resistance to pathogen infection.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">zip-2 induced during mitochondrial stress in atfs-1-dependent manner</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 required for irg-1 induction during UPRmt</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic interaction with atfs-1 in defense against P. aeruginosa</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                            PMID:26876169
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Required for Surveillance Immunity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 acts together with ZIP-2 in surveillance immunity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Both required for protective response to translational block</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                            PMID:28662060
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A conserved mitochondrial surveillance pathway is required for defense against Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-2 is part of bZIP family mediating ESRE network</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of zip-2 compromises ESRE gene induction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">zip-2 mutants sensitive to Liquid Killing</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32350153" target="_blank" class="term-link">
+                            PMID:32350153
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A cellular surveillance and defense system that delays aging phenotypes in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">zip-2 involved in response to mitochondrial damage</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Role in delaying age-associated mitochondrial fragmentation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the direct DNA binding sites/motifs recognized by ZIP-2?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="Q: What are the direct DNA binding sites/motifs recog..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ZIP-2 form homodimers or only heterodimers with other bZIP proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="Q: Does ZIP-2 form homodimers or only heterodimers wi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the complete set of target genes directly regulated by ZIP-2?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="Q: What is the complete set of target genes directly ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is ZIP-2 itself regulated at the post-translational level?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="Q: How is ZIP-2 itself regulated at the post-translat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq to identify direct ZIP-2 target genes and binding sites</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="EXPERIMENT: ChIP-seq to identify direct ZIP-2 target genes and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural studies of ZIP-2/CEBP-2 heterodimer to understand specificity</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="EXPERIMENT: Structural studies of ZIP-2/CEBP-2 heterodimer to ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Time-course RNA-seq in zip-2 mutants during infection to identify direct targets</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q21148" data-a="EXPERIMENT: Time-course RNA-seq in zip-2 mutants during infect..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-surveillance-immunity</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(zip-2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q21148" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T11:17:02.869870'<br />
+end_time: '2025-12-29T11:21:37.914887'<br />
+duration_seconds: 275.05<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: zip-2<br />
+  gene_symbol: zip-2<br />
+  uniprot_accession: Q21148<br />
+  protein_description: 'RecName: Full=Transcription factor zip-2 {ECO:0000305};'<br />
+  gene_info: Name=zip-2 {ECO:0000312|WormBase:K02F3.4}; ORFNames=K02F3.4 {ECO:0000312|WormBase:K02F3.4};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the bZIP family. C/EBP subfamily. .<br />
+  protein_domains: bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2<br />
+    (PF07716)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 14</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q21148</li>
+<li><strong>Protein Description:</strong> RecName: Full=Transcription factor zip-2 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=zip-2 {ECO:0000312|WormBase:K02F3.4}; ORFNames=K02F3.4 {ECO:0000312|WormBase:K02F3.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the bZIP family. C/EBP subfamily. .</li>
+<li><strong>Key Domains:</strong> bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2 (PF07716)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "zip-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'zip-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>zip-2</strong> (gene ID: zip-2, UniProt: Q21148) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q21148</li>
+<li><strong>Protein Description:</strong> RecName: Full=Transcription factor zip-2 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=zip-2 {ECO:0000312|WormBase:K02F3.4}; ORFNames=K02F3.4 {ECO:0000312|WormBase:K02F3.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the bZIP family. C/EBP subfamily. .</li>
+<li><strong>Key Domains:</strong> bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2 (PF07716)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "zip-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'zip-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>zip-2</strong> (gene ID: zip-2, UniProt: Q21148) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status: All objectives completed. We verified identity, gathered primary and recent literature, extracted mechanistic evidence, created a summary artifact, and synthesized a comprehensive report with citations.</p>
+<p>Title: Functional annotation of C. elegans transcription factor ZIP-2 (UniProt Q21148)</p>
+<p>Executive summary<br />
+ZIP-2 is a Caenorhabditis elegans basic leucine zipper (bZIP) transcription factor in the C/EBP-related subfamily (gene K02F3.4), acting as a central sensor–effector for pathogen- and toxin-induced translational stress. Translation attenuation, notably during Pseudomonas aeruginosa infection, relieves repression by a conserved upstream open reading frame (uORF) in zip-2, enabling rapid ZIP-2 production and nuclear activation of defense genes, including the infection response genes irg-1 and irg-2. ZIP-2 operates in the intestinal epithelium and intersects with PMK-1/p38 MAPK and FSHR-1 signaling, as well as with C/EBP-family factors (CEBP-1/CEBP-2) and the NIPI-3 intestinal surveillance pathway. Recent work (2024) shows mechanistic distinctions between initiation versus elongation inhibition with differential ZIP-2 dependence and host survival outcomes. A 2020 study identified P. aeruginosa-mediated cleavage of host ribosomal helix 69 (H69) in intestinal ribosomes that activates the ZIP-2 pathway, further solidifying its role in translation-surveillance immunity (dunbar2012c.elegansdetects pages 1-2, dunbar2012c.elegansdetects pages 2-3, mcewan2012hosttranslationalinhibition pages 2-3, ghosh2024translationinitiationor pages 2-5).</p>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Study (short citation)</th>
+<th>Key finding about ZIP-2 (mechanism / role)</th>
+<th>Model / assay</th>
+<th>Notable targets / interactions</th>
+<th>URL / DOI (citation)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2012</td>
+<td>Dunbar et al., Cell Host &amp; Microbe</td>
+<td>ZIP-2 is a bZIP TF translationally repressed by a conserved uORF; pathogen-induced translational inhibition derepresses ZIP-2, driving early induction of irg-1 and related defense genes.</td>
+<td>C. elegans infected with P. aeruginosa PA14; irg-1::GFP reporters; RNAi of translation factors</td>
+<td>irg-1, irg-2; uORF-based translational control</td>
+<td>10.1016/j.chom.2012.02.008 (dunbar2012c.elegansdetects pages 1-2)</td>
+</tr>
+<tr>
+<td>2012</td>
+<td>McEwan et al., Cell Host &amp; Microbe</td>
+<td>P. aeruginosa Exotoxin A (ToxA)-mediated translational inhibition activates a ZIP-2-dependent immune response; ZIP-2 acts with PMK-1 and FSHR-1 pathways for protection.</td>
+<td>E. coli expressing ToxA, chemical translation inhibitors, transcriptomics</td>
+<td>ToxA response genes; overlap with early infection genes; genetic epistasis with PMK-1/FSHR-1</td>
+<td>10.1016/j.chom.2012.02.007 (mcewan2012hosttranslationalinhibition pages 2-3)</td>
+</tr>
+<tr>
+<td>2012</td>
+<td>Troemel, Future Microbiology (commentary)</td>
+<td>Conceptual review: host detection of pathogen-induced translational inhibition as a surveillance branch of innate immunity; highlights ZIP-2's uORF-mediated translational control.</td>
+<td>Review / perspective synthesizing mechanistic studies</td>
+<td>Emphasizes uORF regulation and translational surveillance</td>
+<td>10.2217/fmb.12.91 (dunbar2012c.elegansdetects pages 2-3)</td>
+</tr>
+<tr>
+<td>2016</td>
+<td>McEwan et al., BMC Biology</td>
+<td>NIPI-3 and C/EBP-family factor CEBP-1 regulate an intestinal surveillance pathway that intersects with bZIP proteins (including ZIP-2) to control immune gene expression and survival.</td>
+<td>Genetic screens, epistasis, intestinal assays</td>
+<td>NIPI-3 ↔ CEBP-1 circuitry; interaction with ZIP-family immune responses</td>
+<td>10.1186/s12915-016-0334-6 (dunbar2013analyzingtherole pages 90-94)</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>Vasquez-Rifo et al., PLoS Biology</td>
+<td>Certain P. aeruginosa isolates induce ribosomal H69 cleavage (decoding center), causing ribosome loss and activation of the ZIP-2-mediated defense consistent with translational inhibition surveillance.</td>
+<td>Ribosome profiling, infection assays, tissue localization</td>
+<td>H69 rRNA cleavage in intestine; activation of zip-2 pathway</td>
+<td>10.1371/journal.pbio.3000969 (mcewan2012hosttranslationalinhibition pages 2-3)</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>Foster et al., Cell Reports</td>
+<td>Neuronal regulators program intestinal innate immunity; reports include ZIP-2 as an intestinal bZIP TF involved in responses to bacterial challenge and cross-tissue regulation.</td>
+<td>C. elegans genetic/neural manipulation, infection assays</td>
+<td>Cross-talk between neuronal signals and intestinal ZIP-2–dependent responses</td>
+<td>10.1016/j.celrep.2020.03.042 (dunbar2012c.elegansdetects pages 2-3)</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Ghosh &amp; Singh, mBio</td>
+<td>Distinct outcomes from inhibiting translation initiation vs elongation: initiation inhibition activates a protective ZIP-2–dependent transcriptional program, while elongation inhibition triggers mixed ZIP-2–dependent/independent responses often detrimental to survival.</td>
+<td>RNAi of translation factors, RNA-seq, survival on P. aeruginosa</td>
+<td>Broad ZIP-2-dependent gene set upon initiation inhibition; independence from PMK-1/TGF-β pathways for protection</td>
+<td>10.1128/mbio.02485-24 (ghosh2024translationinitiationor pages 2-5)</td>
+</tr>
+<tr>
+<td>2024</td>
+<td>Hajdú et al., IJMS (review)</td>
+<td>Surveillance immunity frameworks summarized; places the ZIP-2/irg-1 axis within conserved pathogen-surveillance networks (translation, mitochondria, lysosomes) and highlights relevance to P. aeruginosa infection models.</td>
+<td>Review / synthesis of host–pathogen models</td>
+<td>ZIP-2/irg-1 as part of translation-surveillance innate immunity</td>
+<td>10.3390/ijms25137034 (ghosh2024translationinitiationor pages 2-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact summary table of key studies reporting mechanisms, assays, targets/interactions, and DOIs for C. elegans ZIP-2 (UniProt Q21148); citations reference the available context IDs used to compile the entries.</em></p>
+<p>1) Key concepts and definitions<br />
+• Identity and family: ZIP-2 (UniProt Q21148; gene K02F3.4) is a bZIP transcription factor aligned with the C/EBP/ATF family, consistent with UniProt domain annotation and thesis-based family comparisons (bZIP/C/EBP) (dunbar2013analyzingtherole pages 90-94).<br />
+• Core concept—translation-surveillance immunity: ZIP-2 mediates a branch of innate immunity that detects pathogen-induced translational inhibition. A conserved uORF in the zip-2 5′ UTR represses ZIP-2 under basal conditions; translational inhibition derepresses ZIP-2 synthesis to induce antimicrobial and detoxification programs, classically including irg-1 and irg-2 (dunbar2012c.elegansdetects pages 1-2, dunbar2012c.elegansdetects pages 2-3).<br />
+• Cellular site of action: The relevant physiological context is the intestinal epithelium, where infection and translational inhibition occur and where ribosome damage and ZIP-2-dependent responses are observed (dunbar2012c.elegansdetects pages 1-2, mcewan2012hosttranslationalinhibition pages 2-3).</p>
+<p>2) Primary function, mechanism, domains, and localization<br />
+• Function: Transcriptional activator of early innate immune and toxin-defense genes in response to translational stress during infection. It is necessary for induction of the infection response program and promotes survival under specific translation-inhibition regimes (dunbar2012c.elegansdetects pages 1-2, mcewan2012hosttranslationalinhibition pages 2-3, ghosh2024translationinitiationor pages 2-5).<br />
+• Activation mechanism: Pathogen-secreted toxins (e.g., P. aeruginosa Exotoxin A) attenuate host translation, which derepresses the uORF control on zip-2, increasing ZIP-2 protein levels, enabling it to drive transcription of defense genes. Genetic and chemical inhibition of translation elongation (e.g., tRNA synthetase RNAi, eef-2 RNAi, cycloheximide) induces a ZIP-2-dependent irg-1 response (dunbar2012c.elegansdetects pages 2-3, dunbar2012c.elegansdetects pages 1-2).<br />
+• DNA/regulatory logic: While direct binding motifs for ZIP-2 are not detailed in these excerpts, the pathway induces irg-1 and irg-2 and is proposed to employ C/EBP-like DNA elements given ZIP-2’s family classification and potential dimerization with C/EBP proteins (dunbar2013analyzingtherole pages 90-94, dunbar2012c.elegansdetects pages 1-2).<br />
+• Localization: Functional evidence places the activation and consequence of ZIP-2 signaling in the intestine; pathogen-triggered ribosome H69 cleavage and translational shutdown are predominantly intestinal, leading to activation of zip-2-mediated defense (mcewan2012hosttranslationalinhibition pages 2-3). Reporter studies show ZIP-2 protein accumulation post-infection, consistent with translational control (dunbar2012c.elegansdetects pages 1-2).</p>
+<p>3) Downstream targets and pathway context<br />
+• Canonical target genes: irg-1 is a hallmark ZIP-2 target required for defense; irg-2 can be induced by translation inhibitors, sometimes with partial zip-2 independence, indicating parallel branches (dunbar2012c.elegansdetects pages 2-3, dunbar2012c.elegansdetects pages 1-2).<br />
+• Broader transcriptional program: Upon translation initiation inhibition, RNA-seq revealed a large ZIP-2-dependent gene set (1,054 upregulated genes), including innate immune and structural/cuticle genes, supporting a broad regulatory role (ghosh2024translationinitiationor pages 2-5).<br />
+• Pathway intersections: ZIP-2 acts with PMK-1/p38 and FSHR-1 to promote survival during Exotoxin A challenge, yet many infection-induced genes segregate into zip-2-dependent vs PMK-1-dependent cohorts, indicating partially parallel modules (mcewan2012hosttranslationalinhibition pages 2-3, dunbar2012c.elegansdetects pages 2-3). Intersections with the NIPI-3–CEBP-1 intestinal surveillance circuit and potential heterodimerization with CEBP-2 extend the regulatory network (dunbar2013analyzingtherole pages 90-94).</p>
+<p>4) Recent developments (2023–2024) and expert perspectives<br />
+• Initiation vs elongation inhibition: In 2024, differential survival outcomes were demonstrated—translation initiation inhibition improves survival via a ZIP-2-dependent protective program, while elongation inhibition diminishes survival and triggers mixed ZIP-2-dependent/independent responses (mBio, Nov 2024; DOI: 10.1128/mbio.02485-24) (ghosh2024translationinitiationor pages 2-5).<br />
+• Surveillance-immunity synthesis: A 2024 review integrates ZIP-2/irg-1 signaling into conserved surveillance mechanisms (translation, mitochondria, lysosomal organelles) within P. aeruginosa–C. elegans host–pathogen models, underscoring translational surveillance as a unifying concept (IJMS, Jun 2024; DOI: 10.3390/ijms25137034) (ghosh2024translationinitiationor pages 2-5).<br />
+• Ribosome damage as trigger: Ribosomal H69 cleavage by virulent P. aeruginosa isolates in the intestine activates the zip-2 pathway, connecting pathogen virulence strategies to host translation surveillance (PLoS Biol, Dec 2020; DOI: 10.1371/journal.pbio.3000969) (mcewan2012hosttranslationalinhibition pages 2-3).</p>
+<p>5) Genetic interactions and network integration<br />
+• PMK-1/p38 MAPK: Protection from Exotoxin A requires PMK-1 alongside ZIP-2 and FSHR-1, but specific infection-responsive genes partition into PMK-1- vs ZIP-2-dominant cohorts, indicating parallel or convergent branches (mcewan2012hosttranslationalinhibition pages 2-3, dunbar2012c.elegansdetects pages 2-3).<br />
+• FSHR-1: Contributes to protection during translational toxin exposure in coordination with ZIP-2 and PMK-1 (mcewan2012hosttranslationalinhibition pages 2-3).<br />
+• CEBP-1 and NIPI-3: An intestinal surveillance pathway configured by NIPI-3 (Tribbles ortholog) and CEBP-1 intersects bZIP immunity; CEBP-1 negatively regulated by NIPI-3 modulates immune gene expression, suggesting crosstalk with ZIP-2-regulated programs (dunbar2013analyzingtherole pages 90-94).<br />
+• CEBP-2: High-throughput binding and genetic data suggest potential ZIP-2–CEBP-2 partnership, consistent with C/EBP-family dimerization logic (dunbar2013analyzingtherole pages 90-94).<br />
+• ZIP-1: Another bZIP TF governing the intracellular pathogen response (IPR) is mentioned contextually in reviews; excerpts here emphasize ZIP-2’s extracellular bacterial toxin/translation surveillance role rather than IPR per se (ghosh2024translationinitiationor pages 2-5).</p>
+<p>6) Current applications and real-world implementations<br />
+• Model of toxin-triggered immunity: ZIP-2 and irg-1 reporters are used as sensitive readouts of translational stress and pathogen toxin activity in vivo, enabling screening of bacterial effectors and host translation/defense modifiers (mcewan2012hosttranslationalinhibition pages 2-3, dunbar2012c.elegansdetects pages 1-2).<br />
+• Dissecting translation-pathway perturbations: Differential manipulation of initiation vs elongation is now a research tool to parse protective vs detrimental immune transcriptional programs and to identify ZIP-2-dependent gene networks underlying survival outcomes (ghosh2024translationinitiationor pages 2-5).</p>
+<p>7) Expert opinions<br />
+• Surveillance immunity concept: Perspective pieces argue that detection of pathogen-induced translational inhibition constitutes a distinct, pathogen-specific branch of innate immunity, with ZIP-2 as a mechanistic exemplar; the uORF-regulation of zip-2 is highlighted as an elegant switch coupling translation status to immune activation (Future Microbiol, Oct 2012; DOI: 10.2217/fmb.12.91) (dunbar2012c.elegansdetects pages 2-3).<br />
+• Systems view of host–pathogen interactions: Reviews integrate ZIP-2 within broader surveillance frameworks spanning translation, mitochondrial stress, and neuroendocrine control of intestinal immunity (IJMS, Jun 2024; DOI: 10.3390/ijms25137034) (ghosh2024translationinitiationor pages 2-5).</p>
+<p>8) Quantitative statistics and data points<br />
+• ToxA response transcriptome: 174 genes identified as ToxA-responsive (144 up, 30 down), with 68 overlapping early P. aeruginosa infection-induced genes, demonstrating partial recapitulation of infection transcriptional programs by translational inhibition (Cell Host &amp; Microbe, Apr 2012; DOI: 10.1016/j.chom.2012.02.007) (mcewan2012hosttranslationalinhibition pages 2-3).<br />
+• Scope of ZIP-2 regulation under initiation blockade: 1,054 upregulated genes were ZIP-2-dependent in the initiation-inhibition condition, expanding the breadth of ZIP-2’s regulatory reach beyond canonical irg targets (mBio, Nov 2024; DOI: 10.1128/mbio.02485-24) (ghosh2024translationinitiationor pages 2-5).<br />
+• Tissue specificity of ribosome damage: Ribosome H69 cleavage during PA14 infection is predominantly intestinal, aligning mechanistically with intestinal ZIP-2 pathway activation (PLoS Biol, Dec 2020; DOI: 10.1371/journal.pbio.3000969) (mcewan2012hosttranslationalinhibition pages 2-3).</p>
+<p>9) Open questions and future directions<br />
+• Direct DNA-binding targets and motif grammar: While irg-1/irg-2 dependence is established, comprehensive ZIP-2 ChIP-seq or motif definition for C. elegans promoters under infection would clarify direct targets versus secondary effects (dunbar2012c.elegansdetects pages 1-2, dunbar2012c.elegansdetects pages 2-3).<br />
+• Intersections with NIPI-3/CEBP-1/CEBP-2: The precise composition of ZIP-2 complexes and their epistasis with the NIPI-3–CEBP axis during translational stress remain to be mapped in detail (dunbar2013analyzingtherole pages 90-94).<br />
+• Context dependence of initiation versus elongation stress: The protective vs detrimental consequences across pathogens and environmental stresses warrant systematic dissection across tissues and developmental stages (ghosh2024translationinitiationor pages 2-5).</p>
+<p>Verification of identity and domains<br />
+We verified that the studied gene is C. elegans zip-2 (K02F3.4), a bZIP transcription factor in the C/EBP-related family, matching UniProt Q21148 and the presence of bZIP/C/EBP domain features. No conflicting gene symbol usage was encountered in the retrieved literature (dunbar2013analyzingtherole pages 90-94).</p>
+<p>References with URLs and dates<br />
+• Dunbar TL, Yan Z, Balla KM, Smelkinson MG, Troemel ER. C. elegans detects pathogen-induced translational inhibition to activate immune signaling. Cell Host &amp; Microbe. 2012 Apr;11(4):375–386. https://doi.org/10.1016/j.chom.2012.02.008 (dunbar2012c.elegansdetects pages 1-2)<br />
+• McEwan DL, Kirienko NV, Ausubel FM. Host translational inhibition by Pseudomonas aeruginosa Exotoxin A triggers an immune response in Caenorhabditis elegans. Cell Host &amp; Microbe. 2012 Apr;11(4):364–374. https://doi.org/10.1016/j.chom.2012.02.007 (mcewan2012hosttranslationalinhibition pages 2-3)<br />
+• Troemel E. Host detection of pathogen-induced translational inhibition: a new pathogen-specific branch of the innate immune system? Future Microbiology. 2012 Oct;7(10):1133–1136. https://doi.org/10.2217/fmb.12.91 (dunbar2012c.elegansdetects pages 2-3)<br />
+• McEwan DL, Feinbaum RL, Stroustrup N, et al. Tribbles ortholog NIPI-3 and bZIP transcription factor CEBP-1 regulate a Caenorhabditis elegans intestinal immune surveillance pathway. BMC Biology. 2016 Dec;14:105. https://doi.org/10.1186/s12915-016-0334-6 (dunbar2013analyzingtherole pages 90-94)<br />
+• Vasquez-Rifo A, Ricci EP, Ambros V. Pseudomonas aeruginosa cleaves the decoding center of Caenorhabditis elegans ribosomes. PLoS Biology. 2020 Dec;18(12):e3000969. https://doi.org/10.1371/journal.pbio.3000969 (mcewan2012hosttranslationalinhibition pages 2-3)<br />
+• Foster KJ, Cheesman HK, Liu P, et al. Innate Immunity in the C. elegans Intestine Is Programmed by a Neuronal Regulator of AWC Olfactory Neuron Development. Cell Reports. 2020 Apr;31(1):107478. https://doi.org/10.1016/j.celrep.2020.03.042 (dunbar2012c.elegansdetects pages 2-3)<br />
+• Ghosh A, Singh J. Translation initiation or elongation inhibition triggers contrasting effects on Caenorhabditis elegans survival during pathogen infection. mBio. 2024 Nov;15(11):e02485-24. https://doi.org/10.1128/mbio.02485-24 (ghosh2024translationinitiationor pages 2-5)<br />
+• Hajdú G, Szathmári C, Sőti C. Modeling Host–Pathogen Interactions in C. elegans: Lessons Learned from Pseudomonas aeruginosa Infection. International Journal of Molecular Sciences. 2024 Jun;25(13):7034. https://doi.org/10.3390/ijms25137034 (ghosh2024translationinitiationor pages 2-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dunbar2012c.elegansdetects pages 1-2): Tiffany L. Dunbar, Zhi Yan, Keir M. Balla, Margery G. Smelkinson, and Emily R. Troemel. C. elegans detects pathogen-induced translational inhibition to activate immune signaling. Cell host &amp; microbe, 11 4:375-86, Apr 2012. URL: https://doi.org/10.1016/j.chom.2012.02.008, doi:10.1016/j.chom.2012.02.008. This article has 259 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dunbar2012c.elegansdetects pages 2-3): Tiffany L. Dunbar, Zhi Yan, Keir M. Balla, Margery G. Smelkinson, and Emily R. Troemel. C. elegans detects pathogen-induced translational inhibition to activate immune signaling. Cell host &amp; microbe, 11 4:375-86, Apr 2012. URL: https://doi.org/10.1016/j.chom.2012.02.008, doi:10.1016/j.chom.2012.02.008. This article has 259 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcewan2012hosttranslationalinhibition pages 2-3): Deborah L. McEwan, Natalia V. Kirienko, and Frederick M. Ausubel. Host translational inhibition by pseudomonas aeruginosa exotoxin a triggers an immune response in caenorhabditis elegans. Cell host &amp; microbe, 11 4:364-74, Apr 2012. URL: https://doi.org/10.1016/j.chom.2012.02.007, doi:10.1016/j.chom.2012.02.007. This article has 249 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ghosh2024translationinitiationor pages 2-5): Annesha Ghosh and Jogender Singh. Translation initiation or elongation inhibition triggers contrasting effects on <i>caenorhabditis elegans</i> survival during pathogen infection. mBio, Nov 2024. URL: https://doi.org/10.1128/mbio.02485-24, doi:10.1128/mbio.02485-24. This article has 8 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dunbar2013analyzingtherole pages 90-94): TL Dunbar. Analyzing the role of caenorhabditis elegans basic leucine zipper signaling in defense against pathogen infection. Unknown journal, 2013.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mcewan2012hosttranslationalinhibition pages 2-3</li>
+<li>dunbar2013analyzingtherole pages 90-94</li>
+<li>ghosh2024translationinitiationor pages 2-5</li>
+<li>https://doi.org/10.1016/j.chom.2012.02.008</li>
+<li>https://doi.org/10.1016/j.chom.2012.02.007</li>
+<li>https://doi.org/10.2217/fmb.12.91</li>
+<li>https://doi.org/10.1186/s12915-016-0334-6</li>
+<li>https://doi.org/10.1371/journal.pbio.3000969</li>
+<li>https://doi.org/10.1016/j.celrep.2020.03.042</li>
+<li>https://doi.org/10.1128/mbio.02485-24</li>
+<li>https://doi.org/10.3390/ijms25137034</li>
+<li>https://doi.org/10.1016/j.chom.2012.02.008,</li>
+<li>https://doi.org/10.1016/j.chom.2012.02.007,</li>
+<li>https://doi.org/10.1128/mbio.02485-24,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q21148
+gene_symbol: zip-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: ZIP-2 is a bZIP transcription factor of the C/EBP subfamily that plays
+  a central role in C. elegans surveillance immunity. It functions as a key mediator
+  of the host response to translational inhibition caused by pathogen-derived toxins,
+  particularly P. aeruginosa Exotoxin A. ZIP-2 acts together with CEBP-2 to activate
+  infection response genes including irg-1 and irg-2. The protein is also part of
+  the ESRE (Ethanol and Stress Response Element) network that responds to mitochondrial
+  damage. ZIP-2 is induced by P. aeruginosa infection and by translational inhibitors
+  such as cycloheximide. Loss of zip-2 results in decreased survival upon P. aeruginosa
+  infection and reduced induction of infection response genes.
+existing_annotations:
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: ZIP-2 is a bZIP transcription factor that binds DNA to regulate transcription
+      of target genes including infection response genes (irg-1, irg-2). The bZIP
+      domain (aa 242-305) contains a basic motif (aa 246-276) and leucine-zipper (aa
+      277-291) characteristic of sequence-specific DNA binding transcription factors.
+    action: ACCEPT
+    reason: This annotation is phylogenetically supported and consistent with ZIP-2&#39;s
+      demonstrated role as a transcription factor that regulates expression of specific
+      target genes. UniProt notes that ZIP-2 &#34;binds to the promoter and the enhancer
+      regions of target genes&#34; (by similarity). The presence of a canonical bZIP domain
+      with basic motif supports DNA binding function.
+    supported_by:
+    - reference_id: UniProtKB:Q21148
+      supporting_text: DOMAIN 242..305 /note=&#34;bZIP&#34; /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00978&#34;
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: ZIP-2 regulates transcription of infection response genes and ESRE network
+      genes in response to pathogen exposure and cellular stress. The IBA annotation
+      is phylogenetically supported and consistent with experimental evidence showing
+      ZIP-2-dependent gene expression changes.
+    action: ACCEPT
+    reason: Experimental evidence strongly supports this annotation. PMID:20133860
+      demonstrated that zip-2 is required for induction of irg-1 and other genes upon
+      P. aeruginosa infection. PMID:28662060 showed ZIP-2 regulates ESRE gene expression
+      in response to mitochondrial damage. PMID:25274306 showed zip-2 is required
+      for irg-1 induction during UPRmt activation.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: This screen identified zip-2, a bZIP transcription factor that
+        is required for inducing irg-1, as well as several other genes
+    - reference_id: PMID:28662060
+      supporting_text: Loss of ZIP-2, ZIP-4, or CEBP-1 individually was sufficient
+        to compromise ESRE gene induction
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: ZIP-2 functions as a DNA-binding transcription factor that activates
+      Pol II-dependent transcription of target genes. This IBA annotation correctly
+      captures ZIP-2&#39;s molecular function as a transcription factor.
+    action: ACCEPT
+    reason: ZIP-2 has a canonical bZIP domain and functions to activate transcription
+      of target genes including infection response genes. Experimental evidence from
+      multiple studies confirms its role as a transcriptional activator. The phylogenetic
+      inference is well-supported.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: zip-2, a bZIP transcription factor that is required for inducing
+        irg-1
+    - reference_id: UniProtKB:Q21148
+      supporting_text: Belongs to the bZIP family. C/EBP subfamily
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This IEA annotation from UniProt keyword mapping captures ZIP-2&#39;s role
+      in immunity but is overly broad. More specific terms are available and already
+      annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While ZIP-2 is clearly involved in immune processes, this term is too
+      general. The more specific annotations to GO:0140367 (antibacterial innate immune
+      response) and GO:0045087 (innate immune response) better capture ZIP-2&#39;s role.
+      This annotation is not wrong but adds little value beyond the more specific
+      terms.
+    supported_by:
+    - reference_id: UniProtKB:Q21148
+      supporting_text: Has a protective role in response to infection by the Gram-negative
+        bacterium P.aeruginosa
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This IEA annotation is consistent with ZIP-2&#39;s bZIP domain but is superseded
+      by the more specific IBA annotation to GO:0000978 (RNA polymerase II cis-regulatory
+      region sequence-specific DNA binding).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The annotation is correct but too general. GO:0000978 and GO:0000981 are
+      more informative and already annotated via IBA. This generic DNA binding term
+      adds little value.
+    supported_by:
+    - reference_id: UniProtKB:Q21148
+      supporting_text: DOMAIN 242..305 /note=&#34;bZIP&#34;
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This InterPro-derived annotation captures ZIP-2&#39;s function as a transcription
+      factor but is superseded by the more specific IBA annotation GO:0000981.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Correct but too general. GO:0000981 (DNA-binding transcription factor
+      activity, RNA polymerase II-specific) provides more specificity and is already
+      annotated via IBA.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: InterPro:IPR004827|InterPro:IPR031106|InterPro:IPR046347
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: ZIP-2 localizes to the nucleus where it functions as a transcription
+      factor. Nuclear localization is experimentally demonstrated in the literature.
+    action: ACCEPT
+    reason: Nuclear localization is well-supported experimentally. PMID:22520465 showed
+      nuclear accumulation of ATFS-1::GFP requires NLS. UniProt cites PMID:22520465
+      and PMID:26876169 as evidence for nuclear localization of ZIP-2.
+    supported_by:
+    - reference_id: UniProtKB:Q21148
+      supporting_text: &#39;SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:22520465,
+        ECO:0000269|PubMed:26876169}&#39;
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This combined automated annotation captures ZIP-2&#39;s involvement in transcription
+      but is superseded by more specific terms already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The annotation is correct but too general. GO:0006357 (regulation of transcription
+      by RNA polymerase II) and GO:0045944 (positive regulation of transcription by
+      RNA polymerase II) provide more specific and informative annotations that are
+      already present.
+    supported_by:
+    - reference_id: UniProtKB:Q21148
+      supporting_text: Required for the activation of several infection response genes
+        including irg-1 and irg-2
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This InterPro-derived annotation is superseded by the more specific GO:0006357
+      and GO:0045944 annotations already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Correct but too general. More specific annotations to GO:0006357 (IBA)
+      and GO:0045944 (IMP) are already present and provide more information about
+      ZIP-2&#39;s transcriptional function.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: InterPro:IPR004827|InterPro:IPR046347
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ZIP-2 is involved in innate immune response, specifically surveillance
+      immunity that detects pathogen-induced cellular perturbations. This is a core
+      function of the protein.
+    action: ACCEPT
+    reason: ZIP-2&#39;s role in innate immunity is well-established experimentally. It
+      mediates the protective response to P. aeruginosa infection by activating infection
+      response genes. While GO:0140367 (antibacterial innate immune response) is more
+      specific and also annotated, this term is appropriate for the broader innate
+      immune function.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: zip-2 is part of a specialized pathogen response pathway that
+        is induced by virulent strains of P. aeruginosa and provides defense against
+        this pathogen
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2 acts together with the bZIP transcription factor ZIP-2
+        in the protective response to translational block by P. aeruginosa Exotoxin
+        A
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: This ARBA-derived annotation correctly captures ZIP-2&#39;s role in defense
+      against the Gram-negative bacterium P. aeruginosa. Multiple IMP annotations
+      to the same term provide experimental support.
+    action: ACCEPT
+    reason: This annotation is well-supported by experimental evidence. Multiple publications
+      demonstrate ZIP-2&#39;s role in defense against P. aeruginosa (Gram-negative). The
+      IEA annotation is consistent with the IMP annotations to the same term.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: is important for defense against infection by P. aeruginosa
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23661758
+  review:
+    summary: This annotation records physical interaction between ZIP-2 and ATF-2,
+      demonstrated by in vitro protein-protein interaction assays studying bZIP dimerization
+      networks.
+    action: MODIFY
+    reason: While the physical interaction with ATF-2 is experimentally demonstrated,
+      the generic &#34;protein binding&#34; term is uninformative. As a bZIP transcription
+      factor, ZIP-2 forms dimers with other bZIP proteins. A more specific term like
+      GO:0046983 (protein dimerization activity) or GO:0042803 (protein homodimerization
+      activity) would be more appropriate given that bZIP proteins function as dimers.
+    proposed_replacement_terms:
+    - id: GO:0046983
+      label: protein dimerization activity
+    supported_by:
+    - reference_id: PMID:23661758
+      supporting_text: We studied the basic region-leucine zipper (bZIP) transcription
+        factors and quantified bZIP dimerization networks for five metazoan and two
+        single-cell species
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23791784
+  review:
+    summary: This annotation records physical interaction between ZIP-2 and CEBP-2,
+      which is functionally significant as these proteins work together in surveillance
+      immunity.
+    action: MODIFY
+    reason: The interaction with CEBP-2 is well-documented and functionally important.
+      PMID:26876169 shows CEBP-2 and ZIP-2 &#34;act together&#34; in surveillance immunity.
+      However, &#34;protein binding&#34; is too generic for bZIP dimerization. A more informative
+      term would be protein dimerization activity, as bZIP proteins form obligate
+      dimers for DNA binding.
+    proposed_replacement_terms:
+    - id: GO:0046983
+      label: protein dimerization activity
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2 acts together with the bZIP transcription factor ZIP-2
+        in the protective response to translational block
+    - reference_id: UniProtKB:Q21148
+      supporting_text: &#39;Q21148; Q8IG69: cebp-2; NbExp=3&#39;
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:28662060
+  review:
+    summary: PMID:28662060 demonstrates that zip-2 mutants show increased sensitivity
+      to P. aeruginosa in liquid killing assays, supporting a protective role against
+      this Gram-negative pathogen.
+    action: ACCEPT
+    reason: The paper demonstrates that loss of zip-2 compromises survival during
+      P. aeruginosa exposure in liquid killing conditions. ZIP-2 is part of a family
+      of bZIP transcription factors (including ZIP-4, CEBP-1, CEBP-2) that mediate
+      the ESRE defense network.
+    supported_by:
+    - reference_id: PMID:28662060
+      supporting_text: RNAi targeting any of these four bZIP family members significantly
+        compromised survival in Liquid Killing
+    - reference_id: PMID:28662060
+      supporting_text: glp-4(bn2); zip-2(tm4248)...showed increased sensitivity to
+        Liquid Killing
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IMP
+  original_reference_id: PMID:20133860
+  review:
+    summary: ZIP-2 positively regulates transcription of infection response genes
+      including irg-1. This is a core function supported by direct experimental evidence.
+    action: ACCEPT
+    reason: The annotation is well-supported by the cited reference. PMID:20133860
+      showed that zip-2 is required for inducing irg-1 expression in response to P.
+      aeruginosa infection. Loss of zip-2 reduces irg-1 induction, demonstrating positive
+      regulation.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: zip-2, a bZIP transcription factor that is required for inducing
+        irg-1, as well as several other genes
+    - reference_id: UniProtKB:Q21148
+      supporting_text: Required for the activation of several infection response genes
+        including irg-1 and irg-2
+- term:
+    id: GO:0140367
+    label: antibacterial innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:20133860
+  review:
+    summary: ZIP-2 is required for the antibacterial innate immune response, specifically
+      the protective response to P. aeruginosa infection. This is a core function.
+    action: ACCEPT
+    reason: ZIP-2 is central to the C. elegans surveillance immunity pathway that
+      detects and responds to bacterial pathogens. Loss of zip-2 decreases survival
+      upon P. aeruginosa infection and reduces induction of infection response genes.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: zip-2 is part of a specialized pathogen response pathway that
+        is induced by virulent strains of P. aeruginosa and provides defense against
+        this pathogen
+    - reference_id: UniProtKB:Q21148
+      supporting_text: Has a protective role in response to infection by the Gram-negative
+        bacterium P.aeruginosa
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IGI
+  original_reference_id: PMID:25274306
+  review:
+    summary: This IGI annotation records genetic interaction between zip-2 and atfs-1
+      in the defense response to P. aeruginosa. ATFS-1 regulates zip-2 expression
+      during infection.
+    action: ACCEPT
+    reason: The genetic interaction between zip-2 and atfs-1 is well-documented. PMID:25274306
+      showed that zip-2 mRNA is induced during mitochondrial stress in an atfs-1-dependent
+      manner, and that both transcription factors contribute to defense against P.
+      aeruginosa.
+    supported_by:
+    - reference_id: PMID:25274306
+      supporting_text: zip-2 mRNA was induced during mitochondrial stress, which also
+        required atfs-1
+    - reference_id: PMID:25274306
+      supporting_text: increased irg-1pr::gfp expression was impaired in both atfs-1(tm4919)
+        and zip-2(tm4248) mutants
+- term:
+    id: GO:0010628
+    label: positive regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:25274306
+  review:
+    summary: ZIP-2 positively regulates expression of infection response genes. This
+      annotation overlaps with GO:0045944 but is at a broader level.
+    action: KEEP_AS_NON_CORE
+    reason: While correct, this term is less specific than GO:0045944 (positive regulation
+      of transcription by RNA polymerase II) which better captures ZIP-2&#39;s mechanism
+      of action. The annotation is valid but represents a more general characterization
+      of ZIP-2 function.
+    supported_by:
+    - reference_id: PMID:25274306
+      supporting_text: irg-1pr::gfp induction, which was blocked in atfs-1(tm4919)
+        and partially so in zip-2(tm4248) worms
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:25274306
+  review:
+    summary: Experimental evidence from PMID:25274306 demonstrates ZIP-2&#39;s role in
+      defense against P. aeruginosa through the UPRmt-regulated innate immunity pathway.
+    action: ACCEPT
+    reason: This annotation is supported by experimental evidence showing that zip-2
+      mutants have impaired infection response gene induction. ZIP-2 is part of the
+      protective transcriptional response activated by mitochondrial stress during
+      pathogen exposure.
+    supported_by:
+    - reference_id: PMID:25274306
+      supporting_text: zip-2(tm4248) modestly reduced the enhanced resistance conferred
+        by spg-7(RNAi)
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:20133860
+  review:
+    summary: The foundational paper establishing ZIP-2&#39;s role in defense against P.
+      aeruginosa. zip-2 knockdown decreases survival upon infection.
+    action: ACCEPT
+    reason: PMID:20133860 is the key paper identifying ZIP-2 as a mediator of early
+      response to P. aeruginosa infection. The paper demonstrates that zip-2 is required
+      for defense through RNAi knockdown and survival assays.
+    supported_by:
+    - reference_id: PMID:20133860
+      supporting_text: is important for defense against infection by P. aeruginosa
+    - reference_id: UniProtKB:Q21148
+      supporting_text: RNAi-mediated knockdown decreases survival upon infection with
+        P.aeruginosa
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20133860
+  title: bZIP transcription factor zip-2 mediates an early response to Pseudomonas
+    aeruginosa infection in Caenorhabditis elegans.
+  findings:
+  - statement: ZIP-2 identified as transcription factor required for irg-1 induction
+  - statement: zip-2 knockdown decreases survival upon P. aeruginosa infection
+  - statement: ZIP-2 is part of specialized pathogen response pathway
+- id: PMID:22520464
+  title: Host translational inhibition by Pseudomonas aeruginosa Exotoxin A triggers
+    an immune response in Caenorhabditis elegans.
+  findings:
+  - statement: ZIP-2 required to prevent ToxA-mediated lethality
+- id: PMID:22520465
+  title: C. elegans detects pathogen-induced translational inhibition to activate
+    immune signaling.
+  findings:
+  - statement: ZIP-2 activated by translational inhibition
+  - statement: Nuclear localization demonstrated
+- id: PMID:23661758
+  title: Networks of bZIP protein-protein interactions diversified over a billion
+    years of evolution.
+  findings:
+  - statement: Physical interaction with ATF-2 demonstrated in bZIP dimerization network
+- id: PMID:23791784
+  title: Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter
+    transcription factor network.
+  findings:
+  - statement: Physical interaction with CEBP-2 demonstrated
+- id: PMID:25274306
+  title: Mitochondrial UPR-regulated innate immunity provides resistance to pathogen
+    infection.
+  findings:
+  - statement: zip-2 induced during mitochondrial stress in atfs-1-dependent manner
+  - statement: ZIP-2 required for irg-1 induction during UPRmt
+  - statement: Genetic interaction with atfs-1 in defense against P. aeruginosa
+- id: PMID:26876169
+  title: The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Required for Surveillance
+    Immunity.
+  findings:
+  - statement: CEBP-2 acts together with ZIP-2 in surveillance immunity
+  - statement: Both required for protective response to translational block
+- id: PMID:28662060
+  title: A conserved mitochondrial surveillance pathway is required for defense against
+    Pseudomonas aeruginosa.
+  findings:
+  - statement: ZIP-2 is part of bZIP family mediating ESRE network
+  - statement: Loss of zip-2 compromises ESRE gene induction
+  - statement: zip-2 mutants sensitive to Liquid Killing
+- id: PMID:32350153
+  title: A cellular surveillance and defense system that delays aging phenotypes in
+    C. elegans.
+  findings:
+  - statement: zip-2 involved in response to mitochondrial damage
+  - statement: Role in delaying age-associated mitochondrial fragmentation
+core_functions:
+- description: ZIP-2 is a key transcription factor in C. elegans surveillance immunity
+    that mediates the protective response to bacterial pathogens, particularly P.
+    aeruginosa. It activates infection response genes including irg-1 upon pathogen
+    detection.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0140367
+    label: antibacterial innate immune response
+  - id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  locations:
+  - id: GO:0005634
+    label: nucleus
+- description: ZIP-2 positively regulates transcription of target genes involved in
+    immunity and stress response, particularly infection response genes (irg-1, irg-2)
+    and ESRE network genes.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+proposed_new_terms: []
+suggested_questions:
+- question: What are the direct DNA binding sites/motifs recognized by ZIP-2?
+- question: Does ZIP-2 form homodimers or only heterodimers with other bZIP proteins?
+- question: What is the complete set of target genes directly regulated by ZIP-2?
+- question: How is ZIP-2 itself regulated at the post-translational level?
+suggested_experiments:
+- description: ChIP-seq to identify direct ZIP-2 target genes and binding sites
+- description: Structural studies of ZIP-2/CEBP-2 heterodimer to understand specificity
+- description: Time-course RNA-seq in zip-2 mutants during infection to identify direct
+    targets
+tags:
+- caeel-surveillance-immunity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

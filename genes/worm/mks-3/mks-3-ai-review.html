@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mks-3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mks-3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q20046" target="_blank" class="term-link">
+                        Q20046
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mks-3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q20046" data-a="DESCRIPTION: MKS-3 is the C. elegans ortholog of human TMEM67/m..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MKS-3 is the C. elegans ortholog of human TMEM67/meckelin, a transmembrane protein that localizes to the ciliary transition zone. It functions as a component of the MKS module (together with MKS-1, MKSR-1, MKSR-2, MKS-5, and MKS-6), which cooperates with the NPHP module to establish basal body/transition zone membrane associations and ciliary gate function during ciliogenesis. MKS-3 is required for non-motile cilium assembly through genetic interactions with the NPHP module, and participates in restricting non-ciliary membrane proteins from entering the ciliary compartment, thereby establishing the transition zone as a selective barrier (ciliary gate).
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0035869" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3 localization to the ciliary transition zone is strongly supported by fluorescence microscopy studies in C. elegans. Williams et al. (2011) demonstrated that MKS-3/meckelin localizes specifically to the TZ region adjacent to where IFT proteins concentrate at the transition fibers/basal body.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core annotation for MKS-3. The IBA annotation is consistent with phylogenetic evidence from the MECKELIN family (PTHR21274) and is directly supported by experimental evidence in C. elegans (PMID:21422230).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1, MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3 is involved in cilium assembly through functional interactions with the NPHP module. While mks-3 single mutants show relatively mild phenotypes, mks-3;nphp-4 double mutants exhibit severe ciliary defects including dye-filling defects, missing/shorter cilia, and TZ/BB membrane detachment.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures MKS-3 involvement in ciliogenesis. The IBA annotation from phylogenetic inference is well-supported by experimental evidence in C. elegans showing MKS-3 participates in establishing BB/TZ membrane associations during early ciliogenesis (PMID:21422230).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functional interactions between different MKS module components and the NPHP module are essential for an IFT-independent early stage of ciliogenesis, namely docking/anchoring of the BB/TZ to the membrane.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036038" target="_blank" class="term-link">
+                                    GO:0036038
+                                </a>
+                            </span>
+                            <span class="term-label">MKS complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0036038" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3 is a component of the MKS complex (MKS module), which consists of MKS-1, MKSR-1, MKSR-2, MKS-3, MKS-5, and MKS-6 in C. elegans. The complex localizes to the ciliary transition zone and functions in organizing Y-shaped links and establishing the ciliary gate.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation from InterPro is well-supported. MKS-3 contains the Meckelin domain (IPR019170/Pfam:PF09773) which is a defining feature of this protein family. Experimental evidence confirms MKS-3 functions within the MKS module and genetically interacts with other module components.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and NPHP-1/NPHP-4 proteins, respectively.
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These data suggest that mks-6 genetically interacts with the NPHP module and is associated with the MKS/MKSR module.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0060271" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation to cilium assembly from InterPro mapping. This IEA annotation is consistent with the IBA annotation and experimental evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this duplicates the IBA annotation for cilium assembly, it is appropriate to retain both as they derive from independent evidence sources (InterPro domain mapping vs. phylogenetic inference). Both correctly capture the role of MKS-3 in ciliogenesis.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:1905515" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures that MKS-3 is required specifically for assembly of non-motile (primary/sensory) cilia. In C. elegans, the ciliated sensory neurons possess non-motile cilia. Williams et al. demonstrated that mks-3;nphp-4 double mutants have severe ciliogenesis defects in these sensory neurons.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a more specific annotation than GO:0060271 (cilium assembly) and accurately reflects that C. elegans sensory neuron cilia are non-motile. The IGI evidence code is appropriate as the phenotype is observed in genetic interaction with nphp-4 (WB:WBGene00011261). This represents a core function of MKS-3.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Primary cilia protrude from most mammalian cells and modulate sensory processes, including chemo-, mechano-, and photo-reception
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We uncovered in double mutants multiple phenotypes, including missing or shorter cilia
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0035869" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation documents the direct experimental demonstration of MKS-3 localization to the ciliary transition zone using fluorescence microscopy of tagged MKS-3 protein.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported core annotation. The IDA evidence is appropriate as MKS-3 TZ localization was directly observed using MKS-3::GFP fusion protein imaging. This annotation complements the IBA annotation from phylogenetic inference.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1, MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905349" target="_blank" class="term-link">
+                                    GO:1905349
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:1905349" data-r="PMID:21422230" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3, as part of the MKS module, is required for proper assembly and organization of the ciliary transition zone. When MKS module components are disrupted together with NPHP-4, severe TZ defects are observed including missing Y-links and disrupted TZ structure.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the role of MKS-3 in transition zone organization, which is distinct from but related to its localization there. The TEM studies show that mks-3;nphp-4 double mutants have disrupted TZ regions with missing Y-links.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mks-6;nphp-4 and mks-5;nphp-4 double mutants exhibit mispositioned and disrupted TZ regions, with clear disconnections between the BB/TZ region and membrane, accompanied by missing Y-links
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phenotypes nearly identical to mks-6;nphp-4 mutants were observed in the mksr-1;nphp-4 strain
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903565" target="_blank" class="term-link">
+                                    GO:1903565
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of protein localization to cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:1903565" data-r="PMID:21422230" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3, together with other TZ proteins, restricts inappropriate accumulation of non-ciliary membrane proteins within cilia. In mks/mksr mutants, proteins like RPI-2 and TRAM-1a that are normally excluded from cilia accumulate within the ciliary compartment, demonstrating the gating function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a critical annotation capturing the ciliary gate function of MKS-3. The paper directly demonstrates that TZ proteins including those in the MKS module establish a gate that modulates ciliary composition. When TZ proteins are disrupted, non-ciliary proteins inappropriately accumulate inside cilia.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the two modules restrict inappropriate accumulation of membrane-associated proteins inside cilia
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Together, our data showing abnormal accumulations of MKS-3, RPI-2, and TRAM-1a in TZ mutant cilia indicate that, in addition to their role in early ciliogenesis, most if not all TZ proteins normally function to maintain a boundary at the cilium base, establishing the TZ as a bona fide ciliary gate.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                    GO:0007635
+                                </a>
+                            </span>
+                            <span class="term-label">chemosensory behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0007635" data-r="PMID:21422230" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3 contributes to chemosensory behavior through its role in ciliary function. mks-3;nphp-4 double mutants show osmotic avoidance defects and impaired dye-filling, indicating compromised sensory cilium function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the physiological/behavioral consequence of MKS-3 function in sensory cilia. The osmotic avoidance assay tests chemosensory behavior that depends on functional sensory cilia. This should be marked as a secondary/non-core function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both mks-5;nphp-4 and mks-6;nphp-4 double mutants exhibit strong dye-filling (Dyf) and osmotic avoidance (Osm) phenotypes
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q20046" data-a="GO:0005198" data-r="PMID:21422230" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MKS-3 contributes to the structural integrity of the MKS complex at the ciliary transition zone. The protein localizes to the TZ and functions together with other MKS module components to organize TZ architecture.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function annotation captures MKS-3&#39;s role as a structural component of the MKS complex. Evidence shows MKS-3 is part of the TZ architecture and is required for proper organization of Y-links and membrane associations. This is more appropriate than generic protein binding as it describes the functional contribution.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and NPHP-1/NPHP-4 proteins, respectively.
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MKS-3 functions as a transmembrane structural component of the MKS complex at the ciliary transition zone, contributing to the integrity and organization of the TZ architecture including Y-links and membrane associations. As a multi-pass transmembrane protein with five predicted transmembrane helices, MKS-3 likely functions in anchoring the MKS complex to the transition zone membrane.</h3>
+                <span class="vote-buttons" data-g="Q20046" data-a="FUNCTION: MKS-3 functions as a transmembrane structural comp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                non-motile cilium assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905349" target="_blank" class="term-link">
+                                ciliary transition zone assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903565" target="_blank" class="term-link">
+                                negative regulation of protein localization to cilium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                ciliary transition zone
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036038" target="_blank" class="term-link">
+                            MKS complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                PMID:21422230
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and NPHP-1/NPHP-4 proteins, respectively.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 contains the Meckelin domain (IPR019170) which maps to MKS complex membership and cilium assembly</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 is part of the MECKELIN family (PTHR21274) supporting TZ localization and cilium assembly annotations</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                            PMID:21422230
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MKS and NPHP modules cooperate to establish basal body/transition zone membrane associations and ciliary gate function during ciliogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 localizes to the ciliary transition zone in C. elegans sensory neurons</div>
+                        
+                        <div class="finding-text">"Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1, MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 is a component of the MKS module that functions with the NPHP module in ciliogenesis</div>
+                        
+                        <div class="finding-text">"We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and NPHP-1/NPHP-4 proteins, respectively.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 participates in establishing basal body/TZ membrane attachments during early ciliogenesis</div>
+                        
+                        <div class="finding-text">"Functional interactions between different MKS module components and the NPHP module are essential for an IFT-independent early stage of ciliogenesis, namely docking/anchoring of the BB/TZ to the membrane.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS-3 is required for ciliary gate function that restricts non-ciliary proteins from entering cilia</div>
+                        
+                        <div class="finding-text">"Together, our data showing abnormal accumulations of MKS-3, RPI-2, and TRAM-1a in TZ mutant cilia indicate that, in addition to their role in early ciliogenesis, most if not all TZ proteins normally function to maintain a boundary at the cilium base, establishing the TZ as a bona fide ciliary gate.
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">mks-3;nphp-4 double mutants show severe ciliogenesis defects including missing Y-links and TZ detachment</div>
+                        
+                        <div class="finding-text">"Although similar ciliary defects were observed in the latter mutants (Fig. 7; Fig. S4, Fig. S5), some of their TZ regions are in normal proximity to the ciliary membrane but often lack connecting Y-links
+"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific protein-protein interactions between MKS-3 and other MKS module components?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="Q: What are the specific protein-protein interactions..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does MKS-3 directly interact with NPHP-1 or NPHP-4, or is the genetic interaction indirect?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="Q: Does MKS-3 directly interact with NPHP-1 or NPHP-4..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular basis for MKS-3 localization to the transition zone?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="Q: What is the molecular basis for MKS-3 localization..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation of MKS-3 with other MKS module components to confirm physical interactions</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MKS-3 directly binds to other MKS module proteins at the transition zone</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="EXPERIMENT: Co-immunoprecipitation of MKS-3 with other MKS mod..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis of MKS-3 domains required for TZ localization</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Specific domains of MKS-3 are required for its localization and function at the TZ</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="EXPERIMENT: Structure-function analysis of MKS-3 domains requi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Super-resolution microscopy to define precise MKS-3 localization within the TZ</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MKS-3 localizes to a specific sub-compartment within the transition zone</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q20046" data-a="EXPERIMENT: Super-resolution microscopy to define precise MKS-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-ciliopathy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mks-3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q20046" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T16:23:12.441800'<br />
+end_time: '2025-12-29T16:27:16.295660'<br />
+duration_seconds: 243.85<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: mks-3<br />
+  gene_symbol: mks-3<br />
+  uniprot_accession: Q20046<br />
+  protein_description: 'SubName: Full=Meckelin {ECO:0000313|EMBL:CCD70508.1};'<br />
+  gene_info: Name=mks-3 {ECO:0000313|EMBL:CCD70508.1, ECO:0000313|WormBase:F35D2.4};<br />
+    ORFNames=CELE_F35D2.4 {ECO:0000313|EMBL:CCD70508.1}, F35D2.4 {ECO:0000313|WormBase:F35D2.4};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Meckelin. (IPR019170); Meckelin (PF09773)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 19</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q20046</li>
+<li><strong>Protein Description:</strong> SubName: Full=Meckelin {ECO:0000313|EMBL:CCD70508.1};</li>
+<li><strong>Gene Information:</strong> Name=mks-3 {ECO:0000313|EMBL:CCD70508.1, ECO:0000313|WormBase:F35D2.4}; ORFNames=CELE_F35D2.4 {ECO:0000313|EMBL:CCD70508.1}, F35D2.4 {ECO:0000313|WormBase:F35D2.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Meckelin. (IPR019170); Meckelin (PF09773)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mks-3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mks-3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mks-3</strong> (gene ID: mks-3, UniProt: Q20046) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q20046</li>
+<li><strong>Protein Description:</strong> SubName: Full=Meckelin {ECO:0000313|EMBL:CCD70508.1};</li>
+<li><strong>Gene Information:</strong> Name=mks-3 {ECO:0000313|EMBL:CCD70508.1, ECO:0000313|WormBase:F35D2.4}; ORFNames=CELE_F35D2.4 {ECO:0000313|EMBL:CCD70508.1}, F35D2.4 {ECO:0000313|WormBase:F35D2.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Meckelin. (IPR019170); Meckelin (PF09773)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "mks-3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'mks-3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>mks-3</strong> (gene ID: mks-3, UniProt: Q20046) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+Objective 1 (completed): Verified target identity and orthology. The C. elegans gene mks-3 (UniProt Q20046) encodes the Meckelin ortholog of human TMEM67/MKS3, a membrane protein localized to the ciliary transition zone (TZ) within the Meckel syndrome (MKS) module. This identity and localization are consistently reported in authoritative studies and reviews (li2016mks5andcep290 pages 2-3, jensen2015formationofthe pages 1-2, park2022compositionorganizationand pages 6-8).<br />
+Objective 2 (completed): Retrieved recent and authoritative literature, prioritizing 2022–2024 where available. Key sources include a 2022 EMBO Reports TZ review (Park &amp; Leroux, 2022), foundational experimental studies defining MKS/NPHP module organization and gating (2015–2016), and a 2024 bioRxiv mechanistic preprint on TMEM67 cleavage by ADAMTS9 that separates ciliogenesis/TZ functions from Wnt signaling (Ahmed et al., 2024) (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2, lambacher2016tmem107recruitsciliopathy pages 20-20, ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).<br />
+Objective 3 (completed): Extracted function, localization, and module context; summarized below with citations.<br />
+Objective 4 (completed): Compiled applications/real-world implementations, including variant interpretation in C. elegans for TMEM67 VUS and disease relevance via orthology (lange2021interpretingciliopathyassociatedmissense pages 1-4, park2022compositionorganizationand pages 6-8).<br />
+Objective 5 (completed): Synthesized expert opinions, statistics, and data; included URLs and publication dates for all major sources.<br />
+Objective 6: Provide final comprehensive, well-cited research report.</p>
+<p>Comprehensive Research Report: mks-3 (C. elegans Meckelin; ortholog of human TMEM67/MKS3)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Identity and orthology: mks-3 encodes the C. elegans ortholog of human TMEM67 (also called MKS3/Meckelin), a conserved transmembrane protein of the ciliary transition zone (TZ) that functions in the MKS module of TZ proteins. The MKS module cooperates with the NPHP module to assemble a functional TZ diffusion barrier (“ciliary gate”) (Park &amp; Leroux, EMBO Reports, Nov 2022, https://doi.org/10.15252/embr.202255420; Li et al., PLoS Biology, Mar 2016, https://doi.org/10.1371/journal.pbio.1002416; Jensen et al., EMBO J, Oct 2015, https://doi.org/10.15252/embj.201488044) (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2).<br />
+- Protein family/domains: UniProt Q20046 is annotated as Meckelin with Meckelin domains (PF09773, IPR019170). In the literature, Meckelin/TMEM67 is a membrane protein enriched at the TZ membrane, consistent with Meckelin domain annotations and MKS-module membership (Park &amp; Leroux 2022; Li et al. 2016; Jensen et al. 2015) (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2).<br />
+- Cellular localization: MKS-3 localizes to the ciliary transition zone membrane and forms part of the MKS module superstructure. Super-resolution mapping showed that TMEM67/MKS-3 occupies radial and axial subdomains of the TZ membrane, forming discrete clustered rings consistent with association to Y-links and ciliary necklace features (Lambacher et al., Nat Cell Biol, Nov 2016, https://doi.org/10.1038/ncb3273) (lambacher2016tmem107recruitsciliopathy pages 20-20).<br />
+- Functional role: As an MKS-module component, MKS-3 contributes to establishing/maintaining the TZ diffusion barrier (gate) that preserves ciliary compartmentalization. The MKS module acts largely in parallel with the NPHP module; together they ensure proper TZ ultrastructure (including Y-links), anchoring, ciliogenesis, and gating of membrane proteins and lipids (Park &amp; Leroux 2022; Li et al. 2016; Jensen et al. 2015) (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2).</p>
+<p>2) Recent developments and latest research (prioritize 2023–2024 sources)<br />
+- Proteolytic regulation creates two functional TMEM67 forms: A 2024 preprint reported that the extracellular protease ADAMTS9 cleaves TMEM67, generating a cleaved C-terminal form that localizes to the TZ and is essential for ciliogenesis and MKS/B9 assembly, while the non-cleaved full-length protein mediates Wnt signaling. A non-cleavable Tmem67 mouse phenocopied Tmem67-null for ciliopathy manifestations yet retained Wnt signaling, mechanistically separating TMEM67’s TZ versus Wnt roles. C. elegans assays were used alongside mammalian models to probe TMEM67/mks-3 requirements (Ahmed et al., bioRxiv, Sep 2024, https://doi.org/10.1101/2024.09.04.611229) (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).<br />
+- Updated TZ conceptual framework: The 2022 EMBO Reports review synthesized module organization (MKS vs NPHP), hierarchical assembly (MKS-5/RPGRIP1L and CEP-290 scaffolding), and gating mechanisms (lipid microdomain, picket-fence, size-selective sieve). It places MKS-3/TMEM67 as a canonical MKS-module TZ protein within this hierarchy (Park &amp; Leroux, EMBO Reports, Nov 2022, https://doi.org/10.15252/embr.202255420) (park2022compositionorganizationand pages 6-8).</p>
+<p>3) Current applications and real-world implementations<br />
+- Variant interpretation pipeline using C. elegans mks-3: CRISPR/Cas9 knock-in of human TMEM67 missense variants into the endogenous worm mks-3 locus, coupled to quantitative cilia structure and function assays, distinguished known benign from pathogenic alleles and classified eight VUS (three benign: Cys173Arg, Thr176Ile, Gly979Arg; five pathogenic: Cys170Tyr, His782Arg, Gly786Glu, His790Arg, Ser961Tyr). This demonstrates a tractable in vivo platform that can inform clinical classification of TMEM67 variants relevant to Meckel/Joubert spectrum ciliopathies (Lange et al., bioRxiv, posted Sep 22, 2021, https://doi.org/10.1101/2021.06.17.448799) (lange2021interpretingciliopathyassociatedmissense pages 1-4).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- TZ modules and genetic redundancy: Authoritative studies define the TZ as comprising two functional modules. MKS-3 belongs to the MKS module; CEP-290 and MKS-5/RPGRIP1L act as core assembly factors. Disruption of single-module components is often partially tolerated, but combined MKS–NPHP defects cause severe ciliogenesis and TZ ultrastructural defects, reflecting parallel, cooperative pathways (Park &amp; Leroux 2022; Li et al. 2016; Jensen et al. 2015) (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2).<br />
+- Spatial organization of MKS-3 at the TZ: Super-resolution imaging shows conserved clustering of TMEM67/MKS-3 in rings at the TZ membrane, implying association with Y-links and necklace structures that support barrier function (Lambacher et al. 2016, https://doi.org/10.1038/ncb3273) (lambacher2016tmem107recruitsciliopathy pages 20-20).<br />
+- Separation of signaling and ciliogenesis roles: The 2024 preprint argues that proteolytic cleavage of TMEM67 by ADAMTS9 separates ciliogenesis/TZ assembly from TMEM67-mediated Wnt signaling, which has implications for interpreting genotype–phenotype relationships and therapeutic strategies (Ahmed et al. 2024, https://doi.org/10.1101/2024.09.04.611229) (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Hierarchical TZ assembly and gating: Experimental work in C. elegans established that CEP-290 and MKS-5 organize MKS-module components, enforcing ciliary compartmentalization by limiting inappropriate membrane protein entry and retaining ARL-13/Arl13b within the cilium; combined MKS–NPHP disruptions cause pronounced loss of TZ Y-links and ciliogenesis failures (Li et al., PLoS Biology, Mar 2016, https://doi.org/10.1371/journal.pbio.1002416; Jensen et al., EMBO J, Oct 2015, https://doi.org/10.15252/embj.201488044) (li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2).<br />
+- Variant assay outcomes in C. elegans: In a CRISPR knock-in study of TMEM67/mks-3 variants, worm assays accurately discriminated known benign versus pathogenic variants and classified eight VUS, with three predicted benign and five pathogenic (Lange et al., bioRxiv, Sep 2021, https://doi.org/10.1101/2021.06.17.448799) (lange2021interpretingciliopathyassociatedmissense pages 1-4).<br />
+- Subdomain mapping: Super-resolution mapping resolved periodic radial and axial subdomains of MKS-3/TMEM67 at the TZ membrane, forming clustered rings thought to align with Y-link architecture, supporting a structural basis for gating (Lambacher et al., Nat Cell Biol, Nov 2016, https://doi.org/10.1038/ncb3273) (lambacher2016tmem107recruitsciliopathy pages 20-20).<br />
+- Proteolytic cleavage and functional separation (2024): The ADAMTS9 cleavage study demonstrated that preventing TMEM67 cleavage phenocopied Tmem67-null ciliopathy for ciliogenesis/TZ assembly while preserving Wnt signaling, implying two functional forms with distinct roles (Ahmed et al., bioRxiv, Sep 2024, https://doi.org/10.1101/2024.09.04.611229) (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).</p>
+<p>Detailed functional narrative for C. elegans mks-3<br />
+- Primary role: MKS-3 is an MKS-module transition zone membrane protein required for forming a functional TZ diffusion barrier that compartmentalizes proteins and lipids within the cilium. In the MKS-5→CEP-290-dependent assembly hierarchy, MKS-3 is among the MKS transmembrane components positioned at the TZ membrane, contributing to the establishment/maintenance of the ciliary zone of exclusion and to correct ciliary composition (Li et al., 2016; Jensen et al., 2015; Park &amp; Leroux, 2022) (li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2, park2022compositionorganizationand pages 6-8).<br />
+- Localization and structure: Super-resolution imaging in nematodes and mammals shows MKS/TMEM proteins occupying discrete clustered rings along the TZ length; TMEM67/MKS-3 localizes at the membrane-proximal subdomain, suggesting association with Y-links and necklace structures that define the barrier’s architecture (Lambacher et al., 2016) (lambacher2016tmem107recruitsciliopathy pages 20-20).<br />
+- Genetic interactions and pathway context: MKS and NPHP module components act in parallel. While loss of individual MKS components (including mks-3) can yield modest effects, combined loss with NPHP-1 or NPHP-4 leads to severe defects: loss of basal body–TZ membrane anchoring, disrupted Y-links, axonemal defects, and compromised gating. This demonstrates cooperative action between modules to support ciliogenesis and ciliary signaling (Li et al., 2016; Jensen et al., 2015; Park &amp; Leroux, 2022) (li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2, park2022compositionorganizationand pages 6-8).<br />
+- Signaling implications: By maintaining TZ integrity and the ciliary diffusion barrier, MKS-3 indirectly supports ciliary signaling by ensuring correct compartmentalization of signaling receptors and regulators, and by controlling ciliary lipid composition (e.g., limiting PIP2 abundance within cilia via TZ-dependent CIZE) (Jensen et al., 2015; Park &amp; Leroux, 2022) (jensen2015formationofthe pages 1-2, park2022compositionorganizationand pages 6-8).<br />
+- Recent mechanistic advance relevant to mks-3: Although demonstrated in vertebrate systems with complementary C. elegans assays, ADAMTS9-mediated cleavage of TMEM67 generates a TZ-localizing form essential for ciliogenesis/TZ assembly, while full-length TMEM67 retains Wnt signaling functions. This separation provides a mechanistic lens for interpreting worm mks-3 function: the membrane-proximal, TZ-resident form likely corresponds to the functional species fulfilling MKS-3’s role in the MKS module (Ahmed et al., 2024) (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).</p>
+<p>Mandatory verification of identity and scope<br />
+- Gene/protein symbol and organism: The report concerns C. elegans mks-3 (UniProt Q20046), orthologous to human TMEM67/MKS3/Meckelin; all cited organism-specific functional conclusions are based on C. elegans experimental frameworks and conserved TZ biology drawn from authoritative sources (li2016mks5andcep290 pages 2-3, jensen2015formationofthe pages 1-2, park2022compositionorganizationand pages 6-8).<br />
+- Protein family/domains: Consistent with UniProt (PF09773/IPR019170 Meckelin domain), literature places MKS-3/TMEM67 as a membrane protein of the TZ MKS module (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, jensen2015formationofthe pages 1-2).<br />
+- Ambiguity check: The symbol mks-3 can refer to MKS3/TMEM67 in various species; this report does not rely on similarly named, distinct genes from other organisms except to draw orthology-based insights. Where vertebrate data are referenced (e.g., TMEM67 cleavage), they are explicitly framed as orthology-informed context or mechanistic cross-validation, not as species substitution (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).</p>
+<p>Selected references with URLs and publication dates<br />
+- Park &amp; Leroux. Composition, organization and mechanisms of the transition zone, a gate for the cilium. EMBO Reports. Published Nov 2022. URL: https://doi.org/10.15252/embr.202255420 (park2022compositionorganizationand pages 6-8).<br />
+- Li et al. MKS5 and CEP290 dependent assembly pathway of the ciliary transition zone. PLoS Biology. Published Mar 2016. URL: https://doi.org/10.1371/journal.pbio.1002416 (li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2).<br />
+- Jensen et al. Formation of the transition zone by Mks5/Rpgrip1L establishes a ciliary zone of exclusion (CIZE). EMBO Journal. Published Oct 2015. URL: https://doi.org/10.15252/embj.201488044 (jensen2015formationofthe pages 1-2).<br />
+- Lambacher et al. TMEM107 recruits ciliopathy proteins to subdomains of the ciliary transition zone and causes Joubert syndrome. Nature Cell Biology. Published Nov 2016. URL: https://doi.org/10.1038/ncb3273 (lambacher2016tmem107recruitsciliopathy pages 20-20).<br />
+- Ahmed et al. Two functional forms of the Meckel-Gruber syndrome protein TMEM67 generated by proteolytic cleavage by ADAMTS9 mediate Wnt signaling and ciliogenesis. bioRxiv. Posted Sep 2024. URL: https://doi.org/10.1101/2024.09.04.611229 (ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23).<br />
+- Lange et al. Interpreting ciliopathy-associated missense variants of uncertain significance (VUS) in an animal model. bioRxiv. Posted Sep 22, 2021. URL: https://doi.org/10.1101/2021.06.17.448799 (lange2021interpretingciliopathyassociatedmissense pages 1-4).</p>
+<p>Conclusions<br />
+- C. elegans mks-3 encodes the Meckelin/TMEM67 ortholog that localizes to the ciliary transition zone and functions within the MKS module to build a functional gating barrier. Its role is tightly integrated into a hierarchical TZ assembly pathway organized by MKS-5 and CEP-290. Genetic interactions between MKS and NPHP modules underscore parallel pathways that cooperatively ensure ciliogenesis and ciliary signaling. Recent evidence suggests TMEM67 possesses separable biochemical roles—TZ assembly tied to a cleaved membrane-proximal form and Wnt signaling mediated by the non-cleaved protein—which, together with C. elegans variant-assay pipelines, informs functional annotation and clinical variant interpretation of TMEM67/mks-3 (park2022compositionorganizationand pages 6-8, li2016mks5andcep290 pages 2-3, li2016mks5andcep290 pages 1-2, jensen2015formationofthe pages 1-2, lambacher2016tmem107recruitsciliopathy pages 20-20, ahmed2024twofunctionalforms pages 37-39, ahmed2024twofunctionalforms pages 20-23, lange2021interpretingciliopathyassociatedmissense pages 1-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(li2016mks5andcep290 pages 2-3): Chunmei Li, Victor L. Jensen, Kwangjin Park, Julie Kennedy, Francesc R. Garcia-Gonzalo, Marta Romani, Roberta De Mori, Ange-Line Bruel, Dominique Gaillard, Bérénice Doray, Estelle Lopez, Jean-Baptiste Rivière, Laurence Faivre, Christel Thauvin-Robinet, Jeremy F. Reiter, Oliver E. Blacque, Enza Maria Valente, and Michel R. Leroux. Mks5 and cep290 dependent assembly pathway of the ciliary transition zone. PLOS Biology, 14:e1002416, Mar 2016. URL: https://doi.org/10.1371/journal.pbio.1002416, doi:10.1371/journal.pbio.1002416. This article has 165 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jensen2015formationofthe pages 1-2): Victor L Jensen, Chunmei Li, Rachel V Bowie, Lara Clarke, Swetha Mohan, Oliver E Blacque, and Michel R Leroux. Formation of the transition zone by mks5/rpgrip1l establishes a ciliary zone of exclusion (cize) that compartmentalises ciliary signalling proteins and controls pip2 ciliary abundance. The EMBO Journal, 34:2537-2556, Oct 2015. URL: https://doi.org/10.15252/embj.201488044, doi:10.15252/embj.201488044. This article has 159 citations.</p>
+</li>
+<li>
+<p>(park2022compositionorganizationand pages 6-8): Kwangjin Park and Michel R Leroux. Composition, organization and mechanisms of the transition zone, a gate for the cilium. EMBO reports, Nov 2022. URL: https://doi.org/10.15252/embr.202255420, doi:10.15252/embr.202255420. This article has 71 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2016mks5andcep290 pages 1-2): Chunmei Li, Victor L. Jensen, Kwangjin Park, Julie Kennedy, Francesc R. Garcia-Gonzalo, Marta Romani, Roberta De Mori, Ange-Line Bruel, Dominique Gaillard, Bérénice Doray, Estelle Lopez, Jean-Baptiste Rivière, Laurence Faivre, Christel Thauvin-Robinet, Jeremy F. Reiter, Oliver E. Blacque, Enza Maria Valente, and Michel R. Leroux. Mks5 and cep290 dependent assembly pathway of the ciliary transition zone. PLOS Biology, 14:e1002416, Mar 2016. URL: https://doi.org/10.1371/journal.pbio.1002416, doi:10.1371/journal.pbio.1002416. This article has 165 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lambacher2016tmem107recruitsciliopathy pages 20-20): Nils J. Lambacher, Ange-Line Bruel, Teunis J. P. van Dam, Katarzyna Szymańska, Gisela G. Slaats, Stefanie Kuhns, Gavin J. McManus, Julie E. Kennedy, Karl Gaff, Ka Man Wu, Robin van der Lee, Lydie Burglen, Diane Doummar, Jean-Baptiste Rivière, Laurence Faivre, Tania Attié-Bitach, Sophie Saunier, Alistair Curd, Michelle Peckham, Rachel H. Giles, Colin A. Johnson, Martijn A. Huynen, Christel Thauvin-Robinet, and Oliver E. Blacque. Tmem107 recruits ciliopathy proteins to subdomains of the ciliary transition zone and causes joubert syndrome. Nature Cell Biology, 18:122-131, Nov 2016. URL: https://doi.org/10.1038/ncb3273, doi:10.1038/ncb3273. This article has 160 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ahmed2024twofunctionalforms pages 37-39): Manu Ahmed, Sydney Fischer, Karyn L. Robert, Karen I. Lange, Michael W. Stuck, Sunayna Best, Colin A. Johnson, Gregory J. Pazour, Oliver E. Blacque, and Sumeda Nandadasa. Two functional forms of the meckel-gruber syndrome protein tmem67 generated by proteolytic cleavage by adamts9 mediate wnt signaling and ciliogenesis. bioRxiv, Sep 2024. URL: https://doi.org/10.1101/2024.09.04.611229, doi:10.1101/2024.09.04.611229. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ahmed2024twofunctionalforms pages 20-23): Manu Ahmed, Sydney Fischer, Karyn L. Robert, Karen I. Lange, Michael W. Stuck, Sunayna Best, Colin A. Johnson, Gregory J. Pazour, Oliver E. Blacque, and Sumeda Nandadasa. Two functional forms of the meckel-gruber syndrome protein tmem67 generated by proteolytic cleavage by adamts9 mediate wnt signaling and ciliogenesis. bioRxiv, Sep 2024. URL: https://doi.org/10.1101/2024.09.04.611229, doi:10.1101/2024.09.04.611229. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(lange2021interpretingciliopathyassociatedmissense pages 1-4): Karen I. Lange, Sunayna Best, Sofia Tsiropoulou, Ian Berry, Colin A. Johnson, and Oliver E. Blacque. Interpreting ciliopathy-associated missense variants of uncertain significance (vus) in an animal model. bioRxiv, Jun 2021. URL: https://doi.org/10.1101/2021.06.17.448799, doi:10.1101/2021.06.17.448799. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>park2022compositionorganizationand pages 6-8</li>
+<li>lange2021interpretingciliopathyassociatedmissense pages 1-4</li>
+<li>jensen2015formationofthe pages 1-2</li>
+<li>ahmed2024twofunctionalforms pages 37-39</li>
+<li>ahmed2024twofunctionalforms pages 20-23</li>
+<li>https://doi.org/10.15252/embr.202255420;</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416;</li>
+<li>https://doi.org/10.15252/embj.201488044</li>
+<li>https://doi.org/10.1038/ncb3273</li>
+<li>https://doi.org/10.1101/2024.09.04.611229</li>
+<li>https://doi.org/10.15252/embr.202255420</li>
+<li>https://doi.org/10.1101/2021.06.17.448799</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416,</li>
+<li>https://doi.org/10.15252/embj.201488044,</li>
+<li>https://doi.org/10.15252/embr.202255420,</li>
+<li>https://doi.org/10.1038/ncb3273,</li>
+<li>https://doi.org/10.1101/2024.09.04.611229,</li>
+<li>https://doi.org/10.1101/2021.06.17.448799,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q20046
+gene_symbol: mks-3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &#39;MKS-3 is the C. elegans ortholog of human TMEM67/meckelin, a transmembrane
+  protein that localizes to the ciliary transition zone. It functions as a component
+  of the MKS module (together with MKS-1, MKSR-1, MKSR-2, MKS-5, and MKS-6), which
+  cooperates with the NPHP module to establish basal body/transition zone membrane
+  associations and ciliary gate function during ciliogenesis. MKS-3 is required for
+  non-motile cilium assembly through genetic interactions with the NPHP module, and
+  participates in restricting non-ciliary membrane proteins from entering the ciliary
+  compartment, thereby establishing the transition zone as a selective barrier (ciliary
+  gate).
+
+  &#39;
+existing_annotations:
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;MKS-3 localization to the ciliary transition zone is strongly supported
+      by fluorescence microscopy studies in C. elegans. Williams et al. (2011) demonstrated
+      that MKS-3/meckelin localizes specifically to the TZ region adjacent to where
+      IFT proteins concentrate at the transition fibers/basal body.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a core annotation for MKS-3. The IBA annotation is consistent
+      with phylogenetic evidence from the MECKELIN family (PTHR21274) and is directly
+      supported by experimental evidence in C. elegans (PMID:21422230).
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+        proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+        concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1,
+        MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+
+        &#39;
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;MKS-3 is involved in cilium assembly through functional interactions
+      with the NPHP module. While mks-3 single mutants show relatively mild phenotypes,
+      mks-3;nphp-4 double mutants exhibit severe ciliary defects including dye-filling
+      defects, missing/shorter cilia, and TZ/BB membrane detachment.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This annotation accurately captures MKS-3 involvement in ciliogenesis.
+      The IBA annotation from phylogenetic inference is well-supported by experimental
+      evidence in C. elegans showing MKS-3 participates in establishing BB/TZ membrane
+      associations during early ciliogenesis (PMID:21422230).
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+        before or coinciding with intraflagellar transport-dependent axoneme extension
+
+        &#39;
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Functional interactions between different MKS module components
+        and the NPHP module are essential for an IFT-independent early stage of ciliogenesis,
+        namely docking/anchoring of the BB/TZ to the membrane.
+
+        &#39;
+- term:
+    id: GO:0036038
+    label: MKS complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;MKS-3 is a component of the MKS complex (MKS module), which consists
+      of MKS-1, MKSR-1, MKSR-2, MKS-3, MKS-5, and MKS-6 in C. elegans. The complex
+      localizes to the ciliary transition zone and functions in organizing Y-shaped
+      links and establishing the ciliary gate.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This IEA annotation from InterPro is well-supported. MKS-3 contains the
+      Meckelin domain (IPR019170/Pfam:PF09773) which is a defining feature of this
+      protein family. Experimental evidence confirms MKS-3 functions within the MKS
+      module and genetically interacts with other module components.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;We find that MKS-5/RPGRIP1L interacts with two distinct TZ
+        functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6
+        and NPHP-1/NPHP-4 proteins, respectively.
+
+        &#39;
+    - reference_id: PMID:21422230
+      supporting_text: &#39;These data suggest that mks-6 genetically interacts with the
+        NPHP module and is associated with the MKS/MKSR module.
+
+        &#39;
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;Duplicate annotation to cilium assembly from InterPro mapping. This
+      IEA annotation is consistent with the IBA annotation and experimental evidence.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;While this duplicates the IBA annotation for cilium assembly, it is appropriate
+      to retain both as they derive from independent evidence sources (InterPro domain
+      mapping vs. phylogenetic inference). Both correctly capture the role of MKS-3
+      in ciliogenesis.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+        before or coinciding with intraflagellar transport-dependent axoneme extension
+
+        &#39;
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IGI
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;This annotation captures that MKS-3 is required specifically for assembly
+      of non-motile (primary/sensory) cilia. In C. elegans, the ciliated sensory neurons
+      possess non-motile cilia. Williams et al. demonstrated that mks-3;nphp-4 double
+      mutants have severe ciliogenesis defects in these sensory neurons.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a more specific annotation than GO:0060271 (cilium assembly)
+      and accurately reflects that C. elegans sensory neuron cilia are non-motile.
+      The IGI evidence code is appropriate as the phenotype is observed in genetic
+      interaction with nphp-4 (WB:WBGene00011261). This represents a core function
+      of MKS-3.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Primary cilia protrude from most mammalian cells and modulate
+        sensory processes, including chemo-, mechano-, and photo-reception
+
+        &#39;
+    - reference_id: PMID:21422230
+      supporting_text: &#39;We uncovered in double mutants multiple phenotypes, including
+        missing or shorter cilia
+
+        &#39;
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IDA
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;This IDA annotation documents the direct experimental demonstration
+      of MKS-3 localization to the ciliary transition zone using fluorescence microscopy
+      of tagged MKS-3 protein.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a well-supported core annotation. The IDA evidence is appropriate
+      as MKS-3 TZ localization was directly observed using MKS-3::GFP fusion protein
+      imaging. This annotation complements the IBA annotation from phylogenetic inference.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+        proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+        concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1,
+        MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+
+        &#39;
+- term:
+    id: GO:1905349
+    label: ciliary transition zone assembly
+  evidence_type: IGI
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;MKS-3, as part of the MKS module, is required for proper assembly and
+      organization of the ciliary transition zone. When MKS module components are
+      disrupted together with NPHP-4, severe TZ defects are observed including missing
+      Y-links and disrupted TZ structure.
+
+      &#39;
+    action: NEW
+    reason: &#39;This annotation captures the role of MKS-3 in transition zone organization,
+      which is distinct from but related to its localization there. The TEM studies
+      show that mks-3;nphp-4 double mutants have disrupted TZ regions with missing
+      Y-links.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;mks-6;nphp-4 and mks-5;nphp-4 double mutants exhibit mispositioned
+        and disrupted TZ regions, with clear disconnections between the BB/TZ region
+        and membrane, accompanied by missing Y-links
+
+        &#39;
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Phenotypes nearly identical to mks-6;nphp-4 mutants were observed
+        in the mksr-1;nphp-4 strain
+
+        &#39;
+- term:
+    id: GO:1903565
+    label: negative regulation of protein localization to cilium
+  evidence_type: IMP
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;MKS-3, together with other TZ proteins, restricts inappropriate accumulation
+      of non-ciliary membrane proteins within cilia. In mks/mksr mutants, proteins
+      like RPI-2 and TRAM-1a that are normally excluded from cilia accumulate within
+      the ciliary compartment, demonstrating the gating function.
+
+      &#39;
+    action: NEW
+    reason: &#39;This is a critical annotation capturing the ciliary gate function of
+      MKS-3. The paper directly demonstrates that TZ proteins including those in the
+      MKS module establish a gate that modulates ciliary composition. When TZ proteins
+      are disrupted, non-ciliary proteins inappropriately accumulate inside cilia.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;the two modules restrict inappropriate accumulation of membrane-associated
+        proteins inside cilia
+
+        &#39;
+    - reference_id: PMID:21422230
+      supporting_text: &#39;Together, our data showing abnormal accumulations of MKS-3,
+        RPI-2, and TRAM-1a in TZ mutant cilia indicate that, in addition to their
+        role in early ciliogenesis, most if not all TZ proteins normally function
+        to maintain a boundary at the cilium base, establishing the TZ as a bona fide
+        ciliary gate.
+
+        &#39;
+- term:
+    id: GO:0007635
+    label: chemosensory behavior
+  evidence_type: IMP
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;MKS-3 contributes to chemosensory behavior through its role in ciliary
+      function. mks-3;nphp-4 double mutants show osmotic avoidance defects and impaired
+      dye-filling, indicating compromised sensory cilium function.
+
+      &#39;
+    action: NEW
+    reason: &#39;This annotation captures the physiological/behavioral consequence of
+      MKS-3 function in sensory cilia. The osmotic avoidance assay tests chemosensory
+      behavior that depends on functional sensory cilia. This should be marked as
+      a secondary/non-core function.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;both mks-5;nphp-4 and mks-6;nphp-4 double mutants exhibit
+        strong dye-filling (Dyf) and osmotic avoidance (Osm) phenotypes
+
+        &#39;
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: IDA
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;MKS-3 contributes to the structural integrity of the MKS complex at
+      the ciliary transition zone. The protein localizes to the TZ and functions together
+      with other MKS module components to organize TZ architecture.
+
+      &#39;
+    action: NEW
+    reason: &#39;This molecular function annotation captures MKS-3&#39;&#39;s role as a structural
+      component of the MKS complex. Evidence shows MKS-3 is part of the TZ architecture
+      and is required for proper organization of Y-links and membrane associations.
+      This is more appropriate than generic protein binding as it describes the functional
+      contribution.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: &#39;We find that MKS-5/RPGRIP1L interacts with two distinct TZ
+        functional modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6
+        and NPHP-1/NPHP-4 proteins, respectively.
+
+        &#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: MKS-3 contains the Meckelin domain (IPR019170) which maps to MKS complex
+      membership and cilium assembly
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: MKS-3 is part of the MECKELIN family (PTHR21274) supporting TZ localization
+      and cilium assembly annotations
+- id: PMID:21422230
+  title: MKS and NPHP modules cooperate to establish basal body/transition zone membrane
+    associations and ciliary gate function during ciliogenesis.
+  findings:
+  - statement: MKS-3 localizes to the ciliary transition zone in C. elegans sensory
+      neurons
+    supporting_text: &#39;Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+      proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+      concentrate at the TFs/BB). This is evident for MKS-1, MKS-1 related-1 (MKSR-1)/B9D1,
+      MKS-1 related-2 (MKSR-2)/B9D2, MKS-3/meckelin, NPHP-1, and NPHP-4
+
+      &#39;
+  - statement: MKS-3 is a component of the MKS module that functions with the NPHP
+      module in ciliogenesis
+    supporting_text: &#39;We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional
+      modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and
+      NPHP-1/NPHP-4 proteins, respectively.
+
+      &#39;
+  - statement: MKS-3 participates in establishing basal body/TZ membrane attachments
+      during early ciliogenesis
+    supporting_text: &#39;Functional interactions between different MKS module components
+      and the NPHP module are essential for an IFT-independent early stage of ciliogenesis,
+      namely docking/anchoring of the BB/TZ to the membrane.
+
+      &#39;
+  - statement: MKS-3 is required for ciliary gate function that restricts non-ciliary
+      proteins from entering cilia
+    supporting_text: &#39;Together, our data showing abnormal accumulations of MKS-3,
+      RPI-2, and TRAM-1a in TZ mutant cilia indicate that, in addition to their role
+      in early ciliogenesis, most if not all TZ proteins normally function to maintain
+      a boundary at the cilium base, establishing the TZ as a bona fide ciliary gate.
+
+      &#39;
+  - statement: mks-3;nphp-4 double mutants show severe ciliogenesis defects including
+      missing Y-links and TZ detachment
+    supporting_text: &#39;Although similar ciliary defects were observed in the latter
+      mutants (Fig. 7; Fig. S4, Fig. S5), some of their TZ regions are in normal proximity
+      to the ciliary membrane but often lack connecting Y-links
+
+      &#39;
+core_functions:
+- molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  description: MKS-3 functions as a transmembrane structural component of the MKS
+    complex at the ciliary transition zone, contributing to the integrity and organization
+    of the TZ architecture including Y-links and membrane associations. As a multi-pass
+    transmembrane protein with five predicted transmembrane helices, MKS-3 likely
+    functions in anchoring the MKS complex to the transition zone membrane.
+  locations:
+  - id: GO:0035869
+    label: ciliary transition zone
+  in_complex:
+    id: GO:0036038
+    label: MKS complex
+  directly_involved_in:
+  - id: GO:1905515
+    label: non-motile cilium assembly
+  - id: GO:1905349
+    label: ciliary transition zone assembly
+  - id: GO:1903565
+    label: negative regulation of protein localization to cilium
+  supported_by:
+  - reference_id: PMID:21422230
+    supporting_text: We find that MKS-5/RPGRIP1L interacts with two distinct TZ functional
+      modules, MKS/MKSR and NPHP, consisting of MKS-1/MKSR-1/MKSR-2/MKS-3/MKS-6 and
+      NPHP-1/NPHP-4 proteins, respectively.
+proposed_new_terms: []
+suggested_questions:
+- question: What are the specific protein-protein interactions between MKS-3 and other
+    MKS module components?
+- question: Does MKS-3 directly interact with NPHP-1 or NPHP-4, or is the genetic
+    interaction indirect?
+- question: What is the molecular basis for MKS-3 localization to the transition zone?
+suggested_experiments:
+- description: Co-immunoprecipitation of MKS-3 with other MKS module components to
+    confirm physical interactions
+  hypothesis: MKS-3 directly binds to other MKS module proteins at the transition
+    zone
+- description: Structure-function analysis of MKS-3 domains required for TZ localization
+  hypothesis: Specific domains of MKS-3 are required for its localization and function
+    at the TZ
+- description: Super-resolution microscopy to define precise MKS-3 localization within
+    the TZ
+  hypothesis: MKS-3 localizes to a specific sub-compartment within the transition
+    zone
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

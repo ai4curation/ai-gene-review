@@ -1,0 +1,2948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>epg-5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>epg-5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q18892" target="_blank" class="term-link">
+                        Q18892
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "epg-5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q18892" data-a="DESCRIPTION: EPG-5 (Ectopic P granules protein 5) is a metazoan..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EPG-5 (Ectopic P granules protein 5) is a metazoan-specific autophagy tethering factor that functions as a RAB-7 effector to determine the fusion specificity of autophagosomes with late endosomes/lysosomes. EPG-5 binds RAB-7 on late endosomes/lysosomes and engages LGG-1 (C. elegans LC3/ATG8 ortholog) via conserved LIR motifs on autophagosomes. It coordinates the STX17-SNAP29-VAMP7/8 trans-SNARE machinery to promote correct autophagosome-lysosome fusion and prevent aberrant SNARE pairing. Loss of epg-5 causes accumulation of non-degradative hybrid vesicles bearing both autophagosomal and endosomal markers, impaired lysosomal acidification, and defective autophagy flux. EPG-5 also functions in LAP (LC3-associated phagocytosis) to promote delivery of engulfed apoptotic cells to lysosomes. Human ortholog EPG5 mutations cause Vici syndrome, a severe multisystem disorder.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is localized to the cytoplasm with partial localization to late endosome/lysosome membranes and autophagosome-lysosome contact sites. The IBA annotation is consistent with the general cytoplasmic distribution of this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5 is a cytoplasmic protein that is recruited to late endosomes/lysosomes via RAB-7 interaction. The cytoplasm annotation accurately reflects the general localization of EPG-5 before it is recruited to specific membrane compartments for its fusion-tethering function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The EPG-5 protein was reported to evenly distribute in the cytosol</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 is predominantly cytoplasmic and recruited to autophagosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097352" target="_blank" class="term-link">
+                                    GO:0097352
+                                </a>
+                            </span>
+                            <span class="term-label">autophagosome maturation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0097352" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is essential for autophagosome maturation, functioning as a RAB-7 effector that determines fusion specificity of autophagosomes with late endosomes/lysosomes. This is a core function of the protein conserved across metazoans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Autophagosome maturation is a core function of EPG-5. The protein acts as a tethering factor that binds RAB-7 on late endosomes/lysosomes and LGG-1 on autophagosomes, coordinating SNARE-mediated fusion. epg-5 mutants accumulate non-degradative autolysosomes indicating impaired maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24374177" target="_blank" class="term-link">
+                                        PMID:24374177
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LGG-2 controls the maturation of LGG-1-positive autophagosomes and facilitates the tethering with the lysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location vocabulary mapping. Consistent with IBA annotation and experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct and consistent with the IBA annotation and experimental evidence. It is acceptable to retain both IBA and IEA annotations for the same term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The EPG-5 protein was reported to evenly distribute in the cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006914" target="_blank" class="term-link">
+                                    GO:0006914
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0006914" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is involved in autophagy, specifically in the late autophagosome maturation/fusion step. This IEA annotation from UniProt keyword mapping is correct but more general than the specific function (autophagosome maturation).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While GO:0097352 (autophagosome maturation) is more specific for EPG-5&#39;s function, the parent term GO:0006914 (autophagy) is not incorrect. The IEA annotation provides a valid broader annotation that complements the more specific IBA annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030670" target="_blank" class="term-link">
+                                    GO:0030670
+                                </a>
+                            </span>
+                            <span class="term-label">phagocytic vesicle membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0030670" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 localizes to phagosome membranes of engulfed apoptotic cells during LAP (LC3-associated phagocytosis). This is supported by experimental evidence in PMID:22451698.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5::GFP was recruited to the outer surface of internalized apoptotic Q cell corpses in the phagocyte. This localization is distinct from its role in canonical autophagy but represents a genuine function in apoptotic cell clearance via LAP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the autophagy proteins LGG-1, ATG-18, and EPG-5 are recruited from the phagocyte to the outer surface of internalized Q cell corpses</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                    GO:0031410
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0031410" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 localizes to cytoplasmic vesicles including late endosomes/lysosomes and autophagosomes. This annotation is supported by experimental localization data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5 localizes to late endosomes/lysosomes via RAB-7 interaction and to sites of autophagosome-lysosome contact.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5::GFP was recruited on the Q cell corpse</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 localizes to autophagosomes and late endosomes/lysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902902" target="_blank" class="term-link">
+                                    GO:1902902
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of autophagosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24374177" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24374177
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The C. elegans LC3 acts downstream of GABARAP to degrade aut...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:1902902" data-r="PMID:24374177" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation suggests EPG-5 negatively regulates autophagosome assembly. However, EPG-5 functions at the autophagosome maturation step, not assembly. The observed increase in autophagosomes in epg-5 mutants is due to blocked fusion/degradation, not increased assembly rate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation appears to be based on the observation that epg-5 mutants cause accumulation of autophagosomes. However, this accumulation results from impaired autophagosome-lysosome fusion and degradation, not from increased autophagosome formation. EPG-5 acts downstream at the maturation step. The correct interpretation is that EPG-5 is involved in autophagosome maturation (GO:0097352) or autophagosome-lysosome fusion (GO:0061909). The term GO:1902902 misrepresents the mechanism.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097352" target="_blank" class="term-link">
+                                    autophagosome maturation
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061909" target="_blank" class="term-link">
+                                    autophagosome-lysosome fusion
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24374177" target="_blank" class="term-link">
+                                        PMID:24374177
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LGG-2 controls the maturation of LGG-1-positive autophagosomes and facilitates the tethering with the lysosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016236" target="_blank" class="term-link">
+                                    GO:0016236
+                                </a>
+                            </span>
+                            <span class="term-label">macroautophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20550938
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans screen identifies autophagy genes specific to mul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0016236" data-r="PMID:20550938" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is essential for macroautophagy, specifically the maturation step where autophagosomes fuse with lysosomes. This is a core function supported by the seminal study that identified epg-5.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:20550938 identified epg-5 in a genetic screen for autophagy genes and demonstrated that it is required for starvation-induced autophagy. While autophagosome maturation is the more specific step, macroautophagy accurately describes the broader process in which EPG-5 functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20550938
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans screen identifies autophagy genes specific to mul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0005737" data-r="PMID:20550938" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence shows EPG-5 localizes to the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IDA annotation provides the strongest evidence for cytoplasmic localization. EPG-5 is a cytoplasmic protein that is recruited to late endosome/lysosome membranes for its fusion function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The EPG-5 protein was reported to evenly distribute in the cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061909" target="_blank" class="term-link">
+                                    GO:0061909
+                                </a>
+                            </span>
+                            <span class="term-label">autophagosome-lysosome fusion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20550938
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans screen identifies autophagy genes specific to mul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0061909" data-r="PMID:20550938" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is a tethering factor that directly promotes autophagosome-lysosome fusion by coordinating RAB-7, LGG-1/LC3, and SNARE proteins. This is the most specific term for EPG-5&#39;s core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:20550938 demonstrated that EPG-5 is required for formation of degradative autolysosomes. Later work definitively established that EPG-5 is a Rab7 effector that determines the fusion specificity of autophagosomes with late endosomes/lysosomes. This term should be added with IMP evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 promotes autophagosome-lysosome fusion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031902" target="_blank" class="term-link">
+                                    GO:0031902
+                                </a>
+                            </span>
+                            <span class="term-label">late endosome membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22451698
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Autophagy genes function sequentially to promote apoptotic c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0031902" data-r="PMID:22451698" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 localizes to late endosome/lysosome membranes via RAB-7 binding. This localization is essential for its tethering function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5 is recruited to late endosomes/lysosomes via its interaction with RAB-7. This localization is distinct from the general cytoplasm annotation and more accurately reflects the site of EPG-5&#39;s action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5::GFP was recruited on the Q cell corpse</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 localizes to late endosomes/lysosomes via RAB-7</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000149" target="_blank" class="term-link">
+                                    GO:0000149
+                                </a>
+                            </span>
+                            <span class="term-label">SNARE binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20550938
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans screen identifies autophagy genes specific to mul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0000149" data-r="PMID:20550938" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 binds SNARE proteins to coordinate autophagosome-lysosome fusion. This molecular function annotation would complement the biological process annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5 engages the autophagosomal Qabc SNARE complex STX17-SNAP29 and coordinates with the R-SNARE VAMP7/8 on late endosomes/lysosomes. SNARE binding is a core molecular function that enables EPG-5&#39;s tethering activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                        PMID:20550938
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 coordinates SNARE complex assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22451698
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Autophagy genes function sequentially to promote apoptotic c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q18892" data-a="GO:0031267" data-r="PMID:22451698" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> EPG-5 is a RAB-7 effector that directly binds RAB-7. This molecular function is central to its role in autophagosome maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> EPG-5 binds RAB-7 (a small GTPase of the Rab family) on late endosomes/lysosomes. This interaction is essential for EPG-5 localization and function. RAB-7 binding is a core molecular function of EPG-5.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                        PMID:22451698
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that the recruitment of RAB-7 onto the phagosome was delayed from 70 ± 15 min in WT (n = 11) to 145 ± 66 min in atg-18 (n = 18) and 102 ± 30 min in epg-5 (n = 12) mutants</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/epg-5/epg-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">EPG-5 is a RAB-7 effector</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EPG-5 is a RAB-7 effector that directly binds RAB-7 GTPase on late endosomes/lysosomes. This interaction is essential for EPG-5 localization and function in autophagosome-lysosome tethering.</h3>
+                <span class="vote-buttons" data-g="Q18892" data-a="FUNCTION: EPG-5 is a RAB-7 effector that directly binds RAB-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                            small GTPase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061909" target="_blank" class="term-link">
+                                autophagosome-lysosome fusion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097352" target="_blank" class="term-link">
+                                autophagosome maturation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031902" target="_blank" class="term-link">
+                                late endosome membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                                PMID:22451698
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We found that the recruitment of RAB-7 onto the phagosome was delayed from 70 ± 15 min in WT (n = 11) to 145 ± 66 min in atg-18 (n = 18) and 102 ± 30 min in epg-5 (n = 12) mutants</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                PMID:20550938
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EPG-5 binds SNARE proteins including STX17-SNAP29 on autophagosomes and VAMP7/8 on late endosomes/lysosomes to coordinate membrane fusion. This SNARE coordination is the mechanistic basis for EPG-5&#39;s tethering activity.</h3>
+                <span class="vote-buttons" data-g="Q18892" data-a="FUNCTION: EPG-5 binds SNARE proteins including STX17-SNAP29 ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000149" target="_blank" class="term-link">
+                            SNARE binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061909" target="_blank" class="term-link">
+                                autophagosome-lysosome fusion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031902" target="_blank" class="term-link">
+                                late endosome membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                                PMID:20550938
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">EI24 and mEPG5 are required for formation of degradative autolysosomes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations for cytoplasm and autophagosome maturation from PANTHER family PTHR31139 (Autophagy-related EPG5).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20550938" target="_blank" class="term-link">
+                            PMID:20550938
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">C. elegans screen identifies autophagy genes specific to multicellular organisms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified epg-5 as a metazoan-specific autophagy gene required for formation of degradative autolysosomes.</div>
+                        
+                        <div class="finding-text">"EI24 and mEPG5 are required for formation of degradative autolysosomes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">epg-2, -3, -4, and -5 define discrete genetic steps of the autophagy pathway.</div>
+                        
+                        <div class="finding-text">"Genetic analysis reveals that epg-2, -3, -4, and -5 define discrete genetic steps of the autophagy pathway"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22451698" target="_blank" class="term-link">
+                            PMID:22451698
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Autophagy genes function sequentially to promote apoptotic cell corpse degradation in the engulfing cell.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EPG-5 is recruited to the outer surface of internalized apoptotic Q cell corpses in phagocytes.</div>
+                        
+                        <div class="finding-text">"the autophagy proteins LGG-1, ATG-18, and EPG-5 are recruited from the phagocyte to the outer surface of internalized Q cell corpses"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EPG-5 functions in the phagocyte to promote apoptotic cell degradation via phagosome maturation.</div>
+                        
+                        <div class="finding-text">"atg-18 and epg-5 function in the phagocyte to promote Q cell corpse clearance"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">epg-5 mutants show delayed RAB-7 recruitment to phagosomes.</div>
+                        
+                        <div class="finding-text">"We found that the recruitment of RAB-7 onto the phagosome was delayed from 70 ± 15 min in WT (n = 11) to 145 ± 66 min in atg-18 (n = 18) and 102 ± 30 min in epg-5 (n = 12) mutants"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24374177" target="_blank" class="term-link">
+                            PMID:24374177
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C. elegans LC3 acts downstream of GABARAP to degrade autophagosomes by interacting with the HOPS subunit VPS39.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LGG-2 controls autophagosome maturation and facilitates tethering with lysosomes through VPS-39.</div>
+                        
+                        <div class="finding-text">"LGG-2 controls the maturation of LGG-1-positive autophagosomes and facilitates the tethering with the lysosomes through a direct interaction with the VPS-39 HOPS complex subunit"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25124690" target="_blank" class="term-link">
+                            PMID:25124690
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PI3P phosphatase activity is required for autophagosome maturation and autolysosome formation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MTM-3 acts upstream of EPG-5 to promote autophagosome maturation.</div>
+                        
+                        <div class="finding-text">"MTM-3 acts downstream of the ATG-2/EPG-6 complex and upstream of EPG-5 to promote autophagosome maturation into autolysosomes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/epg-5/epg-5-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for epg-5</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EPG-5 is a RAB-7 effector that promotes autophagosome-lysosome fusion.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-mitophagy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(epg-5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q18892" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T00:20:38.036510'<br />
+end_time: '2025-12-28T00:25:13.199703'<br />
+duration_seconds: 275.16<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: epg-5<br />
+  gene_symbol: epg-5<br />
+  uniprot_accession: Q18892<br />
+  protein_description: 'RecName: Full=Ectopic P granules protein 5;'<br />
+  gene_info: Name=epg-5 {ECO:0000312|WormBase:C56C10.12}; ORFNames=C56C10.12 {ECO:0000312|WormBase:C56C10.12};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the EPG5 family. .<br />
+  protein_domains: Autophagy-related_EPG5. (IPR051436)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q18892</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ectopic P granules protein 5;</li>
+<li><strong>Gene Information:</strong> Name=epg-5 {ECO:0000312|WormBase:C56C10.12}; ORFNames=C56C10.12 {ECO:0000312|WormBase:C56C10.12};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the EPG5 family. .</li>
+<li><strong>Key Domains:</strong> Autophagy-related_EPG5. (IPR051436)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "epg-5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'epg-5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>epg-5</strong> (gene ID: epg-5, UniProt: Q18892) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q18892</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ectopic P granules protein 5;</li>
+<li><strong>Gene Information:</strong> Name=epg-5 {ECO:0000312|WormBase:C56C10.12}; ORFNames=C56C10.12 {ECO:0000312|WormBase:C56C10.12};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the EPG5 family. .</li>
+<li><strong>Key Domains:</strong> Autophagy-related_EPG5. (IPR051436)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "epg-5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'epg-5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>epg-5</strong> (gene ID: epg-5, UniProt: Q18892) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview: We verified identity and domain/family alignment for C. elegans epg-5 (UniProt Q18892) and gathered recent primary and review literature emphasizing mechanistic function, localization, phenotypes, pathway context, and translational links. We synthesized experimental evidence from C. elegans and conserved human studies, prioritized 2023–2024 sources where available, and compiled quantitative data and assay implementations in worms. All claims below are supported by specific citations.</p>
+<p>Comprehensive research report on C. elegans epg-5 (EPG-5)</p>
+<p>1) Key concepts, definitions, and current understanding<br />
+- Identity and family: epg-5 encodes Ectopic P granules protein 5 (EPG-5), a metazoan-specific autophagy tethering factor in the EPG5 family that functions at the terminal step of autophagy to enforce fusion specificity between autophagosomes and late endosomes/lysosomes (autolysosome formation) (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3).<br />
+- Molecular role: EPG-5 is a Rab7 effector that binds late endosomes/lysosomes. It also engages autophagosomal Atg8/LC3 ortholog LGG-1 via conserved LIR motifs, and coordinates the STX17–SNAP29–VAMP7/8 trans-SNARE machinery to specify and promote autophagosome–lysosome fusion (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3, wang2016thevicisyndrome pages 6-9).<br />
+- Step in autophagy: EPG-5 acts after autophagosome completion, at the docking/fusion stage with late endosomes/lysosomes. Loss of epg-5 causes accumulation of non-degradative hybrid vesicles and non-functional autolysosomes containing both autophagosomal and endosomal markers (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021; Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3, wang2019therbg1–rbg2complex pages 4-7).</p>
+<p>2) Recent developments and latest research (emphasis 2023–2024)<br />
+- Expanded pathway connections to endocytic recycling and signaling: New work shows EPG-5 modulates retrograde endocytic trafficking in C. elegans development, impacting TGF-β (SMA-6 receptor) and WNT (WLS/MIG-14) pathways. In epg-5 mutants, SMA-6 and MIG-14 are trapped in hybrid endosomal structures co-localizing with SNX-1 or SNX-3; defects in RAB-5→RAB-7 and RAB-5→RAB-10 conversion generate hybrid vesicles. Notably, HOPS knockdown ameliorates trafficking and autophagy defects, linking EPG-5 to endosome maturation machinery (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).<br />
+- Disease spectrum and translational genetics: A 2024 multicenter cohort analysis (n=200 individuals with recessive EPG5 variants) extends the spectrum of EPG5-related disorders from classic Vici syndrome to milder neurodevelopmental/neurodegenerative phenotypes, including epilepsy, dystonia, and early-onset parkinsonism; genotype–phenotype patterns suggest residual expression correlates with severity (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 9-12, dafsari2024mutationsinepg5 pages 24-27).</p>
+<p>3) Primary function, localization, pathways, and worm phenotypes<br />
+- Molecular interactions and mechanism:<br />
+  - Rab GTPase and SNARE interface: EPG-5 binds RAB-7 and the R-SNARE VAMP7/8 on late endosomes/lysosomes, and associates with the Qabc SNARE complex STX17–SNAP29 assembled on autophagosomes. In reconstituted liposome systems, EPG-5 promotes STX17–SNAP29–VAMP7/8 fusion, defining its role as a fusion-tethering factor. Depletion alters SNARE pairing (e.g., increased STX17–SNAP25–VAMP8) indicating a role in fusion specificity (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3).<br />
+  - ATG8-family binding: EPG-5 directly binds LGG-1 through conserved LIR motifs (two canonical motifs within residues 500–530). Mutation or deletion of this region abolishes LGG-1 binding, supporting EPG-5’s engagement with autophagosomal membranes (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 6-9).<br />
+- Subcellular localization: In worms, EPG-5 localizes to late endosomes/lysosomes via RAB-7, and to sites of autophagosome–lysosome interaction; epg-5 mutants accumulate enlarged vesicles co-labeled by autophagy (LGG-1) and endosomal/lysosomal markers (RAB-7, RAB-10, NUC-1 reporters), reflecting hybrid non-degradative autolysosomes (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021; Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2016thevicisyndrome pages 3-5, wang2019therbg1–rbg2complex pages 4-7).<br />
+- Pathway context and genetic interactions:<br />
+  - epg-5 functions downstream in the autophagy pathway, at maturation/fusion, interfacing with RAB-7 and HOPS-dependent endolysosomal machinery; loss of rbg-1 (component of the RBG-1–RBG-2 complex) genetically suppresses epg-5 phenotypes by promoting lysosomal biogenesis and restoring acidification and flux, partly via modulating RAB-7 dynamics (Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2019therbg1–rbg2complex pages 1-2, wang2019therbg1–rbg2complex pages 4-7).<br />
+  - epg-5 intersects with endocytic recycling and retrograde transport (RAB-5→RAB-7, RAB-5→RAB-10 conversion), impacting TGF-β and WNT receptor trafficking and hence developmental outcomes (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).<br />
+- Worm phenotypes:<br />
+  - Autophagy defects: epg-5 mutants accumulate GFP::LGG-1 puncta and non-acidic enlarged hybrid vesicles bearing autophagosomal and endosomal markers; lysosomal acidification and degradation reporters (e.g., NUC-1 tandem reporters) indicate impaired delivery/acidification; FRAP shows reduced RAB-7 mobility on late endosomes/lysosomes (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021; Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2016thevicisyndrome pages 3-5, wang2019therbg1–rbg2complex pages 4-7).<br />
+  - Mitophagy and neuro-motor phenotypes: epg-5 knockdown in worms increases LGG-1 autophagosome puncta and DCT-1 mitophagy puncta, consistent with impaired clearance; locomotor defects were quantified in RNAi-fed animals (methods: three biological replicates of 10 day-1 adults per replicate) (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 24-27). </p>
+<p>4) Expert opinions and analyses from authoritative sources<br />
+- Canonical fusion-tether model: The Mol Cell study (2016) provides the authoritative mechanistic framework placing EPG-5 as a Rab7-dependent tether that ensures correct SNARE pairing for autophagosome–lysosome fusion, preventing mistargeted fusion with other compartments (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3).<br />
+- Autophagy-endocytosis crosstalk and disease implications: New data emphasize EPG-5’s role in endocytic retrograde trafficking and receptor recycling, mechanistically connecting autophagy defects to developmental signaling alterations and suggesting convergence with HOPS-dependent lysosomal fusion. This provides a unifying explanation for epg-5 pleiotropy and informs ALS/Vici syndrome pathogenesis (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).<br />
+- Genetic modifiers of EPG5 deficiency: The RBG-1–RBG-2 complex modulates lysosomal biogenesis/function and RAB-7 dynamics to suppress epg-5 defects, highlighting lysosome-centered therapeutic angles for EPG5-related disease (Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2019therbg1–rbg2complex pages 1-2, wang2019therbg1–rbg2complex pages 4-7).</p>
+<p>5) Relevant statistics, data, and assays<br />
+- Human cohort statistics: 200 individuals with recessive EPG5 variants were compiled, delineating a spectrum from classic Vici syndrome to milder neurodevelopmental/neurodegenerative presentations, with genotype–phenotype correlations suggesting residual expression modifies severity (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 9-12).<br />
+- C. elegans experimental numbers and quantitation:<br />
+  - RNAi locomotion and mitophagy assays: three biological replicates of n=10 day‑1 adults each per condition were used to quantify locomotor phenotypes and mitophagy/autophagy puncta (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 24-27).<br />
+  - Lysosome function and RAB-7 dynamics: quantitative imaging of NUC-1 tandem reporters and pH-sensitive probes, volumes/intensity of lysosomal structures (n≈10 animals/condition, mean±s.e.m.), FRAP of GFP–RAB-7 mobility, and GST–RILP pulldown for GTP-RAB-7 were used to define suppression of epg-5 defects by rbg-1 loss (Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2019therbg1–rbg2complex pages 4-7).<br />
+- Core worm assays used to define epg-5 function:<br />
+  - Autophagosome markers: GFP::LGG-1 puncta quantification and colocalization with RAB-7-labeled late endosomes (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 6-9).<br />
+  - Lysosomal delivery/acidification reporters: NUC-1::sfGFP::mCherry (tandem pH-insensitive/sensitive), NUC-1::pHTomato, indicating impaired acidification in epg-5 mutants (Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2019therbg1–rbg2complex pages 4-7).<br />
+  - Endosomal/recycling markers and conversions: RAB-5, RAB-7, RAB-10 conversions and SNX-1/SNX-3 colocalization to define hybrid vesicles; suppression by HOPS KD (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).<br />
+  - Selective autophagy/mitophagy: DCT-1 (BNIP3 homolog) mitophagy puncta and LGG‑1 reporters to quantify impaired mitophagic clearance upon epg-5 perturbation (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 24-27).</p>
+<p>6) Biological inference and pathway integration in C. elegans<br />
+- Primary role and substrate specificity: EPG-5 is not an enzyme or transporter; it is a vesicle tethering/scaffolding factor that enforces fidelity of autophagosome–lysosome fusion. Its “substrates” are membrane-bound fusion intermediates: it recognizes Rab7-positive late endosomes/lysosomes and LC3/LGG-1-decorated autophagosomes, stabilizing STX17–SNAP29–VAMP7/8 to drive correct fusion and prevent aberrant SNARE pairing (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021) (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3, wang2016thevicisyndrome pages 6-9).<br />
+- Cellular site of action: Cytosolic peripheral localization at late endosome/lysosome membranes and autophagosome–lysosome contact sites characterized by RAB-7 and VAMP7/8 presence (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021; Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2016thevicisyndrome pages 3-5, wang2019therbg1–rbg2complex pages 4-7).<br />
+- Pathway crosstalk: EPG-5 bridges autophagy and the endocytic/recycling routes. In worms, epg-5 ensures proper retrograde trafficking of SMA-6 and MIG-14, thereby modulating TGF-β-dependent body size and WNT-dependent cell migration; HOPS dependency emphasizes its role at the endosome–lysosome interface (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).</p>
+<p>7) Conservation to human EPG5 and disease relevance<br />
+- Mechanistic conservation: The Rab7-effector, LC3/Atg8-binding, and SNARE-fusion roles are conserved features of EPG5 orthologs; mutations in human EPG5 cause Vici syndrome and broader EPG5-related disorders, aligning with the fusion-defect model established in C. elegans (Sep 2016; https://doi.org/10.1016/j.molcel.2016.08.021; Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (wang2016thevicisyndrome pages 3-5, dafsari2024mutationsinepg5 pages 9-12).<br />
+- Clinical spectrum and quantitative data: A 2024 cohort of 200 patients delineates a continuum from severe, classic Vici syndrome to milder neurodevelopmental/neurodegenerative disease; functional studies in patient fibroblasts demonstrate impaired PINK1/PRKN mitophagy, mirroring worm epg-5 mitophagy/autophagy defects (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 9-12, dafsari2024mutationsinepg5 pages 24-27).</p>
+<p>8) Current applications and real-world implementations (C. elegans)<br />
+- Flux and cargo assays: LGG-1 puncta and tandem reporters (e.g., NUC-1::sfGFP::mCherry; NUC-1::pHTomato) quantify delivery and acidification defects in epg-5 mutants; FRAP of GFP–RAB-7 and GST–RILP pulldown quantify RAB-7 dynamics/state (Oct 2019; https://doi.org/10.1242/jcs.234195) (wang2019therbg1–rbg2complex pages 4-7).<br />
+- Endosomal trafficking readouts: RAB-5/RAB-7/RAB-10 conversion analyses and SNX-1/SNX-3 colocalization identify hybrid vesicles; HOPS RNAi epistasis tests mechanistic positions (Apr 2025; https://doi.org/10.1080/15548627.2025.2485420) (yuan2025epg5regulatestgfbtgfβ pages 1-2).<br />
+- Selective autophagy/mitophagy reporter usage in vivo: DCT-1 mitophagy puncta with LGG-1 and locomotion assays to quantify functional consequences of epg-5 knockdown (Jun 2024; https://doi.org/10.1101/2024.06.12.24308722) (dafsari2024mutationsinepg5 pages 24-27).</p>
+<p>Conclusions<br />
+EPG-5/epg-5 is a conserved metazoan autophagy tether that specifies and promotes the fusion of autophagosomes with late endosomes/lysosomes through coordinated Rab7/Atg8 and SNARE interactions. In C. elegans, epg-5 loss yields hybrid, non-degradative autolysosomes, impaired acidification, and stalled selective autophagy (including mitophagy). Recent work highlights epg-5’s broader role in retrograde endocytic trafficking that modulates TGF-β and WNT signaling, providing a mechanistic bridge between autophagy and developmental signaling. Human genetics consolidates the fusion-defect model and expands the EPG5-related disease spectrum, with quantitative cohorts and functional patient-cell phenotypes mirroring nematode biology (wang2016thevicisyndrome pages 3-5, wang2016thevicisyndrome pages 1-3, wang2016thevicisyndrome pages 6-9, wang2019therbg1–rbg2complex pages 4-7, yuan2025epg5regulatestgfbtgfβ pages 1-2, dafsari2024mutationsinepg5 pages 9-12, dafsari2024mutationsinepg5 pages 24-27).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(wang2016thevicisyndrome pages 3-5): Zheng Wang, Guangyan Miao, Xue-Yi Xue, Xiangyang Guo, Chongzhen Yuan, Zhaoyu Wang, Gangming Zhang, Yingyu Chen, Du Feng, Junjie Hu, and Hong Zhang. The vici syndrome protein epg5 is a rab7 effector that determines the fusion specificity of autophagosomes with late endosomes/lysosomes. Molecular cell, 63 5:781-95, Sep 2016. URL: https://doi.org/10.1016/j.molcel.2016.08.021, doi:10.1016/j.molcel.2016.08.021. This article has 331 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016thevicisyndrome pages 1-3): Zheng Wang, Guangyan Miao, Xue-Yi Xue, Xiangyang Guo, Chongzhen Yuan, Zhaoyu Wang, Gangming Zhang, Yingyu Chen, Du Feng, Junjie Hu, and Hong Zhang. The vici syndrome protein epg5 is a rab7 effector that determines the fusion specificity of autophagosomes with late endosomes/lysosomes. Molecular cell, 63 5:781-95, Sep 2016. URL: https://doi.org/10.1016/j.molcel.2016.08.021, doi:10.1016/j.molcel.2016.08.021. This article has 331 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016thevicisyndrome pages 6-9): Zheng Wang, Guangyan Miao, Xue-Yi Xue, Xiangyang Guo, Chongzhen Yuan, Zhaoyu Wang, Gangming Zhang, Yingyu Chen, Du Feng, Junjie Hu, and Hong Zhang. The vici syndrome protein epg5 is a rab7 effector that determines the fusion specificity of autophagosomes with late endosomes/lysosomes. Molecular cell, 63 5:781-95, Sep 2016. URL: https://doi.org/10.1016/j.molcel.2016.08.021, doi:10.1016/j.molcel.2016.08.021. This article has 331 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2019therbg1–rbg2complex pages 4-7): Zhaoyu Wang, Hongyu Zhao, Chongzhen Yuan, Dongfeng Zhao, Yanan Sun, Xiaochen Wang, and Hong Zhang. The rbg-1–rbg-2 complex modulates autophagy activity by regulating lysosomal biogenesis and function in <i>c. elegans</i>. Journal of Cell Science, Oct 2019. URL: https://doi.org/10.1242/jcs.234195, doi:10.1242/jcs.234195. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yuan2025epg5regulatestgfbtgfβ pages 1-2): Chongzhen Yuan, Huachuan Dong, Chunyan Wu, Jinyang Liu, Zheng Wang, Xingwei Wang, Haiyan Ren, Zhaoyu Wang, and Qun Lu. Epg-5 regulates tgfb/tgf-β and wnt signalling by modulating retrograde endocytic trafficking. Autophagy, pages 1-14, Apr 2025. URL: https://doi.org/10.1080/15548627.2025.2485420, doi:10.1080/15548627.2025.2485420. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dafsari2024mutationsinepg5 pages 9-12): Hormos Salimi Dafsari, Celine Deneubourg, Kritarth Singh, Reza Maroofian, Zita Suprenant, Ay Lin Kho, Neil J Ingham, Karen P Steel, Preethi Sheshadri, Franciska Baur, Lea Hentrich, Birgit Gerisch, Mina Zamani, Cesar Alvares, Ata Siddiqui, Haidar S Dafsari, Mehri Salari, Anthony Lang, Michael Harris, Alice Abdelaleem, Saeid Sadeghian, Reza Azizimalamiri, Hamid Galehdari, Gholamreza Shariati, Alireza Sedaghat, Jawaher Zeighami, Daniel Calame, Dana Marafi, Ruizhi Duan, Adrian Boehnke, Carrie Mohila, Dora Steel, Saurabh Chopra, Suvasini Sharma, Nicolai Kohlschmidt, Steffi Patzer, Afshin Saffari, Darius Ebrahimi-Fakhari, Büşra Eser Çavdartepe, Irene J Chang, Erika Beckman, Renate Peters, Andrew Paul Fennell, Bernice Lo, Luisa Averdunk, Felix Distelmaier, Martina Baethmann, Frances Elmslie, Kairit Joost, Sheela Nampoothiri, Dhanya Yesodharan, Hannah Mandel, Amy Kimball, Antonie D. Kline, Cyril Mignot, Boris Keren, Vincent Laugel, Katrin Õunap, Kalpana Devadathan, Frederique M.C. van Berkestijn, Arpana Silwal, Saskia Koene, Sumit Verma, Mohammed Yousuf Karim, Chahynez Boubidi, Majid Aziz, Gehad ElGhazali, Lauren Mattas, Mohammad Miryounesi, Farzad Hashemi-Gorji, Shahryar Alavi, Nayereh Nouri, Mehrdad Noruzinia, Saeedeh Kavousi, Arveen Kamath, Sandeep Jayawant, Russell Saneto, Nourelhoda A. Haridy, Pinar Ozkan Kart, Ali Cansu, Claire Beneteau, Kyra E. Stuurman, Martina Wilke, Tahsin Stefan Barakat, Homa Tajsharghi, Annarita Scardamaglia, Sadeq Vallian, Semra Hız, Ali Shoeibi, Reza Boostani, Narges Hashemi, Meisam Babaei, Norah Saleh Alsaleh, Julie Lander, Tania Attié-Bitach, Pauline Marzin, Dorota Wicher, Jessica I Gold, Mariana H G Monje, Dimitri Krainc, Niccolò Mencacci, Somayeh Bakhtiari, Michael Kruer, Emanuela Argilli, Elliott Sherr, Yalda Jamshidi, Ehsan Ghayoor Karimiani, Yiu Wing Sunny Cheung, Ivan Karin, Wendy K Chung, James R. Lupski, Manju A. Kurian, Jörg Dötsch, Jürgen-Christoph von Kleist-Retzow, Thomas Klopstock, Matias Wagner, Calvin Yip, Andreas Roos, Carlo Dionisi-Vici, Mathias Gautel, Michael R Duchen, Adam Antebi, Henry Houlden, Manolis Fanto, and Heinz Jungbluth. Mutations in epg5 are associated with a wide spectrum of neurodevelopmental and neurodegenerative disorders. MedRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.12.24308722, doi:10.1101/2024.06.12.24308722. This article has 3 citations.</p>
+</li>
+<li>
+<p>(dafsari2024mutationsinepg5 pages 24-27): Hormos Salimi Dafsari, Celine Deneubourg, Kritarth Singh, Reza Maroofian, Zita Suprenant, Ay Lin Kho, Neil J Ingham, Karen P Steel, Preethi Sheshadri, Franciska Baur, Lea Hentrich, Birgit Gerisch, Mina Zamani, Cesar Alvares, Ata Siddiqui, Haidar S Dafsari, Mehri Salari, Anthony Lang, Michael Harris, Alice Abdelaleem, Saeid Sadeghian, Reza Azizimalamiri, Hamid Galehdari, Gholamreza Shariati, Alireza Sedaghat, Jawaher Zeighami, Daniel Calame, Dana Marafi, Ruizhi Duan, Adrian Boehnke, Carrie Mohila, Dora Steel, Saurabh Chopra, Suvasini Sharma, Nicolai Kohlschmidt, Steffi Patzer, Afshin Saffari, Darius Ebrahimi-Fakhari, Büşra Eser Çavdartepe, Irene J Chang, Erika Beckman, Renate Peters, Andrew Paul Fennell, Bernice Lo, Luisa Averdunk, Felix Distelmaier, Martina Baethmann, Frances Elmslie, Kairit Joost, Sheela Nampoothiri, Dhanya Yesodharan, Hannah Mandel, Amy Kimball, Antonie D. Kline, Cyril Mignot, Boris Keren, Vincent Laugel, Katrin Õunap, Kalpana Devadathan, Frederique M.C. van Berkestijn, Arpana Silwal, Saskia Koene, Sumit Verma, Mohammed Yousuf Karim, Chahynez Boubidi, Majid Aziz, Gehad ElGhazali, Lauren Mattas, Mohammad Miryounesi, Farzad Hashemi-Gorji, Shahryar Alavi, Nayereh Nouri, Mehrdad Noruzinia, Saeedeh Kavousi, Arveen Kamath, Sandeep Jayawant, Russell Saneto, Nourelhoda A. Haridy, Pinar Ozkan Kart, Ali Cansu, Claire Beneteau, Kyra E. Stuurman, Martina Wilke, Tahsin Stefan Barakat, Homa Tajsharghi, Annarita Scardamaglia, Sadeq Vallian, Semra Hız, Ali Shoeibi, Reza Boostani, Narges Hashemi, Meisam Babaei, Norah Saleh Alsaleh, Julie Lander, Tania Attié-Bitach, Pauline Marzin, Dorota Wicher, Jessica I Gold, Mariana H G Monje, Dimitri Krainc, Niccolò Mencacci, Somayeh Bakhtiari, Michael Kruer, Emanuela Argilli, Elliott Sherr, Yalda Jamshidi, Ehsan Ghayoor Karimiani, Yiu Wing Sunny Cheung, Ivan Karin, Wendy K Chung, James R. Lupski, Manju A. Kurian, Jörg Dötsch, Jürgen-Christoph von Kleist-Retzow, Thomas Klopstock, Matias Wagner, Calvin Yip, Andreas Roos, Carlo Dionisi-Vici, Mathias Gautel, Michael R Duchen, Adam Antebi, Henry Houlden, Manolis Fanto, and Heinz Jungbluth. Mutations in epg5 are associated with a wide spectrum of neurodevelopmental and neurodegenerative disorders. MedRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.12.24308722, doi:10.1101/2024.06.12.24308722. This article has 3 citations.</p>
+</li>
+<li>
+<p>(wang2019therbg1–rbg2complex pages 1-2): Zhaoyu Wang, Hongyu Zhao, Chongzhen Yuan, Dongfeng Zhao, Yanan Sun, Xiaochen Wang, and Hong Zhang. The rbg-1–rbg-2 complex modulates autophagy activity by regulating lysosomal biogenesis and function in <i>c. elegans</i>. Journal of Cell Science, Oct 2019. URL: https://doi.org/10.1242/jcs.234195, doi:10.1242/jcs.234195. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>wang2016thevicisyndrome pages 6-9</li>
+<li>wang2016thevicisyndrome pages 3-5</li>
+<li>wang2016thevicisyndrome pages 1-3</li>
+<li>https://doi.org/10.1016/j.molcel.2016.08.021</li>
+<li>https://doi.org/10.1016/j.molcel.2016.08.021;</li>
+<li>https://doi.org/10.1242/jcs.234195</li>
+<li>https://doi.org/10.1080/15548627.2025.2485420</li>
+<li>https://doi.org/10.1101/2024.06.12.24308722</li>
+<li>https://doi.org/10.1016/j.molcel.2016.08.021,</li>
+<li>https://doi.org/10.1242/jcs.234195,</li>
+<li>https://doi.org/10.1080/15548627.2025.2485420,</li>
+<li>https://doi.org/10.1101/2024.06.12.24308722,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q18892
+gene_symbol: epg-5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: EPG-5 (Ectopic P granules protein 5) is a metazoan-specific autophagy
+  tethering factor that functions as a RAB-7 effector to determine the fusion specificity
+  of autophagosomes with late endosomes/lysosomes. EPG-5 binds RAB-7 on late endosomes/lysosomes
+  and engages LGG-1 (C. elegans LC3/ATG8 ortholog) via conserved LIR motifs on autophagosomes.
+  It coordinates the STX17-SNAP29-VAMP7/8 trans-SNARE machinery to promote correct
+  autophagosome-lysosome fusion and prevent aberrant SNARE pairing. Loss of epg-5
+  causes accumulation of non-degradative hybrid vesicles bearing both autophagosomal
+  and endosomal markers, impaired lysosomal acidification, and defective autophagy
+  flux. EPG-5 also functions in LAP (LC3-associated phagocytosis) to promote delivery
+  of engulfed apoptotic cells to lysosomes. Human ortholog EPG5 mutations cause Vici
+  syndrome, a severe multisystem disorder.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: EPG-5 is localized to the cytoplasm with partial localization to late
+      endosome/lysosome membranes and autophagosome-lysosome contact sites. The IBA
+      annotation is consistent with the general cytoplasmic distribution of this protein.
+    action: ACCEPT
+    reason: EPG-5 is a cytoplasmic protein that is recruited to late endosomes/lysosomes
+      via RAB-7 interaction. The cytoplasm annotation accurately reflects the general
+      localization of EPG-5 before it is recruited to specific membrane compartments
+      for its fusion-tethering function.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: The EPG-5 protein was reported to evenly distribute in the
+        cytosol
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 is predominantly cytoplasmic and recruited to autophagosomes
+- term:
+    id: GO:0097352
+    label: autophagosome maturation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: EPG-5 is essential for autophagosome maturation, functioning as a RAB-7
+      effector that determines fusion specificity of autophagosomes with late endosomes/lysosomes.
+      This is a core function of the protein conserved across metazoans.
+    action: ACCEPT
+    reason: Autophagosome maturation is a core function of EPG-5. The protein acts
+      as a tethering factor that binds RAB-7 on late endosomes/lysosomes and LGG-1
+      on autophagosomes, coordinating SNARE-mediated fusion. epg-5 mutants accumulate
+      non-degradative autolysosomes indicating impaired maturation.
+    supported_by:
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+    - reference_id: PMID:24374177
+      supporting_text: LGG-2 controls the maturation of LGG-1-positive autophagosomes
+        and facilitates the tethering with the lysosomes
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProt subcellular location vocabulary mapping.
+      Consistent with IBA annotation and experimental evidence.
+    action: ACCEPT
+    reason: This annotation is correct and consistent with the IBA annotation and
+      experimental evidence. It is acceptable to retain both IBA and IEA annotations
+      for the same term.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: The EPG-5 protein was reported to evenly distribute in the
+        cytosol
+- term:
+    id: GO:0006914
+    label: autophagy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: EPG-5 is involved in autophagy, specifically in the late autophagosome
+      maturation/fusion step. This IEA annotation from UniProt keyword mapping is
+      correct but more general than the specific function (autophagosome maturation).
+    action: ACCEPT
+    reason: While GO:0097352 (autophagosome maturation) is more specific for EPG-5&#39;s
+      function, the parent term GO:0006914 (autophagy) is not incorrect. The IEA annotation
+      provides a valid broader annotation that complements the more specific IBA annotation.
+    supported_by:
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+- term:
+    id: GO:0030670
+    label: phagocytic vesicle membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: EPG-5 localizes to phagosome membranes of engulfed apoptotic cells during
+      LAP (LC3-associated phagocytosis). This is supported by experimental evidence
+      in PMID:22451698.
+    action: ACCEPT
+    reason: EPG-5::GFP was recruited to the outer surface of internalized apoptotic
+      Q cell corpses in the phagocyte. This localization is distinct from its role
+      in canonical autophagy but represents a genuine function in apoptotic cell clearance
+      via LAP.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: the autophagy proteins LGG-1, ATG-18, and EPG-5 are recruited
+        from the phagocyte to the outer surface of internalized Q cell corpses
+- term:
+    id: GO:0031410
+    label: cytoplasmic vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: EPG-5 localizes to cytoplasmic vesicles including late endosomes/lysosomes
+      and autophagosomes. This annotation is supported by experimental localization
+      data.
+    action: ACCEPT
+    reason: EPG-5 localizes to late endosomes/lysosomes via RAB-7 interaction and
+      to sites of autophagosome-lysosome contact.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: EPG-5::GFP was recruited on the Q cell corpse
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 localizes to autophagosomes and late endosomes/lysosomes
+- term:
+    id: GO:1902902
+    label: negative regulation of autophagosome assembly
+  evidence_type: IMP
+  original_reference_id: PMID:24374177
+  review:
+    summary: This annotation suggests EPG-5 negatively regulates autophagosome assembly.
+      However, EPG-5 functions at the autophagosome maturation step, not assembly.
+      The observed increase in autophagosomes in epg-5 mutants is due to blocked fusion/degradation,
+      not increased assembly rate.
+    action: MODIFY
+    reason: The annotation appears to be based on the observation that epg-5 mutants
+      cause accumulation of autophagosomes. However, this accumulation results from
+      impaired autophagosome-lysosome fusion and degradation, not from increased autophagosome
+      formation. EPG-5 acts downstream at the maturation step. The correct interpretation
+      is that EPG-5 is involved in autophagosome maturation (GO:0097352) or autophagosome-lysosome
+      fusion (GO:0061909). The term GO:1902902 misrepresents the mechanism.
+    proposed_replacement_terms:
+    - id: GO:0097352
+      label: autophagosome maturation
+    - id: GO:0061909
+      label: autophagosome-lysosome fusion
+    supported_by:
+    - reference_id: PMID:24374177
+      supporting_text: LGG-2 controls the maturation of LGG-1-positive autophagosomes
+        and facilitates the tethering with the lysosomes
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+- term:
+    id: GO:0016236
+    label: macroautophagy
+  evidence_type: IMP
+  original_reference_id: PMID:20550938
+  review:
+    summary: EPG-5 is essential for macroautophagy, specifically the maturation step
+      where autophagosomes fuse with lysosomes. This is a core function supported
+      by the seminal study that identified epg-5.
+    action: ACCEPT
+    reason: PMID:20550938 identified epg-5 in a genetic screen for autophagy genes
+      and demonstrated that it is required for starvation-induced autophagy. While
+      autophagosome maturation is the more specific step, macroautophagy accurately
+      describes the broader process in which EPG-5 functions.
+    supported_by:
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:20550938
+  review:
+    summary: Direct experimental evidence shows EPG-5 localizes to the cytoplasm.
+    action: ACCEPT
+    reason: This IDA annotation provides the strongest evidence for cytoplasmic localization.
+      EPG-5 is a cytoplasmic protein that is recruited to late endosome/lysosome membranes
+      for its fusion function.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: The EPG-5 protein was reported to evenly distribute in the
+        cytosol
+- term:
+    id: GO:0061909
+    label: autophagosome-lysosome fusion
+  evidence_type: IMP
+  original_reference_id: PMID:20550938
+  review:
+    summary: EPG-5 is a tethering factor that directly promotes autophagosome-lysosome
+      fusion by coordinating RAB-7, LGG-1/LC3, and SNARE proteins. This is the most
+      specific term for EPG-5&#39;s core molecular function.
+    action: NEW
+    reason: PMID:20550938 demonstrated that EPG-5 is required for formation of degradative
+      autolysosomes. Later work definitively established that EPG-5 is a Rab7 effector
+      that determines the fusion specificity of autophagosomes with late endosomes/lysosomes.
+      This term should be added with IMP evidence.
+    supported_by:
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 promotes autophagosome-lysosome fusion
+- term:
+    id: GO:0031902
+    label: late endosome membrane
+  evidence_type: IDA
+  original_reference_id: PMID:22451698
+  review:
+    summary: EPG-5 localizes to late endosome/lysosome membranes via RAB-7 binding.
+      This localization is essential for its tethering function.
+    action: NEW
+    reason: EPG-5 is recruited to late endosomes/lysosomes via its interaction with
+      RAB-7. This localization is distinct from the general cytoplasm annotation and
+      more accurately reflects the site of EPG-5&#39;s action.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: EPG-5::GFP was recruited on the Q cell corpse
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 localizes to late endosomes/lysosomes via RAB-7
+- term:
+    id: GO:0000149
+    label: SNARE binding
+  evidence_type: IPI
+  original_reference_id: PMID:20550938
+  review:
+    summary: EPG-5 binds SNARE proteins to coordinate autophagosome-lysosome fusion.
+      This molecular function annotation would complement the biological process annotations.
+    action: NEW
+    reason: EPG-5 engages the autophagosomal Qabc SNARE complex STX17-SNAP29 and coordinates
+      with the R-SNARE VAMP7/8 on late endosomes/lysosomes. SNARE binding is a core
+      molecular function that enables EPG-5&#39;s tethering activity.
+    supported_by:
+    - reference_id: PMID:20550938
+      supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 coordinates SNARE complex assembly
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: IPI
+  original_reference_id: PMID:22451698
+  review:
+    summary: EPG-5 is a RAB-7 effector that directly binds RAB-7. This molecular function
+      is central to its role in autophagosome maturation.
+    action: NEW
+    reason: EPG-5 binds RAB-7 (a small GTPase of the Rab family) on late endosomes/lysosomes.
+      This interaction is essential for EPG-5 localization and function. RAB-7 binding
+      is a core molecular function of EPG-5.
+    supported_by:
+    - reference_id: PMID:22451698
+      supporting_text: &#34;We found that the recruitment of RAB-7 onto the phagosome\
+        \ was delayed from 70 \xB1 15 min in WT (n = 11) to 145 \xB1 66 min in atg-18\
+        \ (n = 18) and 102 \xB1 30 min in epg-5 (n = 12) mutants&#34;
+    - reference_id: file:worm/epg-5/epg-5-deep-research-falcon.md
+      supporting_text: EPG-5 is a RAB-7 effector
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: IBA annotations for cytoplasm and autophagosome maturation from PANTHER
+      family PTHR31139 (Autophagy-related EPG5).
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings: []
+- id: PMID:20550938
+  title: C. elegans screen identifies autophagy genes specific to multicellular organisms.
+  findings:
+  - statement: Identified epg-5 as a metazoan-specific autophagy gene required for
+      formation of degradative autolysosomes.
+    supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+  - statement: epg-2, -3, -4, and -5 define discrete genetic steps of the autophagy
+      pathway.
+    supporting_text: Genetic analysis reveals that epg-2, -3, -4, and -5 define discrete
+      genetic steps of the autophagy pathway
+- id: PMID:22451698
+  title: Autophagy genes function sequentially to promote apoptotic cell corpse degradation
+    in the engulfing cell.
+  findings:
+  - statement: EPG-5 is recruited to the outer surface of internalized apoptotic Q
+      cell corpses in phagocytes.
+    supporting_text: the autophagy proteins LGG-1, ATG-18, and EPG-5 are recruited
+      from the phagocyte to the outer surface of internalized Q cell corpses
+  - statement: EPG-5 functions in the phagocyte to promote apoptotic cell degradation
+      via phagosome maturation.
+    supporting_text: atg-18 and epg-5 function in the phagocyte to promote Q cell
+      corpse clearance
+  - statement: epg-5 mutants show delayed RAB-7 recruitment to phagosomes.
+    supporting_text: &#34;We found that the recruitment of RAB-7 onto the phagosome was\
+      \ delayed from 70 \xB1 15 min in WT (n = 11) to 145 \xB1 66 min in atg-18 (n\
+      \ = 18) and 102 \xB1 30 min in epg-5 (n = 12) mutants&#34;
+- id: PMID:24374177
+  title: The C. elegans LC3 acts downstream of GABARAP to degrade autophagosomes by
+    interacting with the HOPS subunit VPS39.
+  findings:
+  - statement: LGG-2 controls autophagosome maturation and facilitates tethering with
+      lysosomes through VPS-39.
+    supporting_text: LGG-2 controls the maturation of LGG-1-positive autophagosomes
+      and facilitates the tethering with the lysosomes through a direct interaction
+      with the VPS-39 HOPS complex subunit
+- id: PMID:25124690
+  title: PI3P phosphatase activity is required for autophagosome maturation and autolysosome
+    formation.
+  findings:
+  - statement: MTM-3 acts upstream of EPG-5 to promote autophagosome maturation.
+    supporting_text: MTM-3 acts downstream of the ATG-2/EPG-6 complex and upstream
+      of EPG-5 to promote autophagosome maturation into autolysosomes
+- id: file:worm/epg-5/epg-5-deep-research-falcon.md
+  title: Deep research summary for epg-5
+  findings:
+  - statement: EPG-5 is a RAB-7 effector that promotes autophagosome-lysosome fusion.
+core_functions:
+- molecular_function:
+    id: GO:0031267
+    label: small GTPase binding
+  description: EPG-5 is a RAB-7 effector that directly binds RAB-7 GTPase on late
+    endosomes/lysosomes. This interaction is essential for EPG-5 localization and
+    function in autophagosome-lysosome tethering.
+  directly_involved_in:
+  - id: GO:0061909
+    label: autophagosome-lysosome fusion
+  - id: GO:0097352
+    label: autophagosome maturation
+  locations:
+  - id: GO:0031902
+    label: late endosome membrane
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:22451698
+    supporting_text: &#34;We found that the recruitment of RAB-7 onto the phagosome was\
+      \ delayed from 70 \xB1 15 min in WT (n = 11) to 145 \xB1 66 min in atg-18 (n\
+      \ = 18) and 102 \xB1 30 min in epg-5 (n = 12) mutants&#34;
+  - reference_id: PMID:20550938
+    supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+- molecular_function:
+    id: GO:0000149
+    label: SNARE binding
+  description: EPG-5 binds SNARE proteins including STX17-SNAP29 on autophagosomes
+    and VAMP7/8 on late endosomes/lysosomes to coordinate membrane fusion. This SNARE
+    coordination is the mechanistic basis for EPG-5&#39;s tethering activity.
+  directly_involved_in:
+  - id: GO:0061909
+    label: autophagosome-lysosome fusion
+  locations:
+  - id: GO:0031902
+    label: late endosome membrane
+  supported_by:
+  - reference_id: PMID:20550938
+    supporting_text: EI24 and mEPG5 are required for formation of degradative autolysosomes
+tags:
+- caeel-mitophagy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

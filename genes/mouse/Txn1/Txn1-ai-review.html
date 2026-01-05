@@ -1,0 +1,2798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Txn1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Txn1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P10639" target="_blank" class="term-link">
+                        P10639
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Mus musculus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Txn1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P10639" data-a="DESCRIPTION: Mouse thioredoxin-1 (Trx1/Txn1) is a small (~12 kD..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Mouse thioredoxin-1 (Trx1/Txn1) is a small (~12 kDa) ubiquitous oxidoreductase that plays a central role in cellular redox homeostasis. The protein contains the conserved active site motif CGPC (Cys32-Gly-Pro-Cys35) within a canonical thioredoxin fold, enabling it to catalyze dithiol-disulfide exchange reactions. The catalytic mechanism involves nucleophilic attack by Cys32 on substrate disulfide bonds, forming a mixed disulfide intermediate that is resolved by Cys35, releasing the reduced substrate while forming an intramolecular disulfide in Trx1. The oxidized Trx1 is regenerated by thioredoxin reductase using NADPH. Major physiological substrates include peroxiredoxins (for H2O2 detoxification), ribonucleotide reductase (for deoxyribonucleotide synthesis), and oxidized proteins. Mouse Txn1 interacts with TXNIP through its redox-active site, and also interacts with MAP3K5 (ASK1) and CASP3. Trx1 regulates transcription factors AP-1 and NF-kB via interaction with APEX1/Ref-1 and modulates apoptosis. The protein is predominantly cytosolic but translocates to the nucleus upon cellular stress, and is also secreted via a leaderless pathway.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on subcellular location. Thioredoxin is secreted via a leaderless secretory pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Extracellular localization is well-established for thioredoxin across mammalian species. UniProt annotation confirms secretion via a leaderless pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Secreted by a leaderless secretory pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation supported by evidence showing nuclear translocation of Trx1 in response to cellular stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-established. Trx1 translocates to the nucleus where it interacts with Ref-1/APEX1 to regulate AP-1 transcription factor activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Translocates from the cytoplasm into the nucleus after phorbol 12-myristate 13-acetate induction (PMA)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation consistent with Trx1 being predominantly cytoplasmic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is the primary location for Trx1 in unstressed cells, where it performs its major redox functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Predominantly in the cytoplasm in non irradiated cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt keyword mapping. Trx1 does not directly participate in transcription but regulates transcription factor DNA-binding activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too direct - Trx1 does not function as a transcription factor or directly in the transcription machinery. Instead, it regulates transcription factor activity through redox mechanisms via interaction with APEX1/Ref-1.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043388" target="_blank" class="term-link">
+                                    positive regulation of DNA binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                                    GO:0015035
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0015035" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for the core molecular function of thioredoxin. This is the primary enzymatic activity of Trx1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining enzymatic activity of thioredoxin - reducing disulfide bonds in target proteins via its CGPC active site.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019725" target="_blank" class="term-link">
+                                    GO:0019725
+                                </a>
+                            </span>
+                            <span class="term-label">cellular homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0019725" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation that is overly general. Trx1 specifically maintains cellular redox homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Trx1 does contribute to cellular homeostasis, the more specific and accurate term is GO:0045454 (cell redox homeostasis), which precisely describes the function of the thioredoxin system.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    cell redox homeostasis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005654" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on subcellular location data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with nuclear translocation of Trx1 upon cellular stress as demonstrated in multiple studies.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005829" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation showing cytosolic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cytosol is the primary location for Trx1 in unstressed cells, consistent with its function in maintaining cytosolic protein redox state.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009314" target="_blank" class="term-link">
+                                    GO:0009314
+                                </a>
+                            </span>
+                            <span class="term-label">response to radiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0009314" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog showing Trx1 responds to ionizing radiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Trx1 translocates to the nucleus in response to ionizing radiation and activates AP-1, as documented in human studies with conserved function in mouse.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Radiation induces translocation of TRX from the cytoplasm to the nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0042803" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog based on structural evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Thioredoxin forms homodimers through Cys73 disulfide bonds, as demonstrated in structural studies of human Trx1 with conserved residues in mouse.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Homodimer; disulfide-linked</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0045454" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function annotation for thioredoxin&#39;s role in maintaining cellular redox balance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of thioredoxin - maintaining cellular redox homeostasis through its disulfide reductase activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047134" target="_blank" class="term-link">
+                                    GO:0047134
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase [NAD(P)H] activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0047134" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This GO term describes an enzyme that directly uses NAD(P)H to reduce protein disulfides. However, Trx1 itself does not directly use NADPH - it is reduced by thioredoxin reductase which uses NADPH. The correct term is GO:0015035 (protein-disulfide reductase activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051897" target="_blank" class="term-link">
+                                    GO:0051897
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0051897" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents a downstream signaling effect of Trx1 rather than a core function. The evidence from human studies shows Trx1 is required for H2O2-induced AKT activation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061692" target="_blank" class="term-link">
+                                    GO:0061692
+                                </a>
+                            </span>
+                            <span class="term-label">cellular detoxification of hydrogen peroxide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0061692" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Trx1 functions in H2O2 detoxification by reducing peroxiredoxins, which directly detoxify H2O2. This is a core function of the thioredoxin system.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071731" target="_blank" class="term-link">
+                                    GO:0071731
+                                </a>
+                            </span>
+                            <span class="term-label">response to nitric oxide</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0071731" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation transferred from human ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Trx1 responds to NO by becoming S-nitrosylated at Cys73 and subsequently mediating transnitrosation of target proteins like caspase-3.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plays a role in the reversible S-nitrosylation of cysteine residues in target proteins, and thereby contributes to the response to intracellular nitric oxide</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-MMU-1250256
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0005829" data-r="Reactome:R-MMU-1250256" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation for TXNIP release from oxidized thioredoxin in cytosol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The TXNIP-Trx1 interaction occurs in the cytosol and is well-established.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009314" target="_blank" class="term-link">
+                                    GO:0009314
+                                </a>
+                            </span>
+                            <span class="term-label">response to radiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0009314" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation based on sequence similarity to human TXN.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Conserved function based on high sequence similarity to human thioredoxin.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043388" target="_blank" class="term-link">
+                                    GO:0043388
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0043388" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation showing Trx1 positively regulates AP-1 DNA binding activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Trx1 regulates AP-1 DNA binding through its interaction with Ref-1/APEX1, a function conserved between human and mouse.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Induces the FOS/JUN AP-1 DNA binding activity in ionizing radiation (IR) cells through its oxidation/reduction status and stimulates AP-1 transcriptional activity (By similarity)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P10639" data-a="GO:0043066" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Trx1 inhibits apoptosis by S-nitrosylating caspase-3.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Trx1 inhibits caspase-3 activity through S-nitrosylation, thereby preventing apoptosis. This function is conserved from human ortholog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:P10639
+                                    
+                                </span>
+                                
+                                <div class="support-text">Nitrosylates the active site Cys of CASP3 in response to nitric oxide (NO), and thereby inhibits caspase-3 activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Trx1 reduces disulfide bonds in target proteins via dithiol-disulfide exchange using the CGPC active site. Functions with peroxiredoxins for H2O2 detoxification and ribonucleotide reductase for deoxyribonucleotide synthesis.</h3>
+                <span class="vote-buttons" data-g="P10639" data-a="FUNCTION: Trx1 reduces disulfide bonds in target proteins vi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                cell redox homeostasis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProtKB:P10639
+                            
+                        </span>
+                        
+                        <div class="finding-text">-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Trx1 regulates DNA-binding activity of transcription factors AP-1 through interaction with APEX1/Ref-1. Nuclear translocation of Trx and interaction with Ref-1 potentiates AP-1 DNA binding in response to stress signals.</h3>
+                <span class="vote-buttons" data-g="P10639" data-a="FUNCTION: Trx1 regulates DNA-binding activity of transcripti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043388" target="_blank" class="term-link">
+                                positive regulation of DNA binding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProtKB:P10639
+                            
+                        </span>
+                        
+                        <div class="finding-text">Induces the FOS/JUN AP-1 DNA binding activity in ionizing radiation (IR) cells through its oxidation/reduction status and stimulates AP-1 transcriptional activity (By similarity)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Trx1 responds to NO by becoming S-nitrosylated at Cys73 and mediating transnitrosation of target proteins including caspase-3, resulting in inhibition of apoptosis.</h3>
+                <span class="vote-buttons" data-g="P10639" data-a="FUNCTION: Trx1 responds to NO by becoming S-nitrosylated at ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071731" target="_blank" class="term-link">
+                                response to nitric oxide
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                negative regulation of apoptotic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProtKB:P10639
+                            
+                        </span>
+                        
+                        <div class="finding-text">Nitrosylates the active site Cys of CASP3 in response to nitric oxide (NO), and thereby inhibits caspase-3 activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-MMU-1250256
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Txnip is released from oxidized thioredoxin</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProtKB:P10639
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for mouse thioredoxin (Txn1)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Participates in various redox reactions through dithiol-disulfide exchange</div>
+                        
+                        <div class="finding-text">"-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts with TXNIP through the redox-active site</div>
+                        
+                        <div class="finding-text">"Interacts with TXNIP through the redox-active site"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts with MAP3K5 and CASP3</div>
+                        
+                        <div class="finding-text">"Interacts with MAP3K5 and CASP3"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear translocation upon stress and radiation</div>
+                        
+                        <div class="finding-text">"Radiation induces translocation of TRX from the cytoplasm to the nucleus"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative contribution of cytosolic vs nuclear Trx1 to cellular redox homeostasis in mouse tissues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P10639" data-a="Q: What is the relative contribution of cytosolic vs ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is Trx1 secretion regulated in mouse and what are the primary extracellular functions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P10639" data-a="Q: How is Trx1 secretion regulated in mouse and what ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative proteomics to identify the complete Trx1 substrate repertoire under different stress conditions in mouse cells</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Trx1 has condition-specific substrates that change depending on the type of cellular stress.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Quantitative proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P10639" data-a="EXPERIMENT: Quantitative proteomics to identify the complete T..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P10639
+gene_symbol: Txn1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:10090
+  label: Mus musculus
+description: Mouse thioredoxin-1 (Trx1/Txn1) is a small (~12 kDa) ubiquitous oxidoreductase
+  that plays a central role in cellular redox homeostasis. The protein contains the conserved
+  active site motif CGPC (Cys32-Gly-Pro-Cys35) within a canonical thioredoxin fold, enabling
+  it to catalyze dithiol-disulfide exchange reactions. The catalytic mechanism involves
+  nucleophilic attack by Cys32 on substrate disulfide bonds, forming a mixed disulfide
+  intermediate that is resolved by Cys35, releasing the reduced substrate while forming
+  an intramolecular disulfide in Trx1. The oxidized Trx1 is regenerated by thioredoxin
+  reductase using NADPH. Major physiological substrates include peroxiredoxins (for H2O2
+  detoxification), ribonucleotide reductase (for deoxyribonucleotide synthesis), and oxidized
+  proteins. Mouse Txn1 interacts with TXNIP through its redox-active site, and also interacts
+  with MAP3K5 (ASK1) and CASP3. Trx1 regulates transcription factors AP-1 and NF-kB via
+  interaction with APEX1/Ref-1 and modulates apoptosis. The protein is predominantly
+  cytosolic but translocates to the nucleus upon cellular stress, and is also secreted
+  via a leaderless pathway.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on subcellular location. Thioredoxin is secreted via
+      a leaderless secretory pathway.
+    action: ACCEPT
+    reason: Extracellular localization is well-established for thioredoxin across
+      mammalian species. UniProt annotation confirms secretion via a leaderless pathway.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Secreted by a leaderless secretory pathway
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation supported by evidence showing nuclear translocation of Trx1
+      in response to cellular stress.
+    action: ACCEPT
+    reason: Nuclear localization is well-established. Trx1 translocates to the nucleus
+      where it interacts with Ref-1/APEX1 to regulate AP-1 transcription factor activity.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Note=Translocates from the cytoplasm into the nucleus after phorbol 12-myristate 13-acetate induction (PMA)
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation consistent with Trx1 being predominantly cytoplasmic.
+    action: ACCEPT
+    reason: Cytoplasmic localization is the primary location for Trx1 in unstressed
+      cells, where it performs its major redox functions.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Predominantly in the cytoplasm in non irradiated cells
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProt keyword mapping. Trx1 does not directly
+      participate in transcription but regulates transcription factor DNA-binding activity.
+    action: MODIFY
+    reason: This term is too direct - Trx1 does not function as a transcription factor
+      or directly in the transcription machinery. Instead, it regulates transcription
+      factor activity through redox mechanisms via interaction with APEX1/Ref-1.
+    proposed_replacement_terms:
+    - id: GO:0043388
+      label: positive regulation of DNA binding
+- term:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation for the core molecular function of thioredoxin. This is
+      the primary enzymatic activity of Trx1.
+    action: ACCEPT
+    reason: This is the defining enzymatic activity of thioredoxin - reducing disulfide
+      bonds in target proteins via its CGPC active site.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: &#34;-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)&#34;
+- term:
+    id: GO:0019725
+    label: cellular homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: IEA annotation that is overly general. Trx1 specifically maintains cellular
+      redox homeostasis.
+    action: MODIFY
+    reason: While Trx1 does contribute to cellular homeostasis, the more specific and
+      accurate term is GO:0045454 (cell redox homeostasis), which precisely describes
+      the function of the thioredoxin system.
+    proposed_replacement_terms:
+    - id: GO:0045454
+      label: cell redox homeostasis
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on subcellular location data.
+    action: ACCEPT
+    reason: Consistent with nuclear translocation of Trx1 upon cellular stress as
+      demonstrated in multiple studies.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation showing cytosolic localization.
+    action: ACCEPT
+    reason: The cytosol is the primary location for Trx1 in unstressed cells, consistent
+      with its function in maintaining cytosolic protein redox state.
+- term:
+    id: GO:0009314
+    label: response to radiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog showing Trx1 responds to
+      ionizing radiation.
+    action: ACCEPT
+    reason: Trx1 translocates to the nucleus in response to ionizing radiation and
+      activates AP-1, as documented in human studies with conserved function in mouse.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Radiation induces translocation of TRX from the cytoplasm to the nucleus
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog based on structural evidence.
+    action: ACCEPT
+    reason: Thioredoxin forms homodimers through Cys73 disulfide bonds, as demonstrated
+      in structural studies of human Trx1 with conserved residues in mouse.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Homodimer; disulfide-linked
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Core function annotation for thioredoxin&#39;s role in maintaining cellular
+      redox balance.
+    action: ACCEPT
+    reason: This is a core function of thioredoxin - maintaining cellular redox
+      homeostasis through its disulfide reductase activity.
+- term:
+    id: GO:0047134
+    label: protein-disulfide reductase [NAD(P)H] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog.
+    action: REMOVE
+    reason: This GO term describes an enzyme that directly uses NAD(P)H to reduce
+      protein disulfides. However, Trx1 itself does not directly use NADPH - it is
+      reduced by thioredoxin reductase which uses NADPH. The correct term is GO:0015035
+      (protein-disulfide reductase activity).
+- term:
+    id: GO:0051897
+    label: positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal
+      transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog.
+    action: KEEP_AS_NON_CORE
+    reason: This represents a downstream signaling effect of Trx1 rather than a core
+      function. The evidence from human studies shows Trx1 is required for H2O2-induced
+      AKT activation.
+- term:
+    id: GO:0061692
+    label: cellular detoxification of hydrogen peroxide
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog.
+    action: ACCEPT
+    reason: Trx1 functions in H2O2 detoxification by reducing peroxiredoxins, which
+      directly detoxify H2O2. This is a core function of the thioredoxin system.
+- term:
+    id: GO:0071731
+    label: response to nitric oxide
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: Annotation transferred from human ortholog.
+    action: ACCEPT
+    reason: Trx1 responds to NO by becoming S-nitrosylated at Cys73 and subsequently
+      mediating transnitrosation of target proteins like caspase-3.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Plays a role in the reversible S-nitrosylation of cysteine residues in target proteins, and thereby contributes to the response to intracellular nitric oxide
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-MMU-1250256
+  review:
+    summary: Reactome annotation for TXNIP release from oxidized thioredoxin in cytosol.
+    action: ACCEPT
+    reason: The TXNIP-Trx1 interaction occurs in the cytosol and is well-established.
+- term:
+    id: GO:0009314
+    label: response to radiation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation based on sequence similarity to human TXN.
+    action: ACCEPT
+    reason: Conserved function based on high sequence similarity to human thioredoxin.
+- term:
+    id: GO:0043388
+    label: positive regulation of DNA binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation showing Trx1 positively regulates AP-1 DNA binding activity.
+    action: ACCEPT
+    reason: Trx1 regulates AP-1 DNA binding through its interaction with Ref-1/APEX1,
+      a function conserved between human and mouse.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Induces the FOS/JUN AP-1 DNA binding activity in ionizing radiation (IR) cells through its oxidation/reduction status and stimulates AP-1 transcriptional activity (By similarity)
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Trx1 inhibits apoptosis by S-nitrosylating caspase-3.
+    action: NEW
+    reason: Trx1 inhibits caspase-3 activity through S-nitrosylation, thereby preventing
+      apoptosis. This function is conserved from human ortholog.
+    supported_by:
+    - reference_id: UniProtKB:P10639
+      supporting_text: Nitrosylates the active site Cys of CASP3 in response to nitric oxide (NO), and thereby inhibits caspase-3 activity
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: Reactome:R-MMU-1250256
+  title: Txnip is released from oxidized thioredoxin
+  findings: []
+- id: UniProtKB:P10639
+  title: UniProt entry for mouse thioredoxin (Txn1)
+  findings:
+  - statement: Participates in various redox reactions through dithiol-disulfide exchange
+    supporting_text: &#34;-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)&#34;
+  - statement: Interacts with TXNIP through the redox-active site
+    supporting_text: Interacts with TXNIP through the redox-active site
+  - statement: Interacts with MAP3K5 and CASP3
+    supporting_text: Interacts with MAP3K5 and CASP3
+  - statement: Nuclear translocation upon stress and radiation
+    supporting_text: Radiation induces translocation of TRX from the cytoplasm to the nucleus
+core_functions:
+- description: Trx1 reduces disulfide bonds in target proteins via dithiol-disulfide
+    exchange using the CGPC active site. Functions with peroxiredoxins for H2O2
+    detoxification and ribonucleotide reductase for deoxyribonucleotide synthesis.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  directly_involved_in:
+  - id: GO:0045454
+    label: cell redox homeostasis
+  supported_by:
+  - reference_id: UniProtKB:P10639
+    supporting_text: &#34;-!- FUNCTION: Participates in various redox reactions through the reversible oxidation of its active center dithiol to a disulfide and catalyzes dithiol-disulfide exchange reactions (By similarity)&#34;
+- description: Trx1 regulates DNA-binding activity of transcription factors AP-1
+    through interaction with APEX1/Ref-1. Nuclear translocation of Trx and interaction
+    with Ref-1 potentiates AP-1 DNA binding in response to stress signals.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:0043388
+    label: positive regulation of DNA binding
+  supported_by:
+  - reference_id: UniProtKB:P10639
+    supporting_text: Induces the FOS/JUN AP-1 DNA binding activity in ionizing radiation (IR) cells through its oxidation/reduction status and stimulates AP-1 transcriptional activity (By similarity)
+- description: Trx1 responds to NO by becoming S-nitrosylated at Cys73 and mediating
+    transnitrosation of target proteins including caspase-3, resulting in inhibition
+    of apoptosis.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  directly_involved_in:
+  - id: GO:0071731
+    label: response to nitric oxide
+  - id: GO:0043066
+    label: negative regulation of apoptotic process
+  supported_by:
+  - reference_id: UniProtKB:P10639
+    supporting_text: Nitrosylates the active site Cys of CASP3 in response to nitric oxide (NO), and thereby inhibits caspase-3 activity
+proposed_new_terms: []
+suggested_questions:
+- question: What is the relative contribution of cytosolic vs nuclear Trx1 to cellular
+    redox homeostasis in mouse tissues?
+- question: How is Trx1 secretion regulated in mouse and what are the primary extracellular
+    functions?
+suggested_experiments:
+- description: Quantitative proteomics to identify the complete Trx1 substrate repertoire
+    under different stress conditions in mouse cells
+  hypothesis: Trx1 has condition-specific substrates that change depending on the type
+    of cellular stress.
+  experiment_type: Quantitative proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

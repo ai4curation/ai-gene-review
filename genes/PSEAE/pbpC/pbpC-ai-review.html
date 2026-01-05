@@ -1,0 +1,3287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pbpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pbpC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9I1K1" target="_blank" class="term-link">
+                        Q9I1K1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PBP3x</span>
+                    
+                    <span class="badge">PBP3a</span>
+                    
+                    <span class="badge">PA2272</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pbpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9I1K1" data-a="DESCRIPTION: PbpC (also known as PBP3x or PBP3a, encoded by PA2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PbpC (also known as PBP3x or PBP3a, encoded by PA2272) is a class B high-molecular-mass penicillin-binding protein (HMM bPBP) in Pseudomonas aeruginosa. It is a membrane-anchored protein with an N-terminal transmembrane segment and a periplasmic D,D-transpeptidase domain containing the conserved SXXK/SXN/KT(S)G motifs characteristic of penicillin-binding proteins. PbpC is a nonessential paralog of the essential septal transpeptidase PBP3 (FtsI/PbpB). Unlike PBP3, pbpC knockout causes no detectable growth or morphology defects under standard laboratory conditions. PbpC is expressed only during stationary phase and shows low/conditional expression. While it binds penicillin in labeling assays, there is no direct experimental evidence for specific enzymatic activity, and its physiological role remains unclear. Overexpression of pbpC does not alter beta-lactam susceptibility, in contrast to PBP3.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization of PbpC is experimentally supported. Liao and Hancock (1997, PMID:9045804) demonstrated membrane association through cell fractionation studies. The protein contains a predicted N-terminal transmembrane helix (residues 10-30 per UniProt annotation). The IBA annotation from PANTHER phylogenetic inference is consistent with this experimental evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support from membrane fractionation studies. The publication demonstrates that the pbpC gene product &#34;was exported to the cytoplasmic membrane of E. coli cells&#34; (PMID:9045804). In bacteria, the inner/cytoplasmic membrane is termed &#34;plasma membrane&#34; in GO.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">was exported to the cytoplasmic membrane of E. coli cells and could bind [3H] penicillin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0008658" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Penicillin binding by PbpC is directly demonstrated experimentally. Liao and Hancock (1997, PMID:9045804) showed that PbpC binds penicillin in labeling assays, though the protein was not detected in physiological penicillin labeling due to low/conditional expression. The IBA phylogenetic inference is well-supported by experimental data.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is experimentally validated. The publication confirms &#34;could bind [3H] penicillin&#34; (PMID:9045804). This is a core molecular function of the protein.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">could bind [3H] penicillin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0071555" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell wall organization is a reasonable inference based on the protein&#39;s domain structure and family membership (transpeptidase family, FtsI subfamily). However, the evidence is indirect. The pbpC knockout shows no detectable growth or morphology defects, indicating that PbpC is not required for normal cell wall organization under standard conditions.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While phylogenetic inference and domain conservation support a potential role in cell wall organization, the complete lack of phenotype upon gene knockout (PMID:9045804) indicates this is not a core function. The protein may have a redundant or stress-response role in cell wall organization that is only relevant under specific (unknown) conditions.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells, suggesting that pbpC was not required for cell viability under normal laboratory growth conditions</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Chromosomal insertional inactivation of pbpC caused no detectable growth or morphology defects under assay conditions, indicating nonessentiality</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000917" target="_blank" class="term-link">
+                                    GO:0000917
+                                </a>
+                            </span>
+                            <span class="term-label">division septum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0000917" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from UniProtKB keyword mapping (KW-0717 Septation). However, experimental evidence directly contradicts involvement in division septum assembly. PbpC knockout shows no cell division or morphology defects, and the protein is only expressed in stationary phase when cells are not actively dividing. The essential paralog PBP3 (FtsI/PbpB) is the true septal transpeptidase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an over-annotation based on sequence similarity to the essential septal transpeptidase PBP3 (FtsI). The experimental evidence from PMID:9045804 shows that inactivation causes no morphology defects and the protein is produced in stationary phase when cell division is minimal. The deep research confirms that PBP3 (ftsI), not PbpC, is the essential septal transpeptidase.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP3x was produced in the stationary phase of growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP3 (ftsI) sits in a division/PG operon and is essential for septal PG synthesis, whereas pbpC is genetically separate, low/conditional expression, and dispensable in lab growth</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0004180" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from UniProtKB keyword mapping (KW-0121 Carboxypeptidase). The protein is assigned EC 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase) by HAMAP rule inference, but this enzymatic activity has not been directly demonstrated for PbpC. The inference is based on domain conservation with other transpeptidases that have this activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein contains conserved transpeptidase motifs, no direct kinetic or enzymatic characterization has been performed for PbpC. The deep research notes that direct kinetic substrate specificity was not reported. The EC assignment is from HAMAP rule inference, not experimental evidence. Class B PBPs primarily function as D,D-transpeptidases for peptidoglycan cross-linking, with carboxypeptidase activity being secondary.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a duplicate annotation for plasma membrane localization, derived from InterPro domain mapping (IPR037532 - FtsI transpeptidase family). The localization is experimentally supported by membrane fractionation studies.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Membrane localization is experimentally confirmed (PMID:9045804). This IEA annotation from InterPro/UniRule is consistent with the experimental evidence. Duplicate annotations with different evidence codes are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">was exported to the cytoplasmic membrane of E. coli cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0006508" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very broad biological process annotation derived from the UniProtKB keyword KW-0645 (Protease). While PbpC may have peptidase activity based on domain conservation, &#34;proteolysis&#34; as a general term is too broad and uninformative for this protein. The actual biological process would be more specifically related to peptidoglycan metabolism.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general and not informative for a penicillin-binding protein. PBPs act on peptidoglycan substrates, not general protein substrates. The term &#34;proteolysis&#34; implies general protein degradation, which is misleading for this enzyme class. Additionally, no direct proteolytic activity has been demonstrated for PbpC.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This molecular function annotation is derived from UniProtKB keyword KW-0645 (Protease). While PbpC belongs to the transpeptidase family and may have peptidase activity based on domain conservation, this general term is less informative than the specific penicillin binding annotation. No direct peptidase activity has been demonstrated.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is technically correct based on domain conservation (transpeptidases cleave peptide bonds), but it is less informative than more specific terms. The primary experimentally-demonstrated activity is penicillin binding (GO:0008658). This annotation is retained as non-core because it reflects predicted rather than demonstrated activity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0008360" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from UniProtKB keyword KW-0133 (Cell shape). However, experimental evidence directly contradicts involvement in cell shape regulation. PbpC knockout shows no morphology defects, and the protein is not required for normal cell shape maintenance.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an over-annotation based on family membership. The experimental evidence from PMID:9045804 clearly demonstrates that inactivation causes no changes in cell morphology. This directly contradicts a role in cell shape regulation. The essential paralog PBP3 (FtsI) is involved in cell shape through its role in septal peptidoglycan synthesis, but PbpC is dispensable for normal cell morphology.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0008658" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a duplicate annotation for penicillin binding, derived from multiple InterPro domains (IPR001460, IPR005311, IPR036138, IPR037532) and ARBA rule. The activity is experimentally demonstrated.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Penicillin binding is directly demonstrated experimentally (PMID:9045804). This IEA annotation is consistent with experimental evidence. Duplicate annotations with different evidence codes/sources are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">could bind [3H] penicillin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    GO:0008955
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0008955" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT for PbpC. It is derived from InterPro domain mapping (IPR037532 - FtsI transpeptidase family), but this represents a mapping error. PbpC is a Class B penicillin-binding protein (monofunctional D,D-transpeptidase), NOT a Class A PBP. Peptidoglycan glycosyltransferase activity is characteristic of Class A PBPs, which are bifunctional enzymes possessing both transpeptidase and glycosyltransferase domains. Class B PBPs like PbpC lack the glycosyltransferase domain entirely.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear annotation error. PbpC belongs to the FtsI/PBP3 subfamily of Class B (monofunctional) penicillin-binding proteins. The deep research confirms PbpC is a class B PBP predicted to catalyze D,D-transpeptidation. Class B PBPs possess only the transpeptidase domain. Peptidoglycan glycosyltransferase activity (GO:0008955) is found in Class A PBPs (e.g., PBP1a, PBP1b in E. coli), which have both glycosyltransferase and transpeptidase domains.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP3x/PBP3a (pbpC) is a class B PBP predicted to catalyze D,D-transpeptidation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0009002" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from EC number assignment (EC 3.4.16.4) via UniRule. The EC assignment itself is based on HAMAP rule inference from sequence features, not direct experimental evidence. While this activity is plausible based on domain conservation, no direct kinetic or enzymatic characterization has been performed for PbpC.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation reflects predicted enzymatic activity based on sequence conservation with characterized D,D-transpeptidases. However, the deep research notes that direct kinetic substrate specificity was not reported for PbpC. Without direct experimental demonstration of this specific activity for PbpC, the annotation remains uncertain.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from InterPro domain mapping (IPR037532), UniPathway (UPA00219), and UniRule. While the protein&#39;s domain structure suggests a role in peptidoglycan metabolism, the complete lack of phenotype upon gene knockout indicates PbpC is not required for normal peptidoglycan biosynthesis.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on sound domain inference and family membership. PbpC belongs to the transpeptidase family involved in peptidoglycan cross-linking. However, the knockout phenotype shows PbpC is dispensable for normal peptidoglycan biosynthesis. The protein may contribute to peptidoglycan biosynthesis under specific stress conditions or in stationary phase (when it is expressed), but this is not demonstrated.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very broad molecular function annotation derived from UniProtKB keyword KW-0378 (Hydrolase). While transpeptidases do involve hydrolysis as part of their mechanism, this term is too general and uninformative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct in the sense that transpeptidases catalyze reactions involving peptide bond cleavage, but &#34;hydrolase activity&#34; is too broad to be informative. The more specific penicillin binding (GO:0008658) is a more appropriate molecular function annotation. Additionally, no hydrolase activity has been directly demonstrated for PbpC.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043093" target="_blank" class="term-link">
+                                    GO:0043093
+                                </a>
+                            </span>
+                            <span class="term-label">FtsZ-dependent cytokinesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0043093" data-r="GO_REF:0000104" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from UniRule (UR000432218) based on sequence features shared with FtsI/PBP3, which is essential for FtsZ-dependent cytokinesis. However, PbpC is not required for cell division and shows no involvement in cytokinesis based on knockout phenotype.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an over-annotation based on similarity to the essential paralog FtsI/PBP3. The experimental evidence from PMID:9045804 shows that PbpC is nonessential with no morphology or growth defects upon inactivation. Furthermore, PbpC is produced in the stationary phase of growth when cell division is minimal or absent. The essential septal transpeptidase required for FtsZ-dependent cytokinesis is PBP3 (ftsI/pbpB), not PbpC.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP3x was produced in the stationary phase of growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Conditional deletion of ftsI/PBP3 caused filamentation and division arrest; growth required PBP3 expression, establishing it as the principal septal transpeptidase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0051301" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from InterPro domain mapping (IPR037532) and UniProtKB keyword (KW-0132 Cell division). However, experimental evidence shows PbpC is not required for cell division and is primarily expressed in stationary phase when cells are not dividing.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an over-annotation based on sequence similarity to FtsI/PBP3. The experimental evidence directly contradicts involvement in cell division. The protein is produced in the stationary phase of growth, not during active division. The deep research emphasizes that PBP3 (ftsI/pbpB) is the essential septal transpeptidase for cell division; PBP3x is a nonessential paralog under standard conditions.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PBP3x was produced in the stationary phase of growth</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9I1K1" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a duplicate annotation for cell wall organization, derived from UniProtKB keyword KW-0961. As noted for the IBA annotation, while domain conservation supports a potential role, the knockout shows no phenotype related to cell wall organization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same reasoning as for the IBA annotation of this term. The annotation is retained as non-core because the protein has conserved features suggesting a potential role, but the knockout phenotype shows it is not essential for cell wall organization under standard conditions. The protein may have a redundant or stress-response function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                        PMID:9045804
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells, suggesting that pbpC was not required for cell viability under normal laboratory growth conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Experimentally demonstrated in penicillin labeling assays (PMID:9045804). This is the only molecular function directly demonstrated for PbpC.
+</h3>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="FUNCTION: Experimentally demonstrated in penicillin labeling..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                            penicillin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                                PMID:9045804
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">could bind [3H] penicillin</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9045804" target="_blank" class="term-link">
+                            PMID:9045804
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a penicillin-binding protein 3 homolog, PBP3x, in Pseudomonas aeruginosa: gene cloning and growth phase-dependent expression.
+</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PbpC (PBP3x) binds penicillin in labeling assays</div>
+                        
+                        <div class="finding-text">"could bind [3H] penicillin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PbpC is membrane-localized</div>
+                        
+                        <div class="finding-text">"was exported to the cytoplasmic membrane of E. coli cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PbpC is expressed in stationary phase</div>
+                        
+                        <div class="finding-text">"PBP3x was produced in the stationary phase of growth"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">pbpC knockout causes no growth or morphology defects</div>
+                        
+                        <div class="finding-text">"Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PbpC overexpression does not alter beta-lactam susceptibility</div>
+                        
+                        <div class="finding-text">"overexpression of the pbpC gene product had no effect on the susceptibility to the PBP3-targeted antibiotics tested"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10984043" target="_blank" class="term-link">
+                            PMID:10984043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic pathogen
+</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for pbpC</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PbpC is a class B PBP</div>
+                        
+                        <div class="finding-text">"PBP3x/PBP3a (pbpC) is a class B PBP predicted to catalyze D,D-transpeptidation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PBP3 (not PbpC) is essential for cell division</div>
+                        
+                        <div class="finding-text">"Conditional deletion of ftsI/PBP3 caused filamentation and division arrest"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct enzymatic characterization of PbpC</div>
+                        
+                        <div class="finding-text">"Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological role of PbpC during stationary phase? Is it involved in cell wall remodeling or maintenance under nutrient limitation or stress?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="Q: What is the physiological role of PbpC during stat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PbpC have a role in biofilm formation or persistence, given its stationary phase expression pattern?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="Q: Does PbpC have a role in biofilm formation or pers..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What conditions, if any, reveal a phenotype for pbpC deletion? Are there specific stress conditions where PbpC becomes important?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="Q: What conditions, if any, reveal a phenotype for pb..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PbpC have D,D-transpeptidase activity, and if so, what is its substrate specificity compared to PBP3?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="Q: Does PbpC have D,D-transpeptidase activity, and if..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Enzymatic characterization: Purify recombinant PbpC and measure D,D-transpeptidase and D,D-carboxypeptidase activities with defined peptidoglycan substrates
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PbpC has D,D-transpeptidase activity similar to other Class B PBPs</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="EXPERIMENT: Enzymatic characterization: Purify recombinant Pbp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Localization studies: Use fluorescent protein fusions to determine precise localization of PbpC during stationary phase
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PbpC localizes to the cytoplasmic membrane during stationary phase</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="EXPERIMENT: Localization studies: Use fluorescent protein fusi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Stress phenotype screening: Test pbpC knockout under various stress conditions (antibiotic stress, biofilm formation, nutrient limitation, oxidative stress)
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PbpC may have a conditionally essential role under stress conditions</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="EXPERIMENT: Stress phenotype screening: Test pbpC knockout und..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Expression analysis: Quantify pbpC expression across growth phases and stress conditions using reporter fusions or RNA-seq
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: pbpC expression is regulated by stationary phase sigma factors</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="EXPERIMENT: Expression analysis: Quantify pbpC expression acro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Genetic interaction analysis: Test for synthetic phenotypes when pbpC is deleted in combination with other nonessential PBPs
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PbpC has functional redundancy with other nonessential PBPs</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9I1K1" data-a="EXPERIMENT: Genetic interaction analysis: Test for synthetic p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pbpC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9I1K1" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-23T00:39:28.037542'<br />
+end_time: '2025-12-23T00:47:31.623147'<br />
+duration_seconds: 483.59<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEAE<br />
+  gene_id: pbpC<br />
+  gene_symbol: pbpC<br />
+  uniprot_accession: Q9I1K1<br />
+  protein_description: 'RecName: Full=Probable peptidoglycan D,D-transpeptidase PbpC<br />
+    {ECO:0000305}; EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=PBP3x<br />
+    {ECO:0000303|PubMed:9045804}; AltName: Full=Penicillin-binding protein 3 homolog<br />
+    {ECO:0000303|PubMed:9045804}; Short=PBP3 homolog {ECO:0000303|PubMed:9045804};'<br />
+  gene_info: Name=pbpC {ECO:0000303|PubMed:9045804}; OrderedLocusNames=PA2272 {ECO:0000312|EMBL:AAG05660.1};<br />
+  organism_full: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116<br />
+    / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).<br />
+  protein_family: Belongs to the transpeptidase family. FtsI subfamily.<br />
+  protein_domains: Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like.<br />
+    (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf.<br />
+    (IPR036138)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 20</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9I1K1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Probable peptidoglycan D,D-transpeptidase PbpC {ECO:0000305}; EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=PBP3x {ECO:0000303|PubMed:9045804}; AltName: Full=Penicillin-binding protein 3 homolog {ECO:0000303|PubMed:9045804}; Short=PBP3 homolog {ECO:0000303|PubMed:9045804};</li>
+<li><strong>Gene Information:</strong> Name=pbpC {ECO:0000303|PubMed:9045804}; OrderedLocusNames=PA2272 {ECO:0000312|EMBL:AAG05660.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. FtsI subfamily.</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pbpC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pbpC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pbpC</strong> (gene ID: pbpC, UniProt: Q9I1K1) in PSEAE.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9I1K1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Probable peptidoglycan D,D-transpeptidase PbpC {ECO:0000305}; EC=3.4.16.4 {ECO:0000255|HAMAP-Rule:MF_02080}; AltName: Full=PBP3x {ECO:0000303|PubMed:9045804}; AltName: Full=Penicillin-binding protein 3 homolog {ECO:0000303|PubMed:9045804}; Short=PBP3 homolog {ECO:0000303|PubMed:9045804};</li>
+<li><strong>Gene Information:</strong> Name=pbpC {ECO:0000303|PubMed:9045804}; OrderedLocusNames=PA2272 {ECO:0000312|EMBL:AAG05660.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. FtsI subfamily.</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); FtsI_transpept. (IPR037532); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pbpC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pbpC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pbpC</strong> (gene ID: pbpC, UniProt: Q9I1K1) in PSEAE.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan status: All objectives completed. We verified identity and organism, assembled primary and recent literature, collected applications and expert analyses with quantitative data, and synthesized the following report.</p>
+<p>Gene/protein verification<br />
+- Target: pbpC (PA2272) in Pseudomonas aeruginosa PAO1 encodes PBP3x/PBP3a, a class B high-molecular-mass penicillin-binding protein (HMM bPBP) homologous to FtsI/PBP3. It is membrane-anchored via an N‑terminal transmembrane segment with a periplasmic D,D‑transpeptidase domain harboring conserved SXXK/SXN/KT(S)G motifs, consistent with UniProt Q9I1K1 and early cloning/biochemical work (pbpC ≡ PBP3x) (liao1996characterizationofthe pages 128-133, liao1996characterizationofthe pages 133-138).</p>
+<p>1) Key concepts and definitions<br />
+- Functional class: PBP3x/PBP3a (pbpC) is a class B PBP predicted to catalyze D,D‑transpeptidation in peptidoglycan (PG) cross‑linking. In P. aeruginosa, PBP3 (ftsI/pbpB) is the essential septal transpeptidase for cell division; PBP3x is a nonessential paralog under standard conditions (chen2017penicillinbindingprotein3 pages 3-5, liao1996characterizationofthe pages 128-133, liao1996characterizationofthe pages 133-138).<br />
+- Cellular localization: PBP3x is an inner‑membrane protein whose catalytic domain is periplasmic. Fractionation of recombinant pbpC supported membrane association; hydropathy analysis predicted a single N‑terminal transmembrane helix (liao1996characterizationofthe pages 119-128, liao1996characterizationofthe pages 128-133).<br />
+- Relationship to PBP3/FtsI: Both are PBP3‑like bPBPs; however, PBP3 (ftsI) sits in a division/PG operon and is essential for septal PG synthesis, whereas pbpC is genetically separate, low/conditional expression, and dispensable in lab growth (liao1996characterizationofthe pages 133-138, chen2017penicillinbindingprotein3 pages 3-5).</p>
+<p>2) Experimentally supported function, activity, and localization for pbpC (PBP3x)<br />
+- Enzymatic activity inference: pbpC encodes a penicillin‑binding protein containing conserved transpeptidase motifs and binds penicillin in labeling assays, consistent with a D,D‑transpeptidase. Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding (liao1996characterizationofthe pages 119-128, liao1996characterizationofthe pages 133-138).<br />
+- Essentiality: Chromosomal insertional inactivation of pbpC caused no detectable growth or morphology defects under assay conditions, indicating nonessentiality; physiological penicillin labeling did not detect PBP3x, consistent with low/conditional expression (liao1996characterizationofthe pages 119-128).<br />
+- Beta‑lactam susceptibility impact: Overexpression or presence of pbpC did not alter susceptibility to PBP3‑targeting beta‑lactams in tested P. aeruginosa backgrounds, in contrast with PBP3 (pbpB) overexpression that elevated MICs 2–8× (liao1996characterizationofthe pages 143-147, liao1996characterizationofthe pages 119-128).<br />
+- Localization: Membrane fractionation plus predicted N‑terminal TM segment indicate inner‑membrane anchor with periplasmic catalytic domain (liao1996characterizationofthe pages 119-128, liao1996characterizationofthe pages 128-133).</p>
+<p>3) PBP3/FtsI in P. aeruginosa as reference for pbpC’s role<br />
+- Essentiality and septal function: Conditional deletion of ftsI/PBP3 caused filamentation and division arrest; growth required PBP3 expression, establishing it as the principal septal transpeptidase (chen2017penicillinbindingprotein3 pages 1-3, chen2017penicillinbindingprotein3 pages 14-16).<br />
+- Quantitative susceptibility shifts upon PBP3 depletion: MICs decreased by 4× (imipenem), 2× (doripenem), 8× (cefepime, cefsulodin, ceftazidime), 4× (piperacillin), 8× (aztreonam), and 32× (penicillin G) in the conditional ftsI mutant (PA14 background) (chen2017penicillinbindingprotein3 pages 14-16).<br />
+- PBP3 overexpression and MICs: A 7× increase in PBP3 raised MICs by 2× (aztreonam), 4× (cefepime), and 8× (ceftazidime, cefsulodin), consistent with target titration; expression of E. coli pbpB in P. aeruginosa had similar effects (liao1996characterizationofthe pages 143-147).</p>
+<p>4) Recent developments (2023–2024) on PBP3 targeting, structures, and occupancy<br />
+- Whole‑cell PBP occupancy profiling (PAO1): Aztreonam selectively inactivated PBP3 (~50% PBP3 occupancy at 1/2×MIC, 30 min). Cephalosporins preferentially targeted PBP1a and PBP3; AmpC hyperexpression reduced occupancy of penicillins/cephalosporins/aztreonam, while OprM efflux loss improved occupancy, aligning with MIC changes (2023) (liao1996characterizationofthe pages 95-103).<br />
+- PBP3 variants and fitness/resistance: In PAO1, specific PBP3 (ftsI) catalytic‑domain variants increased MICs to meropenem, ceftazidime, and cefepime, but not imipenem or piperacillin; many variants caused filamentation and reduced growth, implying fitness costs (2024) (glen2024penicillinbindingprotein3 pages 7-8).<br />
+- Structural/kinetic insights for P. aeruginosa PBP3: Comparative inhibitor studies and crystallography revealed analogous acyl‑enzyme products for cefiderocol, ceftazidime, and cefepime with PBP3, and a relative reactivity order with PBP3 (meropenem &gt; cefepime &gt; ceftazidime ≈ cefiderocol) (2024) (basu2024cefiderocolsusceptibilityendows pages 1-2).<br />
+- Cefepime/zidebactam (beta‑lactam enhancer approach): Against MDR P. aeruginosa panels, cefepime/zidebactam achieved MIC90 16 mg/L; in a neutropenic murine lung model, a simulated human regimen achieved ≥1 log10 kill even for isolates with PBP2/PBP3 alterations. Zidebactam reduced cefepime’s fT&gt;MIC requirement from 47–68% to 8–16% (2023) (hujer2023transcendingthechallenge pages 1-2).</p>
+<p>5) Current applications and implementations<br />
+- Aztreonam-based therapy: Aztreonam selectively targets PBP3 in P. aeruginosa whole cells and achieves ~50% occupancy at sub-MIC exposure; its clinical pairing with avibactam addresses co-produced serine β‑lactamases, restoring activity against MBL‑producing pathogens (2023 profiling) (liao1996characterizationofthe pages 95-103).<br />
+- Cefiderocol: Clinically approved siderophore cephalosporin exhibiting PBP3 engagement in P. aeruginosa; structural/kinetic work details binding chemistry at PBP3 and indicates comparable PBP3 acylation to ceftazidime but less than meropenem/cefepime (2024 structural study) (basu2024cefiderocolsusceptibilityendows pages 1-2).<br />
+- Cefepime/zidebactam: Preclinical and translational data support activity against MDR P. aeruginosa, including strains with PBP alterations; PK/PD synergy lowers cefepime exposure needed for killing in vivo (2023) (hujer2023transcendingthechallenge pages 1-2).</p>
+<p>6) Expert opinions and authoritative analyses<br />
+- PBP3 as prime P. aeruginosa PBP target: Multi‑PBP knockout analysis concluded PBP3 is essential and the most attractive PBP target; other HMM PBPs were dispensable or had minor effects (2017) (chen2017penicillinbindingprotein3 pages 1-3).<br />
+- PBP‑mediated resistance in ESKAPE: Reviews emphasize the growing role of PBP alterations in Gram‑negatives and highlight PBP3’s essentiality and druggability in P. aeruginosa (2023) (sethuvel2023βlactamresistancein pages 5-7).</p>
+<p>7) Statistics and quantitative data<br />
+- PBP3 depletion MIC decreases (fold): imipenem 4×, doripenem 2×, cefepime/cefsulodin/ceftazidime 8×, piperacillin 4×, aztreonam 8×, penicillin G 32× (PA14) (chen2017penicillinbindingprotein3 pages 14-16).<br />
+- PBP3 overexpression MIC increases (fold): aztreonam 2×, cefepime 4×, ceftazidime 8×, cefsulodin 8×; pbpC overexpression or deletion had no detectable MIC effect under conditions tested (PAO4089 and derivatives) (liao1996characterizationofthe pages 143-147, liao1996characterizationofthe pages 119-128).<br />
+- Whole‑cell PBP occupancy: aztreonam ~50% PBP3 inactivation at 1/2×MIC after 30 min; cephalosporins show PBP1a/PBP3 preference; AmpC hyperexpression reduces occupancy, OprM loss increases it—trends concordant with MICs (2023) (liao1996characterizationofthe pages 95-103).</p>
+<p>Interpretation for pbpC (PBP3x) and knowledge gaps<br />
+- The gene symbol pbpC in P. aeruginosa PAO1 unambiguously denotes PBP3x/PBP3a (PA2272). Experimental evidence supports membrane localization and penicillin binding, but indicates low/conditional expression and nonessentiality under standard conditions, with no measurable contribution to beta‑lactam susceptibility in the reported lab assays (liao1996characterizationofthe pages 119-128, liao1996characterizationofthe pages 128-133).<br />
+- By contrast, the paralog ftsI/pbpB encodes essential PBP3 with central septal TPase function and strong influence on beta‑lactam susceptibility and cell division (chen2017penicillinbindingprotein3 pages 1-3, chen2017penicillinbindingprotein3 pages 14-16, liao1996characterizationofthe pages 143-147).<br />
+- Recent 2023–2024 advances on PBP3 inhibition and resistance clarify drug–target interactions and resistance trade‑offs but provide little new pbpC‑specific physiology; thus, functional annotation of pbpC relies primarily on sequence/domain inference and historical genetic/biochemical characterization.</p>
+<p>URLs and dates (selected sources)<br />
+- Chen W, Zhang YM, Davies C. Penicillin-binding protein 3 is essential for growth of P. aeruginosa. Antimicrob Agents Chemother. 2017-01. https://doi.org/10.1128/aac.01651-16 (chen2017penicillinbindingprotein3 pages 1-3, chen2017penicillinbindingprotein3 pages 3-5, chen2017penicillinbindingprotein3 pages 14-16)<br />
+- Liao X. Characterization of the P. aeruginosa PBPs 3 and 3x. Thesis. 1996. https://doi.org/10.14288/1.0099201 (liao1996characterizationofthe pages 128-133, liao1996characterizationofthe pages 143-147, liao1996characterizationofthe pages 133-138, liao1996characterizationofthe pages 119-128)<br />
+- Montaner M et al. PBP target profiling in intact P. aeruginosa. Microbiol Spectr. 2023-02. https://doi.org/10.1128/spectrum.03038-22 (liao1996characterizationofthe pages 95-103)<br />
+- Glen KA, Lamont IL. PBP3 variants reduce β‑lactam susceptibility but inhibit division. J Antimicrob Chemother. 2024-07. https://doi.org/10.1093/jac/dkae203 (glen2024penicillinbindingprotein3 pages 7-8)<br />
+- Smith HG et al. Structural basis of P. aeruginosa PBP3 inhibition by cefiderocol. Chemical Science. 2024-09. https://doi.org/10.1039/d4sc04937c (basu2024cefiderocolsusceptibilityendows pages 1-2)<br />
+- Hujer AM et al. Cefepime/zidebactam against MDR P. aeruginosa. mBio. 2023-12. https://doi.org/10.1128/mbio.01118-23 (hujer2023transcendingthechallenge pages 1-2)<br />
+- Sethuvel DPM et al. β‑lactam resistance via PBP modifications in ESKAPE. Infect Dis Ther. 2023-03. https://doi.org/10.1007/s40121-023-00771-8 (sethuvel2023βlactamresistancein pages 5-7)</p>
+<p>Conclusions<br />
+- pbpC (PA2272; PBP3x/PBP3a) is a membrane-anchored bPBP with penicillin-binding, consistent with a D,D‑transpeptidase; it is nonessential and appears conditionally expressed with no demonstrable impact on β‑lactam susceptibility in standard lab conditions. PBP3 (ftsI/pbpB) is the essential septal transpeptidase driving division and is the dominant PBP3-like determinant of β‑lactam susceptibility and a validated antipseudomonal drug target. Recent data refine PBP3 drug targeting/structures and reinforce the centrality of PBP3 over PBP3x in current clinical applications (liao1996characterizationofthe pages 119-128, liao1996characterizationofthe pages 143-147, chen2017penicillinbindingprotein3 pages 14-16, hujer2023transcendingthechallenge pages 1-2, basu2024cefiderocolsusceptibilityendows pages 1-2, glen2024penicillinbindingprotein3 pages 7-8, sethuvel2023βlactamresistancein pages 5-7).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(liao1996characterizationofthe pages 128-133): Characterization of the Pseudomonas aeruginosa penicillin-binding proteins 3 and 3x : gene cloning, expression and role in susceptibility to [beta]-lactam antibiotics</p>
+</li>
+<li>
+<p>(liao1996characterizationofthe pages 133-138): Characterization of the Pseudomonas aeruginosa penicillin-binding proteins 3 and 3x : gene cloning, expression and role in susceptibility to [beta]-lactam antibiotics</p>
+</li>
+<li>
+<p>(chen2017penicillinbindingprotein3 pages 3-5): Wei Chen, Yong-Mei Zhang, and Christopher Davies. Penicillin-binding protein 3 is essential for growth of pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy, Jan 2017. URL: https://doi.org/10.1128/aac.01651-16, doi:10.1128/aac.01651-16. This article has 90 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liao1996characterizationofthe pages 119-128): Characterization of the Pseudomonas aeruginosa penicillin-binding proteins 3 and 3x : gene cloning, expression and role in susceptibility to [beta]-lactam antibiotics</p>
+</li>
+<li>
+<p>(liao1996characterizationofthe pages 143-147): Characterization of the Pseudomonas aeruginosa penicillin-binding proteins 3 and 3x : gene cloning, expression and role in susceptibility to [beta]-lactam antibiotics</p>
+</li>
+<li>
+<p>(chen2017penicillinbindingprotein3 pages 1-3): Wei Chen, Yong-Mei Zhang, and Christopher Davies. Penicillin-binding protein 3 is essential for growth of pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy, Jan 2017. URL: https://doi.org/10.1128/aac.01651-16, doi:10.1128/aac.01651-16. This article has 90 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2017penicillinbindingprotein3 pages 14-16): Wei Chen, Yong-Mei Zhang, and Christopher Davies. Penicillin-binding protein 3 is essential for growth of pseudomonas aeruginosa. Antimicrobial Agents and Chemotherapy, Jan 2017. URL: https://doi.org/10.1128/aac.01651-16, doi:10.1128/aac.01651-16. This article has 90 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liao1996characterizationofthe pages 95-103): Characterization of the Pseudomonas aeruginosa penicillin-binding proteins 3 and 3x : gene cloning, expression and role in susceptibility to [beta]-lactam antibiotics</p>
+</li>
+<li>
+<p>(glen2024penicillinbindingprotein3 pages 7-8): Karl A Glen and Iain L. Lamont. Penicillin-binding protein 3 sequence variations reduce susceptibility of pseudomonas aeruginosa to β-lactams but inhibit cell division. Journal of Antimicrobial Chemotherapy, 79:2170-2178, Jul 2024. URL: https://doi.org/10.1093/jac/dkae203, doi:10.1093/jac/dkae203. This article has 19 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(basu2024cefiderocolsusceptibilityendows pages 1-2): Soumya Basu, Gayathri Ashok, Soumyadip Ghosh, Sudha Ramaiah, Balaji Veeraraghavan, and Anand Anbarasu. Cefiderocol susceptibility endows hope in treating carbapenem-resistant pseudomonas aeruginosa: insights from in vitro and in silico evidence. RSC Advances, 14:21328-21341, Jul 2024. URL: https://doi.org/10.1039/d4ra04302b, doi:10.1039/d4ra04302b. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hujer2023transcendingthechallenge pages 1-2): Andrea M. Hujer, Steven H. Marshall, Andrew R. Mack, Kristine M. Hujer, Yamuna Devi Bakthavatchalam, Kushal Umarkar, Snehal R. Palwe, Swapna Takalkar, Prashant R. Joshi, Rahul Shrivastava, Hariharan Periasamy, Sachin S. Bhagwat, Mahesh V. Patel, Balaji Veeraraghavan, and Robert A. Bonomo. Transcending the challenge of evolving resistance mechanisms in <i>pseudomonas aeruginosa</i> through β-lactam-enhancer-mechanism-based cefepime/zidebactam. mBio, Dec 2023. URL: https://doi.org/10.1128/mbio.01118-23, doi:10.1128/mbio.01118-23. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sethuvel2023βlactamresistancein pages 5-7): Dhiviya Prabaa Muthuirulandi Sethuvel, Yamuna Devi Bakthavatchalam, Maruthan Karthik, Madhumathi Irulappan, Rahul Shrivastava, Hariharan Periasamy, and Balaji Veeraraghavan. Β-lactam resistance in eskape pathogens mediated through modifications in penicillin-binding proteins: an overview. Infectious Diseases and Therapy, 12:829-841, Mar 2023. URL: https://doi.org/10.1007/s40121-023-00771-8, doi:10.1007/s40121-023-00771-8. This article has 67 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>liao1996characterizationofthe pages 119-128</li>
+<li>liao1996characterizationofthe pages 143-147</li>
+<li>liao1996characterizationofthe pages 95-103</li>
+<li>basu2024cefiderocolsusceptibilityendows pages 1-2</li>
+<li>hujer2023transcendingthechallenge pages 1-2</li>
+<li>liao1996characterizationofthe pages 128-133</li>
+<li>liao1996characterizationofthe pages 133-138</li>
+<li>beta</li>
+<li>https://doi.org/10.1128/aac.01651-16</li>
+<li>https://doi.org/10.14288/1.0099201</li>
+<li>https://doi.org/10.1128/spectrum.03038-22</li>
+<li>https://doi.org/10.1093/jac/dkae203</li>
+<li>https://doi.org/10.1039/d4sc04937c</li>
+<li>https://doi.org/10.1128/mbio.01118-23</li>
+<li>https://doi.org/10.1007/s40121-023-00771-8</li>
+<li>https://doi.org/10.1128/aac.01651-16,</li>
+<li>https://doi.org/10.1093/jac/dkae203,</li>
+<li>https://doi.org/10.1039/d4ra04302b,</li>
+<li>https://doi.org/10.1128/mbio.01118-23,</li>
+<li>https://doi.org/10.1007/s40121-023-00771-8,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9I1K1
+gene_symbol: pbpC
+aliases:
+  - PBP3x
+  - PBP3a
+  - PA2272
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:208964
+  label: Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM
+    14847 / LMG 12228 / 1C / PRS 101 / PAO1)
+description: &gt;
+  PbpC (also known as PBP3x or PBP3a, encoded by PA2272) is a class B high-molecular-mass
+  penicillin-binding protein (HMM bPBP) in Pseudomonas aeruginosa. It is a membrane-anchored
+  protein with an N-terminal transmembrane segment and a periplasmic D,D-transpeptidase domain
+  containing the conserved SXXK/SXN/KT(S)G motifs characteristic of penicillin-binding proteins.
+  PbpC is a nonessential paralog of the essential septal transpeptidase PBP3 (FtsI/PbpB).
+  Unlike PBP3, pbpC knockout causes no detectable growth or morphology defects under standard
+  laboratory conditions. PbpC is expressed only during stationary phase and shows low/conditional
+  expression. While it binds penicillin in labeling assays, there is no direct experimental
+  evidence for specific enzymatic activity, and its physiological role remains unclear.
+  Overexpression of pbpC does not alter beta-lactam susceptibility, in contrast to PBP3.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      Membrane localization of PbpC is experimentally supported. Liao and Hancock (1997, PMID:9045804)
+      demonstrated membrane association through cell fractionation studies. The protein contains a
+      predicted N-terminal transmembrane helix (residues 10-30 per UniProt annotation). The IBA annotation
+      from PANTHER phylogenetic inference is consistent with this experimental evidence.
+    action: ACCEPT
+    reason: &gt;
+      Strong experimental support from membrane fractionation studies. The publication demonstrates that
+      the pbpC gene product &#34;was exported to the cytoplasmic membrane of E. coli cells&#34; (PMID:9045804).
+      In bacteria, the inner/cytoplasmic membrane is termed &#34;plasma membrane&#34; in GO.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;was exported to the cytoplasmic membrane of E. coli cells and could bind [3H] penicillin&#34;
+
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      Penicillin binding by PbpC is directly demonstrated experimentally. Liao and Hancock (1997,
+      PMID:9045804) showed that PbpC binds penicillin in labeling assays, though the protein was not
+      detected in physiological penicillin labeling due to low/conditional expression. The IBA
+      phylogenetic inference is well-supported by experimental data.
+    action: ACCEPT
+    reason: &gt;
+      This is experimentally validated. The publication confirms &#34;could bind [3H] penicillin&#34;
+      (PMID:9045804). This is a core molecular function of the protein.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;could bind [3H] penicillin&#34;
+
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      Cell wall organization is a reasonable inference based on the protein&#39;s domain structure and
+      family membership (transpeptidase family, FtsI subfamily). However, the evidence is indirect.
+      The pbpC knockout shows no detectable growth or morphology defects, indicating that PbpC is
+      not required for normal cell wall organization under standard conditions.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      While phylogenetic inference and domain conservation support a potential role in cell wall
+      organization, the complete lack of phenotype upon gene knockout (PMID:9045804) indicates
+      this is not a core function. The protein may have a redundant or stress-response role in
+      cell wall organization that is only relevant under specific (unknown) conditions.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells, suggesting that pbpC was not required for cell viability under normal laboratory growth conditions&#34;
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;Chromosomal insertional inactivation of pbpC caused no detectable growth or morphology defects under assay conditions, indicating nonessentiality&#34;
+
+- term:
+    id: GO:0000917
+    label: division septum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This annotation is derived from UniProtKB keyword mapping (KW-0717 Septation). However,
+      experimental evidence directly contradicts involvement in division septum assembly. PbpC
+      knockout shows no cell division or morphology defects, and the protein is only expressed
+      in stationary phase when cells are not actively dividing. The essential paralog PBP3
+      (FtsI/PbpB) is the true septal transpeptidase.
+    action: REMOVE
+    reason: &gt;
+      This is an over-annotation based on sequence similarity to the essential septal
+      transpeptidase PBP3 (FtsI). The experimental evidence from PMID:9045804 shows that
+      inactivation causes no morphology defects and the protein is produced in stationary phase
+      when cell division is minimal. The deep research confirms that PBP3 (ftsI), not PbpC,
+      is the essential septal transpeptidase.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+      - reference_id: PMID:9045804
+        supporting_text: &#34;PBP3x was produced in the stationary phase of growth&#34;
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;PBP3 (ftsI) sits in a division/PG operon and is essential for septal PG synthesis, whereas pbpC is genetically separate, low/conditional expression, and dispensable in lab growth&#34;
+
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This annotation is derived from UniProtKB keyword mapping (KW-0121 Carboxypeptidase).
+      The protein is assigned EC 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase) by
+      HAMAP rule inference, but this enzymatic activity has not been directly demonstrated
+      for PbpC. The inference is based on domain conservation with other transpeptidases
+      that have this activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      While the protein contains conserved transpeptidase motifs, no direct kinetic or
+      enzymatic characterization has been performed for PbpC. The deep research notes that
+      direct kinetic substrate specificity was not reported. The EC assignment is from HAMAP
+      rule inference, not experimental evidence. Class B PBPs primarily function as
+      D,D-transpeptidases for peptidoglycan cross-linking, with carboxypeptidase activity
+      being secondary.
+    supported_by:
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding&#34;
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is a duplicate annotation for plasma membrane localization, derived from InterPro
+      domain mapping (IPR037532 - FtsI transpeptidase family). The localization is experimentally
+      supported by membrane fractionation studies.
+    action: ACCEPT
+    reason: &gt;
+      Membrane localization is experimentally confirmed (PMID:9045804). This IEA annotation
+      from InterPro/UniRule is consistent with the experimental evidence. Duplicate annotations
+      with different evidence codes are acceptable.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;was exported to the cytoplasmic membrane of E. coli cells&#34;
+
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a very broad biological process annotation derived from the UniProtKB keyword
+      KW-0645 (Protease). While PbpC may have peptidase activity based on domain conservation,
+      &#34;proteolysis&#34; as a general term is too broad and uninformative for this protein. The
+      actual biological process would be more specifically related to peptidoglycan metabolism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      This term is too general and not informative for a penicillin-binding protein. PBPs
+      act on peptidoglycan substrates, not general protein substrates. The term &#34;proteolysis&#34;
+      implies general protein degradation, which is misleading for this enzyme class.
+      Additionally, no direct proteolytic activity has been demonstrated for PbpC.
+
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This molecular function annotation is derived from UniProtKB keyword KW-0645 (Protease).
+      While PbpC belongs to the transpeptidase family and may have peptidase activity based
+      on domain conservation, this general term is less informative than the specific
+      penicillin binding annotation. No direct peptidase activity has been demonstrated.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The term is technically correct based on domain conservation (transpeptidases cleave
+      peptide bonds), but it is less informative than more specific terms. The primary
+      experimentally-demonstrated activity is penicillin binding (GO:0008658). This annotation
+      is retained as non-core because it reflects predicted rather than demonstrated activity.
+    supported_by:
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding&#34;
+
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This annotation is derived from UniProtKB keyword KW-0133 (Cell shape). However,
+      experimental evidence directly contradicts involvement in cell shape regulation.
+      PbpC knockout shows no morphology defects, and the protein is not required for
+      normal cell shape maintenance.
+    action: REMOVE
+    reason: &gt;
+      This is an over-annotation based on family membership. The experimental evidence
+      from PMID:9045804 clearly demonstrates that inactivation causes no changes in cell
+      morphology. This directly contradicts a role in cell shape regulation. The essential
+      paralog PBP3 (FtsI) is involved in cell shape through its role in septal peptidoglycan
+      synthesis, but PbpC is dispensable for normal cell morphology.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is a duplicate annotation for penicillin binding, derived from multiple InterPro
+      domains (IPR001460, IPR005311, IPR036138, IPR037532) and ARBA rule. The activity is
+      experimentally demonstrated.
+    action: ACCEPT
+    reason: &gt;
+      Penicillin binding is directly demonstrated experimentally (PMID:9045804). This IEA
+      annotation is consistent with experimental evidence. Duplicate annotations with
+      different evidence codes/sources are acceptable.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;could bind [3H] penicillin&#34;
+
+- term:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This annotation is INCORRECT for PbpC. It is derived from InterPro domain mapping
+      (IPR037532 - FtsI transpeptidase family), but this represents a mapping error.
+      PbpC is a Class B penicillin-binding protein (monofunctional D,D-transpeptidase),
+      NOT a Class A PBP. Peptidoglycan glycosyltransferase activity is characteristic
+      of Class A PBPs, which are bifunctional enzymes possessing both transpeptidase
+      and glycosyltransferase domains. Class B PBPs like PbpC lack the glycosyltransferase
+      domain entirely.
+    action: REMOVE
+    reason: &gt;
+      This is a clear annotation error. PbpC belongs to the FtsI/PBP3 subfamily of Class B
+      (monofunctional) penicillin-binding proteins. The deep research confirms PbpC is a
+      class B PBP predicted to catalyze D,D-transpeptidation. Class B PBPs possess only the
+      transpeptidase domain. Peptidoglycan glycosyltransferase activity (GO:0008955) is found
+      in Class A PBPs (e.g., PBP1a, PBP1b in E. coli), which have both glycosyltransferase
+      and transpeptidase domains.
+    supported_by:
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;PBP3x/PBP3a (pbpC) is a class B PBP predicted to catalyze D,D-transpeptidation&#34;
+
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This annotation is derived from EC number assignment (EC 3.4.16.4) via UniRule. The
+      EC assignment itself is based on HAMAP rule inference from sequence features, not
+      direct experimental evidence. While this activity is plausible based on domain
+      conservation, no direct kinetic or enzymatic characterization has been performed
+      for PbpC.
+    action: UNDECIDED
+    reason: &gt;
+      The annotation reflects predicted enzymatic activity based on sequence conservation
+      with characterized D,D-transpeptidases. However, the deep research notes that direct
+      kinetic substrate specificity was not reported for PbpC. Without direct experimental
+      demonstration of this specific activity for PbpC, the annotation remains uncertain.
+    supported_by:
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding&#34;
+
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This annotation is derived from InterPro domain mapping (IPR037532), UniPathway
+      (UPA00219), and UniRule. While the protein&#39;s domain structure suggests a role in
+      peptidoglycan metabolism, the complete lack of phenotype upon gene knockout indicates
+      PbpC is not required for normal peptidoglycan biosynthesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The annotation is based on sound domain inference and family membership. PbpC
+      belongs to the transpeptidase family involved in peptidoglycan cross-linking.
+      However, the knockout phenotype shows PbpC is dispensable for normal peptidoglycan
+      biosynthesis. The protein may contribute to peptidoglycan biosynthesis under
+      specific stress conditions or in stationary phase (when it is expressed), but this
+      is not demonstrated.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a very broad molecular function annotation derived from UniProtKB keyword
+      KW-0378 (Hydrolase). While transpeptidases do involve hydrolysis as part of their
+      mechanism, this term is too general and uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      This annotation is correct in the sense that transpeptidases catalyze reactions
+      involving peptide bond cleavage, but &#34;hydrolase activity&#34; is too broad to be
+      informative. The more specific penicillin binding (GO:0008658) is a more appropriate
+      molecular function annotation. Additionally, no hydrolase activity has been directly
+      demonstrated for PbpC.
+
+- term:
+    id: GO:0043093
+    label: FtsZ-dependent cytokinesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;
+      This annotation is derived from UniRule (UR000432218) based on sequence features
+      shared with FtsI/PBP3, which is essential for FtsZ-dependent cytokinesis. However,
+      PbpC is not required for cell division and shows no involvement in cytokinesis
+      based on knockout phenotype.
+    action: REMOVE
+    reason: &gt;
+      This is an over-annotation based on similarity to the essential paralog FtsI/PBP3.
+      The experimental evidence from PMID:9045804 shows that PbpC is nonessential with
+      no morphology or growth defects upon inactivation. Furthermore, PbpC is produced
+      in the stationary phase of growth when cell division is minimal or absent. The
+      essential septal transpeptidase required for FtsZ-dependent cytokinesis is PBP3
+      (ftsI/pbpB), not PbpC.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;PBP3x was produced in the stationary phase of growth&#34;
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+      - reference_id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+        supporting_text: &#34;Conditional deletion of ftsI/PBP3 caused filamentation and division arrest; growth required PBP3 expression, establishing it as the principal septal transpeptidase&#34;
+
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This annotation is derived from InterPro domain mapping (IPR037532) and UniProtKB
+      keyword (KW-0132 Cell division). However, experimental evidence shows PbpC is not
+      required for cell division and is primarily expressed in stationary phase when
+      cells are not dividing.
+    action: REMOVE
+    reason: &gt;
+      This is an over-annotation based on sequence similarity to FtsI/PBP3. The
+      experimental evidence directly contradicts involvement in cell division. The
+      protein is produced in the stationary phase of growth, not during active division.
+      The deep research emphasizes that PBP3 (ftsI/pbpB) is the essential septal
+      transpeptidase for cell division; PBP3x is a nonessential paralog under standard
+      conditions.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+      - reference_id: PMID:9045804
+        supporting_text: &#34;PBP3x was produced in the stationary phase of growth&#34;
+
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a duplicate annotation for cell wall organization, derived from UniProtKB
+      keyword KW-0961. As noted for the IBA annotation, while domain conservation supports
+      a potential role, the knockout shows no phenotype related to cell wall organization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Same reasoning as for the IBA annotation of this term. The annotation is retained
+      as non-core because the protein has conserved features suggesting a potential role,
+      but the knockout phenotype shows it is not essential for cell wall organization
+      under standard conditions. The protein may have a redundant or stress-response
+      function.
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells, suggesting that pbpC was not required for cell viability under normal laboratory growth conditions&#34;
+
+references:
+- id: PMID:9045804
+  title: &gt;
+    Identification of a penicillin-binding protein 3 homolog, PBP3x, in Pseudomonas
+    aeruginosa: gene cloning and growth phase-dependent expression.
+  findings:
+    - statement: PbpC (PBP3x) binds penicillin in labeling assays
+      supporting_text: &#34;could bind [3H] penicillin&#34;
+    - statement: PbpC is membrane-localized
+      supporting_text: &#34;was exported to the cytoplasmic membrane of E. coli cells&#34;
+    - statement: PbpC is expressed in stationary phase
+      supporting_text: &#34;PBP3x was produced in the stationary phase of growth&#34;
+    - statement: pbpC knockout causes no growth or morphology defects
+      supporting_text: &#34;Inactivation of PBP3x caused no changes in the cell morphology or growth rate of exponentially growing cells&#34;
+    - statement: PbpC overexpression does not alter beta-lactam susceptibility
+      supporting_text: &#34;overexpression of the pbpC gene product had no effect on the susceptibility to the PBP3-targeted antibiotics tested&#34;
+- id: PMID:10984043
+  title: &gt;
+    Complete genome sequence of Pseudomonas aeruginosa PAO1, an opportunistic pathogen
+  findings: []
+- id: file:PSEAE/pbpC/pbpC-deep-research-falcon.md
+  title: Deep research summary for pbpC
+  findings:
+    - statement: PbpC is a class B PBP
+      supporting_text: &#34;PBP3x/PBP3a (pbpC) is a class B PBP predicted to catalyze D,D-transpeptidation&#34;
+    - statement: PBP3 (not PbpC) is essential for cell division
+      supporting_text: &#34;Conditional deletion of ftsI/PBP3 caused filamentation and division arrest&#34;
+    - statement: No direct enzymatic characterization of PbpC
+      supporting_text: &#34;Direct kinetic substrate specificity was not reported; inference rests on domain conservation and penicillin binding&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000104
+  title: &gt;
+    Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+
+core_functions:
+  - molecular_function:
+      id: GO:0008658
+      label: penicillin binding
+    description: &gt;
+      Experimentally demonstrated in penicillin labeling assays (PMID:9045804). This is the
+      only molecular function directly demonstrated for PbpC.
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: PMID:9045804
+        supporting_text: &#34;could bind [3H] penicillin&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: &gt;
+      What is the physiological role of PbpC during stationary phase? Is it involved in
+      cell wall remodeling or maintenance under nutrient limitation or stress?
+  - question: &gt;
+      Does PbpC have a role in biofilm formation or persistence, given its stationary phase
+      expression pattern?
+  - question: &gt;
+      What conditions, if any, reveal a phenotype for pbpC deletion? Are there specific
+      stress conditions where PbpC becomes important?
+  - question: &gt;
+      Does PbpC have D,D-transpeptidase activity, and if so, what is its substrate specificity
+      compared to PBP3?
+
+suggested_experiments:
+  - description: &gt;
+      Enzymatic characterization: Purify recombinant PbpC and measure D,D-transpeptidase
+      and D,D-carboxypeptidase activities with defined peptidoglycan substrates
+    hypothesis: PbpC has D,D-transpeptidase activity similar to other Class B PBPs
+  - description: &gt;
+      Localization studies: Use fluorescent protein fusions to determine precise localization
+      of PbpC during stationary phase
+    hypothesis: PbpC localizes to the cytoplasmic membrane during stationary phase
+  - description: &gt;
+      Stress phenotype screening: Test pbpC knockout under various stress conditions
+      (antibiotic stress, biofilm formation, nutrient limitation, oxidative stress)
+    hypothesis: PbpC may have a conditionally essential role under stress conditions
+  - description: &gt;
+      Expression analysis: Quantify pbpC expression across growth phases and stress conditions
+      using reporter fusions or RNA-seq
+    hypothesis: pbpC expression is regulated by stationary phase sigma factors
+  - description: &gt;
+      Genetic interaction analysis: Test for synthetic phenotypes when pbpC is deleted in
+      combination with other nonessential PBPs
+    hypothesis: PbpC has functional redundancy with other nonessential PBPs
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

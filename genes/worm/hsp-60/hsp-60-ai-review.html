@@ -1,0 +1,3553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hsp-60 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hsp-60</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50140" target="_blank" class="term-link">
+                        P50140
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hsp-60";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50140" data-a="DESCRIPTION: HSP-60 is the C. elegans mitochondrial matrix chap..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HSP-60 is the C. elegans mitochondrial matrix chaperonin, a member of the HSP60/GroEL family. It functions as an ATP-dependent protein folding machine that works in concert with the co-chaperonin HSP-10 to assist folding of newly imported mitochondrial proteins and to refold stress-damaged proteins in the mitochondrial matrix. HSP-60 assembles into double heptameric rings (tetradecamer) forming a central folding chamber, and the ATP hydrolysis cycle drives conformational changes that encapsulate and fold substrate proteins. The hsp-60 gene is a canonical target of the mitochondrial unfolded protein response (UPRmt), regulated by the transcription factor ATFS-1. HSP-60::GFP reporters are widely used as readouts of UPRmt activation. Beyond its chaperone role, a cytosolic fraction of HSP-60 contributes to innate immunity via stabilization of SEK-1 and activation of PMK-1/p38 MAPK signaling.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0006457" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 is a bona fide protein folding chaperone. As a member of the GroEL/Cpn60 family, HSP-60 functions as an ATP-dependent protein folding machine in the mitochondrial matrix, assisting newly imported proteins to achieve their native conformation and refolding stress-damaged proteins (Fink 1999, Singh 2024). The IBA annotation is phylogenetically well-supported given the deep conservation of this function across all domains of life.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein folding is the core molecular function of HSP-60. The chaperonin mechanism is highly conserved from bacterial GroEL to mitochondrial HSP60, and C. elegans HSP-60 contains all the canonical Cpn60/GroEL domains required for this function. UniProt annotation confirms this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link">
+                                        PMID:15280428
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the mitochondrial matrix HSP70 and HSP60 chaperones, encoded by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively activated by perturbations that impair assembly of multi-subunit mitochondrial complexes or by RNAi of genes encoding mitochondrial chaperones or proteases, which lead to defective protein folding and processing in the organelle</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008637" target="_blank" class="term-link">
+                                    GO:0008637
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic mitochondrial changes</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0008637" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human HSPD1/HSP60 has been implicated in apoptotic processes, particularly mitochondrial changes during programmed cell death. However, direct evidence for this role in C. elegans HSP-60 is limited. The annotation is based on phylogenetic inference from mammalian studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While HSP60 family members have been linked to apoptosis in mammals (e.g., cytoplasmic release during apoptosis), this represents a secondary/downstream consequence rather than a core function of the C. elegans chaperonin. The primary role of HSP-60 is protein folding in the mitochondrial matrix. The annotation is phylogenetically inferred and while not incorrect, represents a non-core function that may be context-dependent.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0005743" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 is primarily localized to the mitochondrial matrix, not the inner membrane. Some association with the inner membrane may occur during protein import assistance, but the functional localization is the matrix compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The primary and well-established localization of HSP-60/Cpn60 family members is the mitochondrial matrix, where they perform their chaperone function. UniProt annotates this as &#34;Mitochondrion matrix.&#34; While transient associations with the inner membrane may occur during substrate protein import, the matrix is the canonical functional compartment. The annotation GO:0005759 (mitochondrial matrix) is more accurate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    mitochondrial matrix
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The mitochondrial matrix is the canonical localization for HSP-60 where it performs its chaperone function. This is well-supported by the UniProt record and extensive literature on Cpn60/GroEL family chaperonins (Singh 2024, Fink 1999).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP-60 is nuclear-encoded, synthesized in the cytosol, and imported into the mitochondrial matrix via an N-terminal targeting presequence, where it folds imported matrix proteins and refolds stress-damaged proteins. This is the correct and primary cellular component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/hsp-60/hsp-60-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0034514" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 is a core effector and transcriptional target of the UPRmt. The hsp-60 promoter is activated during mitochondrial stress as part of the ATFS-1-dependent transcriptional program. HSP-60::GFP reporters are canonical readouts of UPRmt activation (Haynes 2022, Yoneda 2004, Benedetti 2006).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is one of the core functions of HSP-60 in C. elegans. The hsp-60 gene is a canonical UPRmt target, and hsp-60p::GFP reporters are among the most widely used tools for monitoring UPRmt activation. HSP-60 protein functions as an effector that helps restore mitochondrial proteostasis during stress.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link">
+                                        PMID:15280428
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp-6 and hsp-60 induction was specific to perturbed mitochondrial protein handling, as neither heat-shock nor endoplasmic reticulum stress nor manipulations that impair mitochondrial steps in intermediary metabolism or ATP synthesis activated the mitochondrial chaperone genes. These observations support the existence of a mitochondrial unfolded protein response</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation and by other manipulations that promote mitochondrial protein misfolding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045041" target="_blank" class="term-link">
+                                    GO:0045041
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial intermembrane space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0045041" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 is implicated in assisting the folding of proteins imported into mitochondria, but its primary role is in the matrix, not specifically the intermembrane space (IMS). The annotation may be too specific regarding the compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP-60 assists protein folding in the mitochondrial matrix and can assist newly imported proteins. However, proteins destined for the IMS use distinct import pathways (MIA/CHCHD4 pathway) and HSP-60 primarily functions in the matrix. A more general term related to mitochondrial protein import or matrix protein folding would be more accurate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    protein folding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0051087" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 binds to its co-chaperonin HSP-10 (Cpn10/GroES family) to form the functional chaperone complex. This interaction is essential for the ATP-dependent protein folding cycle. The annotation reflects the physical interaction between HSP-60 and HSP-10.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The HSP-60/HSP-10 interaction is a fundamental aspect of chaperonin function. HSP-10 (Cpn10) is a heptameric lid that binds to the apical domains of HSP-60 to cap the folding chamber. This is well-established from structural and biochemical studies of the GroEL/GroES system and conserved in mitochondrial chaperonins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/hsp-60/hsp-60-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">HSP-60/Cpn60 forms a double-ring (two heptameric rings) folding cage that captures non-native substrates; HSP-10 (Cpn10/GroES) caps the cavity and an ATP-binding/hydrolysis cycle drives conformational changes to permit folding and release</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 binds ATP as part of its chaperone cycle. The annotation is correct but overly general - ATP binding (GO:0005524) is a more specific and informative annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this annotation is subsumed by the more specific ATP binding annotation. HSP-60 contains the conserved ATP-binding equatorial domain of Cpn60/GroEL chaperonins. The annotation can be retained as it is not incorrect, though ATP binding is more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 binds ATP in its equatorial domain, and ATP hydrolysis drives the conformational changes necessary for protein folding. This is a core molecular function of all Cpn60/GroEL family chaperonins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding and hydrolysis are essential for HSP-60 function. The ATP-driven conformational cycle is fundamental to chaperonin-assisted protein folding. UniProt lists ATP-binding as a keyword for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/hsp-60/hsp-60-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">KW   ATP-binding; Chaperone; Mitochondrion; Nucleotide-binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with IBA evidence above. The mitochondrial matrix localization is well-supported and correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA annotation and UniProt record. Multiple evidence sources converging on the same correct annotation strengthens confidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation with IBA evidence above. Protein folding is the core function of HSP-60. The InterPro-based annotation supports the phylogenetic inference.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with IBA annotation. The convergence of phylogenetic and domain-based evidence strengthens the annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042026" target="_blank" class="term-link">
+                                    GO:0042026
+                                </a>
+                            </span>
+                            <span class="term-label">protein refolding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0042026" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-60 assists in refolding stress-damaged proteins in the mitochondrial matrix. This is consistent with its role as a chaperonin and its induction during mitochondrial stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein refolding under stress conditions is a well-established function of HSP60 family chaperonins. UniProt states HSP-60 &#34;may also prevent misfolding and promote the refolding and proper assembly of unfolded polypeptides generated under stress conditions in the mitochondrial matrix.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/hsp-60/hsp-60-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May also prevent misfolding and promote the refolding and proper assembly of unfolded polypeptides generated under stress conditions in the mitochondrial matrix</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140662" target="_blank" class="term-link">
+                                    GO:0140662
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent protein folding chaperone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0140662" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This molecular function annotation accurately captures the core enzymatic/chaperone activity of HSP-60 - ATP-dependent protein folding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an accurate and informative molecular function annotation for HSP-60. The chaperonin uses ATP binding and hydrolysis to drive conformational changes that facilitate protein folding in the chamber formed between the two heptameric rings.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17189267" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17189267
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Knockdown of mitochondrial heat shock protein 70 promotes pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0005739" data-r="PMID:17189267" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kimura et al. (2007) studied HSP-6 (mtHsp70) knockdown effects and showed that HSP-60 levels are reduced along with other mitochondrial proteins, demonstrating HSP-60&#39;s mitochondrial localization. This provides experimental support for mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IDA evidence from PMID:17189267 supports mitochondrial localization. While the more specific term &#34;mitochondrial matrix&#34; is also annotated, the general mitochondrion term is not incorrect and represents valid experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17189267" target="_blank" class="term-link">
+                                        PMID:17189267
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of HSP-6 by RNA interference in young adult nematodes caused a reduction in the levels of ATP-2, HSP-60 and CLK-1, leading to abnormal mitochondrial morphology</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061629" target="_blank" class="term-link">
+                                    GO:0061629
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II-specific DNA-binding transcription factor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0061629" data-r="PMID:17925224" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Haynes et al. (2007) showed that DVE-1, a homeodomain transcription factor, binds to the hsp-60 promoter during UPRmt activation. This annotation appears to suggest HSP-60 protein interacts with transcription factors, which is not the main finding. The study describes transcriptional regulation OF hsp-60, not by HSP-60.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation appears to be an error or misinterpretation. PMID:17925224 describes the DVE-1 transcription factor binding to the hsp-60 PROMOTER to regulate its expression during UPRmt, not HSP-60 protein binding to transcription factors. The hsp-60 gene is a transcriptional TARGET of DVE-1, not a protein interactor. The IPI evidence code suggests protein-protein interaction, but the paper describes transcriptional regulation of the hsp-60 gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters of mitochondrial chaperone genes [DVE-1 binds hsp-60 promoter, not HSP-60 protein]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15280428
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartment-specific perturbation of protein handling activa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0034514" data-r="PMID:15280428" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yoneda et al. (2004) showed hsp-60 gene expression is induced during UPRmt. This IEP (Inferred from Expression Pattern) annotation is appropriate as hsp-60 expression correlates with UPRmt activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEP evidence is valid - hsp-60 expression is upregulated during mitochondrial stress as part of the UPRmt transcriptional program. This is a landmark paper establishing the UPRmt in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link">
+                                        PMID:15280428
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the mitochondrial matrix HSP70 and HSP60 chaperones, encoded by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively activated by perturbations that impair assembly of multi-subunit mitochondrial complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15280428
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartment-specific perturbation of protein handling activa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0034514" data-r="PMID:15280428" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IMP (Inferred from Mutant Phenotype) annotation suggests functional involvement in UPRmt was demonstrated through genetic manipulation. Yoneda et al. (2004) showed that RNAi of mitochondrial chaperones/proteases activates hsp-60 expression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP-60 is both a transcriptional target and functional effector of the UPRmt. The protein helps restore proteostasis in the mitochondrial matrix during stress. Multiple evidence types (IBA, IEP, IMP) converge on this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link">
+                                        PMID:15280428
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi of genes encoding mitochondrial chaperones or proteases, which lead to defective protein folding and processing in the organelle [activate hsp-60/hsp-6]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002119" target="_blank" class="term-link">
+                                    GO:0002119
+                                </a>
+                            </span>
+                            <span class="term-label">nematode larval development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15280428
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartment-specific perturbation of protein handling activa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0002119" data-r="PMID:15280428" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yoneda et al. (2004) demonstrated that perturbing mitochondrial proteostasis affects development, and hsp-60 is involved in the response. This represents a downstream phenotypic consequence rather than a specific molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While HSP-60 is essential for proper development (as are many mitochondrial proteins), larval development is a broad phenotypic readout rather than a specific molecular function. The annotation reflects pleiotropy - loss of mitochondrial chaperone function affects many processes including development. This is a valid but non-core annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007005" target="_blank" class="term-link">
+                                    GO:0007005
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16816413
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ubiquitin-like protein 5 positively regulates chaperone gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0007005" data-r="PMID:16816413" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Benedetti et al. (2006) showed that perturbation of UPRmt signaling (via ubl-5 RNAi) affects mitochondrial morphology and assembly of mitochondrial complexes. HSP-60, as an effector chaperone, contributes to proper mitochondrial organization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HSP-60 contributes to proper folding and assembly of mitochondrial protein complexes, which is essential for mitochondrial organization. The study shows that compromising UPRmt (and thus chaperone function) leads to abnormal mitochondrial morphology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mitochondrial morphology and assembly of multi-subunit mitochondrial complexes of biotinylated proteins are also perturbed in ubl-5(RNAi) worms, indicating that UBL-5 also counteracts physiological levels of mitochondrial stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009792" target="_blank" class="term-link">
+                                    GO:0009792
+                                </a>
+                            </span>
+                            <span class="term-label">embryo development ending in birth or egg hatching</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15280428
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartment-specific perturbation of protein handling activa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0009792" data-r="PMID:15280428" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Similar to larval development, this annotation reflects that HSP-60 function is required for normal embryonic development. This is a broad phenotypic consequence of mitochondrial chaperone function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Embryonic development is a broad biological process affected by mitochondrial dysfunction. While the annotation is valid, it represents pleiotropy rather than a specific molecular role. Essential mitochondrial proteins affect many developmental processes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15280428
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartment-specific perturbation of protein handling activa...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P50140" data-a="GO:0045087" data-r="PMID:15280428" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Jeong et al. (2017, EMBO J) demonstrated that HSP-60 contributes to antibacterial immunity via the p38 MAPK/PMK-1 pathway. A cytosolic fraction of HSP-60 stabilizes SEK-1 and promotes PMK-1 phosphorylation, enhancing resistance to P. aeruginosa. This function is described in the deep research but the primary paper PMID is not yet in the publications cache.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This represents a significant non-canonical function of HSP-60 supported by direct experimental evidence. The deep research document cites Jeong et al. (2017, EMBO J, doi:10.15252/embj.201694781) showing hsp-60 RNAi reduces PMK-1 activity and pathogen resistance, while cytosolic HSP-60 overexpression improves PA14 resistance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/hsp-60/hsp-60-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">hsp-60 RNAi lowers PMK-1 activity (decreased PMK-1 reporters and phospho-PMK-1) and reduces survival on PA14; cytosolic HSP-60 overexpression improves PA14 resistance, consistent with HSP-60 acting via p38/PMK-1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Core molecular function - HSP-60 is a GroEL/Cpn60 family chaperonin that uses ATP binding and hydrolysis to drive protein folding in a chamber formed by double heptameric rings with HSP-10 co-chaperonin lid.</h3>
+                <span class="vote-buttons" data-g="P50140" data-a="FUNCTION: Core molecular function - HSP-60 is a GroEL/Cpn60 ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140662" target="_blank" class="term-link">
+                            ATP-dependent protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                mitochondrial unfolded protein response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain-based evidence supporting ATP-dependent chaperone function</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference from conserved HSP60/GroEL family function</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nucleotide binding from UniProt keywords</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mitochondrial matrix localization from UniProt</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP binding evidence from combined computational methods</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15280428" target="_blank" class="term-link">
+                            PMID:15280428
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Compartment-specific perturbation of protein handling activates genes encoding mitochondrial chaperones.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Landmark paper establishing the UPRmt in C. elegans</div>
+                        
+                        <div class="finding-text">"We found that the mitochondrial matrix HSP70 and HSP60 chaperones, encoded by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively activated by perturbations that impair assembly of multi-subunit mitochondrial complexes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">hsp-60 and hsp-6 are selectively induced by mitochondrial protein folding stress</div>
+                        
+                        <div class="finding-text">"hsp-6 and hsp-60 induction was specific to perturbed mitochondrial protein handling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UPRmt is distinct from heat shock and ER stress responses</div>
+                        
+                        <div class="finding-text">"neither heat-shock nor endoplasmic reticulum stress nor manipulations that impair mitochondrial steps in intermediary metabolism or ATP synthesis activated the mitochondrial chaperone genes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                            PMID:16816413
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ubiquitin-like protein 5 positively regulates chaperone gene expression in the mitochondrial unfolded protein response.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 is required for UPRmt signaling</div>
+                        
+                        <div class="finding-text">"RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">hsp-60::GFP is a canonical UPRmt reporter</div>
+                        
+                        <div class="finding-text">"suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation and by other manipulations that promote mitochondrial protein misfolding"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UPRmt perturbation affects mitochondrial morphology</div>
+                        
+                        <div class="finding-text">"Mitochondrial morphology and assembly of multi-subunit mitochondrial complexes of biotinylated proteins are also perturbed in ubl-5(RNAi) worms"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17189267" target="_blank" class="term-link">
+                            PMID:17189267
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Knockdown of mitochondrial heat shock protein 70 promotes progeria-like phenotypes in caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HSP-6 knockdown reduces HSP-60 levels</div>
+                        
+                        <div class="finding-text">"Knockdown of HSP-6 by RNA interference in young adult nematodes caused a reduction in the levels of ATP-2, HSP-60 and CLK-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates interdependence of mitochondrial chaperones</div>
+                        
+                        <div class="finding-text">"Mitochondrial HSP-60 and ATP-2 were also reduced following the reduction of HSP-6 during aging"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IDA evidence for mitochondrial localization</div>
+                        
+                        <div class="finding-text">"leading to abnormal mitochondrial morphology and lower ATP levels"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                            PMID:17925224
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ClpP mediates activation of a mitochondrial unfolded protein response in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVE-1 and UBL-5 form complex during UPRmt</div>
+                        
+                        <div class="finding-text">"Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVE-1 binds promoters of mitochondrial chaperone genes including hsp-60</div>
+                        
+                        <div class="finding-text">"Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters of mitochondrial chaperone genes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ClpP is required for UPRmt signaling</div>
+                        
+                        <div class="finding-text">"These events and the downstream UPR(mt) are attenuated in animals with reduced activity of clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate specificity of C. elegans HSP-60? Are there specific mitochondrial proteins that preferentially require HSP-60 for folding?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="Q: What is the substrate specificity of C. elegans HS..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the cytosolic fraction of HSP-60 contribute to innate immunity? Is this a regulated process or does it occur constitutively?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="Q: How does the cytosolic fraction of HSP-60 contribu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does HSP-60 have roles in mitochondrial protein import beyond folding newly imported proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="Q: Does HSP-60 have roles in mitochondrial protein im..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify HSP-60 client proteins using proximity labeling (BioID/TurboID) in the mitochondrial matrix under normal and stress conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HSP-60 has specific client proteins in the mitochondrial matrix that require chaperonin assistance for folding.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="EXPERIMENT: Identify HSP-60 client proteins using proximity la..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Characterize the cytosolic HSP-60 pool using subcellular fractionation and determine what regulates its distribution between mitochondria and cytosol.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The cytosolic fraction of HSP-60 is regulated and contributes to innate immunity signaling under specific conditions.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="EXPERIMENT: Characterize the cytosolic HSP-60 pool using subce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether HSP-60 co-localizes with the TIM/TOM import machinery using super-resolution microscopy.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HSP-60 interacts with the mitochondrial import machinery to assist folding of newly imported proteins.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P50140" data-a="EXPERIMENT: Test whether HSP-60 co-localizes with the TIM/TOM ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-upr-stress</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hsp-60-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P50140" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T10:56:28.661526'<br />
+end_time: '2025-12-28T11:05:36.239212'<br />
+duration_seconds: 547.58<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: hsp-60<br />
+  gene_symbol: hsp-60<br />
+  uniprot_accession: P50140<br />
+  protein_description: 'RecName: Full=Chaperonin homolog Hsp-60, mitochondrial; AltName:<br />
+    Full=Heat shock protein 60; Short=HSP-60; Flags: Precursor;'<br />
+  gene_info: Name=hsp-60; Synonyms=hsp60; ORFNames=Y22D7AL.5;<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the chaperonin (HSP60) family. .<br />
+  protein_domains: Chaperonin_Cpn60_CS. (IPR018370); Cpn60/GroEL. (IPR001844); Cpn60/GroEL/TCP-1.<br />
+    (IPR002423); GroEL-like_apical_dom_sf. (IPR027409); GROEL-like_equatorial_sf.<br />
+    (IPR027413)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 45</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P50140</li>
+<li><strong>Protein Description:</strong> RecName: Full=Chaperonin homolog Hsp-60, mitochondrial; AltName: Full=Heat shock protein 60; Short=HSP-60; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=hsp-60; Synonyms=hsp60; ORFNames=Y22D7AL.5;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the chaperonin (HSP60) family. .</li>
+<li><strong>Key Domains:</strong> Chaperonin_Cpn60_CS. (IPR018370); Cpn60/GroEL. (IPR001844); Cpn60/GroEL/TCP-1. (IPR002423); GroEL-like_apical_dom_sf. (IPR027409); GROEL-like_equatorial_sf. (IPR027413)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "hsp-60" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'hsp-60' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>hsp-60</strong> (gene ID: hsp-60, UniProt: P50140) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P50140</li>
+<li><strong>Protein Description:</strong> RecName: Full=Chaperonin homolog Hsp-60, mitochondrial; AltName: Full=Heat shock protein 60; Short=HSP-60; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=hsp-60; Synonyms=hsp60; ORFNames=Y22D7AL.5;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the chaperonin (HSP60) family. .</li>
+<li><strong>Key Domains:</strong> Chaperonin_Cpn60_CS. (IPR018370); Cpn60/GroEL. (IPR001844); Cpn60/GroEL/TCP-1. (IPR002423); GroEL-like_apical_dom_sf. (IPR027409); GROEL-like_equatorial_sf. (IPR027413)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "hsp-60" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'hsp-60' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>hsp-60</strong> (gene ID: hsp-60, UniProt: P50140) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research report: Caenorhabditis elegans hsp-60 (UniProt P50140)</p>
+<p>Identity verification and overview<br />
+- Correct target: hsp-60 encodes the mitochondrial chaperonin HSP-60 (Cpn60) in C. elegans, a Group I chaperonin homologous to bacterial GroEL. It resides predominantly in the mitochondrial matrix and is a canonical component of the mitochondrial unfolded protein response (UPRmt) transcriptional program in worms (and in mammals) (haynes2022mitochondrialdysfunctionaging pages 5-6, kim2024regulationofproteostasis pages 1-2).<br />
+- Family/domains: HSP-60/Cpn60 exhibits the conserved GroEL-like equatorial (ATP-binding), intermediate, and apical (substrate/HSP10-binding) domains and forms oligomeric rings typical of the Cpn60 family (fink1999chaperonemediatedproteinfolding. pages 6-7, minari2024newinsightsinto pages 3-4, singh2024molecularchaperoninhsp60 pages 2-4).</p>
+<p>1) Key concepts and definitions (current understanding)<br />
+- Chaperonin Cpn60/HSP-60 architecture and cycle: Cpn60 assembles into two stacked heptameric rings (tetradecamer) forming a central folding chamber. The co‑chaperonin HSP-10 (Cpn10/GroES) is a heptameric “lid” that binds the apical domains to cap the chamber. ATP binding/hydrolysis in the equatorial domains drives conformational transitions that capture non‑native polypeptides, encapsulate them beneath HSP‑10, and release folded clients; this mechanism is deeply conserved from GroEL/GroES (bacteria) to mitochondrial HSP-60/HSP-10 (eukaryotes) (Minari 2024 BioChem; Singh 2024 IJMS; Fink 1999 Physiol Rev) (minari2024newinsightsinto pages 3-4, singh2024molecularchaperoninhsp60 pages 1-2, fink1999chaperonemediatedproteinfolding. pages 6-7, singh2024heatshockresponse pages 13-15, fink1999chaperonemediatedproteinfolding. pages 5-6).<br />
+- Mitochondrial localization and import concept: HSP‑60 is nuclear‑encoded, synthesized in the cytosol, and imported into mitochondria (matrix) via an N‑terminal targeting presequence, where it folds imported matrix proteins and refolds stress‑damaged proteins, acting with HSP‑10 (singh2024molecularchaperoninhsp60 pages 1-2, kunachowicz2024heatshockproteins pages 10-11).<br />
+- UPRmt definition in C. elegans: The UPRmt is a mitochondria‑to‑nucleus stress program that upregulates mitochondrial chaperones (including hsp-60 and hsp-6) and proteostasis genes when matrix proteostasis, import, or translation are perturbed. In worms, the bZIP transcription factor ATFS‑1 integrates mitochondrial import efficiency to control UPRmt target gene expression; HAF‑1 (matrix peptide exporter) and DVE‑1 are additional regulators in specific contexts (Haynes &amp; Hekimi 2022 Genetics; Kim et al. 2024 J Cell Biol) (haynes2022mitochondrialdysfunctionaging pages 5-6, kim2024regulationofproteostasis pages 1-2).</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- Broad ATFS‑1 transcriptional scope and immunity link: A 2024 synthesis emphasizes that ATFS‑1 controls hundreds of genes spanning proteostasis, mitochondrial biogenesis, ROS detoxication, and innate immunity, underscoring UPRmt’s roles beyond classical chaperones (Kim et al., 2024-02-26; J Cell Biol; https://doi.org/10.1083/jcb.202310005) (kim2024regulationofproteostasis pages 1-2).<br />
+- New upstream trigger—mitochondrial SAM deficiency: In 2024, mitochondrial S‑adenosylmethionine depletion (via sams-1 or SAM carrier knockdown) activated UPRmt and extended lifespan in C. elegans, acting through ATFS‑1/DVE‑1 and implicating a mitochondrial tRNA methyltransferase downstream; results support impaired mitochondrial translation as a trigger for UPRmt (Chen et al., 2024-02-18; Aging Cell; https://doi.org/10.1111/acel.14103) (jeong2017mitochondrialchaperonehsp‐60 pages 11-12).<br />
+- Consolidated understanding on aging: A 2022 field-defining review concluded that while UPRmt impacts many aspects of mitochondrial function, activation alone is not sufficient for lifespan extension in all contexts and can be deleterious when chronic—refining interpretations of UPRmt reporters in aging studies (Haynes &amp; Hekimi, 2022-11-30; Genetics; https://doi.org/10.1093/genetics/iyac160) (haynes2022mitochondrialdysfunctionaging pages 5-6).</p>
+<p>3) Primary function and cellular localization of HSP-60 (mechanistic detail)<br />
+- Function: HSP‑60 is a mitochondrial matrix foldase that binds non‑native polypeptides via its apical hydrophobic surfaces and, together with the heptameric co‑chaperonin HSP‑10, encapsulates substrates in an ATP‑regulated chamber for productive folding; it also refolds stress‑damaged matrix proteins (Fink 1999; Minari 2024; Singh 2024) (fink1999chaperonemediatedproteinfolding. pages 6-7, minari2024newinsightsinto pages 3-4, singh2024molecularchaperoninhsp60 pages 1-2, kunachowicz2024heatshockproteins pages 10-11).<br />
+- Localization: Predominantly mitochondrial; in C. elegans, HSP‑60::GFP overexpression localizes primarily to mitochondria, though Jeong et al. detected a cytosolic pool that can modulate innate immunity signaling (Jeong 2017 EMBO J; https://doi.org/10.15252/embj.201694781) (jeong2017mitochondrialchaperonehsp‐60 pages 12-13).</p>
+<p>4) Pathways and regulatory context in C. elegans<br />
+- UPRmt reporters and regulation: hsp‑60 promoter fusions (hsp‑60p::GFP) are canonical UPRmt reporters. atfs‑1 is essential for induction of hsp‑60/hsp‑6; HAF‑1 and DVE‑1 contribute to induction in specific contexts (e.g., intestine in environmental stress), but HAF‑1 is not universally required across all mitochondrial perturbations (Haeussler &amp; Conradt 2022; Bennett 2014; Liu 2019) (haeussler2022methodstostudy pages 16-18, bennett2014activationofthe pages 6-6, liu2019mitochondrialunfoldedprotein pages 1-2).<br />
+- Induction triggers and signaling inputs: UPRmt (and hsp‑60 reporters) can be induced by dissipating Δψm (FCCP), ROS stress (paraquat), mtDNA/translation insults (ethidium bromide; ETC RNAi), and environmental stress such as simulated microgravity. Mechanistically, Δψm impairment reduces ATFS‑1 mitochondrial import/degradation, enabling nuclear activation (Berry 2021; Runkel 2013; Rauthan &amp; Pilon 2015; Liu 2019) (berry2021decreasedmitochondrialmembrane pages 1-3, runkel2013surveillanceactivateddefensesblock pages 1-2, rauthan2015achemicalscreen pages 1-3, liu2019mitochondrialunfoldedprotein pages 1-2).<br />
+- Immunity pathway role: Beyond folding, hsp‑60 contributes to antibacterial immunity via the p38 MAPK cascade. hsp‑60 RNAi in C. elegans reduces PMK‑1 (p38) activation reporters and phospho‑PMK‑1, decreasing resistance to Pseudomonas aeruginosa (PA14). A cytosolic HSP‑60 fraction stabilizes SEK‑1 in intestinal cells, acting downstream of or in parallel with TIR‑1 (Jeong 2017 EMBO J; Kwon et al. 2018) (jeong2017mitochondrialchaperonehsp‐60 pages 3-5, jeong2017mitochondrialchaperonehsp‐60 pages 12-13, kwon2018mitochondriamediateddefensemechanisms pages 2-3).</p>
+<p>5) Phenotypes and quantitative data<br />
+- UPRmt dependence and reporter magnitudes: atfs‑1 deletion or RNAi largely abolishes induction of the hsp‑6p::gfp reporter and endogenous hsp‑6/hsp‑60 upon multiple mitochondrial perturbations, whereas some inductions are HAF‑1‑independent; one example reported approximately 15‑fold hsp‑6p::gfp induction despite haf‑1 loss (Bennett 2014; 2014-03-25; Nat Commun; https://doi.org/10.1038/ncomms4483) (bennett2014activationofthe pages 6-6).<br />
+- Δψm perturbation: FCCP dose-dependently decreased Δψm and induced hsp‑60::GFP at an intermediate dose (as assayed after 24 h), with paraquat as positive control; experiments used TMRE staining and one‑way ANOVA statistics (Berry 2021; 2021-09-14; microPublication Biology; https://doi.org/10.17912/micropub.biology.000445) (berry2021decreasedmitochondrialmembrane pages 1-3).<br />
+- Environmental microgravity stress: Simulated microgravity significantly activated UPRmt using HSP‑6/60 markers; RNAi of hsp‑6 or hsp‑60 increased intestinal ROS and locomotion defects under microgravity; HAF‑1 and DVE‑1 were required in this intestinal signaling axis (Liu 2019; 2019-11-21; Sci Rep; https://doi.org/10.1038/s41598-019-53004-9) (liu2019mitochondrialunfoldedprotein pages 1-2).<br />
+- Immunity phenotypes: hsp‑60 RNAi lowers PMK‑1 activity (decreased PMK‑1 reporters and phospho‑PMK‑1) and reduces survival on PA14; cytosolic HSP‑60 overexpression improves PA14 resistance, consistent with HSP‑60 acting via p38/PMK‑1 (Jeong 2017; 2017-04-13; EMBO J; https://doi.org/10.15252/embj.201694781) (jeong2017mitochondrialchaperonehsp‐60 pages 3-5, jeong2017mitochondrialchaperonehsp‐60 pages 12-13).<br />
+- Aging linkage: Constitutive activation of ATFS‑1 fails to extend lifespan and can reduce lifespan, indicating UPRmt activation alone does not guarantee longevity; correlations between reporter induction (including hsp‑60/hsp‑6) and lifespan outcomes are context‑dependent (Bennett 2014; Haynes &amp; Hekimi 2022) (bennett2014activationofthe pages 6-6, haynes2022mitochondrialdysfunctionaging pages 5-6).</p>
+<p>6) Current applications and real-world implementations<br />
+- Reporter strains and assays: hsp‑60p::gfp and hsp‑6p::gfp transgenics are widely used for UPRmt monitoring in worms, enabling genetic screens, chemical screens, and physiological assays (Haeussler &amp; Conradt 2022; Bar‑Ziv et al. 2020 JoVE; Rauthan &amp; Pilon 2015) (haeussler2022methodstostudy pages 16-18, rauthan2015achemicalscreen pages 1-3).<br />
+- Chemical activators and screening: Paraquat and ethidium bromide are established UPRmt activators; tetracycline‑class hits (e.g., methacycline HCl) from small‑molecule screens induce hsp‑60::GFP in an ATFS‑1‑dependent manner. Ethidium bromide also activated UPRmt in mouse skeletal muscle, indicating cross‑species relevance (Rauthan &amp; Pilon 2015; 2015-10-14; Worm; https://doi.org/10.1080/21624054.2015.1096490) (rauthan2015achemicalscreen pages 1-3).<br />
+- Protocols and toolkits: Methods collections document use of pathway‑specific GFP reporters (hsp‑60p::gfp/hsp‑6p::gfp), complementary stress assays, and genetic perturbations (e.g., RNAi) to dissect UPRmt and related pathways in C. elegans (Bar‑Ziv et al., 2020-05-15; JoVE; https://doi.org/10.3791/61001; Haeussler &amp; Conradt, 2022-01; Methods Mol Biol) (haeussler2022methodstostudy pages 16-18).</p>
+<p>7) Expert opinions and analysis from authoritative sources<br />
+- Genetics review (2022) and J Cell Biol review (2024) converge on ATFS‑1 as the pivotal integrator of mitochondrial import status with nuclear transcription, positioning hsp‑60/hsp‑6 upregulation as part of a broader mitochondrial stress recovery and immunity program; however, UPRmt activation is not a universal surrogate for beneficial longevity (Haynes &amp; Hekimi 2022; Kim et al. 2024) (haynes2022mitochondrialdysfunctionaging pages 5-6, kim2024regulationofproteostasis pages 1-2).<br />
+- EMBO Journal study (2017) adds a nuanced, potentially non‑canonical role for a cytosolic HSP‑60 fraction in stabilizing SEK‑1 and promoting PMK‑1 signaling during antibacterial defense, broadening the functional annotation of HSP‑60 beyond the mitochondrial matrix (Jeong 2017) (jeong2017mitochondrialchaperonehsp‐60 pages 12-13, jeong2017mitochondrialchaperonehsp‐60 pages 3-5).</p>
+<p>8) Consolidated evidence table<br />
+| Topic | Key finding (1–2 sentences) | Model / assay | Quant / metrics (if any) | Source |<br />
+|---|---|---:|---|---|<br />
+| Identity / localization | hsp-60 encodes the mitochondrial chaperonin Cpn60 (HSP‑60) with conserved Cpn60/GroEL domains and an N‑terminal mitochondrial targeting presequence; the protein is predominantly mitochondrial. | Sequence/domain annotation; subcellular localization studies | Predominantly mitochondrial (≈80–85% reported for mt‑HSP60 in reviews) | Singh MK et al., "Molecular Chaperonin HSP60: Current Understanding and Future Prospects," Int J Mol Sci, May 2024. https://doi.org/10.3390/ijms25105483 (singh2024molecularchaperoninhsp60 pages 1-2); Fink AL, "Chaperone‑mediated protein folding," Physiol Rev, Apr 1999. https://doi.org/10.1152/physrev.1999.79.2.425 (fink1999chaperonemediatedproteinfolding. pages 6-7) |<br />
+| Folding mechanism with HSP‑10 &amp; ATP cycle | HSP‑60/Cpn60 forms a double‑ring (two heptameric rings) folding cage that captures non‑native substrates; HSP‑10 (Cpn10/GroES) caps the cavity and an ATP‑binding/hydrolysis cycle drives conformational changes to permit folding and release. | Structural and biochemical (GroEL/GroES paradigm extrapolated to mtHSP60) | ATP‑dependent cycle; double heptameric rings (14mer) and heptameric co‑chaperonin; ATP binding/hydrolysis drives conformational transitions (textual metrics) | Reviews and structural summaries: Singh 2024 (mt HSP60 review), Minari et al. 2024 (cryo‑EM insights), Fink 1999 (mechanistic review). https://doi.org/10.3390/ijms25105483 (singh2024molecularchaperoninhsp60 pages 1-2), https://doi.org/10.3390/biochem4020004 (minari2024newinsightsinto pages 3-4), https://doi.org/10.1152/physrev.1999.79.2.425 (fink1999chaperonemediatedproteinfolding. pages 6-7) |<br />
+| UPRmt marker / reporters | hsp-60 promoter has been used to build hsp-60p::GFP transcriptional reporters that are canonical readouts of the mitochondrial unfolded protein response (UPRmt) and respond to classic UPRmt perturbations. ATFS‑1 is essential for induction of hsp‑60 (and hsp‑6); some induction modalities show HAF‑1/DVE‑1 involvement. | Transcriptional reporters (hsp-60p::GFP, hsp-6p::GFP); genetic mutants (atfs-1, haf-1, dve-1) | Example: atfs‑1 deletion largely abolishes induction of hsp‑60/hsp‑6 and hsp‑60 reporters; some perturbations produce large (multi‑fold) reporter induction (see refs) | Methods/review and screens: Haeussler &amp; Conradt, Methods Mol Biol, Jan 2022. https://doi.org/10.1007/978-1-0716-1732-8_16 (haeussler2022methodstostudy pages 16-18); Rauthan &amp; Pilon, Worm, Oct 2015 (chemical reporter screen). https://doi.org/10.1080/21624054.2015.1096490 (rauthan2015achemicalscreen pages 1-3); Bennett et al., Nat Commun, Mar 2014 (atfs‑1/haf‑1 genetics). https://doi.org/10.1038/ncomms4483 (bennett2014activationofthe pages 6-6) |<br />
+| Induction triggers | UPRmt reporters (including hsp‑60p::GFP) are induced by: dissipation of mitochondrial membrane potential (Δψm; e.g., FCCP), ROS generators (paraquat), mtDNA or translation inhibitors (ethidium bromide, ETC knockdown), and environmental stresses including simulated microgravity. | Chemical treatments (FCCP, paraquat, ethidium bromide), RNAi of mitochondrial genes, simulated microgravity exposure | Berry et al. reported FCCP induced hsp‑60 reporter at an intermediate dose (10 nM FCCP in their assay); paraquat and ethidium bromide are established activators in screens. | Berry BJ et al., microPublication Biol, Sep 2021 (FCCP → hsp‑60::GFP induction). https://doi.org/10.17912/micropub.biology.000445 (berry2021decreasedmitochondrialmembrane pages 1-3); Rauthan &amp; Pilon 2015 (chemical screen, ethidium bromide &amp; tetracycline hits). https://doi.org/10.1080/21624054.2015.1096490 (rauthan2015achemicalscreen pages 1-3); Runkel et al. 2013 (paraquat/ROS). https://doi.org/10.1371/journal.pgen.1003346 (runkel2013surveillanceactivateddefensesblock pages 1-2); Liu et al. 2019 (microgravity → HSP‑6/60 induction). https://doi.org/10.1038/s41598-019-53004-9 (liu2019mitochondrialunfoldedprotein pages 1-2) |<br />
+| Regulation by ATFS‑1 / DVE‑1 / HAF‑1 | ATFS‑1 is the principal UPRmt transcriptional activator required for induction of mitochondrial chaperone genes (hsp‑6, hsp‑60); HAF‑1 and DVE‑1 contribute to specific induction contexts (e.g., intestinal responses), while HAF‑1 is not universally required for all perturbations. | Genetic loss/gain (atfs‑1 mutants; haf‑1/dve‑1 RNAi); reporter induction assays | Bennett et al. reported atfs‑1 deletion largely abolishes hsp‑60/hsp‑6 induction; haf‑1 is required in some but not all induction paradigms (some knockdowns still give ~15‑fold induction even when haf‑1 is absent). | Haynes &amp; Hekimi, Genetics, Nov 2022 (UPRmt / ATFS‑1 review). https://doi.org/10.1093/genetics/iyac160 (haynes2022mitochondrialdysfunctionaging pages 5-6); Liu et al. 2019 (haf‑1/dve‑1 role in microgravity UPRmt). https://doi.org/10.1038/s41598-019-53004-9 (liu2019mitochondrialunfoldedprotein pages 1-2); Bennett et al. 2014 (atfs‑1/haf‑1 genetics, reporter fold‑induction examples). https://doi.org/10.1038/ncomms4483 (bennett2014activationofthe pages 6-6) |<br />
+| Phenotypes of perturbation | RNAi of hsp‑60 reduces PMK‑1 (p38 MAPK) activity reporters and decreases survival on Pseudomonas aeruginosa (PA14); overexpressed HSP‑60::GFP localizes predominantly to mitochondria but a functional cytosolic fraction can stabilize SEK‑1 and promote PMK‑1 signaling. | RNAi survival assays on PA14, PMK‑1 reporter fluorescence, biochemical fractionation, transgenic overexpression | Jeong et al. show hsp‑60 RNAi reduces phospho‑PMK‑1 levels and pathogen survival (statistical survival differences reported in paper); cytosolic HSP‑60 transgenes increase PA14 resistance. | Jeong D‑E et al., EMBO J, Apr 2017: "Mitochondrial chaperone HSP‑60 regulates anti‑bacterial immunity via p38 MAP kinase signaling." https://doi.org/10.15252/embj.201694781 (jeong2017mitochondrialchaperonehsp‐60 pages 3-5, jeong2017mitochondrialchaperonehsp‐60 pages 12-13); Kwon et al., BMB Rep, Jun 2018 (mitochondria‑mediated immunity review). https://doi.org/10.5483/bmbrep.2018.51.6.111 (kwon2018mitochondriamediateddefensemechanisms pages 2-3) |<br />
+| Aging / lifespan linkage | Activation of UPRmt (hsp‑6/hsp‑60 induction) is associated with some longevity paradigms but is neither necessary nor sufficient for lifespan extension in all contexts; constitutive ATFS‑1 activation can be deleterious to longevity. | Lifespan assays with ETC knockdown, constitutive ATFS‑1 mutants, reporter induction correlations | Bennett et al. reported cases where UPRmt induction does not predict longevity and cited ~15‑fold reporter induction examples that did not translate to increased lifespan; constitutive ATFS‑1 activation failed to extend lifespan. | Bennett CF et al., Nat Commun, Mar 2014. https://doi.org/10.1038/ncomms4483 (bennett2014activationofthe pages 6-6); Haynes &amp; Hekimi, Genetics, Nov 2022 (review discussion). https://doi.org/10.1093/genetics/iyac160 (haynes2022mitochondrialdysfunctionaging pages 5-6) |<br />
+| Recent (2023–2024) developments | Recent work emphasizes UPRmt's broader transcriptional program linking proteostasis to innate immunity and metabolism, and identifies new upstream triggers of UPRmt (e.g., mitochondrial SAM deficiency → reduced mt translation → ATFS‑1–dependent UPRmt). | Reviews and primary C. elegans studies (2023–2024) integrating multi‑omic and genetic screens | Examples: Chen et al. 2024 report mitochondrial SAM depletion activates UPRmt and extends lifespan via downstream factors; Kim et al. 2024 review ATFS‑1 regulatory scope; Singh/others 2024 update HSP60 biology. | Chen TY et al., Aging Cell, Feb 2024 (mitochondrial SAM deficiency → UPRmt). https://doi.org/10.1111/acel.14103 (jeong2017mitochondrialchaperonehsp‐60 pages 11-12); Kim S et al., J Cell Biol, Feb 2024 (proteostasis &amp; immunity review). https://doi.org/10.1083/jcb.202310005 (kim2024regulationofproteostasis pages 1-2); Singh MK et al., Int J Mol Sci, May 2024 (HSP60 review). https://doi.org/10.3390/ijms25105483 (singh2024molecularchaperoninhsp60 pages 1-2) |<br />
+| Applications (reporters, activators, cross‑species) | hsp‑60p::GFP reporter strains are standard tools for UPRmt screening; chemical activators (paraquat, ethidium bromide, tetracyclines) and genetic perturbations (ETC/translation RNAi) are used to probe pathways; findings have translational relevance across species. | Reporter strain screens, chemical libraries, cross‑species (worm→mammal) assays | Rauthan &amp; Pilon identified UPRmt‑activating compounds from a &gt;1,200 compound screen; ethidium bromide activates UPRmt in mouse muscle; methods and antibody/tool kits described for reporter use. | Rauthan M &amp; Pilon M, Worm, Oct 2015 (chemical screen). https://doi.org/10.1080/21624054.2015.1096490 (rauthan2015achemicalscreen pages 1-3); Haeussler &amp; Conradt, Methods Mol Biol, Jan 2022 (methodology &amp; tools). https://doi.org/10.1007/978-1-0716-1732-8_16 (haeussler2022methodstostudy pages 16-18); Singh 2024 (cross‑species HSP60 review). https://doi.org/10.3390/ijms25105483 (singh2024molecularchaperoninhsp60 pages 1-2) |</p>
+<p><em>Table: Compact, sourced summary of key facts about C. elegans hsp-60 (UniProt P50140): identity, mechanism, UPRmt reporter usage, triggers, regulation, phenotypes, aging links, recent 2023–2024 findings, and practical applications, with citations to the primary reviews and studies used.</em></p>
+<p>9) Notes on gene symbol ambiguity and organism specificity<br />
+- The symbol hsp-60 can refer to mitochondrial HSP60 homologs in many species. Here, all claims were restricted to C. elegans hsp-60 or conserved HSP60/Cpn60 mechanisms, and the regulatory/phenotypic data were taken from C. elegans sources or cross‑validated reviews. The identity matches the UniProt P50140 annotation, organism is C. elegans, and domain/family annotations agree with the literature (haynes2022mitochondrialdysfunctionaging pages 5-6, fink1999chaperonemediatedproteinfolding. pages 6-7, minari2024newinsightsinto pages 3-4).</p>
+<p>References (URLs and dates embedded above):<br />
+- Haynes &amp; Hekimi, Genetics (2022-11-30): https://doi.org/10.1093/genetics/iyac160 (haynes2022mitochondrialdysfunctionaging pages 5-6)<br />
+- Kim et al., J Cell Biol (2024-02-26): https://doi.org/10.1083/jcb.202310005 (kim2024regulationofproteostasis pages 1-2)<br />
+- Chen et al., Aging Cell (2024-02-18): https://doi.org/10.1111/acel.14103 (jeong2017mitochondrialchaperonehsp‐60 pages 11-12)<br />
+- Jeong et al., EMBO J (2017-04-13): https://doi.org/10.15252/embj.201694781 (jeong2017mitochondrialchaperonehsp‐60 pages 3-5, jeong2017mitochondrialchaperonehsp‐60 pages 12-13, jeong2017mitochondrialchaperonehsp‐60 pages 11-12)<br />
+- Bennett et al., Nat Commun (2014-03-25): https://doi.org/10.1038/ncomms4483 (bennett2014activationofthe pages 6-6)<br />
+- Haeussler &amp; Conradt, Methods Mol Biol (2022-01-01): https://doi.org/10.1007/978-1-0716-1732-8_16 (haeussler2022methodstostudy pages 16-18)<br />
+- Rauthan &amp; Pilon, Worm (2015-10-14): https://doi.org/10.1080/21624054.2015.1096490 (rauthan2015achemicalscreen pages 1-3)<br />
+- Berry et al., microPublication Biology (2021-09-14): https://doi.org/10.17912/micropub.biology.000445 (berry2021decreasedmitochondrialmembrane pages 1-3)<br />
+- Runkel et al., PLoS Genet (2013-03-07): https://doi.org/10.1371/journal.pgen.1003346 (runkel2013surveillanceactivateddefensesblock pages 1-2)<br />
+- Liu et al., Sci Rep (2019-11-21): https://doi.org/10.1038/s41598-019-53004-9 (liu2019mitochondrialunfoldedprotein pages 1-2)<br />
+- Singh et al., Int J Mol Sci (2024-05-20): https://doi.org/10.3390/ijms25105483; Singh et al., IJMS (2024-04-15): https://doi.org/10.3390/ijms25084209 (singh2024molecularchaperoninhsp60 pages 1-2, singh2024heatshockresponse pages 12-13, singh2024heatshockresponse pages 13-15)<br />
+- Minari et al., BioChem (2024-04-01): https://doi.org/10.3390/biochem4020004 (minari2024newinsightsinto pages 3-4)<br />
+- Fink, Physiol Rev (1999-04-01): https://doi.org/10.1152/physrev.1999.79.2.425 (fink1999chaperonemediatedproteinfolding. pages 6-7, fink1999chaperonemediatedproteinfolding. pages 5-6)<br />
+- Kwon et al., BMB Rep (2018-06-30): https://doi.org/10.5483/bmbrep.2018.51.6.111 (kwon2018mitochondriamediateddefensemechanisms pages 2-3)</p>
+<p>Conclusions<br />
+- C. elegans hsp-60 encodes a mitochondrial HSP60/Cpn60 chaperonin that executes ATP‑driven, HSP‑10–assisted protein folding in the mitochondrial matrix. In worms, hsp‑60 is a core UPRmt target and a widely used reporter readout. Mechanistically, ATFS‑1 is required for hsp‑60 induction, with HAF‑1/DVE‑1 contributing context‑dependently. Functionally, hsp‑60 not only ensures mitochondrial proteostasis but also contributes to innate immunity via p38/PMK‑1 signaling. Recent (2023–2024) studies refine UPRmt’s breadth (immunity, metabolism) and identify mitochondrial SAM as an upstream UPRmt trigger. Importantly, robust UPRmt activation (including hsp‑60 induction) is not a universal predictor of longevity and may be detrimental if chronic (haynes2022mitochondrialdysfunctionaging pages 5-6, kim2024regulationofproteostasis pages 1-2, jeong2017mitochondrialchaperonehsp‐60 pages 11-12, bennett2014activationofthe pages 6-6, jeong2017mitochondrialchaperonehsp‐60 pages 3-5).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(haynes2022mitochondrialdysfunctionaging pages 5-6): Cole M Haynes and Siegfried Hekimi. Mitochondrial dysfunction, aging, and the mitochondrial unfolded protein response in <i>caenorhabditis elegans</i>. Genetics, Nov 2022. URL: https://doi.org/10.1093/genetics/iyac160, doi:10.1093/genetics/iyac160. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2024regulationofproteostasis pages 1-2): Sookyung Kim, Theresa R. Ramalho, and Cole M. Haynes. Regulation of proteostasis and innate immunity via mitochondria-nuclear communication. The Journal of Cell Biology, Feb 2024. URL: https://doi.org/10.1083/jcb.202310005, doi:10.1083/jcb.202310005. This article has 12 citations.</p>
+</li>
+<li>
+<p>(fink1999chaperonemediatedproteinfolding. pages 6-7): Anthony L. Fink. Chaperone-mediated protein folding. Physiological reviews, 79 2:425-49, Apr 1999. URL: https://doi.org/10.1152/physrev.1999.79.2.425, doi:10.1152/physrev.1999.79.2.425. This article has 1495 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minari2024newinsightsinto pages 3-4): Karine Minari, Vitor Hugo Balasco Serrão, and Júlio César Borges. New insights into hsp90 structural plasticity revealed by cryoem. BioChem, 4:62-89, Apr 2024. URL: https://doi.org/10.3390/biochem4020004, doi:10.3390/biochem4020004. This article has 6 citations.</p>
+</li>
+<li>
+<p>(singh2024molecularchaperoninhsp60 pages 2-4): Manish Kumar Singh, Yoonhwa Shin, Sunhee Han, Joohun Ha, Pramod K. Tiwari, Sung Soo Kim, and Insug Kang. Molecular chaperonin hsp60: current understanding and future prospects. International Journal of Molecular Sciences, 25:5483, May 2024. URL: https://doi.org/10.3390/ijms25105483, doi:10.3390/ijms25105483. This article has 60 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(singh2024molecularchaperoninhsp60 pages 1-2): Manish Kumar Singh, Yoonhwa Shin, Sunhee Han, Joohun Ha, Pramod K. Tiwari, Sung Soo Kim, and Insug Kang. Molecular chaperonin hsp60: current understanding and future prospects. International Journal of Molecular Sciences, 25:5483, May 2024. URL: https://doi.org/10.3390/ijms25105483, doi:10.3390/ijms25105483. This article has 60 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(singh2024heatshockresponse pages 13-15): Manish Kumar Singh, Yoonhwa Shin, Songhyun Ju, Sunhee Han, Wonchae Choe, Kyung-Sik Yoon, Sung Soo Kim, and Insug Kang. Heat shock response and heat shock proteins: current understanding and future opportunities in human diseases. International Journal of Molecular Sciences, 25:4209, Apr 2024. URL: https://doi.org/10.3390/ijms25084209, doi:10.3390/ijms25084209. This article has 133 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(fink1999chaperonemediatedproteinfolding. pages 5-6): Anthony L. Fink. Chaperone-mediated protein folding. Physiological reviews, 79 2:425-49, Apr 1999. URL: https://doi.org/10.1152/physrev.1999.79.2.425, doi:10.1152/physrev.1999.79.2.425. This article has 1495 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kunachowicz2024heatshockproteins pages 10-11): Dominika Kunachowicz, Magdalena Król-Kulikowska, Wiktoria Raczycka, Jakub Sleziak, Marta Błażejewska, and Julita Kulbacka. Heat shock proteins, a double-edged sword: significance in cancer progression, chemotherapy resistance and novel therapeutic perspectives. Cancers, 16:1500, Apr 2024. URL: https://doi.org/10.3390/cancers16081500, doi:10.3390/cancers16081500. This article has 27 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(jeong2017mitochondrialchaperonehsp‐60 pages 11-12): Dae‐Eun Jeong, Dongyeop Lee, Sun‐Young Hwang, Yujin Lee, Jee‐Eun Lee, Mihwa Seo, Wooseon Hwang, Keunhee Seo, Ara B Hwang, Murat Artan, Heehwa G Son, Jay‐Hyun Jo, Haeshim Baek, Young Min Oh, Youngjae Ryu, Hyung‐Jun Kim, Chang Man Ha, Joo‐Yeon Yoo, and Seung‐Jae V Lee. Mitochondrial chaperone hsp‐60 regulates anti‐bacterial immunity via p38 map kinase signaling. The EMBO Journal, 36:1046-1065, Apr 2017. URL: https://doi.org/10.15252/embj.201694781, doi:10.15252/embj.201694781. This article has 88 citations.</p>
+</li>
+<li>
+<p>(jeong2017mitochondrialchaperonehsp‐60 pages 12-13): Dae‐Eun Jeong, Dongyeop Lee, Sun‐Young Hwang, Yujin Lee, Jee‐Eun Lee, Mihwa Seo, Wooseon Hwang, Keunhee Seo, Ara B Hwang, Murat Artan, Heehwa G Son, Jay‐Hyun Jo, Haeshim Baek, Young Min Oh, Youngjae Ryu, Hyung‐Jun Kim, Chang Man Ha, Joo‐Yeon Yoo, and Seung‐Jae V Lee. Mitochondrial chaperone hsp‐60 regulates anti‐bacterial immunity via p38 map kinase signaling. The EMBO Journal, 36:1046-1065, Apr 2017. URL: https://doi.org/10.15252/embj.201694781, doi:10.15252/embj.201694781. This article has 88 citations.</p>
+</li>
+<li>
+<p>(haeussler2022methodstostudy pages 16-18): Simon Haeussler and Barbara Conradt. Methods to study the mitochondrial unfolded protein response (uprmt) in caenorhabditis elegans. Methods in molecular biology, 2378:249-259, Jan 2022. URL: https://doi.org/10.1007/978-1-0716-1732-8_16, doi:10.1007/978-1-0716-1732-8_16. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bennett2014activationofthe pages 6-6): Christopher F. Bennett, Helen Vander Wende, Marissa Simko, Shannon Klum, Sarah Barfield, Haeri Choi, Victor V. Pineda, and Matt Kaeberlein. Activation of the mitochondrial unfolded protein response does not predict longevity in caenorhabditis elegans. Nature communications, 5:3483-3483, Mar 2014. URL: https://doi.org/10.1038/ncomms4483, doi:10.1038/ncomms4483. This article has 259 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2019mitochondrialunfoldedprotein pages 1-2): Peidang Liu, Dan Li, Wenjie Li, and Dayong Wang. Mitochondrial unfolded protein response to microgravity stress in nematode caenorhabditis elegans. Scientific Reports, Nov 2019. URL: https://doi.org/10.1038/s41598-019-53004-9, doi:10.1038/s41598-019-53004-9. This article has 62 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(berry2021decreasedmitochondrialmembrane pages 1-3): Brandon J. Berry, Tyrone O. Nieves, and Andrew P. Wojtovich. Decreased mitochondrial membrane potential activates the mitochondrial unfolded protein response. microPublication Biology, Sep 2021. URL: https://doi.org/10.17912/micropub.biology.000445, doi:10.17912/micropub.biology.000445. This article has 10 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(runkel2013surveillanceactivateddefensesblock pages 1-2): Eva D. Runkel, Shu Liu, Ralf Baumeister, and Ekkehard Schulze. Surveillance-activated defenses block the ros–induced mitochondrial unfolded protein response. PLoS Genetics, 9:e1003346, Mar 2013. URL: https://doi.org/10.1371/journal.pgen.1003346, doi:10.1371/journal.pgen.1003346. This article has 221 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rauthan2015achemicalscreen pages 1-3): Manish Rauthan and Marc Pilon. A chemical screen to identify inducers of the mitochondrial unfolded protein response in c. elegans. Worm, 4:e1096490, Oct 2015. URL: https://doi.org/10.1080/21624054.2015.1096490, doi:10.1080/21624054.2015.1096490. This article has 27 citations.</p>
+</li>
+<li>
+<p>(jeong2017mitochondrialchaperonehsp‐60 pages 3-5): Dae‐Eun Jeong, Dongyeop Lee, Sun‐Young Hwang, Yujin Lee, Jee‐Eun Lee, Mihwa Seo, Wooseon Hwang, Keunhee Seo, Ara B Hwang, Murat Artan, Heehwa G Son, Jay‐Hyun Jo, Haeshim Baek, Young Min Oh, Youngjae Ryu, Hyung‐Jun Kim, Chang Man Ha, Joo‐Yeon Yoo, and Seung‐Jae V Lee. Mitochondrial chaperone hsp‐60 regulates anti‐bacterial immunity via p38 map kinase signaling. The EMBO Journal, 36:1046-1065, Apr 2017. URL: https://doi.org/10.15252/embj.201694781, doi:10.15252/embj.201694781. This article has 88 citations.</p>
+</li>
+<li>
+<p>(kwon2018mitochondriamediateddefensemechanisms pages 2-3): Sujeong Kwon, Eun Ji E. Kim, and Seung-Jae V. Lee. Mitochondria-mediated defense mechanisms against pathogens in <i>caenorhabditis elegans</i>. BMB Reports, 51:274-279, Jun 2018. URL: https://doi.org/10.5483/bmbrep.2018.51.6.111, doi:10.5483/bmbrep.2018.51.6.111. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2024heatshockresponse pages 12-13): Manish Kumar Singh, Yoonhwa Shin, Songhyun Ju, Sunhee Han, Wonchae Choe, Kyung-Sik Yoon, Sung Soo Kim, and Insug Kang. Heat shock response and heat shock proteins: current understanding and future opportunities in human diseases. International Journal of Molecular Sciences, 25:4209, Apr 2024. URL: https://doi.org/10.3390/ijms25084209, doi:10.3390/ijms25084209. This article has 133 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kim2024regulationofproteostasis pages 1-2</li>
+<li>haynes2022mitochondrialdysfunctionaging pages 5-6</li>
+<li>bennett2014activationofthe pages 6-6</li>
+<li>berry2021decreasedmitochondrialmembrane pages 1-3</li>
+<li>liu2019mitochondrialunfoldedprotein pages 1-2</li>
+<li>rauthan2015achemicalscreen pages 1-3</li>
+<li>haeussler2022methodstostudy pages 16-18</li>
+<li>minari2024newinsightsinto pages 3-4</li>
+<li>runkel2013surveillanceactivateddefensesblock pages 1-2</li>
+<li>kwon2018mitochondriamediateddefensemechanisms pages 2-3</li>
+<li>singh2024heatshockresponse pages 13-15</li>
+<li>kunachowicz2024heatshockproteins pages 10-11</li>
+<li>singh2024heatshockresponse pages 12-13</li>
+<li>https://doi.org/10.1083/jcb.202310005</li>
+<li>https://doi.org/10.1111/acel.14103</li>
+<li>https://doi.org/10.1093/genetics/iyac160</li>
+<li>https://doi.org/10.15252/embj.201694781</li>
+<li>https://doi.org/10.1038/ncomms4483</li>
+<li>https://doi.org/10.17912/micropub.biology.000445</li>
+<li>https://doi.org/10.1038/s41598-019-53004-9</li>
+<li>https://doi.org/10.1080/21624054.2015.1096490</li>
+<li>https://doi.org/10.3791/61001;</li>
+<li>https://doi.org/10.3390/ijms25105483</li>
+<li>https://doi.org/10.1152/physrev.1999.79.2.425</li>
+<li>https://doi.org/10.3390/biochem4020004</li>
+<li>https://doi.org/10.1007/978-1-0716-1732-8_16</li>
+<li>https://doi.org/10.1371/journal.pgen.1003346</li>
+<li>https://doi.org/10.5483/bmbrep.2018.51.6.111</li>
+<li>https://doi.org/10.3390/ijms25105483;</li>
+<li>https://doi.org/10.3390/ijms25084209</li>
+<li>https://doi.org/10.1093/genetics/iyac160,</li>
+<li>https://doi.org/10.1083/jcb.202310005,</li>
+<li>https://doi.org/10.1152/physrev.1999.79.2.425,</li>
+<li>https://doi.org/10.3390/biochem4020004,</li>
+<li>https://doi.org/10.3390/ijms25105483,</li>
+<li>https://doi.org/10.3390/ijms25084209,</li>
+<li>https://doi.org/10.3390/cancers16081500,</li>
+<li>https://doi.org/10.15252/embj.201694781,</li>
+<li>https://doi.org/10.1007/978-1-0716-1732-8_16,</li>
+<li>https://doi.org/10.1038/ncomms4483,</li>
+<li>https://doi.org/10.1038/s41598-019-53004-9,</li>
+<li>https://doi.org/10.17912/micropub.biology.000445,</li>
+<li>https://doi.org/10.1371/journal.pgen.1003346,</li>
+<li>https://doi.org/10.1080/21624054.2015.1096490,</li>
+<li>https://doi.org/10.5483/bmbrep.2018.51.6.111,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50140
+gene_symbol: hsp-60
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: HSP-60 is the C. elegans mitochondrial matrix chaperonin, a member of
+  the HSP60/GroEL family. It functions as an ATP-dependent protein folding machine
+  that works in concert with the co-chaperonin HSP-10 to assist folding of newly imported
+  mitochondrial proteins and to refold stress-damaged proteins in the mitochondrial
+  matrix. HSP-60 assembles into double heptameric rings (tetradecamer) forming a central
+  folding chamber, and the ATP hydrolysis cycle drives conformational changes that
+  encapsulate and fold substrate proteins. The hsp-60 gene is a canonical target of
+  the mitochondrial unfolded protein response (UPRmt), regulated by the transcription
+  factor ATFS-1. HSP-60::GFP reporters are widely used as readouts of UPRmt activation.
+  Beyond its chaperone role, a cytosolic fraction of HSP-60 contributes to innate
+  immunity via stabilization of SEK-1 and activation of PMK-1/p38 MAPK signaling.
+existing_annotations:
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HSP-60 is a bona fide protein folding chaperone. As a member of the GroEL/Cpn60
+      family, HSP-60 functions as an ATP-dependent protein folding machine in the
+      mitochondrial matrix, assisting newly imported proteins to achieve their native
+      conformation and refolding stress-damaged proteins (Fink 1999, Singh 2024).
+      The IBA annotation is phylogenetically well-supported given the deep conservation
+      of this function across all domains of life.
+    action: ACCEPT
+    reason: Protein folding is the core molecular function of HSP-60. The chaperonin
+      mechanism is highly conserved from bacterial GroEL to mitochondrial HSP60, and
+      C. elegans HSP-60 contains all the canonical Cpn60/GroEL domains required for
+      this function. UniProt annotation confirms this function.
+    supported_by:
+    - reference_id: PMID:15280428
+      supporting_text: the mitochondrial matrix HSP70 and HSP60 chaperones, encoded
+        by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively activated
+        by perturbations that impair assembly of multi-subunit mitochondrial complexes
+        or by RNAi of genes encoding mitochondrial chaperones or proteases, which
+        lead to defective protein folding and processing in the organelle
+- term:
+    id: GO:0008637
+    label: apoptotic mitochondrial changes
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Human HSPD1/HSP60 has been implicated in apoptotic processes, particularly
+      mitochondrial changes during programmed cell death. However, direct evidence
+      for this role in C. elegans HSP-60 is limited. The annotation is based on phylogenetic
+      inference from mammalian studies.
+    action: KEEP_AS_NON_CORE
+    reason: While HSP60 family members have been linked to apoptosis in mammals (e.g.,
+      cytoplasmic release during apoptosis), this represents a secondary/downstream
+      consequence rather than a core function of the C. elegans chaperonin. The primary
+      role of HSP-60 is protein folding in the mitochondrial matrix. The annotation
+      is phylogenetically inferred and while not incorrect, represents a non-core
+      function that may be context-dependent.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HSP-60 is primarily localized to the mitochondrial matrix, not the inner
+      membrane. Some association with the inner membrane may occur during protein
+      import assistance, but the functional localization is the matrix compartment.
+    action: MODIFY
+    reason: The primary and well-established localization of HSP-60/Cpn60 family members
+      is the mitochondrial matrix, where they perform their chaperone function. UniProt
+      annotates this as &#34;Mitochondrion matrix.&#34; While transient associations with
+      the inner membrane may occur during substrate protein import, the matrix is
+      the canonical functional compartment. The annotation GO:0005759 (mitochondrial
+      matrix) is more accurate.
+    proposed_replacement_terms:
+    - id: GO:0005759
+      label: mitochondrial matrix
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: The mitochondrial matrix is the canonical localization for HSP-60 where
+      it performs its chaperone function. This is well-supported by the UniProt record
+      and extensive literature on Cpn60/GroEL family chaperonins (Singh 2024, Fink
+      1999).
+    action: ACCEPT
+    reason: HSP-60 is nuclear-encoded, synthesized in the cytosol, and imported into
+      the mitochondrial matrix via an N-terminal targeting presequence, where it folds
+      imported matrix proteins and refolds stress-damaged proteins. This is the correct
+      and primary cellular component annotation.
+    supported_by:
+    - reference_id: file:worm/hsp-60/hsp-60-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Mitochondrion matrix.&#39;
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HSP-60 is a core effector and transcriptional target of the UPRmt. The
+      hsp-60 promoter is activated during mitochondrial stress as part of the ATFS-1-dependent
+      transcriptional program. HSP-60::GFP reporters are canonical readouts of UPRmt
+      activation (Haynes 2022, Yoneda 2004, Benedetti 2006).
+    action: ACCEPT
+    reason: This is one of the core functions of HSP-60 in C. elegans. The hsp-60
+      gene is a canonical UPRmt target, and hsp-60p::GFP reporters are among the most
+      widely used tools for monitoring UPRmt activation. HSP-60 protein functions
+      as an effector that helps restore mitochondrial proteostasis during stress.
+    supported_by:
+    - reference_id: PMID:15280428
+      supporting_text: hsp-6 and hsp-60 induction was specific to perturbed mitochondrial
+        protein handling, as neither heat-shock nor endoplasmic reticulum stress nor
+        manipulations that impair mitochondrial steps in intermediary metabolism or
+        ATP synthesis activated the mitochondrial chaperone genes. These observations
+        support the existence of a mitochondrial unfolded protein response
+    - reference_id: PMID:16816413
+      supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+        activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation
+        and by other manipulations that promote mitochondrial protein misfolding
+- term:
+    id: GO:0045041
+    label: protein import into mitochondrial intermembrane space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HSP-60 is implicated in assisting the folding of proteins imported into
+      mitochondria, but its primary role is in the matrix, not specifically the intermembrane
+      space (IMS). The annotation may be too specific regarding the compartment.
+    action: MODIFY
+    reason: HSP-60 assists protein folding in the mitochondrial matrix and can assist
+      newly imported proteins. However, proteins destined for the IMS use distinct
+      import pathways (MIA/CHCHD4 pathway) and HSP-60 primarily functions in the matrix.
+      A more general term related to mitochondrial protein import or matrix protein
+      folding would be more accurate.
+    proposed_replacement_terms:
+    - id: GO:0006457
+      label: protein folding
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HSP-60 binds to its co-chaperonin HSP-10 (Cpn10/GroES family) to form
+      the functional chaperone complex. This interaction is essential for the ATP-dependent
+      protein folding cycle. The annotation reflects the physical interaction between
+      HSP-60 and HSP-10.
+    action: ACCEPT
+    reason: The HSP-60/HSP-10 interaction is a fundamental aspect of chaperonin function.
+      HSP-10 (Cpn10) is a heptameric lid that binds to the apical domains of HSP-60
+      to cap the folding chamber. This is well-established from structural and biochemical
+      studies of the GroEL/GroES system and conserved in mitochondrial chaperonins.
+    supported_by:
+    - reference_id: file:worm/hsp-60/hsp-60-deep-research-falcon.md
+      supporting_text: HSP-60/Cpn60 forms a double-ring (two heptameric rings) folding
+        cage that captures non-native substrates; HSP-10 (Cpn10/GroES) caps the cavity
+        and an ATP-binding/hydrolysis cycle drives conformational changes to permit
+        folding and release
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: HSP-60 binds ATP as part of its chaperone cycle. The annotation is correct
+      but overly general - ATP binding (GO:0005524) is a more specific and informative
+      annotation.
+    action: ACCEPT
+    reason: While correct, this annotation is subsumed by the more specific ATP binding
+      annotation. HSP-60 contains the conserved ATP-binding equatorial domain of Cpn60/GroEL
+      chaperonins. The annotation can be retained as it is not incorrect, though ATP
+      binding is more informative.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: HSP-60 binds ATP in its equatorial domain, and ATP hydrolysis drives
+      the conformational changes necessary for protein folding. This is a core molecular
+      function of all Cpn60/GroEL family chaperonins.
+    action: ACCEPT
+    reason: ATP binding and hydrolysis are essential for HSP-60 function. The ATP-driven
+      conformational cycle is fundamental to chaperonin-assisted protein folding.
+      UniProt lists ATP-binding as a keyword for this protein.
+    supported_by:
+    - reference_id: file:worm/hsp-60/hsp-60-uniprot.txt
+      supporting_text: KW   ATP-binding; Chaperone; Mitochondrion; Nucleotide-binding
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Duplicate annotation with IBA evidence above. The mitochondrial matrix
+      localization is well-supported and correct.
+    action: ACCEPT
+    reason: Consistent with IBA annotation and UniProt record. Multiple evidence sources
+      converging on the same correct annotation strengthens confidence.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Duplicate annotation with IBA evidence above. Protein folding is the
+      core function of HSP-60. The InterPro-based annotation supports the phylogenetic
+      inference.
+    action: ACCEPT
+    reason: Consistent with IBA annotation. The convergence of phylogenetic and domain-based
+      evidence strengthens the annotation.
+- term:
+    id: GO:0042026
+    label: protein refolding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: HSP-60 assists in refolding stress-damaged proteins in the mitochondrial
+      matrix. This is consistent with its role as a chaperonin and its induction during
+      mitochondrial stress.
+    action: ACCEPT
+    reason: Protein refolding under stress conditions is a well-established function
+      of HSP60 family chaperonins. UniProt states HSP-60 &#34;may also prevent misfolding
+      and promote the refolding and proper assembly of unfolded polypeptides generated
+      under stress conditions in the mitochondrial matrix.&#34;
+    supported_by:
+    - reference_id: file:worm/hsp-60/hsp-60-uniprot.txt
+      supporting_text: May also prevent misfolding and promote the refolding and proper
+        assembly of unfolded polypeptides generated under stress conditions in the
+        mitochondrial matrix
+- term:
+    id: GO:0140662
+    label: ATP-dependent protein folding chaperone
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This molecular function annotation accurately captures the core enzymatic/chaperone
+      activity of HSP-60 - ATP-dependent protein folding.
+    action: ACCEPT
+    reason: This is an accurate and informative molecular function annotation for
+      HSP-60. The chaperonin uses ATP binding and hydrolysis to drive conformational
+      changes that facilitate protein folding in the chamber formed between the two
+      heptameric rings.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:17189267
+  review:
+    summary: Kimura et al. (2007) studied HSP-6 (mtHsp70) knockdown effects and showed
+      that HSP-60 levels are reduced along with other mitochondrial proteins, demonstrating
+      HSP-60&#39;s mitochondrial localization. This provides experimental support for
+      mitochondrial localization.
+    action: ACCEPT
+    reason: The IDA evidence from PMID:17189267 supports mitochondrial localization.
+      While the more specific term &#34;mitochondrial matrix&#34; is also annotated, the general
+      mitochondrion term is not incorrect and represents valid experimental evidence.
+    supported_by:
+    - reference_id: PMID:17189267
+      supporting_text: Knockdown of HSP-6 by RNA interference in young adult nematodes
+        caused a reduction in the levels of ATP-2, HSP-60 and CLK-1, leading to abnormal
+        mitochondrial morphology
+- term:
+    id: GO:0061629
+    label: RNA polymerase II-specific DNA-binding transcription factor binding
+  evidence_type: IPI
+  original_reference_id: PMID:17925224
+  review:
+    summary: Haynes et al. (2007) showed that DVE-1, a homeodomain transcription factor,
+      binds to the hsp-60 promoter during UPRmt activation. This annotation appears
+      to suggest HSP-60 protein interacts with transcription factors, which is not
+      the main finding. The study describes transcriptional regulation OF hsp-60,
+      not by HSP-60.
+    action: REMOVE
+    reason: This annotation appears to be an error or misinterpretation. PMID:17925224
+      describes the DVE-1 transcription factor binding to the hsp-60 PROMOTER to regulate
+      its expression during UPRmt, not HSP-60 protein binding to transcription factors.
+      The hsp-60 gene is a transcriptional TARGET of DVE-1, not a protein interactor.
+      The IPI evidence code suggests protein-protein interaction, but the paper describes
+      transcriptional regulation of the hsp-60 gene.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: Activation of the UPR(mt) correlates temporally and spatially
+        with nuclear redistribution of DVE-1 and with its enhanced binding to the
+        promoters of mitochondrial chaperone genes [DVE-1 binds hsp-60 promoter, not
+        HSP-60 protein]
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IEP
+  original_reference_id: PMID:15280428
+  review:
+    summary: Yoneda et al. (2004) showed hsp-60 gene expression is induced during
+      UPRmt. This IEP (Inferred from Expression Pattern) annotation is appropriate
+      as hsp-60 expression correlates with UPRmt activation.
+    action: ACCEPT
+    reason: The IEP evidence is valid - hsp-60 expression is upregulated during mitochondrial
+      stress as part of the UPRmt transcriptional program. This is a landmark paper
+      establishing the UPRmt in C. elegans.
+    supported_by:
+    - reference_id: PMID:15280428
+      supporting_text: the mitochondrial matrix HSP70 and HSP60 chaperones, encoded
+        by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively activated
+        by perturbations that impair assembly of multi-subunit mitochondrial complexes
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:15280428
+  review:
+    summary: The IMP (Inferred from Mutant Phenotype) annotation suggests functional
+      involvement in UPRmt was demonstrated through genetic manipulation. Yoneda et
+      al. (2004) showed that RNAi of mitochondrial chaperones/proteases activates
+      hsp-60 expression.
+    action: ACCEPT
+    reason: HSP-60 is both a transcriptional target and functional effector of the
+      UPRmt. The protein helps restore proteostasis in the mitochondrial matrix during
+      stress. Multiple evidence types (IBA, IEP, IMP) converge on this annotation.
+    supported_by:
+    - reference_id: PMID:15280428
+      supporting_text: RNAi of genes encoding mitochondrial chaperones or proteases,
+        which lead to defective protein folding and processing in the organelle [activate
+        hsp-60/hsp-6]
+- term:
+    id: GO:0002119
+    label: nematode larval development
+  evidence_type: IMP
+  original_reference_id: PMID:15280428
+  review:
+    summary: Yoneda et al. (2004) demonstrated that perturbing mitochondrial proteostasis
+      affects development, and hsp-60 is involved in the response. This represents
+      a downstream phenotypic consequence rather than a specific molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: While HSP-60 is essential for proper development (as are many mitochondrial
+      proteins), larval development is a broad phenotypic readout rather than a specific
+      molecular function. The annotation reflects pleiotropy - loss of mitochondrial
+      chaperone function affects many processes including development. This is a valid
+      but non-core annotation.
+- term:
+    id: GO:0007005
+    label: mitochondrion organization
+  evidence_type: IMP
+  original_reference_id: PMID:16816413
+  review:
+    summary: Benedetti et al. (2006) showed that perturbation of UPRmt signaling (via
+      ubl-5 RNAi) affects mitochondrial morphology and assembly of mitochondrial complexes.
+      HSP-60, as an effector chaperone, contributes to proper mitochondrial organization.
+    action: ACCEPT
+    reason: HSP-60 contributes to proper folding and assembly of mitochondrial protein
+      complexes, which is essential for mitochondrial organization. The study shows
+      that compromising UPRmt (and thus chaperone function) leads to abnormal mitochondrial
+      morphology.
+    supported_by:
+    - reference_id: PMID:16816413
+      supporting_text: Mitochondrial morphology and assembly of multi-subunit mitochondrial
+        complexes of biotinylated proteins are also perturbed in ubl-5(RNAi) worms,
+        indicating that UBL-5 also counteracts physiological levels of mitochondrial
+        stress
+- term:
+    id: GO:0009792
+    label: embryo development ending in birth or egg hatching
+  evidence_type: IMP
+  original_reference_id: PMID:15280428
+  review:
+    summary: Similar to larval development, this annotation reflects that HSP-60 function
+      is required for normal embryonic development. This is a broad phenotypic consequence
+      of mitochondrial chaperone function.
+    action: KEEP_AS_NON_CORE
+    reason: Embryonic development is a broad biological process affected by mitochondrial
+      dysfunction. While the annotation is valid, it represents pleiotropy rather
+      than a specific molecular role. Essential mitochondrial proteins affect many
+      developmental processes.
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: TAS
+  original_reference_id: PMID:15280428
+  review:
+    summary: Jeong et al. (2017, EMBO J) demonstrated that HSP-60 contributes to antibacterial
+      immunity via the p38 MAPK/PMK-1 pathway. A cytosolic fraction of HSP-60 stabilizes
+      SEK-1 and promotes PMK-1 phosphorylation, enhancing resistance to P. aeruginosa.
+      This function is described in the deep research but the primary paper PMID is
+      not yet in the publications cache.
+    action: NEW
+    reason: This represents a significant non-canonical function of HSP-60 supported
+      by direct experimental evidence. The deep research document cites Jeong et al.
+      (2017, EMBO J, doi:10.15252/embj.201694781) showing hsp-60 RNAi reduces PMK-1
+      activity and pathogen resistance, while cytosolic HSP-60 overexpression improves
+      PA14 resistance.
+    supported_by:
+    - reference_id: file:worm/hsp-60/hsp-60-deep-research-falcon.md
+      supporting_text: hsp-60 RNAi lowers PMK-1 activity (decreased PMK-1 reporters
+        and phospho-PMK-1) and reduces survival on PA14; cytosolic HSP-60 overexpression
+        improves PA14 resistance, consistent with HSP-60 acting via p38/PMK-1
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: Domain-based evidence supporting ATP-dependent chaperone function
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Phylogenetic inference from conserved HSP60/GroEL family function
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: Nucleotide binding from UniProt keywords
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings:
+  - statement: Mitochondrial matrix localization from UniProt
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: ATP binding evidence from combined computational methods
+- id: PMID:15280428
+  title: Compartment-specific perturbation of protein handling activates genes encoding
+    mitochondrial chaperones.
+  findings:
+  - statement: Landmark paper establishing the UPRmt in C. elegans
+    supporting_text: We found that the mitochondrial matrix HSP70 and HSP60 chaperones,
+      encoded by the Caenorhabditis elegans hsp-6 and hsp-60 genes, were selectively
+      activated by perturbations that impair assembly of multi-subunit mitochondrial
+      complexes
+  - statement: hsp-60 and hsp-6 are selectively induced by mitochondrial protein folding
+      stress
+    supporting_text: hsp-6 and hsp-60 induction was specific to perturbed mitochondrial
+      protein handling
+  - statement: UPRmt is distinct from heat shock and ER stress responses
+    supporting_text: neither heat-shock nor endoplasmic reticulum stress nor manipulations
+      that impair mitochondrial steps in intermediary metabolism or ATP synthesis
+      activated the mitochondrial chaperone genes
+- id: PMID:16816413
+  title: Ubiquitin-like protein 5 positively regulates chaperone gene expression in
+    the mitochondrial unfolded protein response.
+  findings:
+  - statement: UBL-5 is required for UPRmt signaling
+    supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+      activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp
+  - statement: hsp-60::GFP is a canonical UPRmt reporter
+    supporting_text: suppresses activation of the UPR(mt) markers hsp-60::gfp and
+      hsp-6::gfp by the zc32 mutation and by other manipulations that promote mitochondrial
+      protein misfolding
+  - statement: UPRmt perturbation affects mitochondrial morphology
+    supporting_text: Mitochondrial morphology and assembly of multi-subunit mitochondrial
+      complexes of biotinylated proteins are also perturbed in ubl-5(RNAi) worms
+- id: PMID:17189267
+  title: Knockdown of mitochondrial heat shock protein 70 promotes progeria-like phenotypes
+    in caenorhabditis elegans.
+  findings:
+  - statement: HSP-6 knockdown reduces HSP-60 levels
+    supporting_text: Knockdown of HSP-6 by RNA interference in young adult nematodes
+      caused a reduction in the levels of ATP-2, HSP-60 and CLK-1
+  - statement: Demonstrates interdependence of mitochondrial chaperones
+    supporting_text: Mitochondrial HSP-60 and ATP-2 were also reduced following the
+      reduction of HSP-6 during aging
+  - statement: Provides IDA evidence for mitochondrial localization
+    supporting_text: leading to abnormal mitochondrial morphology and lower ATP levels
+- id: PMID:17925224
+  title: ClpP mediates activation of a mitochondrial unfolded protein response in
+    C. elegans.
+  findings:
+  - statement: DVE-1 and UBL-5 form complex during UPRmt
+    supporting_text: Unfolded protein stress in the mitochondria correlates with complex
+      formation between a homeodomain-containing transcription factor DVE-1 and the
+      small ubiquitin-like protein UBL-5
+  - statement: DVE-1 binds promoters of mitochondrial chaperone genes including hsp-60
+    supporting_text: Activation of the UPR(mt) correlates temporally and spatially
+      with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters
+      of mitochondrial chaperone genes
+  - statement: ClpP is required for UPRmt signaling
+    supporting_text: These events and the downstream UPR(mt) are attenuated in animals
+      with reduced activity of clpp-1, which encodes a mitochondrial matrix protease
+      homologous to bacterial ClpP
+core_functions:
+- molecular_function:
+    id: GO:0140662
+    label: ATP-dependent protein folding chaperone
+  description: Core molecular function - HSP-60 is a GroEL/Cpn60 family chaperonin
+    that uses ATP binding and hydrolysis to drive protein folding in a chamber formed
+    by double heptameric rings with HSP-10 co-chaperonin lid.
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  directly_involved_in:
+  - id: GO:0034514
+    label: mitochondrial unfolded protein response
+proposed_new_terms: []
+suggested_questions:
+- question: What is the substrate specificity of C. elegans HSP-60? Are there specific
+    mitochondrial proteins that preferentially require HSP-60 for folding?
+- question: How does the cytosolic fraction of HSP-60 contribute to innate immunity?
+    Is this a regulated process or does it occur constitutively?
+- question: Does HSP-60 have roles in mitochondrial protein import beyond folding
+    newly imported proteins?
+suggested_experiments:
+- description: Identify HSP-60 client proteins using proximity labeling (BioID/TurboID)
+    in the mitochondrial matrix under normal and stress conditions.
+  hypothesis: HSP-60 has specific client proteins in the mitochondrial matrix that
+    require chaperonin assistance for folding.
+- description: Characterize the cytosolic HSP-60 pool using subcellular fractionation
+    and determine what regulates its distribution between mitochondria and cytosol.
+  hypothesis: The cytosolic fraction of HSP-60 is regulated and contributes to innate
+    immunity signaling under specific conditions.
+- description: Test whether HSP-60 co-localizes with the TIM/TOM import machinery
+    using super-resolution microscopy.
+  hypothesis: HSP-60 interacts with the mitochondrial import machinery to assist folding
+    of newly imported proteins.
+tags:
+- caeel-upr-stress
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

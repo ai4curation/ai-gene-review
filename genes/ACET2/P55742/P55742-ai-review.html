@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>celM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>celM</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P55742" target="_blank" class="term-link">
+                        P55742
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Acetivibrio thermocellus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">CelM</span>
+                    
+                    <span class="badge">TET aminopeptidase</span>
+                    
+                    <span class="badge">M42 aminopeptidase</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "celM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P55742" data-a="DESCRIPTION: CelM is a putative aminopeptidase belonging to the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CelM is a putative aminopeptidase belonging to the M42 peptidase family, originally misannotated as an endoglucanase (hence the &#34;cel&#34; nomenclature). Despite its misleading name, CelM has been experimentally characterized as a metalloaminopeptidase with leucine aminopeptidase (LAP) activity, requiring cobalt ions (Co2+) as a cofactor. The protein forms an active dodecameric complex and preferentially cleaves nonpolar aliphatic L-amino acid residues from the N-terminus of peptide substrates, with L-leucine-pNA being the optimal substrate. CelM shows no significant cellulase activity despite earlier erroneous reports. The protein does not contain a dockerin domain and is therefore not a component of the cellulosome complex. Its biological role may involve protein turnover or peptide processing in the cytoplasm of A. thermocellus.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004177" target="_blank" class="term-link">
+                                    GO:0004177
+                                </a>
+                            </span>
+                            <span class="term-label">aminopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0004177" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct and supported by experimental evidence from Dutoit et al. (2012) PMID:23226342, who demonstrated that CelM has leucine aminopeptidase (LAP) activity using L-leucine-pNA as substrate. The protein preferentially hydrolyzes nonpolar aliphatic L-amino acid-pNA substrates at the N-terminus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CelM has been experimentally demonstrated to function as an aminopeptidase. Although the annotation is derived from keyword mapping (IEA), it accurately reflects the experimentally determined function of the protein. This is a core molecular function of the enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M42 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0006508" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct as CelM participates in proteolytic degradation through its aminopeptidase activity. The protein hydrolyzes peptide bonds at the N-terminus of peptides.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Aminopeptidases are proteolytic enzymes that participate in proteolysis by cleaving N-terminal amino acid residues from peptides. This is the appropriate biological process term for the enzymatic activity of CelM.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M42 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but represents a parent term of the more specific aminopeptidase activity annotation. CelM is a peptidase of the M42 metallopeptidase family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid annotation as CelM is indeed a peptidase. However, the more specific term GO:0004177 (aminopeptidase activity) or GO:0070006 (metalloaminopeptidase activity) is more informative. This general term is acceptable as an IEA annotation alongside the more specific annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M42 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0008237" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. CelM is an M42 family metallopeptidase that requires divalent metal cations (specifically Co2+ for optimal activity) for catalysis. The metal ions are essential for the enzymatic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CelM is a metallopeptidase that requires metal ions for activity. EDTA chelation inhibits activity, confirming the metal-dependence of the enzyme. The annotation correctly reflects the catalytic mechanism of the enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 divalent metal cations per subunit.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but very general. CelM is a hydrolase that catalyzes the hydrolysis of peptide bonds. This is a parent term of the more specific peptidase and aminopeptidase activity terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this is the most general term in the hierarchy. The more specific annotations (aminopeptidase activity, metallopeptidase activity) are more informative. This annotation is acceptable as part of the IEA annotation set derived from keyword mapping, but provides limited functional insight beyond the more specific terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M42 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. CelM binds divalent metal cations which are essential for its catalytic activity. UniProt reports binding of 2 divalent metal cations per subunit at defined binding sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CelM requires divalent metal cations for activity. UniProt documents metal binding sites at residues 65, 168, 199, 221, and 307. While cobalt provides optimal activity in vitro, the in vivo metal cofactor may differ. The general metal ion binding term is appropriate given this uncertainty.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 divalent metal cations per subunit.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070006" target="_blank" class="term-link">
+                                    GO:0070006
+                                </a>
+                            </span>
+                            <span class="term-label">metalloaminopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23226342" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23226342
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of two M42 aminopeptidases erron...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P55742" data-a="GO:0070006" data-r="PMID:23226342" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most appropriate and specific molecular function term for CelM. The protein is an M42 family metalloaminopeptidase that cleaves N-terminal amino acids using a metal-dependent catalytic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term should be added as a new annotation based on the experimental characterization by Dutoit et al. (2012). CelM is a metalloaminopeptidase that requires metal ions for catalysis and cleaves N-terminal amino acids from peptide substrates. This is more specific than both aminopeptidase activity and metallopeptidase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P55742
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peptidase M42 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Metalloaminopeptidase that cleaves N-terminal amino acids from peptides using a metal-dependent catalytic mechanism, with preference for nonpolar aliphatic amino acids like leucine. Requires cobalt ions for optimal activity in vitro and forms active dodecameric complexes. Not a cellulase despite the gene name.</h3>
+                <span class="vote-buttons" data-g="P55742" data-a="FUNCTION: Metalloaminopeptidase that cleaves N-terminal amin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070006" target="_blank" class="term-link">
+                            metalloaminopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                proteolysis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P55742
+                            
+                        </span>
+                        
+                        <div class="finding-text">Belongs to the peptidase M42 family.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keywords for Aminopeptidase, Hydrolase, Metal-binding, Metalloprotease, and Protease were correctly used to infer GO annotations for molecular function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23226342" target="_blank" class="term-link">
+                            PMID:23226342
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional characterization of two M42 aminopeptidases erroneously annotated as cellulases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CelM from Clostridium thermocellum was experimentally characterized as an M42 family aminopeptidase, not a cellulase as previously annotated.</div>
+                        
+                        <div class="finding-text">"some members have been annotated as cellulases because of their homology with CelM, formerly described as an endoglucanase of Clostridium thermocellum"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein shows no significant cellulase activity on CMC and cellobiose.</div>
+                        
+                        <div class="finding-text">"No significant endoglucanase activity was measured, either for TmPep1050 or CelM"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CelM has robust leucine aminopeptidase activity with L-leucine-pNA as the optimal substrate.</div>
+                        
+                        <div class="finding-text">"Both enzymes were shown to catalyze hydrolysis of nonpolar aliphatic L-amino acid-pNA substrates, the L-leucine derivative appearing as the best substrate"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cobalt ions (Co2+) are required for maximal activity.</div>
+                        
+                        <div class="finding-text">"Addition of cobalt ions enhanced the activity of both enzymes significantly"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EDTA inhibits activity, confirming metal-dependence.</div>
+                        
+                        <div class="finding-text">"both the chelating agent EDTA and bestatin, a specific inhibitor of metalloaminopeptidases, proved inhibitory"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Bestatin inhibits CelM, consistent with metalloaminopeptidase function.</div>
+                        
+                        <div class="finding-text">"bestatin, a specific inhibitor of metalloaminopeptidases, proved inhibitory"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:P55742
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for CelM/Putative aminopeptidase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Classified as Peptidase M42 family member.</div>
+                        
+                        <div class="finding-text">"Belongs to the peptidase M42 family."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binds 2 divalent metal cations per subunit.</div>
+                        
+                        <div class="finding-text">"Binds 2 divalent metal cations per subunit."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological metal cofactor of CelM in vivo? While cobalt provides optimal activity in vitro, the in vivo cofactor may be different.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="Q: What is the physiological metal cofactor of CelM i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the biological role of CelM in A. thermocellus? Is it involved in protein turnover, processing of cellulosomal components, or another cellular function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="Q: What is the biological role of CelM in A. thermoce..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CelM have any role related to the cellulosome, or is it entirely a cytoplasmic housekeeping enzyme?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="Q: Does CelM have any role related to the cellulosome..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the native metal cofactor of CelM through metal content analysis of purified enzyme from A. thermocellus.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="EXPERIMENT: Determine the native metal cofactor of CelM throug..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct celM deletion mutant to assess phenotypic effects and identify physiological role.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="EXPERIMENT: Construct celM deletion mutant to assess phenotypi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify physiological substrates through proteomics or peptide library screening.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="EXPERIMENT: Identify physiological substrates through proteomi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine if CelM is cytoplasmic or secreted, and if it has any association with cellulosome components.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P55742" data-a="EXPERIMENT: Determine if CelM is cytoplasmic or secreted, and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P55742
+gene_symbol: celM
+aliases:
+  - CelM
+  - TET aminopeptidase
+  - M42 aminopeptidase
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:203119
+  label: Acetivibrio thermocellus
+description: CelM is a putative aminopeptidase belonging to the M42 peptidase family,
+  originally misannotated as an endoglucanase (hence the &#34;cel&#34; nomenclature). Despite
+  its misleading name, CelM has been experimentally characterized as a metalloaminopeptidase
+  with leucine aminopeptidase (LAP) activity, requiring cobalt ions (Co2+) as a cofactor.
+  The protein forms an active dodecameric complex and preferentially cleaves nonpolar
+  aliphatic L-amino acid residues from the N-terminus of peptide substrates, with
+  L-leucine-pNA being the optimal substrate. CelM shows no significant cellulase
+  activity despite earlier erroneous reports. The protein does not contain a dockerin
+  domain and is therefore not a component of the cellulosome complex. Its biological
+  role may involve protein turnover or peptide processing in the cytoplasm of A.
+  thermocellus.
+existing_annotations:
+- term:
+    id: GO:0004177
+    label: aminopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct and supported by experimental evidence from
+      Dutoit et al. (2012) PMID:23226342, who demonstrated that CelM has leucine
+      aminopeptidase (LAP) activity using L-leucine-pNA as substrate. The protein
+      preferentially hydrolyzes nonpolar aliphatic L-amino acid-pNA substrates at
+      the N-terminus.
+    action: ACCEPT
+    reason: CelM has been experimentally demonstrated to function as an aminopeptidase.
+      Although the annotation is derived from keyword mapping (IEA), it accurately
+      reflects the experimentally determined function of the protein. This is a core
+      molecular function of the enzyme.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Belongs to the peptidase M42 family.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct as CelM participates in proteolytic degradation
+      through its aminopeptidase activity. The protein hydrolyzes peptide bonds at
+      the N-terminus of peptides.
+    action: ACCEPT
+    reason: Aminopeptidases are proteolytic enzymes that participate in proteolysis
+      by cleaving N-terminal amino acid residues from peptides. This is the appropriate
+      biological process term for the enzymatic activity of CelM.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Belongs to the peptidase M42 family.
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct but represents a parent term of the more
+      specific aminopeptidase activity annotation. CelM is a peptidase of the M42
+      metallopeptidase family.
+    action: ACCEPT
+    reason: This is a valid annotation as CelM is indeed a peptidase. However, the
+      more specific term GO:0004177 (aminopeptidase activity) or GO:0070006 (metalloaminopeptidase
+      activity) is more informative. This general term is acceptable as an IEA annotation
+      alongside the more specific annotations.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Belongs to the peptidase M42 family.
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct. CelM is an M42 family metallopeptidase that
+      requires divalent metal cations (specifically Co2+ for optimal activity) for
+      catalysis. The metal ions are essential for the enzymatic mechanism.
+    action: ACCEPT
+    reason: CelM is a metallopeptidase that requires metal ions for activity. EDTA
+      chelation inhibits activity, confirming the metal-dependence of the enzyme.
+      The annotation correctly reflects the catalytic mechanism of the enzyme.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Binds 2 divalent metal cations per subunit.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct but very general. CelM is a hydrolase that
+      catalyzes the hydrolysis of peptide bonds. This is a parent term of the more
+      specific peptidase and aminopeptidase activity terms.
+    action: ACCEPT
+    reason: While correct, this is the most general term in the hierarchy. The more
+      specific annotations (aminopeptidase activity, metallopeptidase activity) are
+      more informative. This annotation is acceptable as part of the IEA annotation
+      set derived from keyword mapping, but provides limited functional insight beyond
+      the more specific terms.
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Belongs to the peptidase M42 family.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This annotation is correct. CelM binds divalent metal cations which
+      are essential for its catalytic activity. UniProt reports binding of 2 divalent
+      metal cations per subunit at defined binding sites.
+    action: ACCEPT
+    reason: CelM requires divalent metal cations for activity. UniProt documents
+      metal binding sites at residues 65, 168, 199, 221, and 307. While cobalt provides
+      optimal activity in vitro, the in vivo metal cofactor may differ. The general
+      metal ion binding term is appropriate given this uncertainty.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Binds 2 divalent metal cations per subunit.
+- term:
+    id: GO:0070006
+    label: metalloaminopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:23226342
+  review:
+    summary: This is the most appropriate and specific molecular function term for
+      CelM. The protein is an M42 family metalloaminopeptidase that cleaves N-terminal
+      amino acids using a metal-dependent catalytic mechanism.
+    action: NEW
+    reason: This term should be added as a new annotation based on the experimental
+      characterization by Dutoit et al. (2012). CelM is a metalloaminopeptidase that
+      requires metal ions for catalysis and cleaves N-terminal amino acids from peptide
+      substrates. This is more specific than both aminopeptidase activity and metallopeptidase
+      activity.
+    additional_reference_ids:
+    - PMID:23226342
+    supported_by:
+    - reference_id: UniProt:P55742
+      supporting_text: Belongs to the peptidase M42 family.
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  full_text_unavailable: false
+  findings:
+  - statement: Keywords for Aminopeptidase, Hydrolase, Metal-binding, Metalloprotease,
+      and Protease were correctly used to infer GO annotations for molecular function.
+- id: PMID:23226342
+  title: Functional characterization of two M42 aminopeptidases erroneously annotated
+    as cellulases.
+  findings:
+  - statement: CelM from Clostridium thermocellum was experimentally characterized
+      as an M42 family aminopeptidase, not a cellulase as previously annotated.
+    supporting_text: &#34;some members have been annotated as cellulases because of their homology with CelM, formerly described as an endoglucanase of Clostridium thermocellum&#34;
+  - statement: The protein shows no significant cellulase activity on CMC and cellobiose.
+    supporting_text: &#34;No significant endoglucanase activity was measured, either for TmPep1050 or CelM&#34;
+  - statement: CelM has robust leucine aminopeptidase activity with L-leucine-pNA
+      as the optimal substrate.
+    supporting_text: &#34;Both enzymes were shown to catalyze hydrolysis of nonpolar aliphatic L-amino acid-pNA substrates, the L-leucine derivative appearing as the best substrate&#34;
+  - statement: Cobalt ions (Co2+) are required for maximal activity.
+    supporting_text: &#34;Addition of cobalt ions enhanced the activity of both enzymes significantly&#34;
+  - statement: EDTA inhibits activity, confirming metal-dependence.
+    supporting_text: &#34;both the chelating agent EDTA and bestatin, a specific inhibitor of metalloaminopeptidases, proved inhibitory&#34;
+  - statement: Bestatin inhibits CelM, consistent with metalloaminopeptidase function.
+    supporting_text: &#34;bestatin, a specific inhibitor of metalloaminopeptidases, proved inhibitory&#34;
+- id: UniProt:P55742
+  title: UniProt entry for CelM/Putative aminopeptidase
+  full_text_unavailable: false
+  findings:
+  - statement: Classified as Peptidase M42 family member.
+    supporting_text: Belongs to the peptidase M42 family.
+    reference_section_type: DATABASE_ENTRY
+  - statement: Binds 2 divalent metal cations per subunit.
+    supporting_text: Binds 2 divalent metal cations per subunit.
+    reference_section_type: DATABASE_ENTRY
+core_functions:
+- description: Metalloaminopeptidase that cleaves N-terminal amino acids from peptides
+    using a metal-dependent catalytic mechanism, with preference for nonpolar aliphatic
+    amino acids like leucine. Requires cobalt ions for optimal activity in vitro
+    and forms active dodecameric complexes. Not a cellulase despite the gene name.
+  molecular_function:
+    id: GO:0070006
+    label: metalloaminopeptidase activity
+  directly_involved_in:
+  - id: GO:0006508
+    label: proteolysis
+  supported_by:
+  - reference_id: UniProt:P55742
+    supporting_text: Belongs to the peptidase M42 family.
+suggested_questions:
+- question: What is the physiological metal cofactor of CelM in vivo? While cobalt
+    provides optimal activity in vitro, the in vivo cofactor may be different.
+- question: What is the biological role of CelM in A. thermocellus? Is it involved
+    in protein turnover, processing of cellulosomal components, or another cellular
+    function?
+- question: Does CelM have any role related to the cellulosome, or is it entirely
+    a cytoplasmic housekeeping enzyme?
+suggested_experiments:
+- description: Determine the native metal cofactor of CelM through metal content
+    analysis of purified enzyme from A. thermocellus.
+- description: Construct celM deletion mutant to assess phenotypic effects and identify
+    physiological role.
+- description: Identify physiological substrates through proteomics or peptide library
+    screening.
+- description: Determine if CelM is cytoplasmic or secreted, and if it has any association
+    with cellulosome components.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
