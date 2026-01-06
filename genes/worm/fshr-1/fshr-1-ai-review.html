@@ -1,0 +1,3276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fshr-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fshr-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/L8EC40" target="_blank" class="term-link">
+                        L8EC40
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fshr-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="L8EC40" data-a="DESCRIPTION: FSHR-1 is a G protein-coupled receptor (GPCR) with..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FSHR-1 is a G protein-coupled receptor (GPCR) with leucine-rich repeats in its extracellular domain that functions in the C. elegans intestine as an essential component of the innate immune response. Unlike its mammalian FSHR ortholog which responds to follicle-stimulating hormone, FSHR-1 has been repurposed in C. elegans to detect and respond to infection and oxidative damage. FSHR-1 signals in parallel to the p38 MAPK pathway to activate transcription of antimicrobial effectors and oxidative stress response genes (including gcs-1). It is required for defense against diverse pathogens including Gram-negative bacteria (Pseudomonas aeruginosa), Gram-positive bacteria (Staphylococcus aureus, Enterococcus faecalis), and fungal pathogens (Candida albicans). FSHR-1 also mediates survival of oxidative stress (paraquat) and heavy metal stress (cadmium), but not thermal stress. Additionally, FSHR-1 is required for learned aversive behavior toward pathogens. The broad specificity of response suggests FSHR-1 acts as an indirect sensor of infection, possibly detecting host damage-associated molecular patterns rather than pathogen molecular patterns directly.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FSHR-1 is a multi-pass transmembrane G protein-coupled receptor localized to the plasma membrane. UniProt annotations indicate Cell membrane localization. The IBA annotation is based on phylogenetic inference from mammalian FSHR orthologs which are established plasma membrane receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The plasma membrane localization is consistent with FSHR-1 being a GPCR that functions in intestinal cells to sense and respond to pathogens and stress. Intestinal expression of fshr-1 rescues the pathogen sensitivity phenotype (PMID:26360906). The seven transmembrane domains predicted in UniProt support plasma membrane localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of fshr-1 in the intestine is necessary and sufficient for its role in the response to infection by PA14</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007189" target="_blank" class="term-link">
+                                    GO:0007189
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase-activating G protein-coupled receptor signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0007189" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation infers adenylate cyclase-activating GPCR signaling based on phylogenetic relationships with mammalian glycoprotein hormone receptors (FSHR, TSHR, LHCGR) which canonically couple to Gs and activate adenylate cyclase. While FSHR-1 is structurally related to these receptors, direct evidence for cAMP/adenylate cyclase activation in C. elegans FSHR-1 signaling is limited.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is phylogenetically reasonable based on FSHR-1 belonging to the glycoprotein hormone receptor family. However, the core function of FSHR-1 in C. elegans appears to be immune signaling rather than hormone response. The downstream signaling mechanism in C. elegans has not been fully characterized, and FSHR-1 signals in parallel to p38 MAPK pathway (PMID:19196974). Keep as non-core since the precise signaling mechanism in worms may differ from mammals.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FSHR-1 signals in parallel to the known p38 MAPK pathway but converges to regulate the transcriptional induction of an overlapping but nonidentical set of antimicrobial effectors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009755" target="_blank" class="term-link">
+                                    GO:0009755
+                                </a>
+                            </span>
+                            <span class="term-label">hormone-mediated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0009755" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is based on phylogenetic inference from mammalian FSH receptor, which mediates follicle-stimulating hormone signaling. However, there is no evidence that FSHR-1 functions in hormone signaling in C. elegans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While FSHR-1 is structurally related to mammalian hormone receptors, its characterized function in C. elegans is in innate immunity and stress response, not hormone signaling. C. elegans lacks the gonadotropin hormones (FSH, LH, TSH) present in vertebrates. The publications (PMID:19196974, PMID:26360906) characterize FSHR-1 exclusively as an immune/stress response regulator. This annotation represents phylogenetic over-extension of function that does not apply to C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We screened all LRR-containing transmembrane receptors in C. elegans and identified the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008528" target="_blank" class="term-link">
+                                    GO:0008528
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled peptide receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0008528" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA annotation infers peptide receptor activity based on phylogenetic relationship with glycoprotein hormone receptors. The ligand for FSHR-1 in C. elegans has not been identified.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FSHR-1 is a GPCR but its ligand in C. elegans is unknown. The term &#34;G protein-coupled peptide receptor activity&#34; implies binding to a peptide ligand, which is unconfirmed. Given that FSHR-1 may detect damage-associated molecular patterns or other infection-related signals rather than peptide hormones, the more general term &#34;G protein-coupled receptor activity&#34; is more appropriate. The ligand could be a DAMP or stress signal rather than a peptide.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    G protein-coupled receptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rather than serving as a direct PRR like fellow LRR-containing TLRs and NLRs, we propose that FSHR-1 is an indirect sensor of infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0004930" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro GPCR domain and UniProt keywords. FSHR-1 contains the canonical GPCR 7TM domain and belongs to the rhodopsin-like GPCR family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FSHR-1 is unambiguously a GPCR based on sequence features (7TM domain, InterPro:IPR000276) and functional studies showing it signals to regulate gene expression in response to infection. This is the appropriate molecular function term for this receptor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We screened all LRR-containing transmembrane receptors in C. elegans and identified the G protein-coupled receptor FSHR-1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location vocabulary mapping. Consistent with FSHR-1 being a transmembrane GPCR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the IBA annotation for plasma membrane. Both annotations are valid and consistent with FSHR-1 being a transmembrane receptor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0007165" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt keyword mapping. FSHR-1 participates in signal transduction as a GPCR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a high-level term that is correct but less informative than the more specific GPCR signaling annotations. FSHR-1 clearly functions in signal transduction to regulate immune and stress responses.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0007186" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro GPCR domain. FSHR-1 participates in GPCR signaling in the intestine to regulate immune responses.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FSHR-1 is a GPCR that signals to regulate transcription of antimicrobial and stress response genes. This annotation correctly describes its participation in GPCR signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro domain mapping. This is a more general term than plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than the plasma membrane annotation. FSHR-1 is a membrane protein with seven transmembrane domains.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016500" target="_blank" class="term-link">
+                                    GO:0016500
+                                </a>
+                            </span>
+                            <span class="term-label">protein-hormone receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0016500" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro glycoprotein hormone receptor family (IPR002131). This annotation implies FSHR-1 binds protein hormones.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> There is no evidence that FSHR-1 functions as a hormone receptor in C. elegans. The ligand is unknown but appears to be related to infection/damage sensing rather than hormone signaling. C. elegans lacks vertebrate gonadotropins. The InterPro domain match reflects sequence similarity rather than functional conservation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we propose that FSHR-1 is an indirect sensor of infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19196974
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The G protein-coupled receptor FSHR-1 is required for the Ca...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0050829" data-r="PMID:19196974" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive to killing by Pseudomonas aeruginosa PA14 (Gram-negative pathogen). FSHR-1 activates antimicrobial gene expression in response to PA14 infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of FSHR-1. The original characterization paper (PMID:19196974) identified FSHR-1 in a screen for immune regulators and demonstrated its requirement for defense against Gram-negative PA14. This is strongly supported by experimental evidence including survival assays, gene expression studies, and rescue experiments.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We screened all LRR-containing transmembrane receptors in C. elegans and identified the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">infected fshr-1(ok778) worms have a mean survival time of 39 hours, significantly less than the wild-type mean survival time of 73 hours (P&lt;0.0001)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26360906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Conserved G-Protein Coupled Receptor FSHR-1 Regulates Pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0006979" data-r="PMID:26360906" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive to paraquat-induced oxidative stress. FSHR-1 is required for induction of the oxidative stress response gene gcs-1 upon infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of FSHR-1. The study showed fshr-1(ok778) mutants died significantly faster than wild-type when exposed to paraquat. FSHR-1 is required for gcs-1::gfp induction upon PA14 infection. Intestinal expression of fshr-1 rescues the paraquat sensitivity phenotype.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fshr-1(ok778) mutants died significantly more quickly than wild-type worms (One-way ANOVA, F = 40.96; Tukey HSD test, P&lt;0.01)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp upon PA14 infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26360906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Conserved G-Protein Coupled Receptor FSHR-1 Regulates Pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0045087" data-r="PMID:26360906" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype. FSHR-1 is required for survival of diverse pathogens and for transcriptional induction of antimicrobial effector genes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function of FSHR-1. Extensive evidence supports FSHR-1 as an essential component of C. elegans innate immunity. It regulates antimicrobial gene expression, delays pathogen accumulation in the intestine, and mediates pathogen avoidance behavior. Functions against Gram-negative, Gram-positive, and fungal pathogens.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FSHR-1 activates the expression of antimicrobial infection response genes in infected worms and delays accumulation of the ingested pathogen Pseudomonas aeruginosa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990170" target="_blank" class="term-link">
+                                    GO:1990170
+                                </a>
+                            </span>
+                            <span class="term-label">stress response to cadmium ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26360906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Conserved G-Protein Coupled Receptor FSHR-1 Regulates Pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:1990170" data-r="PMID:26360906" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive to cadmium stress. Intestinal expression of fshr-1 rescues the cadmium sensitivity phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported experimental annotation. The study demonstrated fshr-1 is required for survival of cadmium stress, and this is likely related to the oxidative stress response pathway since cadmium induces ROS production.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fshr-1(ok778) mutants died significantly more quickly in the presence of cadmium than wild-type worms (One-way ANOVA, F = 110.68; Tukey HSD test, P&lt;0.05)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">expression of fshr-1(+) from an intestinal promoter rescued the cadmium sensitivity phenotype and conferred resistance to cadmium exposure</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19196974
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The G protein-coupled receptor FSHR-1 is required for the Ca...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="L8EC40" data-a="GO:0050830" data-r="PMID:19196974" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation based on experimental evidence. FSHR-1 is required for defense against Gram-positive pathogens Staphylococcus aureus and Enterococcus faecalis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The publications demonstrate fshr-1 mutants are sensitive to Gram-positive pathogens S. aureus and E. faecalis, not just Gram-negative PA14. This is explicitly stated in both publications. The annotation for Gram-negative defense exists but the corresponding Gram-positive annotation should be added.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                        PMID:19196974
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                        PMID:26360906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fshr-1(ok778) mutants are more sensitive than wild-type worms to infection by diverse pathogens, including not only the Gram negative pathogen PA14, but also the Gram positive bacterial pathogens Staphylococcus aureus (P&gt;0.01) and Enterococcus faecalis (P&gt;0.05)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FSHR-1 functions as a G protein-coupled receptor in the intestinal epithelium to sense infection or infection-associated damage and activate innate immune responses against diverse bacterial pathogens.</h3>
+                <span class="vote-buttons" data-g="L8EC40" data-a="FUNCTION: FSHR-1 functions as a G protein-coupled receptor i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                            G protein-coupled receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                defense response to Gram-positive bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                                PMID:19196974
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We screened all LRR-containing transmembrane receptors in C. elegans and identified the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                PMID:26360906
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">FSHR-1 activates the expression of antimicrobial infection response genes in infected worms and delays accumulation of the ingested pathogen Pseudomonas aeruginosa</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FSHR-1 regulates the oxidative stress response through activation of detoxification genes including gcs-1, protecting the host from ROS damage during infection and from exogenous oxidative stressors.</h3>
+                <span class="vote-buttons" data-g="L8EC40" data-a="FUNCTION: FSHR-1 regulates the oxidative stress response thr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                            G protein-coupled receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                response to oxidative stress
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990170" target="_blank" class="term-link">
+                                stress response to cadmium ion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                PMID:26360906
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">fshr-1(ok778) mutants died significantly more quickly than wild-type worms when exposed to paraquat</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                                PMID:26360906
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp upon PA14 infection</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19196974" target="_blank" class="term-link">
+                            PMID:19196974
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The G protein-coupled receptor FSHR-1 is required for the Caenorhabditis elegans innate immune response</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FSHR-1 identified in screen of LRR-containing transmembrane receptors for immune function</div>
+                        
+                        <div class="finding-text">"We screened all LRR-containing transmembrane receptors in C. elegans and identified the G protein-coupled receptor FSHR-1 as an important component of the C. elegans immune response"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for defense against Gram-negative and Gram-positive pathogens</div>
+                        
+                        <div class="finding-text">"FSHR-1 as an important component of the C. elegans immune response to Gram-negative and Gram-positive bacterial pathogens"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Acts in the intestine</div>
+                        
+                        <div class="finding-text">"FSHR-1 acts in the C. elegans intestine, the primary site of exposure to ingested pathogens"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Signals parallel to p38 MAPK pathway</div>
+                        
+                        <div class="finding-text">"FSHR-1 signals in parallel to the known p38 MAPK pathway but converges to regulate the transcriptional induction of an overlapping but nonidentical set of antimicrobial effectors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Regulates transcriptional induction of antimicrobial effectors</div>
+                        
+                        <div class="finding-text">"FSHR-1 signals in parallel to the known p38 MAPK pathway but converges to regulate the transcriptional induction of an overlapping but nonidentical set of antimicrobial effectors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">May act as pathogen receptor or general immune booster</div>
+                        
+                        <div class="finding-text">"FSHR-1 may act generally to boost the nematode immune response, or it may function as a pathogen receptor"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26360906" target="_blank" class="term-link">
+                            PMID:26360906
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Conserved G-Protein Coupled Receptor FSHR-1 Regulates Protective Host Responses to Infection and Oxidative Stress</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FSHR-1 delays pathogen accumulation in the intestine</div>
+                        
+                        <div class="finding-text">"fshr-1(ok778) mutants have already accumulated a significantly greater amount of the fluorescent pathogen in their intestinal lumens (P&lt;0.0001)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for defense against diverse pathogens including PA14, S. aureus, E. faecalis</div>
+                        
+                        <div class="finding-text">"fshr-1(ok778) mutants are more sensitive than wild-type worms to infection by diverse pathogens, including not only the Gram negative pathogen PA14, but also the Gram positive bacterial pathogens Staphylococcus aureus (P&gt;0.01) and Enterococcus faecalis (P&gt;0.05)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for survival of oxidative stress (paraquat) and cadmium stress</div>
+                        
+                        <div class="finding-text">"fshr-1(ok778) mutants died significantly more quickly in the presence of cadmium than wild-type worms (One-way ANOVA, F = 110.68; Tukey HSD test, P&lt;0.05)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NOT required for thermal stress survival</div>
+                        
+                        <div class="finding-text">"The mean survival of fshr-1(ok778) mutants at 37°C is not significantly different from the survival of wild-type worms (One-way ANOVA, F = 0.42, P = 0.669), indicating that the fshr-1 pathway does not respond to the damage caused by high heat"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Regulates expression of immune and stress response genes</div>
+                        
+                        <div class="finding-text">"when we examined the reported functions of the genes whose expression in infected worms depends on fshr-1, we observed that many were known antimicrobial infection response genes; in addition, 18% of fshr-1-regulated genes were associated with some type of cellular stress"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for induction of gcs-1 oxidative stress response gene</div>
+                        
+                        <div class="finding-text">"fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp upon PA14 infection"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mediates learned pathogen avoidance behavior</div>
+                        
+                        <div class="finding-text">"fshr-1(ok778) mutants are impaired in their ability to learn pathogen avoidance. 45% of fshr-1(ok778) mutants remain on a lawn of PA14 after 9 hours of exposure"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Acts in intestine for all characterized functions</div>
+                        
+                        <div class="finding-text">"Expression of fshr-1 in the intestine is necessary and sufficient for its role in the response to infection by PA14"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Proposed to be indirect sensor of infection rather than direct pattern recognition receptor</div>
+                        
+                        <div class="finding-text">"Rather than serving as a direct PRR like fellow LRR-containing TLRs and NLRs, we propose that FSHR-1 is an indirect sensor of infection"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the endogenous ligand for FSHR-1 in C. elegans? Does it bind a DAMP, pathogen-derived molecule, or host peptide?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GPCR pharmacologists, C. elegans innate immunity researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="Q: What is the endogenous ligand for FSHR-1 in C. ele..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does FSHR-1 signal to activate gene expression - what G protein subunits are involved?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GPCR signaling specialists, C. elegans signaling researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="Q: How does FSHR-1 signal to activate gene expression..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between FSHR-1 and the p38 MAPK/pmk-1 pathway at the molecular level?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: C. elegans immunity researchers, MAPK signaling specialists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="Q: What is the relationship between FSHR-1 and the p3..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FSHR-1 have any function in reproduction or development given its sequence similarity to mammalian FSH receptor?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: C. elegans developmental biologists, Reproductive biology specialists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="Q: Does FSHR-1 have any function in reproduction or d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify FSHR-1 ligand through biochemical purification or receptor-ligand screens using infected worm extracts or pathogen-conditioned media</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSHR-1 binds a damage-associated molecular pattern or host stress signal rather than a peptide hormone</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical ligand identification</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="EXPERIMENT: Identify FSHR-1 ligand through biochemical purific..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine G protein coupling specificity using mutant analysis of Gs, Gq, and other G protein subunits in combination with fshr-1</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSHR-1 couples to specific G protein subunits to activate immune gene expression</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: G protein coupling analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="EXPERIMENT: Determine G protein coupling specificity using mut..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Investigate potential role of FSHR-1 in detecting reactive oxygen species or lipid peroxidation products as DAMPs</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSHR-1 senses oxidative damage caused by infection rather than pathogen molecules directly</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ROS sensing analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="EXPERIMENT: Investigate potential role of FSHR-1 in detecting ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether FSHR-1 functions in other tissues besides intestine using tissue-specific RNAi or rescue</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FSHR-1 function is restricted to the intestine where it encounters ingested pathogens</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Tissue-specific RNAi</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="L8EC40" data-a="EXPERIMENT: Test whether FSHR-1 functions in other tissues bes..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-surveillance-immunity</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fshr-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="L8EC40" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T11:42:27.779612'<br />
+end_time: '2025-12-29T11:46:52.290307'<br />
+duration_seconds: 264.51<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: fshr-1<br />
+  gene_symbol: fshr-1<br />
+  uniprot_accession: L8EC40<br />
+  protein_description: 'SubName: Full=G-protein coupled receptors family 1 profile<br />
+    domain-containing protein {ECO:0000313|EMBL:CCQ25711.1};'<br />
+  gene_info: Name=fshr-1 {ECO:0000313|EMBL:CCQ25711.1, ECO:0000313|WormBase:C50H2.1b};<br />
+    ORFNames=C50H2.1 {ECO:0000313|WormBase:C50H2.1b}, CELE_C50H2.1 {ECO:0000313|EMBL:CCQ25711.1};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: GPCR_Rhodpsn. (IPR000276); GPCR_Rhodpsn_7TM. (IPR017452); Gphrmn_rcpt_fam.<br />
+    (IPR002131); Leu-rich_rpt. (IPR001611); LRR_dom_sf. (IPR032675)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 8</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> L8EC40</li>
+<li><strong>Protein Description:</strong> SubName: Full=G-protein coupled receptors family 1 profile domain-containing protein {ECO:0000313|EMBL:CCQ25711.1};</li>
+<li><strong>Gene Information:</strong> Name=fshr-1 {ECO:0000313|EMBL:CCQ25711.1, ECO:0000313|WormBase:C50H2.1b}; ORFNames=C50H2.1 {ECO:0000313|WormBase:C50H2.1b}, CELE_C50H2.1 {ECO:0000313|EMBL:CCQ25711.1};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> GPCR_Rhodpsn. (IPR000276); GPCR_Rhodpsn_7TM. (IPR017452); Gphrmn_rcpt_fam. (IPR002131); Leu-rich_rpt. (IPR001611); LRR_dom_sf. (IPR032675)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fshr-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fshr-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fshr-1</strong> (gene ID: fshr-1, UniProt: L8EC40) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> L8EC40</li>
+<li><strong>Protein Description:</strong> SubName: Full=G-protein coupled receptors family 1 profile domain-containing protein {ECO:0000313|EMBL:CCQ25711.1};</li>
+<li><strong>Gene Information:</strong> Name=fshr-1 {ECO:0000313|EMBL:CCQ25711.1, ECO:0000313|WormBase:C50H2.1b}; ORFNames=C50H2.1 {ECO:0000313|WormBase:C50H2.1b}, CELE_C50H2.1 {ECO:0000313|EMBL:CCQ25711.1};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> GPCR_Rhodpsn. (IPR000276); GPCR_Rhodpsn_7TM. (IPR017452); Gphrmn_rcpt_fam. (IPR002131); Leu-rich_rpt. (IPR001611); LRR_dom_sf. (IPR032675)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fshr-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fshr-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fshr-1</strong> (gene ID: fshr-1, UniProt: L8EC40) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan summary<br />
+We verified target identity and organism; searched and extracted primary evidence; synthesized function, pathways, localization, and phenotypes; summarized limitations in recent literature (2023–2024); and compiled a concise evidence table.</p>
+<p>Comprehensive research report: C. elegans fshr-1 (C50H2.1; UniProt L8EC40)</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein identity and family: fshr-1 (locus C50H2.1) encodes FSHR-1, a leucine-rich repeat (LRR)-containing, rhodopsin-like G protein-coupled receptor (GPCR). It is the sole LGR-type, LRR-containing GPCR in C. elegans identified in an RNAi-based screen of LRR receptors for pathogen susceptibility phenotypes (publication: Feb 2009; URL: https://doi.org/10.1073/pnas.0813048106) (powell2009thegproteincoupled pages 2-3, powell2009thegproteincoupled pages 1-2).<br />
+- Domain architecture and structural features: The extracellular domain contains approximately nine LRRs; the receptor has seven transmembrane helices (7TM) and a large C-terminal cytoplasmic tail, consistent with rhodopsin-like GPCRs (powell2009thegproteincoupled pages 2-3).<br />
+- Primary biological role: FSHR-1 is required for the innate immune response of C. elegans to multiple bacterial pathogens (Gram-negative Pseudomonas aeruginosa PA14 and Gram-positive Staphylococcus aureus and Enterococcus faecalis) (powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 5-6).</p>
+<p>2) Mechanistic function, pathways, and signaling context<br />
+- Pathway relationships: Genetic interaction studies indicate that FSHR-1 signals in parallel to the p38 MAPK pathway (PMK-1) and the insulin/IGF (DAF-2) pathway. Double mutants (e.g., pmk-1; fshr-1) exhibit additive or enhanced pathogen sensitivity, and sets of pathogen-response genes regulated by FSHR-1 and PMK-1 overlap but are not identical, arguing against a simple linear pathway (publication date: Feb 2009; https://doi.org/10.1073/pnas.0813048106) (powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 1-2).<br />
+- Transcriptional responses: In fshr-1 loss-of-function, induction of multiple PA14-response genes is markedly reduced, with several targets showing ≥10-fold lower induction compared to wild type upon PA14 exposure, demonstrating a role in mounting inducible antimicrobial responses rather than maintaining basal expression (powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 4-5).<br />
+- Ligand knowledge: No endogenous ligand has been defined. C. elegans lacks canonical vertebrate FSH subunits, leading to two broad hypotheses: FSHR-1 could be a noncanonical hormone receptor for an unknown worm ligand or a pattern-recognition receptor (PRR)-like sensor whose extracellular LRRs detect host- or microbe-derived cues (powell2009thegproteincoupled pages 4-5, powell2009thegproteincoupled pages 5-6).</p>
+<p>3) Cellular and tissue localization<br />
+- Tissue expression and site of action: FSHR-1 is expressed in several somatic tissues, most strongly in the intestine and neurons. Functional assays demonstrate that its intestinal activity is necessary and sufficient for pathogen resistance: intestinal-specific RNAi phenocopies systemic knockdown; intestinal expression (ges-1 promoter) rescues the pathogen sensitivity of the fshr-1(ok778) deletion; neuronal expression provides only partial rescue (powell2009thegproteincoupled pages 4-5, powell2009thegproteincoupled pages 3-4).<br />
+- Subcellular localization: Precise apical/basolateral membrane localization in intestinal cells was not resolved in the primary study; consequently, whether FSHR-1 acts as an apical PRR interacting directly with luminal cues, or as a basolateral/systemic receptor responding to endogenous signals remains undetermined (powell2009thegproteincoupled pages 5-6).</p>
+<p>4) Experimental phenotypes and evidence strength<br />
+- Loss-of-function allele and RNAi: The fshr-1(ok778) deletion removes most LRRs and all seven transmembrane regions, behaving as a genetic null. fshr-1(ok778) mutants show increased sensitivity to PA14, S. aureus, and E. faecalis in bacterial killing assays, without shortened lifespan on nonpathogenic E. coli OP50, indicating a specific defect in pathogen resistance rather than general debility (powell2009thegproteincoupled pages 2-3, powell2009thegproteincoupled pages 5-6, powell2009thegproteincoupled pages 6-6).<br />
+- Rescue and sufficiency: Transgenic rescue with a genomic fragment or an intestinal ges-1::fshr-1 construct restores pathogen resistance to wild-type levels; neuronal ric-19::fshr-1 expression confers only partial rescue, supporting a primary intestinal role (powell2009thegproteincoupled pages 6-6, powell2009thegproteincoupled pages 4-5).<br />
+- Pathway genetics: pmk-1; fshr-1 double mutants and combinations with upstream p38 components (tir-1, nsy-1) show additive/enhanced sensitivity, reinforcing that FSHR-1 does not lie upstream of PMK-1 but in a parallel pathway converging on antimicrobial gene regulation (powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 6-6).</p>
+<p>5) Recent developments and latest research (2023–2024 emphasis)<br />
+- Literature availability: Using the available tools, no additional peer-reviewed sources from 2023–2024 focusing specifically on C. elegans fshr-1 could be retrieved. The foundational Powell et al., 2009 PNAS study remains the primary, authoritative source defining FSHR-1’s role in innate immunity, intestinal site of action, and parallel signaling with PMK-1 and DAF-2 (powell2009thegproteincoupled pages 1-2, powell2009thegproteincoupled pages 3-4). We note this as a limitation and encourage checking WormBase/UniProt release notes and recent reviews for updates beyond the scope of the retrieved evidence.</p>
+<p>6) Applications and real-world implementations<br />
+- Conceptual and methodological applications: FSHR-1 serves as a model to study LRR-containing GPCRs (LGRs) as potential PRR-like sensors in barrier tissues. The intestinally-acting, LRR-bearing GPCR paradigm illustrates how animals without canonical TLRs in key contexts can deploy alternative receptor families to detect and orchestrate defense, providing a framework for comparative immunology and for designing genetic screens for barrier defense GPCRs in other organisms (powell2009thegproteincoupled pages 1-2, powell2009thegproteincoupled pages 5-6).</p>
+<p>7) Expert opinions and analysis from the primary source<br />
+- Interpretive conclusions by the authors: The authors propose that FSHR-1 promotes innate immune responses by enhancing inducible antimicrobial gene expression and that it may function either as a PRR-like sensor or a noncanonical hormone receptor; pathway genetics place it in parallel to PMK-1/p38 and DAF-2/insulin signaling (Feb 2009; https://doi.org/10.1073/pnas.0813048106) (powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 5-6, powell2009thegproteincoupled pages 4-5).</p>
+<p>8) Quantitative data and statistics<br />
+- Domain count: ~9 extracellular LRRs; 7 transmembrane helices (powell2009thegproteincoupled pages 2-3).<br />
+- Transcriptional effects: Multiple PA14-response genes show ≥10-fold reduced induction in fshr-1(ok778) compared to wild type following pathogen exposure (powell2009thegproteincoupled pages 3-4).<br />
+- Pathogen spectrum and phenotype: Increased susceptibility to P. aeruginosa PA14 (Gram-negative), S. aureus, and E. faecalis (Gram-positive) in survival assays; no reduced lifespan on E. coli OP50 under nonpathogenic conditions (powell2009thegproteincoupled pages 5-6, powell2009thegproteincoupled pages 2-3).</p>
+<p>9) Open questions<br />
+- Endogenous ligand(s) remain unidentified; mechanistic placement relative to cell-surface vs systemic cues is unresolved. Subcellular localization in intestine and any neuron-to-intestine regulatory axis require further clarification (powell2009thegproteincoupled pages 5-6, powell2009thegproteincoupled pages 4-5).</p>
+<p>Evidence table<br />
+| Study (citation) | Year | Genotypes/Tools | Pathogens/Assays | Tissue Requirement | Pathway Relationship | Molecular Features | Phenotypes | Notes |<br />
+|---|---:|---|---|---|---|---|---|---|<br />
+| Powell JR, Kim DH, Ausubel FM. Proc. Natl. Acad. Sci. USA. DOI: https://doi.org/10.1073/pnas.0813048106 (powell2009thegproteincoupled pages 1-2, powell2009thegproteincoupled pages 2-3, powell2009thegproteincoupled pages 3-4) | 2009 | fshr-1(ok778) deletion; systemic and tissue-specific RNAi (intestinal ges-1); rescue transgenes (endogenous genomic fragment, ges-1::fshr-1, ric-19::fshr-1) | Pseudomonas aeruginosa PA14, Staphylococcus aureus, Enterococcus faecalis; bacterial killing/survival assays; transcriptional induction of PA14-response genes | Intestinal expression required and sufficient for pathogen resistance; neuronal expression gives partial rescue | Signals in parallel to PMK-1/p38 MAPK and to DAF-2/insulin pathways (double mutants show additive/intermediate sensitivity) | LRR-containing GPCR (reported ~9 LRRs); rhodopsin-like 7TM topology; large C-terminal cytoplasmic tail | fshr-1(ok778) shows increased sensitivity to PA14, S. aureus, E. faecalis; many PA14-response genes induced ≥10-fold less in mutant | Ligand not identified; proposed as noncanonical hormone receptor or pattern-recognition receptor; ok778 removes most LRRs and all seven transmembrane domains (powell2009thegproteincoupled pages 6-6) |</p>
+<p><em>Table: Compact summary of primary experimental evidence from Powell et al. 2009 on C. elegans fshr-1 (C50H2.1), showing tools, assays, tissue requirement, pathway relationships, molecular features, and key phenotypes; useful as a quick reference for functional annotation and citation.</em></p>
+<p>Mandatory verification checklist<br />
+- Gene symbol and description alignment: fshr-1 encodes an LRR-containing GPCR (FSHR-1), consistent with UniProt L8EC40 and Powell et al. (powell2009thegproteincoupled pages 2-3).<br />
+- Organism: Caenorhabditis elegans (powell2009thegproteincoupled pages 1-2).<br />
+- Protein family/domains: LGR/LRR-containing rhodopsin-like 7TM GPCR with ~9 LRRs (powell2009thegproteincoupled pages 2-3).<br />
+- Ambiguity check: No conflicting gene symbol usage found within retrieved evidence; all data refer to C. elegans fshr-1/C50H2.1 (powell2009thegproteincoupled pages 1-2).</p>
+<p>Primary citation with URL and date<br />
+- Powell JR, Kim DH, Ausubel FM. The G protein-coupled receptor FSHR-1 is required for the Caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences of the USA. 2009 Feb;106(8):2782–2787. https://doi.org/10.1073/pnas.0813048106 (powell2009thegproteincoupled pages 1-2, powell2009thegproteincoupled pages 3-4, powell2009thegproteincoupled pages 2-3, powell2009thegproteincoupled pages 5-6, powell2009thegproteincoupled pages 4-5).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(powell2009thegproteincoupled pages 2-3): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2009thegproteincoupled pages 1-2): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2009thegproteincoupled pages 3-4): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2009thegproteincoupled pages 5-6): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2009thegproteincoupled pages 4-5): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2009thegproteincoupled pages 6-6): Jennifer R. Powell, Dennis H. Kim, and Frederick M. Ausubel. The g protein-coupled receptor fshr-1 is required for the caenorhabditis elegans innate immune response. Proceedings of the National Academy of Sciences, 106:2782-2787, Feb 2009. URL: https://doi.org/10.1073/pnas.0813048106, doi:10.1073/pnas.0813048106. This article has 168 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>powell2009thegproteincoupled pages 2-3</li>
+<li>powell2009thegproteincoupled pages 5-6</li>
+<li>powell2009thegproteincoupled pages 3-4</li>
+<li>powell2009thegproteincoupled pages 6-6</li>
+<li>powell2009thegproteincoupled pages 1-2</li>
+<li>powell2009thegproteincoupled pages 4-5</li>
+<li>https://doi.org/10.1073/pnas.0813048106</li>
+<li>https://doi.org/10.1073/pnas.0813048106,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: L8EC40
+gene_symbol: fshr-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: FSHR-1 is a G protein-coupled receptor (GPCR) with leucine-rich repeats
+  in its extracellular domain that functions in the C. elegans intestine as an essential
+  component of the innate immune response. Unlike its mammalian FSHR ortholog which
+  responds to follicle-stimulating hormone, FSHR-1 has been repurposed in C. elegans
+  to detect and respond to infection and oxidative damage. FSHR-1 signals in parallel
+  to the p38 MAPK pathway to activate transcription of antimicrobial effectors and
+  oxidative stress response genes (including gcs-1). It is required for defense against
+  diverse pathogens including Gram-negative bacteria (Pseudomonas aeruginosa), Gram-positive
+  bacteria (Staphylococcus aureus, Enterococcus faecalis), and fungal pathogens (Candida
+  albicans). FSHR-1 also mediates survival of oxidative stress (paraquat) and heavy
+  metal stress (cadmium), but not thermal stress. Additionally, FSHR-1 is required
+  for learned aversive behavior toward pathogens. The broad specificity of response
+  suggests FSHR-1 acts as an indirect sensor of infection, possibly detecting host
+  damage-associated molecular patterns rather than pathogen molecular patterns directly.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: FSHR-1 is a multi-pass transmembrane G protein-coupled receptor localized
+      to the plasma membrane. UniProt annotations indicate Cell membrane localization.
+      The IBA annotation is based on phylogenetic inference from mammalian FSHR orthologs
+      which are established plasma membrane receptors.
+    action: ACCEPT
+    reason: The plasma membrane localization is consistent with FSHR-1 being a GPCR
+      that functions in intestinal cells to sense and respond to pathogens and stress.
+      Intestinal expression of fshr-1 rescues the pathogen sensitivity phenotype (PMID:26360906).
+      The seven transmembrane domains predicted in UniProt support plasma membrane
+      localization.
+    supported_by:
+    - reference_id: PMID:26360906
+      supporting_text: Expression of fshr-1 in the intestine is necessary and sufficient
+        for its role in the response to infection by PA14
+- term:
+    id: GO:0007189
+    label: adenylate cyclase-activating G protein-coupled receptor signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: The IBA annotation infers adenylate cyclase-activating GPCR signaling
+      based on phylogenetic relationships with mammalian glycoprotein hormone receptors
+      (FSHR, TSHR, LHCGR) which canonically couple to Gs and activate adenylate cyclase.
+      While FSHR-1 is structurally related to these receptors, direct evidence for
+      cAMP/adenylate cyclase activation in C. elegans FSHR-1 signaling is limited.
+    action: KEEP_AS_NON_CORE
+    reason: The annotation is phylogenetically reasonable based on FSHR-1 belonging
+      to the glycoprotein hormone receptor family. However, the core function of FSHR-1
+      in C. elegans appears to be immune signaling rather than hormone response. The
+      downstream signaling mechanism in C. elegans has not been fully characterized,
+      and FSHR-1 signals in parallel to p38 MAPK pathway (PMID:19196974). Keep as
+      non-core since the precise signaling mechanism in worms may differ from mammals.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: FSHR-1 signals in parallel to the known p38 MAPK pathway but
+        converges to regulate the transcriptional induction of an overlapping but
+        nonidentical set of antimicrobial effectors
+- term:
+    id: GO:0009755
+    label: hormone-mediated signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This IBA annotation is based on phylogenetic inference from mammalian
+      FSH receptor, which mediates follicle-stimulating hormone signaling. However,
+      there is no evidence that FSHR-1 functions in hormone signaling in C. elegans.
+    action: REMOVE
+    reason: While FSHR-1 is structurally related to mammalian hormone receptors, its
+      characterized function in C. elegans is in innate immunity and stress response,
+      not hormone signaling. C. elegans lacks the gonadotropin hormones (FSH, LH,
+      TSH) present in vertebrates. The publications (PMID:19196974, PMID:26360906)
+      characterize FSHR-1 exclusively as an immune/stress response regulator. This
+      annotation represents phylogenetic over-extension of function that does not
+      apply to C. elegans.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: We screened all LRR-containing transmembrane receptors in C.
+        elegans and identified the G protein-coupled receptor FSHR-1 as an important
+        component of the C. elegans immune response to Gram-negative and Gram-positive
+        bacterial pathogens
+- term:
+    id: GO:0008528
+    label: G protein-coupled peptide receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: The IBA annotation infers peptide receptor activity based on phylogenetic
+      relationship with glycoprotein hormone receptors. The ligand for FSHR-1 in C.
+      elegans has not been identified.
+    action: MODIFY
+    reason: FSHR-1 is a GPCR but its ligand in C. elegans is unknown. The term &#34;G
+      protein-coupled peptide receptor activity&#34; implies binding to a peptide ligand,
+      which is unconfirmed. Given that FSHR-1 may detect damage-associated molecular
+      patterns or other infection-related signals rather than peptide hormones, the
+      more general term &#34;G protein-coupled receptor activity&#34; is more appropriate.
+      The ligand could be a DAMP or stress signal rather than a peptide.
+    proposed_replacement_terms:
+    - id: GO:0004930
+      label: G protein-coupled receptor activity
+    supported_by:
+    - reference_id: PMID:26360906
+      supporting_text: Rather than serving as a direct PRR like fellow LRR-containing
+        TLRs and NLRs, we propose that FSHR-1 is an indirect sensor of infection
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on InterPro GPCR domain and UniProt keywords. FSHR-1
+      contains the canonical GPCR 7TM domain and belongs to the rhodopsin-like GPCR
+      family.
+    action: ACCEPT
+    reason: FSHR-1 is unambiguously a GPCR based on sequence features (7TM domain,
+      InterPro:IPR000276) and functional studies showing it signals to regulate gene
+      expression in response to infection. This is the appropriate molecular function
+      term for this receptor.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: We screened all LRR-containing transmembrane receptors in C.
+        elegans and identified the G protein-coupled receptor FSHR-1
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProt subcellular location vocabulary mapping.
+      Consistent with FSHR-1 being a transmembrane GPCR.
+    action: ACCEPT
+    reason: Duplicate of the IBA annotation for plasma membrane. Both annotations
+      are valid and consistent with FSHR-1 being a transmembrane receptor.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProt keyword mapping. FSHR-1 participates
+      in signal transduction as a GPCR.
+    action: KEEP_AS_NON_CORE
+    reason: This is a high-level term that is correct but less informative than the
+      more specific GPCR signaling annotations. FSHR-1 clearly functions in signal
+      transduction to regulate immune and stress responses.
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on InterPro GPCR domain. FSHR-1 participates in
+      GPCR signaling in the intestine to regulate immune responses.
+    action: ACCEPT
+    reason: FSHR-1 is a GPCR that signals to regulate transcription of antimicrobial
+      and stress response genes. This annotation correctly describes its participation
+      in GPCR signaling.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: the G protein-coupled receptor FSHR-1 as an important component
+        of the C. elegans immune response
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation based on InterPro domain mapping. This is a more general
+      term than plasma membrane.
+    action: ACCEPT
+    reason: Correct but less specific than the plasma membrane annotation. FSHR-1
+      is a membrane protein with seven transmembrane domains.
+- term:
+    id: GO:0016500
+    label: protein-hormone receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation based on InterPro glycoprotein hormone receptor family
+      (IPR002131). This annotation implies FSHR-1 binds protein hormones.
+    action: REMOVE
+    reason: There is no evidence that FSHR-1 functions as a hormone receptor in C.
+      elegans. The ligand is unknown but appears to be related to infection/damage
+      sensing rather than hormone signaling. C. elegans lacks vertebrate gonadotropins.
+      The InterPro domain match reflects sequence similarity rather than functional
+      conservation.
+    supported_by:
+    - reference_id: PMID:26360906
+      supporting_text: we propose that FSHR-1 is an indirect sensor of infection
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:19196974
+  review:
+    summary: IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive
+      to killing by Pseudomonas aeruginosa PA14 (Gram-negative pathogen). FSHR-1 activates
+      antimicrobial gene expression in response to PA14 infection.
+    action: ACCEPT
+    reason: Core function of FSHR-1. The original characterization paper (PMID:19196974)
+      identified FSHR-1 in a screen for immune regulators and demonstrated its requirement
+      for defense against Gram-negative PA14. This is strongly supported by experimental
+      evidence including survival assays, gene expression studies, and rescue experiments.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: We screened all LRR-containing transmembrane receptors in C.
+        elegans and identified the G protein-coupled receptor FSHR-1 as an important
+        component of the C. elegans immune response to Gram-negative and Gram-positive
+        bacterial pathogens
+    - reference_id: PMID:26360906
+      supporting_text: infected fshr-1(ok778) worms have a mean survival time of 39
+        hours, significantly less than the wild-type mean survival time of 73 hours
+        (P&lt;0.0001)
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IMP
+  original_reference_id: PMID:26360906
+  review:
+    summary: IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive
+      to paraquat-induced oxidative stress. FSHR-1 is required for induction of the
+      oxidative stress response gene gcs-1 upon infection.
+    action: ACCEPT
+    reason: Core function of FSHR-1. The study showed fshr-1(ok778) mutants died significantly
+      faster than wild-type when exposed to paraquat. FSHR-1 is required for gcs-1::gfp
+      induction upon PA14 infection. Intestinal expression of fshr-1 rescues the paraquat
+      sensitivity phenotype.
+    supported_by:
+    - reference_id: PMID:26360906
+      supporting_text: fshr-1(ok778) mutants died significantly more quickly than
+        wild-type worms (One-way ANOVA, F = 40.96; Tukey HSD test, P&lt;0.01)
+    - reference_id: PMID:26360906
+      supporting_text: fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp
+        upon PA14 infection
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:26360906
+  review:
+    summary: IMP annotation based on mutant phenotype. FSHR-1 is required for survival
+      of diverse pathogens and for transcriptional induction of antimicrobial effector
+      genes.
+    action: ACCEPT
+    reason: Core function of FSHR-1. Extensive evidence supports FSHR-1 as an essential
+      component of C. elegans innate immunity. It regulates antimicrobial gene expression,
+      delays pathogen accumulation in the intestine, and mediates pathogen avoidance
+      behavior. Functions against Gram-negative, Gram-positive, and fungal pathogens.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: the G protein-coupled receptor FSHR-1 as an important component
+        of the C. elegans immune response to Gram-negative and Gram-positive bacterial
+        pathogens
+    - reference_id: PMID:26360906
+      supporting_text: FSHR-1 activates the expression of antimicrobial infection
+        response genes in infected worms and delays accumulation of the ingested pathogen
+        Pseudomonas aeruginosa
+- term:
+    id: GO:1990170
+    label: stress response to cadmium ion
+  evidence_type: IMP
+  original_reference_id: PMID:26360906
+  review:
+    summary: IMP annotation based on mutant phenotype. fshr-1 mutants are hypersensitive
+      to cadmium stress. Intestinal expression of fshr-1 rescues the cadmium sensitivity
+      phenotype.
+    action: ACCEPT
+    reason: Well-supported experimental annotation. The study demonstrated fshr-1
+      is required for survival of cadmium stress, and this is likely related to the
+      oxidative stress response pathway since cadmium induces ROS production.
+    supported_by:
+    - reference_id: PMID:26360906
+      supporting_text: fshr-1(ok778) mutants died significantly more quickly in the
+        presence of cadmium than wild-type worms (One-way ANOVA, F = 110.68; Tukey
+        HSD test, P&lt;0.05)
+    - reference_id: PMID:26360906
+      supporting_text: expression of fshr-1(+) from an intestinal promoter rescued
+        the cadmium sensitivity phenotype and conferred resistance to cadmium exposure
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:19196974
+  review:
+    summary: NEW annotation based on experimental evidence. FSHR-1 is required for
+      defense against Gram-positive pathogens Staphylococcus aureus and Enterococcus
+      faecalis.
+    action: NEW
+    reason: The publications demonstrate fshr-1 mutants are sensitive to Gram-positive
+      pathogens S. aureus and E. faecalis, not just Gram-negative PA14. This is explicitly
+      stated in both publications. The annotation for Gram-negative defense exists
+      but the corresponding Gram-positive annotation should be added.
+    supported_by:
+    - reference_id: PMID:19196974
+      supporting_text: the G protein-coupled receptor FSHR-1 as an important component
+        of the C. elegans immune response to Gram-negative and Gram-positive bacterial
+        pathogens
+    - reference_id: PMID:26360906
+      supporting_text: fshr-1(ok778) mutants are more sensitive than wild-type worms
+        to infection by diverse pathogens, including not only the Gram negative pathogen
+        PA14, but also the Gram positive bacterial pathogens Staphylococcus aureus
+        (P&gt;0.01) and Enterococcus faecalis (P&gt;0.05)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19196974
+  title: The G protein-coupled receptor FSHR-1 is required for the Caenorhabditis
+    elegans innate immune response
+  findings:
+  - statement: FSHR-1 identified in screen of LRR-containing transmembrane receptors
+      for immune function
+    supporting_text: We screened all LRR-containing transmembrane receptors in C.
+      elegans and identified the G protein-coupled receptor FSHR-1 as an important
+      component of the C. elegans immune response
+  - statement: Required for defense against Gram-negative and Gram-positive pathogens
+    supporting_text: FSHR-1 as an important component of the C. elegans immune response
+      to Gram-negative and Gram-positive bacterial pathogens
+  - statement: Acts in the intestine
+    supporting_text: FSHR-1 acts in the C. elegans intestine, the primary site of
+      exposure to ingested pathogens
+  - statement: Signals parallel to p38 MAPK pathway
+    supporting_text: FSHR-1 signals in parallel to the known p38 MAPK pathway but
+      converges to regulate the transcriptional induction of an overlapping but nonidentical
+      set of antimicrobial effectors
+  - statement: Regulates transcriptional induction of antimicrobial effectors
+    supporting_text: FSHR-1 signals in parallel to the known p38 MAPK pathway but
+      converges to regulate the transcriptional induction of an overlapping but nonidentical
+      set of antimicrobial effectors
+  - statement: May act as pathogen receptor or general immune booster
+    supporting_text: FSHR-1 may act generally to boost the nematode immune response,
+      or it may function as a pathogen receptor
+- id: PMID:26360906
+  title: The Conserved G-Protein Coupled Receptor FSHR-1 Regulates Protective Host
+    Responses to Infection and Oxidative Stress
+  findings:
+  - statement: FSHR-1 delays pathogen accumulation in the intestine
+    supporting_text: fshr-1(ok778) mutants have already accumulated a significantly
+      greater amount of the fluorescent pathogen in their intestinal lumens (P&lt;0.0001)
+  - statement: Required for defense against diverse pathogens including PA14, S. aureus,
+      E. faecalis
+    supporting_text: fshr-1(ok778) mutants are more sensitive than wild-type worms
+      to infection by diverse pathogens, including not only the Gram negative pathogen
+      PA14, but also the Gram positive bacterial pathogens Staphylococcus aureus (P&gt;0.01)
+      and Enterococcus faecalis (P&gt;0.05)
+  - statement: Required for survival of oxidative stress (paraquat) and cadmium stress
+    supporting_text: fshr-1(ok778) mutants died significantly more quickly in the
+      presence of cadmium than wild-type worms (One-way ANOVA, F = 110.68; Tukey HSD
+      test, P&lt;0.05)
+  - statement: NOT required for thermal stress survival
+    supporting_text: &#34;The mean survival of fshr-1(ok778) mutants at 37\xB0C is not\
+      \ significantly different from the survival of wild-type worms (One-way ANOVA,\
+      \ F = 0.42, P = 0.669), indicating that the fshr-1 pathway does not respond\
+      \ to the damage caused by high heat&#34;
+  - statement: Regulates expression of immune and stress response genes
+    supporting_text: when we examined the reported functions of the genes whose expression
+      in infected worms depends on fshr-1, we observed that many were known antimicrobial
+      infection response genes; in addition, 18% of fshr-1-regulated genes were associated
+      with some type of cellular stress
+  - statement: Required for induction of gcs-1 oxidative stress response gene
+    supporting_text: fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp
+      upon PA14 infection
+  - statement: Mediates learned pathogen avoidance behavior
+    supporting_text: fshr-1(ok778) mutants are impaired in their ability to learn
+      pathogen avoidance. 45% of fshr-1(ok778) mutants remain on a lawn of PA14 after
+      9 hours of exposure
+  - statement: Acts in intestine for all characterized functions
+    supporting_text: Expression of fshr-1 in the intestine is necessary and sufficient
+      for its role in the response to infection by PA14
+  - statement: Proposed to be indirect sensor of infection rather than direct pattern
+      recognition receptor
+    supporting_text: Rather than serving as a direct PRR like fellow LRR-containing
+      TLRs and NLRs, we propose that FSHR-1 is an indirect sensor of infection
+core_functions:
+- description: FSHR-1 functions as a G protein-coupled receptor in the intestinal
+    epithelium to sense infection or infection-associated damage and activate innate
+    immune responses against diverse bacterial pathogens.
+  molecular_function:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  directly_involved_in:
+  - id: GO:0045087
+    label: innate immune response
+  - id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  - id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:19196974
+    supporting_text: We screened all LRR-containing transmembrane receptors in C.
+      elegans and identified the G protein-coupled receptor FSHR-1 as an important
+      component of the C. elegans immune response to Gram-negative and Gram-positive
+      bacterial pathogens
+  - reference_id: PMID:26360906
+    supporting_text: FSHR-1 activates the expression of antimicrobial infection response
+      genes in infected worms and delays accumulation of the ingested pathogen Pseudomonas
+      aeruginosa
+- description: FSHR-1 regulates the oxidative stress response through activation of
+    detoxification genes including gcs-1, protecting the host from ROS damage during
+    infection and from exogenous oxidative stressors.
+  molecular_function:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  directly_involved_in:
+  - id: GO:0006979
+    label: response to oxidative stress
+  - id: GO:1990170
+    label: stress response to cadmium ion
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:26360906
+    supporting_text: fshr-1(ok778) mutants died significantly more quickly than wild-type
+      worms when exposed to paraquat
+  - reference_id: PMID:26360906
+    supporting_text: fshr-1(ok778) mutant worms fail to induce expression of gcs-1::gfp
+      upon PA14 infection
+suggested_questions:
+- question: What is the endogenous ligand for FSHR-1 in C. elegans? Does it bind a
+    DAMP, pathogen-derived molecule, or host peptide?
+  experts:
+  - GPCR pharmacologists
+  - C. elegans innate immunity researchers
+- question: How does FSHR-1 signal to activate gene expression - what G protein subunits
+    are involved?
+  experts:
+  - GPCR signaling specialists
+  - C. elegans signaling researchers
+- question: What is the relationship between FSHR-1 and the p38 MAPK/pmk-1 pathway
+    at the molecular level?
+  experts:
+  - C. elegans immunity researchers
+  - MAPK signaling specialists
+- question: Does FSHR-1 have any function in reproduction or development given its
+    sequence similarity to mammalian FSH receptor?
+  experts:
+  - C. elegans developmental biologists
+  - Reproductive biology specialists
+suggested_experiments:
+- experiment_type: Biochemical ligand identification
+  description: Identify FSHR-1 ligand through biochemical purification or receptor-ligand
+    screens using infected worm extracts or pathogen-conditioned media
+  hypothesis: FSHR-1 binds a damage-associated molecular pattern or host stress signal
+    rather than a peptide hormone
+- experiment_type: G protein coupling analysis
+  description: Determine G protein coupling specificity using mutant analysis of Gs,
+    Gq, and other G protein subunits in combination with fshr-1
+  hypothesis: FSHR-1 couples to specific G protein subunits to activate immune gene
+    expression
+- experiment_type: ROS sensing analysis
+  description: Investigate potential role of FSHR-1 in detecting reactive oxygen species
+    or lipid peroxidation products as DAMPs
+  hypothesis: FSHR-1 senses oxidative damage caused by infection rather than pathogen
+    molecules directly
+- experiment_type: Tissue-specific RNAi
+  description: Test whether FSHR-1 functions in other tissues besides intestine using
+    tissue-specific RNAi or rescue
+  hypothesis: FSHR-1 function is restricted to the intestine where it encounters ingested
+    pathogens
+proposed_new_terms: []
+tags:
+- caeel-surveillance-immunity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

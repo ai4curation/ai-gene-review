@@ -1,0 +1,3617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nipi-3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nipi-3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EED4" target="_blank" class="term-link">
+                        G5EED4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nipi-3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EED4" data-a="DESCRIPTION: NIPI-3 is a conserved Tribbles family pseudokinase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NIPI-3 is a conserved Tribbles family pseudokinase that serves as an adapter protein regulating innate immune signaling and larval development in C. elegans. Despite containing a protein kinase domain, NIPI-3 lacks key catalytic residues and is predicted to be catalytically inactive. It functions primarily in epidermal immunity against fungal pathogens (D. coniospora) by acting upstream of the PMK-1/p38 MAPK cascade to induce antimicrobial peptide genes (nlp-29, nlp-31). In the intestine, NIPI-3 mediates defense against Gram-negative (P. aeruginosa) and Gram-positive bacteria by negatively regulating the C/EBP transcription factor CEBP-1, which in turn controls VHP-1 phosphatase levels and PMK-1 phosphorylation status. NIPI-3 directly interacts with CEBP-1 and represses its transcription. Loss of nipi-3 causes larval arrest at L2-L3, demonstrating its essential role in development beyond immunity. The protein localizes to nuclei in epidermis, intestine, and neurons.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 localizes predominantly to nuclei in epidermis, intestine, and neurons, as demonstrated by GFP knock-in studies (PMID:27927209). This nuclear localization is consistent with its role in transcriptional regulation of cebp-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported by experimental evidence. PMID:27927209 demonstrates nuclear localization of NIPI-3 using a GFP knock-in strain. This localization is also consistent with the functional role of NIPI-3 in transcriptional repression of cebp-1. The IBA annotation based on phylogenetic inference is supported by direct experimental evidence in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP::NIPI-3 expression was observed predominantly in the nuclei (Fig. 1i), with an overall intensity peaking at the L2-L3 stages. This nuclear localization suggests a role for NIPI-3 in regulation of gene expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031434" target="_blank" class="term-link">
+                                    GO:0031434
+                                </a>
+                            </span>
+                            <span class="term-label">mitogen-activated protein kinase kinase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0031434" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 functions upstream of the p38 MAPK cascade in epidermal immunity. While genetic interactions between NIPI-3 and SEK-1 (MAPKK) are well-documented (PMID:18394898, PMID:27927209), direct physical binding to SEK-1 has not been demonstrated in C. elegans. The IBA annotation is based on mammalian Tribbles proteins which do interact with MAPK pathway components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation is phylogenetically reasonable. Mammalian Tribbles proteins interact with MAPK pathway components. In C. elegans, NIPI-3 genetically acts upstream of the SEK-1/PMK-1 cascade, though the molecular mechanism may differ from direct binding. PMID:27927209 shows that loss of sek-1 suppresses nipi-3 null lethality, indicating functional interaction. The annotation appropriately captures the conserved relationship between Tribbles and MAPK signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Among the other suppressors of nipi-3(0), we found missense alterations in TIR-1/the sterile alpha (SAM) and Toll-interleukin receptor (TIR) motif-containing protein SARM), NSY-1/MAPKKK, SEK-1/MAPKK and MAK-2/MAPK-activated protein kinase (MAPKAPK)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                        PMID:18394898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032436" target="_blank" class="term-link">
+                                    GO:0032436
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of proteasomal ubiquitin-dependent protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0032436" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mammalian Tribbles proteins (TRIB1, TRIB2) promote C/EBP protein degradation via the ubiquitin-proteasome system. In C. elegans, NIPI-3 regulates CEBP-1 at the transcriptional level rather than through proteasomal degradation (PMID:27927209).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation is phylogenetically inferred from mammalian Tribbles which do promote C/EBP degradation. However, in C. elegans, NIPI-3 appears to regulate CEBP-1 primarily at the transcriptional level. PMID:27927209 states that a translational reporter showed no detectable differences in GFP expression in a nipi-3(0) background, indicating post-translational regulation is not the primary mechanism. The annotation may still apply to some extent given the conserved Tribbles-C/EBP interaction but is not a core function in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Consistent with the observed transcriptional regulation, we found that a translational CEBP-1::GFP reporter driven by a heterologous epidermal promoter showed no detectable differences in GFP expression in a nipi-3(0) background</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 contains a protein kinase domain with predicted ATP binding sites. However, the kinase domain lacks key catalytic residues and is predicted to be catalytically inactive (pseudokinase).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt annotation indicates ATP binding sites at positions 206-214 and 235. While NIPI-3 is a pseudokinase, pseudokinases often retain nucleotide binding capability even though they lack catalytic activity. The IEA annotation based on keyword mapping is appropriate as it does not imply catalytic function. UniProt explicitly states the kinase domain is predicted to be catalytically inactive but still annotates ATP binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Tribbles genes encode a family of highly conserved pseudokinases which lack key catalytic amino acids in the kinase domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0004672" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 contains an InterPro-recognized protein kinase domain (IPR000719). However, multiple sources confirm that NIPI-3 is a pseudokinase lacking catalytic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is incorrect. NIPI-3 is a well-characterized pseudokinase that lacks key catalytic residues and is not expected to have protein kinase activity. UniProt explicitly states the protein kinase domain is predicted to be catalytically inactive (PROSITE-ProRule:PRU00159). PMID:27927209 confirms this. The IEA annotation based solely on domain presence is misleading for this pseudokinase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Tribbles genes encode a family of highly conserved pseudokinases which lack key catalytic amino acids in the kinase domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nipi-4 encodes a nematode-specific protein with a kinase-like domain that is predicted to be a pseudokinase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Based on InterPro kinase domain and UniProt keyword mapping. NIPI-3 contains ATP binding motifs in its kinase domain despite being a pseudokinase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Pseudokinases can retain ATP binding capability even without catalytic activity. UniProt annotates specific ATP binding sites at positions 206-214 and 235, suggesting the structure accommodates ATP. This is consistent with many characterized pseudokinases that bind ATP for regulatory purposes. The annotation is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nipi-3 encodes a pseudokinase of the Tribbles family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location mapping. This is redundant with the IBA annotation and is supported by direct experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-documented experimentally (PMID:27927209). This IEA annotation is consistent with the IBA annotation and experimental data. Duplicate annotations with different evidence codes are acceptable in GO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP::NIPI-3 expression was observed predominantly in the nuclei</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27927200
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tribbles ortholog NIPI-3 and bZIP transcription factor CEBP-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0010468" data-r="PMID:27927200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 is required for proper expression of immune genes in both unstressed and infected animals. nipi-3 mutants show widespread misregulation of pathogen-responsive genes (PMID:27927200). NIPI-3 also represses transcription of cebp-1 (PMID:27927209).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is well-supported. PMID:27927200 demonstrates in the abstract that NIPI-3 protects against intestinal infection by negatively regulating CEBP-1. PMID:27927209 shows that nipi-3 is necessary for the proper expression of immune genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927200" target="_blank" class="term-link">
+                                        PMID:27927200
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NIPI-3 is a negative regulator of CEBP-1, which in turn negatively regulates protective immune mechanisms</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NIPI-3 negatively regulates expression of cebp-1 at the transcriptional level</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34407394" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34407394
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tribbles pseudokinase NIPI-3 regulates intestinal immunity i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0010629" data-r="PMID:34407394" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 negatively regulates CEBP-1 expression, which in turn affects downstream gene expression including vhp-1. Loss of nipi-3 leads to increased CEBP-1 levels and subsequent upregulation of VHP-1 (PMID:34407394).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is supported by the finding that NIPI-3 negatively regulates CEBP-1 transcription. PMID:34407394 states in the abstract that NIPI-3 protects against intestinal infection by negatively regulating CEBP-1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34407394" target="_blank" class="term-link">
+                                        PMID:34407394
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NIPI-3 has been reported to protect against intestinal infection by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription factor CEBP-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NIPI-3 negatively regulates expression of cebp-1 at the transcriptional level</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27927200
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tribbles ortholog NIPI-3 and bZIP transcription factor CEBP-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0050829" data-r="PMID:27927200" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nipi-3(fr4) mutants are hypersusceptible to Pseudomonas aeruginosa. Intestinal NIPI-3 is both necessary and sufficient to mediate defense against this Gram-negative pathogen (PMID:27927200).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-characterized core function of NIPI-3. PMID:27927200 abstract indicates that NIPI-3 protects against intestinal infection. Defense against P. aeruginosa is a key immune function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927200" target="_blank" class="term-link">
+                                        PMID:27927200
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Tribbles pseudokinase ortholog nipi-3, is essential for host survival following exposure to P. aeruginosa or ToxA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34407394" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34407394
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tribbles pseudokinase NIPI-3 regulates intestinal immunity i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0050830" data-r="PMID:34407394" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nipi-3 knockdown in intestinal cells causes hypersusceptibility to the Gram-positive bacterium Enterococcus faecalis (PMID:34407394, PMID:27927200).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:34407394 demonstrates that NIPI-3 protects against intestinal infection. This is consistent with NIPI-3&#39;s role in intestinal immunity and represents a core immune function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34407394" target="_blank" class="term-link">
+                                        PMID:34407394
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NIPI-3 has been reported to protect against intestinal infection by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription factor CEBP-1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27927209
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Coordinated inhibition of C/EBP by Tribbles in multiple tiss...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0010629" data-r="PMID:27927209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 represses transcription of cebp-1 in multiple tissues. Loss of nipi-3 results in increased cebp-1 mRNA levels (PMID:27927209).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function. PMID:27927209 shows that the expression of the cebp-1 transcriptional reporter was highly and significantly increased in nipi-3 mutants and Quantitative RT-PCR analysis also showed significantly increased expression of cebp-1 mRNAs. This negative transcriptional regulation is central to NIPI-3 function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Strikingly, the expression of the cebp-1 transcriptional reporter was highly and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants, compared with wild-type animals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Quantitative RT-PCR analysis also showed significantly increased expression of cebp-1 mRNAs in nipi-3 mutant animals</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140297" target="_blank" class="term-link">
+                                    GO:0140297
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27927209
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Coordinated inhibition of C/EBP by Tribbles in multiple tiss...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0140297" data-r="PMID:27927209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 physically interacts with CEBP-1, a bZIP transcription factor. The N-terminal region of CEBP-1 is sufficient for binding NIPI-3 (PMID:27927209).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Yeast two-hybrid studies demonstrated direct physical interaction between NIPI-3 and CEBP-1. PMID:27927209 identified CEBP-1 as a prominent candidate interacting partner and showed that the N-terminal region of CEBP-1 was sufficient for binding NIPI-3. This is a core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One prominent candidate interacting partner was CEBP-1, a member of the C/EBP family of transcription factors</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                        PMID:27927209
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In further analyses using the yeast two-hybrid assay, we found that the N-terminal region (amino acids 1-115) of CEBP-1 was sufficient for binding NIPI-3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010628" target="_blank" class="term-link">
+                                    GO:0010628
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18394898
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct innate immune responses to infection and wounding i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0010628" data-r="PMID:18394898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 is required for induction of antimicrobial peptide genes nlp-29 and nlp-31 in the epidermis after fungal infection. Loss of nipi-3 results in failure to upregulate these genes (PMID:18394898).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:18394898 shows in the abstract that mutants were isolated that failed to induce nlp-29 expression after D. coniospora infection, including NIPI-3. This positive regulation of AMP gene expression is a core function of NIPI-3 in epidermal immunity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                        PMID:18394898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Through a forward genetic screen, we isolated mutants that failed to induce nlp-29 expression after D. coniospora infection. We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22470487
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The pseudokinase NIPI-4 is a novel regulator of antimicrobia...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0050832" data-r="PMID:22470487" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nipi-3 mutants fail to induce antimicrobial peptide genes after D. coniospora infection. PMID:22470487 describes nipi-3 in the context of fungal defense pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of NIPI-3. Multiple studies (PMID:18394898, PMID:22470487) demonstrate that NIPI-3 is essential for the epidermal innate immune response to fungal infection. The name &#34;nipi&#34; stands for &#34;no induction of peptide after Drechmeria infection.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                                        PMID:22470487
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">infection specifically involves the Tribbles-like kinase NIPI-3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061760" target="_blank" class="term-link">
+                                    GO:0061760
+                                </a>
+                            </span>
+                            <span class="term-label">antifungal innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18394898
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct innate immune responses to infection and wounding i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0061760" data-r="PMID:18394898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NIPI-3 is required for the epidermal innate immune response to fungal infection by D. coniospora. It acts upstream of the p38 MAPK cascade to induce antimicrobial peptides (PMID:18394898).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining function for which nipi-3 was named. PMID:18394898 shows in the abstract that NIPI-3 is required specifically for nlp-29 induction after fungal infection and not after wounding. The annotation accurately captures this specific immune function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                        PMID:18394898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We find NIPI-3 is required only for nlp-29 induction after infection and not after wounding.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                        PMID:18394898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18394898
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct innate immune responses to infection and wounding i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EED4" data-a="GO:0050832" data-r="PMID:18394898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same as above entry from PMID:22470487. NIPI-3 is essential for antifungal defense in the epidermis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate annotation with different reference. Both PMIDs support this core function. PMID:18394898 originally characterized nipi-3&#39;s role in fungal defense.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                        PMID:18394898
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1. We find NIPI-3 is required only for nlp-29 induction after infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NIPI-3 functions as an adapter pseudokinase that binds to and negatively regulates the CEBP-1 transcription factor. Through this interaction, NIPI-3 coordinates innate immune responses in epidermis (antifungal) and intestine (antibacterial) and modulates MAPK signaling and transcription factor activity.</h3>
+                <span class="vote-buttons" data-g="G5EED4" data-a="FUNCTION: NIPI-3 functions as an adapter pseudokinase that b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140297" target="_blank" class="term-link">
+                            DNA-binding transcription factor binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061760" target="_blank" class="term-link">
+                                antifungal innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                defense response to Gram-positive bacterium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                defense response to fungus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                PMID:27927209
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">One prominent candidate interacting partner was CEBP-1, a member of the C/EBP family of transcription factors</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                                PMID:18394898
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NIPI-3 negatively regulates transcription of cebp-1, preventing excessive CEBP-1 activity that would cause developmental arrest and impaired immunity. This repression is central to both developmental and immune functions of NIPI-3.</h3>
+                <span class="vote-buttons" data-g="G5EED4" data-a="FUNCTION: NIPI-3 negatively regulates transcription of cebp-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140297" target="_blank" class="term-link">
+                            DNA-binding transcription factor binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                negative regulation of gene expression
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                regulation of gene expression
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                PMID:27927209
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NIPI-3 negatively regulates expression of cebp-1 at the transcriptional level</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                                PMID:27927209
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the expression of the cebp-1 transcriptional reporter was highly and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18394898" target="_blank" class="term-link">
+                            PMID:18394898
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Distinct innate immune responses to infection and wounding in the C. elegans epidermis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 was first identified as a kinase required for induction of nlp-29 after D. coniospora infection</div>
+                        
+                        <div class="finding-text">"Through a forward genetic screen, we isolated mutants that failed to induce nlp-29 expression after D. coniospora infection. We identify a kinase, NIPI-3, related to human Tribbles homolog 1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 acts upstream of the MAPKK SEK-1</div>
+                        
+                        <div class="finding-text">"We identify a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act upstream of the MAPKK SEK-1."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 is required specifically for infection-induced but not wound-induced nlp-29 expression</div>
+                        
+                        <div class="finding-text">"We find NIPI-3 is required only for nlp-29 induction after infection and not after wounding."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22470487" target="_blank" class="term-link">
+                            PMID:22470487
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The pseudokinase NIPI-4 is a novel regulator of antimicrobial peptide gene expression.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes NIPI-3 in context of epidermal immunity pathway</div>
+                        
+                        <div class="finding-text">"infection specifically involves the Tribbles-like kinase NIPI-3"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Infection specifically involves the Tribbles-like kinase NIPI-3</div>
+                        
+                        <div class="finding-text">"infection specifically involves the Tribbles-like kinase NIPI-3"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27927200" target="_blank" class="term-link">
+                            PMID:27927200
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tribbles ortholog NIPI-3 and bZIP transcription factor CEBP-1 regulate a Caenorhabditis elegans intestinal immune surveillance pathway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 is essential for host survival following exposure to P. aeruginosa or ToxA</div>
+                        
+                        <div class="finding-text">"the Tribbles pseudokinase ortholog nipi-3, is essential for host survival following exposure to P. aeruginosa or ToxA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 is a negative regulator of CEBP-1</div>
+                        
+                        <div class="finding-text">"NIPI-3 is a negative regulator of CEBP-1, which in turn negatively regulates protective immune mechanisms"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27927209" target="_blank" class="term-link">
+                            PMID:27927209
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Coordinated inhibition of C/EBP by Tribbles in multiple tissues is essential for Caenorhabditis elegans development.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nipi-3 null mutants arrest at L2-L3 and die within 5-10 days</div>
+                        
+                        <div class="finding-text">"Mutants arrested development at the second to third larval stages (L2-L3) (see below) and eventually died between 5-10 days after hatching."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 physically interacts with CEBP-1 via yeast two-hybrid</div>
+                        
+                        <div class="finding-text">"One prominent candidate interacting partner was CEBP-1, a member of the C/EBP family of transcription factors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of cebp-1 completely suppresses nipi-3 null lethality</div>
+                        
+                        <div class="finding-text">"Remarkably, cebp-1(0) completely suppressed the growth and fertility defects of nipi-3(0) mutants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 represses cebp-1 transcription in multiple tissues</div>
+                        
+                        <div class="finding-text">"Strikingly, the expression of the cebp-1 transcriptional reporter was highly and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants, compared with wild-type animals"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 localizes predominantly to nuclei in epidermis, intestine, and neurons</div>
+                        
+                        <div class="finding-text">"GFP::NIPI-3 expression was observed predominantly in the nuclei (Fig. 1i), with an overall intensity peaking at the L2-L3 stages."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 negatively modulates PMK-1 phosphorylation via CEBP-1</div>
+                        
+                        <div class="finding-text">"levels of active PMK-1 were significantly increased in nipi-3(0), but remained similar to wild type in cebp-1(0) and cebp-1(0) nipi-3(0) animals"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of PMK-1 pathway components also suppresses nipi-3 null lethality</div>
+                        
+                        <div class="finding-text">"Among the other suppressors of nipi-3(0), we found missense alterations in TIR-1/the sterile alpha (SAM) and Toll-interleukin receptor (TIR) motif-containing protein SARM), NSY-1/MAPKKK, SEK-1/MAPKK and MAK-2/MAPK-activated protein kinase (MAPKAPK)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34407394" target="_blank" class="term-link">
+                            PMID:34407394
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tribbles pseudokinase NIPI-3 regulates intestinal immunity in Caenorhabditis elegans by controlling SKN-1/Nrf activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 is a positive regulator of SKN-1 activity</div>
+                        
+                        <div class="finding-text">"another positive regulator of SKN-1 is identified: NIPI-3, a Tribbles pseudokinase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NIPI-3 negatively regulates CEBP-1 which positively regulates vhp-1</div>
+                        
+                        <div class="finding-text">"NIPI-3 has been reported to protect against intestinal infection by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription factor CEBP-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">VHP-1 is a phosphatase that dephosphorylates PMK-1</div>
+                        
+                        <div class="finding-text">"CEBP-1 positively regulates the vhp-1 transcript, which encodes a phosphatase that dephosphorylates the p38 MAPK called PMK-1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NIPI-3 retain any nucleotide binding or have structural roles independent of catalysis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="Q: Does NIPI-3 retain any nucleotide binding or have ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanism by which nuclear NIPI-3 represses cebp-1 transcription?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="Q: What is the mechanism by which nuclear NIPI-3 repr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there additional transcription factor targets of NIPI-3 beyond CEBP-1?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="Q: Are there additional transcription factor targets ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Crystallographic or cryo-EM studies of NIPI-3 to determine if it binds ATP</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="EXPERIMENT: Crystallographic or cryo-EM studies of NIPI-3 to d..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq for NIPI-3 to identify direct transcriptional targets</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="EXPERIMENT: ChIP-seq for NIPI-3 to identify direct transcripti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mass spectrometry to identify additional NIPI-3 interaction partners beyond CEBP-1</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EED4" data-a="EXPERIMENT: Mass spectrometry to identify additional NIPI-3 in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-surveillance-immunity</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nipi-3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EED4" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T11:38:28.973999'<br />
+end_time: '2025-12-29T11:46:18.497814'<br />
+duration_seconds: 469.52<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: nipi-3<br />
+  gene_symbol: nipi-3<br />
+  uniprot_accession: G5EED4<br />
+  protein_description: 'RecName: Full=Protein nipi-3 {ECO:0000305}; AltName: Full=No<br />
+    induction of peptide after drechmeria infection protein 3 {ECO:0000312|WormBase:K09A9.1};<br />
+    AltName: Full=Tribbles homolog nipi-3 {ECO:0000303|PubMed:27927200, ECO:0000303|PubMed:27927209,<br />
+    ECO:0000303|PubMed:34407394};'<br />
+  gene_info: Name=nipi-3 {ECO:0000312|WormBase:K09A9.1}; ORFNames=K09A9.1 {ECO:0000312|WormBase:K09A9.1};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the protein kinase superfamily. CAMK Ser/Thr<br />
+  protein_domains: Kinase-like_dom_sf. (IPR011009); Prot_kinase_dom. (IPR000719);<br />
+    Tribbles/Ser_Thr_kinase_40. (IPR024104); Pkinase (PF00069)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 16</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G5EED4</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein nipi-3 {ECO:0000305}; AltName: Full=No induction of peptide after drechmeria infection protein 3 {ECO:0000312|WormBase:K09A9.1}; AltName: Full=Tribbles homolog nipi-3 {ECO:0000303|PubMed:27927200, ECO:0000303|PubMed:27927209, ECO:0000303|PubMed:34407394};</li>
+<li><strong>Gene Information:</strong> Name=nipi-3 {ECO:0000312|WormBase:K09A9.1}; ORFNames=K09A9.1 {ECO:0000312|WormBase:K09A9.1};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the protein kinase superfamily. CAMK Ser/Thr</li>
+<li><strong>Key Domains:</strong> Kinase-like_dom_sf. (IPR011009); Prot_kinase_dom. (IPR000719); Tribbles/Ser_Thr_kinase_40. (IPR024104); Pkinase (PF00069)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nipi-3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nipi-3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nipi-3</strong> (gene ID: nipi-3, UniProt: G5EED4) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G5EED4</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein nipi-3 {ECO:0000305}; AltName: Full=No induction of peptide after drechmeria infection protein 3 {ECO:0000312|WormBase:K09A9.1}; AltName: Full=Tribbles homolog nipi-3 {ECO:0000303|PubMed:27927200, ECO:0000303|PubMed:27927209, ECO:0000303|PubMed:34407394};</li>
+<li><strong>Gene Information:</strong> Name=nipi-3 {ECO:0000312|WormBase:K09A9.1}; ORFNames=K09A9.1 {ECO:0000312|WormBase:K09A9.1};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the protein kinase superfamily. CAMK Ser/Thr</li>
+<li><strong>Key Domains:</strong> Kinase-like_dom_sf. (IPR011009); Prot_kinase_dom. (IPR000719); Tribbles/Ser_Thr_kinase_40. (IPR024104); Pkinase (PF00069)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nipi-3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nipi-3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nipi-3</strong> (gene ID: nipi-3, UniProt: G5EED4) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Verify gene/protein identity and domains for C. elegans nipi-3 (UniProt G5EED4), assessing any symbol ambiguity and domain-family assignments (Tribbles pseudokinase with kinase-like domain). (Completed)<br />
+- Gather primary literature defining molecular function, pathway placement, and regulatory partners (especially CEBP-1 and PMK-1/p38 module), and delineate developmental versus immune roles. (Completed)<br />
+- Compile evidence for in vivo localization/tissue context and cell autonomy. (Completed)<br />
+- Summarize recent developments and related pathway advances; quantify key findings where available. (Partially completed; limited 2023–2024 nipi-3–specific evidence retrieved in the current context.)<br />
+- Synthesize into a comprehensive, well-cited research report with URLs and dates. (Completed)</p>
+<p>Verification of target identity and domains<br />
+- Identity and organism: nipi-3 is the Caenorhabditis elegans Tribbles-family ortholog (gene K09A9.1), consistent with UniProt G5EED4, discovered in innate immune studies; no symbol ambiguity with other organisms was encountered in the sources examined (2008 Current Biology; 2016 BMC Biology). NIPI-3 is repeatedly described as a Tribbles-like kinase/pseudokinase in C. elegans and placed functionally in innate immunity and development (Pujol et al., 2008, Current Biology, Apr 2008, https://doi.org/10.1016/j.cub.2008.02.079; Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (pujol2008distinctinnateimmune pages 6-8, kim2016coordinatedinhibitionof pages 2-5)<br />
+- Domains/family: NIPI-3 bears a kinase-like domain characteristic of the Tribbles family and is considered a conserved pseudokinase lacking key catalytic residues, aligning with the CAMK-like protein kinase superfamily annotations. Functional data support a regulatory/scaffolding role rather than demonstrated catalytic activity (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 2-5, kim2016coordinatedinhibitionof pages 1-2)</p>
+<p>Key concepts and current understanding<br />
+- Core role and pathway placement: In the epidermal innate immune response to infection/wounding, NIPI-3 acts upstream of a conserved p38 MAPK cascade (TIR-1/SARM1 → NSY-1/MAP3K → SEK-1/MAP2K → PMK-1/p38), promoting antimicrobial peptide (AMP) induction (e.g., nlp-29). Genetic analyses place NIPI-3 as an activator or permissive regulator upstream of TIR-1/NSY-1/SEK-1 in the epidermis (Pujol et al., 2008, Current Biology, Apr 2008, https://doi.org/10.1016/j.cub.2008.02.079). (pujol2008distinctinnateimmune pages 6-8)<br />
+- Context-dependent regulation: During organismal development, complete loss of nipi-3 causes larval arrest and lethality driven by excessive CEBP-1 activity and hyperactivation of the PMK-1/p38 cascade. NIPI-3 normally represses the bZIP factor CEBP-1, thereby restraining transcription of sek-1 (MAP2K) and downstream PMK-1 activation; cebp-1 loss or disruption of the PMK-1 pathway (e.g., sek-1, pmk-1 mutants) suppresses the nipi-3(0) arrest. Thus, NIPI-3 can both promote PMK-1 signaling in epidermal immunity and restrain it during development via CEBP-1, revealing tissue- and context-dependent control (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 2-5, kim2016coordinatedinhibitionof pages 9-11, kim2016coordinatedinhibitionof pages 1-2)<br />
+- Intestinal surveillance immunity: In the intestine, NIPI-3 mediates immune gene expression following translational inhibition by Pseudomonas aeruginosa exotoxin A (ToxA), and functions largely in parallel to PMK-1 signaling in this context. nipi-3(fr4) mutants (I307N in the kinase-like domain) are hypersusceptible to P. aeruginosa and ToxA and show broad misregulation of immune/stress genes (McEwan et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0334-6). (mcewan2016tribblesortholognipi3 pages 2-4, mcewan2016tribblesortholognipi3 pages 1-2)</p>
+<p>Molecular function, partners, and substrates<br />
+- Pseudokinase/regulatory adaptor: Tribbles-family proteins typically function as adaptors/scaffolds. In C. elegans, biochemical and genetic data support that NIPI-3 interacts with and represses the bZIP transcription factor CEBP-1; a yeast two-hybrid mapped CEBP-1 binding to its N-terminus (aa 1–115). No direct kinase catalytic activity or direct phosphorylation substrates of NIPI-3 have been demonstrated in the cited studies; the prevailing model is regulatory rather than enzymatic catalysis (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 2-5)<br />
+- Pathway partners and feedback: Genetic epistasis places CEBP-1 downstream of NIPI-3; CEBP-1 directly promotes sek-1 transcription (supported by ChIP-seq), and elevated CEBP-1 in nipi-3(0) leads to PMK-1 hyperactivation. Forward genetic suppressor screens uncovered additional components and feedback: mak-2/pmk-1 and sek-1 exhibit positive feedback on sek-1 transcription, and novel regulators such as the NatC N-terminal acetyltransferase complex and HDAC hda-4 modulate development via the NIPI-3 → CEBP-1 → PMK-1 axis (Malinow et al., 2022, Scientific Reports, Sep 2022, https://doi.org/10.1038/s41598-022-20361-x). (malinow2022forwardgeneticscreening pages 11-12, malinow2022novelsignalingmechanisms pages 83-90)</p>
+<p>Pathways, signaling, and biological processes<br />
+- Epidermal innate immunity: NIPI-3 is required cell-autonomously in the epidermis for AMP gene induction in response to fungal infection, acting with or upstream of PKCδ/TPA-1 and the TIR-1/NSY-1/SEK-1/PMK-1 cascade (Pujol et al., 2008, Current Biology, Apr 2008, https://doi.org/10.1016/j.cub.2008.02.079). (pujol2008distinctinnateimmune pages 6-8)<br />
+- Intestinal translational surveillance: NIPI-3 is upregulated by translational inhibition (ToxA), promotes intestinal immune gene expression post-developmentally, and negatively regulates CEBP-1 to enable protective immunity. nipi-3(fr4) animals are hypersensitive to translational inhibitors beyond ToxA, consistent with a surveillance role (McEwan et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0334-6). (mcewan2016tribblesortholognipi3 pages 1-2, mcewan2016tribblesortholognipi3 pages 2-4)<br />
+- Developmental control: nipi-3 null mutants arrest at L2–L3 with lethality that can be fully suppressed by cebp-1 loss; overactive PMK-1 signaling contributes to the arrest. This establishes NIPI-3 as a master regulator coordinating development with stress/immune signaling (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 9-11, kim2016coordinatedinhibitionof pages 2-5)</p>
+<p>Subcellular localization and tissue expression<br />
+- Expression and localization: pnipi-3::GFP reporters show expression in epidermis, intestine, head neurons, and motoneurons; expression is evident in embryos and adults. Genetic mosaic and rescue analyses indicate epidermal cell-autonomous action for AMP induction, while development requires NIPI-3 activity in multiple tissues; NIPI-3 shows predominantly nuclear localization (Pujol et al., 2008, Current Biology, Apr 2008, https://doi.org/10.1016/j.cub.2008.02.079; Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (pujol2008distinctinnateimmune pages 6-8, kim2016coordinatedinhibitionof pages 2-5)</p>
+<p>Recent developments and latest research (emphasis on 2022 and context-limited later work)<br />
+- Genetic suppressor screens uncovered chromatin and N-terminal acetylation regulators acting downstream of NIPI-3/CEBP-1 and documented transcriptional feedback within the p38 module (Malinow et al., 2022, Scientific Reports, Sep 2022, https://doi.org/10.1038/s41598-022-20361-x). These data reinforce the centrality of NIPI-3 in balancing development and stress responses by tuning PMK-1 activity via CEBP-1 (Malinow, 2022, thesis/compendium; context excerpt emphasizes regulatory role) (malinow2022forwardgeneticscreening pages 11-12, malinow2022novelsignalingmechanisms pages 83-90).<br />
+- Note on 2023–2024: While our search identified multiple 2023–2024 papers linking PMK-1 regulation to other cellular processes (e.g., mitochondrial metabolism, bZIP regulators, ADARs), the current gathered evidence set does not include extractable nipi-3–specific data from these articles, so we avoid overinterpreting them here. The most recent nipi-3–centric mechanistic updates in this context are from 2022 suppressor and feedback analyses (malinow2022forwardgeneticscreening pages 11-12, malinow2022novelsignalingmechanisms pages 83-90).</p>
+<p>Quantitative data and statistics from primary studies<br />
+- Intestinal induction and survival: nipi-3 is induced 4.3-fold by ToxA; nipi-3(fr4) mutants show significantly reduced survival upon ToxA exposure (P &lt; 0.0001), and widespread misregulation of immune/stress genes confirmed by NanoString (e.g., 49 genes altered on P. aeruginosa, 27 on ToxA; 26/27 candidates validated) (McEwan et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0334-6). (mcewan2016tribblesortholognipi3 pages 2-4, mcewan2016tribblesortholognipi3 pages 1-2)<br />
+- Developmental lethality and suppression: nipi-3 null mutants arrest at L2–L3 with death 5–10 days post-hatch; cebp-1 loss fully suppresses lethality, and reducing PMK-1 pathway components (e.g., sek-1) rescues, supporting the NIPI-3 → CEBP-1 → sek-1 → PMK-1 axis (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 2-5, kim2016coordinatedinhibitionof pages 9-11)<br />
+- Epidermal AMP induction: nipi-3(fr4) fails to induce nlp-29 upon infection; a genomic nipi-3(+) transgene restores induction; quantification used Biosort reporter fluorescence (Pujol et al., 2008, Current Biology, Apr 2008, https://doi.org/10.1016/j.cub.2008.02.079). (pujol2008distinctinnateimmune pages 6-8)<br />
+- Suppressor screens and feedback: unbiased suppressor screens of nipi-3(0) lethality recovered cebp-1, mak-2, tir-1, nsy-1, sek-1 mutations; a sek-1 transcriptional reporter revealed that pmk-1 and mak-2 positively feed back to sek-1 expression (Malinow et al., 2022, Scientific Reports, Sep 2022, https://doi.org/10.1038/s41598-022-20361-x). (malinow2022forwardgeneticscreening pages 11-12)</p>
+<p>Expert opinions and authoritative reviews (contextual summaries)<br />
+- Reviews integrating innate immune signaling in C. elegans describe NIPI-3/Tribbles as a cross-tissue regulator of PMK-1/p38, with NIPI-3 restraining PMK-1 during development via CEBP-1 yet promoting epidermal immune activation, exemplifying the integration of stress and developmental programs (Kim &amp; Ewbank, 2018 WormBook; Harding &amp; Ewbank, 2021 Biochem Soc Trans). These perspectives are consistent with our primary-source synthesis above (Kim et al., 2016; McEwan et al., 2016) (kim2016coordinatedinhibitionof pages 1-2, kim2016coordinatedinhibitionof pages 2-5, mcewan2016tribblesortholognipi3 pages 1-2).</p>
+<p>Current applications and real-world implementations<br />
+- NIPI-3 serves as a tractable genetic entry point to dissect epithelial immune surveillance (translation stress sensing), to model developmental-immune crosstalk, and to identify modifiers (chromatin and protein N-terminal acetylation) that tune MAPK output. The genetic suppression of nipi-3 lethality provides an assay to discover regulators of the p38 module with potential relevance to conserved Tribbles–C/EBP circuits in higher organisms (Malinow et al., 2022, Scientific Reports, Sep 2022, https://doi.org/10.1038/s41598-022-20361-x; Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (malinow2022forwardgeneticscreening pages 11-12, kim2016coordinatedinhibitionof pages 2-5)</p>
+<p>Limitations and open questions<br />
+- Biochemistry: Direct catalytic kinase activity of NIPI-3 has not been demonstrated; evidence supports a pseudokinase/adaptor model. Direct substrates are unknown from the cited work. Dissecting how NIPI-3 molecularly represses CEBP-1 (e.g., recruitment of corepressors, proteostasis, or chromatin changes) remains a key question (Kim et al., 2016, BMC Biology, Dec 2016, https://doi.org/10.1186/s12915-016-0320-z). (kim2016coordinatedinhibitionof pages 2-5)<br />
+- Tissue specificity and signaling inputs: The upstream cues that engage NIPI-3 differently in epidermis (pro-immune) versus development (anti-PMK-1 via CEBP-1 repression) are incompletely defined, as is the extent of non-cell-autonomous control (Kim et al., 2016; Pujol et al., 2008). (kim2016coordinatedinhibitionof pages 2-5, pujol2008distinctinnateimmune pages 6-8)</p>
+<p>Embedded summary table of key findings and sources<br />
+| Aspect | Main finding | Quantitative / statistical details | Pathway placement / partners | Subcellular / tissue context | Source (journal, year, URL) |<br />
+|---|---|---:|---|---|---|<br />
+| Identification &amp; localization | NIPI-3 is a Tribbles-family kinase-like pseudokinase required for infection-induced AMP (nlp-29) expression; proposed upstream activator of TIR-1/NSY-1/SEK-1 in epidermal immunity. | fr4 mutant fails to induce nlp-29 after infection; genomic transgene rescues induction (Biosort quantification used). | Placed upstream of TIR-1 → NSY-1 → SEK-1 → PMK-1 (p38) signaling in epidermal infection response. | Expression in epidermis, intestine, head neurons and motoneurons; observed in embryos and adults (epidermal cell-autonomous role). | Pujol et al., Current Biology (2008) https://doi.org/10.1016/j.cub.2008.02.079 (pujol2008distinctinnateimmune pages 6-8) |<br />
+| Induction &amp; intestinal immune surveillance | nipi-3 is transcriptionally induced by translational stress (Pseudomonas exotoxin A/ToxA) and is essential for survival to P. aeruginosa and ToxA; acts in intestinal surveillance and functions largely in parallel to PMK-1. | nipi-3 upregulated ~4.3-fold by ToxA; nipi-3(fr4) shows dramatically reduced survival on ToxA (P &lt; 0.0001); NanoString/microarray validated immune gene misregulation (dozens of genes). | Interacts genetically with bZIP CEBP-1 (NIPI-3 negatively regulates CEBP-1); functions parallel to PMK-1/p38 signaling in intestine. | Functions post-developmentally in intestinal epithelial cells for immune gene expression. | McEwan et al., BMC Biology (2016) https://doi.org/10.1186/s12915-016-0334-6 (mcewan2016tribblesortholognipi3 pages 2-4) |<br />
+| Developmental regulation &amp; mechanism | NIPI-3 is essential for larval development/viability and acts as a negative regulator of CEBP-1 to restrain PMK-1/p38 signaling during development; cebp-1 loss suppresses nipi-3 null lethality. | nipi-3 null causes L2–L3 arrest and death (lethality observed 5–10 days post-hatch); ChIP-seq of CEBP-1 shows targets enriched for development and stress-response genes. | NIPI-3 inhibits CEBP-1 → transcriptional activation of sek-1 → PMK-1; genetic epistasis: loss of sek-1/pmk-1 suppresses nipi-3(0) lethality. | Required in multiple tissues (epidermis, intestine, neurons); NIPI-3 shows predominantly nuclear localization and non-cell-autonomous roles for development. | Kim et al., BMC Biology (2016) https://doi.org/10.1186/s12915-016-0320-z (kim2016coordinatedinhibitionof pages 2-5) |<br />
+| Novel downstream regulators &amp; feedback (genetic screens) | Forward genetic/suppressor screens revealed novel regulators (NatC N-terminal acetyltransferase complex, HDAC hda-4) acting downstream of NIPI-3/CEBP-1; uncovered transcriptional feedback where PMK-1/MAK-2 promote sek-1 transcription. | Unbiased suppressor screens recovered mutations in cebp-1, mak-2, tir-1, nsy-1, sek-1; sek-1 transcriptional reporter showed feedback (reporter-based quantitation; suppressor counts reported). | Reinforces NIPI-3 → CEBP-1 → sek-1 → PMK-1 axis and identifies chromatin/N-terminal acetylation modulators as downstream effectors. | Multi-tissue requirement; sek-1 reporter used to detect tissue-specific transcriptional feedback. | Malinow et al., Scientific Reports (2022) https://doi.org/10.1038/s41598-022-20361-x (malinow2022forwardgeneticscreening pages 11-12) |<br />
+| Integrated functional summary &amp; broader context | NIPI-3 functions context-dependently: promotes PMK-1 activation cell-autonomously in epidermal immune responses but restrains PMK-1 via repression of CEBP-1 during development; role consistent with Tribbles pseudokinases acting as scaffolds/adaptors rather than active kinases. | Multiple genetic and transcriptional datasets (microarray, NanoString, ChIP-seq, suppressor screens) report altered immune/developmental gene sets (dozens to &gt;100 genes) and significant survival defects in nipi-3 mutants. | Central node interacting with CEBP-1 (bZIP), TIR-1/NSY-1/SEK-1 (p38 cascade), MAK-2/PMK-1 feedback loops, and chromatin/NatC/HDA regulators. | Tissue- and context-dependent: epidermis (AMP induction), intestine (surveillance), multiple somatic tissues required for development; predominantly nuclear localization and regulatory/scaffolding functions. | Synthesis from Pujol 2008, McEwan 2016, Kim 2016, Malinow 2022 (pujol2008distinctinnateimmune pages 6-8, mcewan2016tribblesortholognipi3 pages 2-4, kim2016coordinatedinhibitionof pages 2-5, malinow2022forwardgeneticscreening pages 11-12) |</p>
+<p><em>Table: Table summarizing key experimental findings for C. elegans nipi-3 (UniProt G5EED4), showing quantitative results, pathway placement (PMK-1/p38, CEBP-1), tissue localization, and primary sources (context IDs).</em></p>
+<p>Conclusions<br />
+- NIPI-3 (G5EED4) is a C. elegans Tribbles-family pseudokinase that integrates developmental and innate immune signaling. In epidermal defense, it acts upstream of the canonical p38 MAPK pathway to drive AMP gene induction. In development, it restrains PMK-1 activity by repressing CEBP-1 and its target sek-1, preventing lethal hyperactivation of the p38 module. Tissue-restricted, largely nuclear expression and strong genetic interactions with CEBP-1 and p38 pathway genes position NIPI-3 as a master regulator of stress–development tradeoffs. 2022 suppressor and reporter studies expanded this framework, revealing feedback and chromatin/N-terminal acetylation modulators downstream of NIPI-3. Open biochemical questions remain regarding direct molecular mechanisms of CEBP-1 repression and any catalytic functions of NIPI-3. Collectively, these data establish NIPI-3 as a central adaptor orchestrating context-dependent control of p38 MAPK signaling in vivo (Pujol et al., 2008; McEwan et al., 2016; Kim et al., 2016; Malinow et al., 2022). (pujol2008distinctinnateimmune pages 6-8, mcewan2016tribblesortholognipi3 pages 1-2, kim2016coordinatedinhibitionof pages 2-5, malinow2022forwardgeneticscreening pages 11-12, malinow2022novelsignalingmechanisms pages 83-90)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pujol2008distinctinnateimmune pages 6-8): Nathalie Pujol, Sophie Cypowyj, Katja Ziegler, Anne Millet, Aline Astrain, Alexandr Goncharov, Yishi Jin, Andrew D. Chisholm, and Jonathan J. Ewbank. Distinct innate immune responses to infection and wounding in the c. elegans epidermis. Current Biology, 18:481-489, Apr 2008. URL: https://doi.org/10.1016/j.cub.2008.02.079, doi:10.1016/j.cub.2008.02.079. This article has 374 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2016coordinatedinhibitionof pages 2-5): Kyung Won Kim, Nishant Thakur, Christopher A. Piggott, Shizue Omi, Jolanta Polanowska, Yishi Jin, and Nathalie Pujol. Coordinated inhibition of c/ebp by tribbles in multiple tissues is essential for caenorhabditis elegans development. BMC Biology, Dec 2016. URL: https://doi.org/10.1186/s12915-016-0320-z, doi:10.1186/s12915-016-0320-z. This article has 45 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2016coordinatedinhibitionof pages 1-2): Kyung Won Kim, Nishant Thakur, Christopher A. Piggott, Shizue Omi, Jolanta Polanowska, Yishi Jin, and Nathalie Pujol. Coordinated inhibition of c/ebp by tribbles in multiple tissues is essential for caenorhabditis elegans development. BMC Biology, Dec 2016. URL: https://doi.org/10.1186/s12915-016-0320-z, doi:10.1186/s12915-016-0320-z. This article has 45 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2016coordinatedinhibitionof pages 9-11): Kyung Won Kim, Nishant Thakur, Christopher A. Piggott, Shizue Omi, Jolanta Polanowska, Yishi Jin, and Nathalie Pujol. Coordinated inhibition of c/ebp by tribbles in multiple tissues is essential for caenorhabditis elegans development. BMC Biology, Dec 2016. URL: https://doi.org/10.1186/s12915-016-0320-z, doi:10.1186/s12915-016-0320-z. This article has 45 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcewan2016tribblesortholognipi3 pages 2-4): Deborah L. McEwan, Rhonda L. Feinbaum, Nicholas Stroustrup, Wilhelm Haas, Annie L. Conery, Anthony Anselmo, Ruslan Sadreyev, and Frederick M. Ausubel. Tribbles ortholog nipi-3 and bzip transcription factor cebp-1 regulate a caenorhabditis elegans intestinal immune surveillance pathway. BMC Biology, Dec 2016. URL: https://doi.org/10.1186/s12915-016-0334-6, doi:10.1186/s12915-016-0334-6. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcewan2016tribblesortholognipi3 pages 1-2): Deborah L. McEwan, Rhonda L. Feinbaum, Nicholas Stroustrup, Wilhelm Haas, Annie L. Conery, Anthony Anselmo, Ruslan Sadreyev, and Frederick M. Ausubel. Tribbles ortholog nipi-3 and bzip transcription factor cebp-1 regulate a caenorhabditis elegans intestinal immune surveillance pathway. BMC Biology, Dec 2016. URL: https://doi.org/10.1186/s12915-016-0334-6, doi:10.1186/s12915-016-0334-6. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(malinow2022forwardgeneticscreening pages 11-12): Rose Aria Malinow, Ming Zhu, Yishi Jin, and Kyung Won Kim. Forward genetic screening identifies novel roles for n-terminal acetyltransferase c and histone deacetylase in c. elegans development. Scientific Reports, Sep 2022. URL: https://doi.org/10.1038/s41598-022-20361-x, doi:10.1038/s41598-022-20361-x. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(malinow2022novelsignalingmechanisms pages 83-90): RA Malinow. Novel signaling mechanisms downstream of nipi-3/tribbles regulate development in caenorhabditis elegans. Unknown journal, 2022.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pujol2008distinctinnateimmune pages 6-8</li>
+<li>kim2016coordinatedinhibitionof pages 2-5</li>
+<li>malinow2022forwardgeneticscreening pages 11-12</li>
+<li>kim2016coordinatedinhibitionof pages 1-2</li>
+<li>kim2016coordinatedinhibitionof pages 9-11</li>
+<li>malinow2022novelsignalingmechanisms pages 83-90</li>
+<li>https://doi.org/10.1016/j.cub.2008.02.079;</li>
+<li>https://doi.org/10.1186/s12915-016-0320-z</li>
+<li>https://doi.org/10.1016/j.cub.2008.02.079</li>
+<li>https://doi.org/10.1186/s12915-016-0334-6</li>
+<li>https://doi.org/10.1038/s41598-022-20361-x</li>
+<li>https://doi.org/10.1038/s41598-022-20361-x;</li>
+<li>https://doi.org/10.1016/j.cub.2008.02.079,</li>
+<li>https://doi.org/10.1186/s12915-016-0320-z,</li>
+<li>https://doi.org/10.1186/s12915-016-0334-6,</li>
+<li>https://doi.org/10.1038/s41598-022-20361-x,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EED4
+gene_symbol: nipi-3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: NIPI-3 is a conserved Tribbles family pseudokinase that serves as an
+  adapter protein regulating innate immune signaling and larval development in C.
+  elegans. Despite containing a protein kinase domain, NIPI-3 lacks key catalytic
+  residues and is predicted to be catalytically inactive. It functions primarily in
+  epidermal immunity against fungal pathogens (D. coniospora) by acting upstream of
+  the PMK-1/p38 MAPK cascade to induce antimicrobial peptide genes (nlp-29, nlp-31).
+  In the intestine, NIPI-3 mediates defense against Gram-negative (P. aeruginosa)
+  and Gram-positive bacteria by negatively regulating the C/EBP transcription factor
+  CEBP-1, which in turn controls VHP-1 phosphatase levels and PMK-1 phosphorylation
+  status. NIPI-3 directly interacts with CEBP-1 and represses its transcription. Loss
+  of nipi-3 causes larval arrest at L2-L3, demonstrating its essential role in development
+  beyond immunity. The protein localizes to nuclei in epidermis, intestine, and neurons.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: NIPI-3 localizes predominantly to nuclei in epidermis, intestine, and
+      neurons, as demonstrated by GFP knock-in studies (PMID:27927209). This nuclear
+      localization is consistent with its role in transcriptional regulation of cebp-1.
+    action: ACCEPT
+    reason: This annotation is well-supported by experimental evidence. PMID:27927209
+      demonstrates nuclear localization of NIPI-3 using a GFP knock-in strain. This
+      localization is also consistent with the functional role of NIPI-3 in transcriptional
+      repression of cebp-1. The IBA annotation based on phylogenetic inference is
+      supported by direct experimental evidence in C. elegans.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: GFP::NIPI-3 expression was observed predominantly in the nuclei
+        (Fig. 1i), with an overall intensity peaking at the L2-L3 stages. This nuclear
+        localization suggests a role for NIPI-3 in regulation of gene expression.
+- term:
+    id: GO:0031434
+    label: mitogen-activated protein kinase kinase binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: NIPI-3 functions upstream of the p38 MAPK cascade in epidermal immunity.
+      While genetic interactions between NIPI-3 and SEK-1 (MAPKK) are well-documented
+      (PMID:18394898, PMID:27927209), direct physical binding to SEK-1 has not been
+      demonstrated in C. elegans. The IBA annotation is based on mammalian Tribbles
+      proteins which do interact with MAPK pathway components.
+    action: ACCEPT
+    reason: The IBA annotation is phylogenetically reasonable. Mammalian Tribbles
+      proteins interact with MAPK pathway components. In C. elegans, NIPI-3 genetically
+      acts upstream of the SEK-1/PMK-1 cascade, though the molecular mechanism may
+      differ from direct binding. PMID:27927209 shows that loss of sek-1 suppresses
+      nipi-3 null lethality, indicating functional interaction. The annotation appropriately
+      captures the conserved relationship between Tribbles and MAPK signaling.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: Among the other suppressors of nipi-3(0), we found missense
+        alterations in TIR-1/the sterile alpha (SAM) and Toll-interleukin receptor
+        (TIR) motif-containing protein SARM), NSY-1/MAPKKK, SEK-1/MAPKK and MAK-2/MAPK-activated
+        protein kinase (MAPKAPK)
+    - reference_id: PMID:18394898
+      supporting_text: We identify a kinase, NIPI-3, related to human Tribbles homolog
+        1, that is likely to act upstream of the MAPKK SEK-1.
+- term:
+    id: GO:0032436
+    label: positive regulation of proteasomal ubiquitin-dependent protein catabolic
+      process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Mammalian Tribbles proteins (TRIB1, TRIB2) promote C/EBP protein degradation
+      via the ubiquitin-proteasome system. In C. elegans, NIPI-3 regulates CEBP-1
+      at the transcriptional level rather than through proteasomal degradation (PMID:27927209).
+    action: KEEP_AS_NON_CORE
+    reason: The IBA annotation is phylogenetically inferred from mammalian Tribbles
+      which do promote C/EBP degradation. However, in C. elegans, NIPI-3 appears to
+      regulate CEBP-1 primarily at the transcriptional level. PMID:27927209 states
+      that a translational reporter showed no detectable differences in GFP expression
+      in a nipi-3(0) background, indicating post-translational regulation is not the
+      primary mechanism. The annotation may still apply to some extent given the conserved
+      Tribbles-C/EBP interaction but is not a core function in C. elegans.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: Consistent with the observed transcriptional regulation, we
+        found that a translational CEBP-1::GFP reporter driven by a heterologous epidermal
+        promoter showed no detectable differences in GFP expression in a nipi-3(0)
+        background
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: NIPI-3 contains a protein kinase domain with predicted ATP binding sites.
+      However, the kinase domain lacks key catalytic residues and is predicted to
+      be catalytically inactive (pseudokinase).
+    action: ACCEPT
+    reason: The UniProt annotation indicates ATP binding sites at positions 206-214
+      and 235. While NIPI-3 is a pseudokinase, pseudokinases often retain nucleotide
+      binding capability even though they lack catalytic activity. The IEA annotation
+      based on keyword mapping is appropriate as it does not imply catalytic function.
+      UniProt explicitly states the kinase domain is predicted to be catalytically
+      inactive but still annotates ATP binding.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: The Tribbles genes encode a family of highly conserved pseudokinases
+        which lack key catalytic amino acids in the kinase domain
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: NIPI-3 contains an InterPro-recognized protein kinase domain (IPR000719).
+      However, multiple sources confirm that NIPI-3 is a pseudokinase lacking catalytic
+      activity.
+    action: REMOVE
+    reason: This annotation is incorrect. NIPI-3 is a well-characterized pseudokinase
+      that lacks key catalytic residues and is not expected to have protein kinase
+      activity. UniProt explicitly states the protein kinase domain is predicted to
+      be catalytically inactive (PROSITE-ProRule:PRU00159). PMID:27927209 confirms
+      this. The IEA annotation based solely on domain presence is misleading for this
+      pseudokinase.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: The Tribbles genes encode a family of highly conserved pseudokinases
+        which lack key catalytic amino acids in the kinase domain
+    - reference_id: PMID:22470487
+      supporting_text: nipi-4 encodes a nematode-specific protein with a kinase-like
+        domain that is predicted to be a pseudokinase
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Based on InterPro kinase domain and UniProt keyword mapping. NIPI-3 contains
+      ATP binding motifs in its kinase domain despite being a pseudokinase.
+    action: ACCEPT
+    reason: Pseudokinases can retain ATP binding capability even without catalytic
+      activity. UniProt annotates specific ATP binding sites at positions 206-214
+      and 235, suggesting the structure accommodates ATP. This is consistent with
+      many characterized pseudokinases that bind ATP for regulatory purposes. The
+      annotation is appropriate.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: nipi-3 encodes a pseudokinase of the Tribbles family
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProt subcellular location mapping. This is
+      redundant with the IBA annotation and is supported by direct experimental evidence.
+    action: ACCEPT
+    reason: Nuclear localization is well-documented experimentally (PMID:27927209).
+      This IEA annotation is consistent with the IBA annotation and experimental data.
+      Duplicate annotations with different evidence codes are acceptable in GO.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: GFP::NIPI-3 expression was observed predominantly in the nuclei
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:27927200
+  review:
+    summary: NIPI-3 is required for proper expression of immune genes in both unstressed
+      and infected animals. nipi-3 mutants show widespread misregulation of pathogen-responsive
+      genes (PMID:27927200). NIPI-3 also represses transcription of cebp-1 (PMID:27927209).
+    action: ACCEPT
+    reason: The annotation is well-supported. PMID:27927200 demonstrates in the abstract
+      that NIPI-3 protects against intestinal infection by negatively regulating CEBP-1.
+      PMID:27927209 shows that nipi-3 is necessary for the proper expression of immune
+      genes.
+    supported_by:
+    - reference_id: PMID:27927200
+      supporting_text: NIPI-3 is a negative regulator of CEBP-1, which in turn negatively
+        regulates protective immune mechanisms
+    - reference_id: PMID:27927209
+      supporting_text: NIPI-3 negatively regulates expression of cebp-1 at the transcriptional
+        level
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:34407394
+  review:
+    summary: NIPI-3 negatively regulates CEBP-1 expression, which in turn affects
+      downstream gene expression including vhp-1. Loss of nipi-3 leads to increased
+      CEBP-1 levels and subsequent upregulation of VHP-1 (PMID:34407394).
+    action: ACCEPT
+    reason: The annotation is supported by the finding that NIPI-3 negatively regulates
+      CEBP-1 transcription. PMID:34407394 states in the abstract that NIPI-3 protects
+      against intestinal infection by negatively regulating CEBP-1.
+    supported_by:
+    - reference_id: PMID:34407394
+      supporting_text: NIPI-3 has been reported to protect against intestinal infection
+        by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription
+        factor CEBP-1
+    - reference_id: PMID:27927209
+      supporting_text: NIPI-3 negatively regulates expression of cebp-1 at the transcriptional
+        level
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:27927200
+  review:
+    summary: nipi-3(fr4) mutants are hypersusceptible to Pseudomonas aeruginosa. Intestinal
+      NIPI-3 is both necessary and sufficient to mediate defense against this Gram-negative
+      pathogen (PMID:27927200).
+    action: ACCEPT
+    reason: This is a well-characterized core function of NIPI-3. PMID:27927200 abstract
+      indicates that NIPI-3 protects against intestinal infection. Defense against
+      P. aeruginosa is a key immune function.
+    supported_by:
+    - reference_id: PMID:27927200
+      supporting_text: the Tribbles pseudokinase ortholog nipi-3, is essential for
+        host survival following exposure to P. aeruginosa or ToxA
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:34407394
+  review:
+    summary: nipi-3 knockdown in intestinal cells causes hypersusceptibility to the
+      Gram-positive bacterium Enterococcus faecalis (PMID:34407394, PMID:27927200).
+    action: ACCEPT
+    reason: PMID:34407394 demonstrates that NIPI-3 protects against intestinal infection.
+      This is consistent with NIPI-3&#39;s role in intestinal immunity and represents
+      a core immune function.
+    supported_by:
+    - reference_id: PMID:34407394
+      supporting_text: NIPI-3 has been reported to protect against intestinal infection
+        by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription
+        factor CEBP-1
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:27927209
+  review:
+    summary: NIPI-3 represses transcription of cebp-1 in multiple tissues. Loss of
+      nipi-3 results in increased cebp-1 mRNA levels (PMID:27927209).
+    action: ACCEPT
+    reason: This is a core function. PMID:27927209 shows that the expression of the
+      cebp-1 transcriptional reporter was highly and significantly increased in nipi-3
+      mutants and Quantitative RT-PCR analysis also showed significantly increased
+      expression of cebp-1 mRNAs. This negative transcriptional regulation is central
+      to NIPI-3 function.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: Strikingly, the expression of the cebp-1 transcriptional reporter
+        was highly and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants,
+        compared with wild-type animals
+    - reference_id: PMID:27927209
+      supporting_text: Quantitative RT-PCR analysis also showed significantly increased
+        expression of cebp-1 mRNAs in nipi-3 mutant animals
+- term:
+    id: GO:0140297
+    label: DNA-binding transcription factor binding
+  evidence_type: IPI
+  original_reference_id: PMID:27927209
+  review:
+    summary: NIPI-3 physically interacts with CEBP-1, a bZIP transcription factor.
+      The N-terminal region of CEBP-1 is sufficient for binding NIPI-3 (PMID:27927209).
+    action: ACCEPT
+    reason: Yeast two-hybrid studies demonstrated direct physical interaction between
+      NIPI-3 and CEBP-1. PMID:27927209 identified CEBP-1 as a prominent candidate
+      interacting partner and showed that the N-terminal region of CEBP-1 was sufficient
+      for binding NIPI-3. This is a core molecular function.
+    supported_by:
+    - reference_id: PMID:27927209
+      supporting_text: One prominent candidate interacting partner was CEBP-1, a member
+        of the C/EBP family of transcription factors
+    - reference_id: PMID:27927209
+      supporting_text: In further analyses using the yeast two-hybrid assay, we found
+        that the N-terminal region (amino acids 1-115) of CEBP-1 was sufficient for
+        binding NIPI-3
+- term:
+    id: GO:0010628
+    label: positive regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:18394898
+  review:
+    summary: NIPI-3 is required for induction of antimicrobial peptide genes nlp-29
+      and nlp-31 in the epidermis after fungal infection. Loss of nipi-3 results in
+      failure to upregulate these genes (PMID:18394898).
+    action: ACCEPT
+    reason: PMID:18394898 shows in the abstract that mutants were isolated that failed
+      to induce nlp-29 expression after D. coniospora infection, including NIPI-3.
+      This positive regulation of AMP gene expression is a core function of NIPI-3
+      in epidermal immunity.
+    supported_by:
+    - reference_id: PMID:18394898
+      supporting_text: Through a forward genetic screen, we isolated mutants that
+        failed to induce nlp-29 expression after D. coniospora infection. We identify
+        a kinase, NIPI-3, related to human Tribbles homolog 1, that is likely to act
+        upstream of the MAPKK SEK-1.
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:22470487
+  review:
+    summary: nipi-3 mutants fail to induce antimicrobial peptide genes after D. coniospora
+      infection. PMID:22470487 describes nipi-3 in the context of fungal defense pathways.
+    action: ACCEPT
+    reason: This is a core function of NIPI-3. Multiple studies (PMID:18394898, PMID:22470487)
+      demonstrate that NIPI-3 is essential for the epidermal innate immune response
+      to fungal infection. The name &#34;nipi&#34; stands for &#34;no induction of peptide after
+      Drechmeria infection.&#34;
+    supported_by:
+    - reference_id: PMID:22470487
+      supporting_text: infection specifically involves the Tribbles-like kinase NIPI-3
+- term:
+    id: GO:0061760
+    label: antifungal innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:18394898
+  review:
+    summary: NIPI-3 is required for the epidermal innate immune response to fungal
+      infection by D. coniospora. It acts upstream of the p38 MAPK cascade to induce
+      antimicrobial peptides (PMID:18394898).
+    action: ACCEPT
+    reason: This is the defining function for which nipi-3 was named. PMID:18394898
+      shows in the abstract that NIPI-3 is required specifically for nlp-29 induction
+      after fungal infection and not after wounding. The annotation accurately captures
+      this specific immune function.
+    supported_by:
+    - reference_id: PMID:18394898
+      supporting_text: We find NIPI-3 is required only for nlp-29 induction after
+        infection and not after wounding.
+    - reference_id: PMID:18394898
+      supporting_text: We identify a kinase, NIPI-3, related to human Tribbles homolog
+        1, that is likely to act upstream of the MAPKK SEK-1.
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:18394898
+  review:
+    summary: Same as above entry from PMID:22470487. NIPI-3 is essential for antifungal
+      defense in the epidermis.
+    action: ACCEPT
+    reason: Duplicate annotation with different reference. Both PMIDs support this
+      core function. PMID:18394898 originally characterized nipi-3&#39;s role in fungal
+      defense.
+    supported_by:
+    - reference_id: PMID:18394898
+      supporting_text: We identify a kinase, NIPI-3, related to human Tribbles homolog
+        1, that is likely to act upstream of the MAPKK SEK-1. We find NIPI-3 is required
+        only for nlp-29 induction after infection
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:18394898
+  title: Distinct innate immune responses to infection and wounding in the C. elegans
+    epidermis.
+  full_text_unavailable: true
+  findings:
+  - statement: NIPI-3 was first identified as a kinase required for induction of nlp-29
+      after D. coniospora infection
+    supporting_text: Through a forward genetic screen, we isolated mutants that failed
+      to induce nlp-29 expression after D. coniospora infection. We identify a kinase,
+      NIPI-3, related to human Tribbles homolog 1
+  - statement: NIPI-3 acts upstream of the MAPKK SEK-1
+    supporting_text: We identify a kinase, NIPI-3, related to human Tribbles homolog
+      1, that is likely to act upstream of the MAPKK SEK-1.
+  - statement: NIPI-3 is required specifically for infection-induced but not wound-induced
+      nlp-29 expression
+    supporting_text: We find NIPI-3 is required only for nlp-29 induction after infection
+      and not after wounding.
+- id: PMID:22470487
+  title: The pseudokinase NIPI-4 is a novel regulator of antimicrobial peptide gene
+    expression.
+  findings:
+  - statement: Describes NIPI-3 in context of epidermal immunity pathway
+    supporting_text: infection specifically involves the Tribbles-like kinase NIPI-3
+  - statement: Infection specifically involves the Tribbles-like kinase NIPI-3
+    supporting_text: infection specifically involves the Tribbles-like kinase NIPI-3
+- id: PMID:27927200
+  title: Tribbles ortholog NIPI-3 and bZIP transcription factor CEBP-1 regulate a
+    Caenorhabditis elegans intestinal immune surveillance pathway.
+  findings:
+  - statement: NIPI-3 is essential for host survival following exposure to P. aeruginosa
+      or ToxA
+    supporting_text: the Tribbles pseudokinase ortholog nipi-3, is essential for host
+      survival following exposure to P. aeruginosa or ToxA
+  - statement: NIPI-3 is a negative regulator of CEBP-1
+    supporting_text: NIPI-3 is a negative regulator of CEBP-1, which in turn negatively
+      regulates protective immune mechanisms
+- id: PMID:27927209
+  title: Coordinated inhibition of C/EBP by Tribbles in multiple tissues is essential
+    for Caenorhabditis elegans development.
+  findings:
+  - statement: nipi-3 null mutants arrest at L2-L3 and die within 5-10 days
+    supporting_text: Mutants arrested development at the second to third larval stages
+      (L2-L3) (see below) and eventually died between 5-10 days after hatching.
+  - statement: NIPI-3 physically interacts with CEBP-1 via yeast two-hybrid
+    supporting_text: One prominent candidate interacting partner was CEBP-1, a member
+      of the C/EBP family of transcription factors
+  - statement: Loss of cebp-1 completely suppresses nipi-3 null lethality
+    supporting_text: Remarkably, cebp-1(0) completely suppressed the growth and fertility
+      defects of nipi-3(0) mutants
+  - statement: NIPI-3 represses cebp-1 transcription in multiple tissues
+    supporting_text: Strikingly, the expression of the cebp-1 transcriptional reporter
+      was highly and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants,
+      compared with wild-type animals
+  - statement: NIPI-3 localizes predominantly to nuclei in epidermis, intestine, and
+      neurons
+    supporting_text: GFP::NIPI-3 expression was observed predominantly in the nuclei
+      (Fig. 1i), with an overall intensity peaking at the L2-L3 stages.
+  - statement: NIPI-3 negatively modulates PMK-1 phosphorylation via CEBP-1
+    supporting_text: levels of active PMK-1 were significantly increased in nipi-3(0),
+      but remained similar to wild type in cebp-1(0) and cebp-1(0) nipi-3(0) animals
+  - statement: Loss of PMK-1 pathway components also suppresses nipi-3 null lethality
+    supporting_text: Among the other suppressors of nipi-3(0), we found missense alterations
+      in TIR-1/the sterile alpha (SAM) and Toll-interleukin receptor (TIR) motif-containing
+      protein SARM), NSY-1/MAPKKK, SEK-1/MAPKK and MAK-2/MAPK-activated protein kinase
+      (MAPKAPK)
+- id: PMID:34407394
+  title: Tribbles pseudokinase NIPI-3 regulates intestinal immunity in Caenorhabditis
+    elegans by controlling SKN-1/Nrf activity.
+  full_text_unavailable: true
+  findings:
+  - statement: NIPI-3 is a positive regulator of SKN-1 activity
+    supporting_text: &#39;another positive regulator of SKN-1 is identified: NIPI-3, a
+      Tribbles pseudokinase&#39;
+  - statement: NIPI-3 negatively regulates CEBP-1 which positively regulates vhp-1
+    supporting_text: NIPI-3 has been reported to protect against intestinal infection
+      by negatively regulating the CCAT enhancer binding protein (C/EBP) bZIP transcription
+      factor CEBP-1
+  - statement: VHP-1 is a phosphatase that dephosphorylates PMK-1
+    supporting_text: CEBP-1 positively regulates the vhp-1 transcript, which encodes
+      a phosphatase that dephosphorylates the p38 MAPK called PMK-1
+core_functions:
+- description: NIPI-3 functions as an adapter pseudokinase that binds to and negatively
+    regulates the CEBP-1 transcription factor. Through this interaction, NIPI-3 coordinates
+    innate immune responses in epidermis (antifungal) and intestine (antibacterial)
+    and modulates MAPK signaling and transcription factor activity.
+  molecular_function:
+    id: GO:0140297
+    label: DNA-binding transcription factor binding
+  directly_involved_in:
+  - id: GO:0061760
+    label: antifungal innate immune response
+  - id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  - id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  - id: GO:0050832
+    label: defense response to fungus
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:27927209
+    supporting_text: One prominent candidate interacting partner was CEBP-1, a member
+      of the C/EBP family of transcription factors
+  - reference_id: PMID:18394898
+    supporting_text: We identify a kinase, NIPI-3, related to human Tribbles homolog
+      1, that is likely to act upstream of the MAPKK SEK-1.
+- description: NIPI-3 negatively regulates transcription of cebp-1, preventing excessive
+    CEBP-1 activity that would cause developmental arrest and impaired immunity. This
+    repression is central to both developmental and immune functions of NIPI-3.
+  molecular_function:
+    id: GO:0140297
+    label: DNA-binding transcription factor binding
+  directly_involved_in:
+  - id: GO:0010629
+    label: negative regulation of gene expression
+  - id: GO:0010468
+    label: regulation of gene expression
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:27927209
+    supporting_text: NIPI-3 negatively regulates expression of cebp-1 at the transcriptional
+      level
+  - reference_id: PMID:27927209
+    supporting_text: the expression of the cebp-1 transcriptional reporter was highly
+      and significantly increased in both nipi-3(fr4) and nipi-3(0) mutants
+proposed_new_terms: []
+suggested_questions:
+- question: Does NIPI-3 retain any nucleotide binding or have structural roles independent
+    of catalysis?
+  experts: []
+- question: What is the mechanism by which nuclear NIPI-3 represses cebp-1 transcription?
+  experts: []
+- question: Are there additional transcription factor targets of NIPI-3 beyond CEBP-1?
+  experts: []
+suggested_experiments:
+- description: Crystallographic or cryo-EM studies of NIPI-3 to determine if it binds
+    ATP
+- description: ChIP-seq for NIPI-3 to identify direct transcriptional targets
+- description: Mass spectrometry to identify additional NIPI-3 interaction partners
+    beyond CEBP-1
+tags:
+- caeel-surveillance-immunity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

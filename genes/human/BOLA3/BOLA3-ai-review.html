@@ -1,0 +1,3456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOLA3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BOLA3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q53S33" target="_blank" class="term-link">
+                        Q53S33
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BOLA3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q53S33" data-a="DESCRIPTION: BOLA3 is a mitochondrial BolA-family protein that ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BOLA3 is a mitochondrial BolA-family protein that functions as a late-acting iron-sulfur (Fe-S) cluster assembly factor. BOLA3 forms a heterocomplex with the mitochondrial monothiol glutaredoxin GLRX5, bridged by a [2Fe-2S] cluster (coordinated by BOLA3 Cys59 and His96, and GLRX5 Cys67 plus glutathione). This GLRX5-BOLA3 complex acts as a [2Fe-2S] carrier/chaperone that delivers cluster equivalents to NFU1, where two [2Fe-2S] clusters are converted to a [4Fe-4S] cluster for insertion into downstream client proteins including lipoyl synthase (LIAS), succinate dehydrogenase, and the mitoribosome. BOLA3 deficiency causes Multiple Mitochondrial Dysfunctions Syndrome type 2 (MMDS2), characterized by defective protein lipoylation, impaired respiratory chain complex activities, and attenuated mitochondrial translation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051604" target="_blank" class="term-link">
+                                    GO:0051604
+                                </a>
+                            </span>
+                            <span class="term-label">protein maturation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0051604" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures BOLA3&#39;s role in facilitating Fe-S cluster insertion into mitochondrial proteins, which is a form of protein maturation. BOLA3 functions in the late ISC pathway to enable [4Fe-4S] protein maturation (PMID:27532772).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While &#34;protein maturation&#34; is technically accurate, it is too general. BOLA3 specifically functions in iron-sulfur cluster assembly and insertion. More precise terms exist that better describe the molecular function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016226" target="_blank" class="term-link">
+                                    iron-sulfur cluster assembly
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044572" target="_blank" class="term-link">
+                                    [4Fe-4S] cluster assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bol1 and Bol3 as specific mitochondrial ISC assembly factors that facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial proteins such as lipoate synthase and succinate dehydrogenase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BOLA3 localizes to mitochondria where it functions in the mitochondrial ISC assembly pathway. Multiple lines of evidence support mitochondrial localization (PMID:22746225, PMID:27532772).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The mitochondrial matrix localization is well-supported by phylogenetic inference (IBA) and is consistent with experimental data. BOLA3 functions within the mitochondrial ISC pathway alongside GLRX5 and NFU1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                                        PMID:22746225
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BOLA1 is a mitochondrial protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mitochondrial Bol1 and Bol3 function as assembly factors for specific iron-sulfur proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005739" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated annotation of mitochondrial localization is correct and consistent with experimental data showing BOLA3 is a mitochondrial protein (PMID:22746225).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is broader than the IBA to mitochondrial matrix but is not incorrect. Multiple annotations at different specificity levels are acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                                        PMID:22746225
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that BOLA1 is a mitochondrial protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005515" data-r="PMID:27499296" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures interaction with GLRX5 from a mitochondrial protein interaction mapping study. The interaction is functionally significant.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Protein binding&#34; is too vague and uninformative. BOLA3 specifically binds GLRX5 to form a Fe-S cluster-bridged heterocomplex. A more informative MF term should be used.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    2 iron, 2 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BOLA1 or BOLA3 and GLRX5 at the atomic level</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005515" data-r="PMID:27532772" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects the physical interaction between BOLA3 and GLRX5 demonstrated by NMR spectroscopy. BOLA3 forms a [2Fe-2S]-bridged heterocomplex with GLRX5, with BOLA3 Cys59 and His96 serving as cluster ligands (PMID:27532772).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Protein binding&#34; does not capture the specific nature of the BOLA3-GLRX5 interaction. The interaction involves forming a Fe-S cluster-bridged complex essential for cluster transfer.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    2 iron, 2 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The structures of (A) BOLA1 and (B) BOLA3 were solved by solution NMR. Residues His58, His67 and His102 are conserved within the eukaryotic BOLA1 proteins, and residues Cys59 and His96 are conserved within the BOLA3 proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput binary interactome mapping study. The specific interaction partners from this study include GLRX5.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic &#34;protein binding&#34; from HTP studies provides limited functional insight. The functionally relevant interactions (GLRX5, NFU1) are better captured through more specific annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dual proteome-scale interactome study. This is a high-throughput study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic &#34;protein binding&#34; from HTP proteome-scale studies is not informative for functional annotation. The core BOLA3-GLRX5 interaction is better captured with more specific terms.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34063696" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34063696
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular Basis of Multiple Mitochondrial Dysfunctions Syndr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005515" data-r="PMID:34063696" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This study examined the C59Y BOLA3 variant and demonstrated that the mutant still forms a heterocomplex with GLRX5, though with altered properties. The interaction between BOLA3 and GLRX5 involves [2Fe-2S] cluster coordination.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study provides detailed molecular characterization of the BOLA3-GLRX5 interaction showing cluster binding. More specific terms should be used.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    2 iron, 2 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34063696" target="_blank" class="term-link">
+                                        PMID:34063696
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence data supporting mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for mitochondrial localization is consistent with the known function of BOLA3 in the mitochondrial ISC assembly pathway.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22746225
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BOLA1 is an aerobic protein that prevents mitochondrial morp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005739" data-r="PMID:22746225" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This study primarily characterized BOLA1 but also demonstrated that the BolA family proteins are mitochondrial. BOLA3 was mentioned in the context of mitochondrial Fe-S cluster biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study provides supporting evidence for mitochondrial localization of the BolA family proteins, consistent with their role in mitochondrial ISC assembly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                                        PMID:22746225
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BOLA3 has recently been implicated in the biogenesis of [Fe-S] clusters for oxidative phosphorylation complexes and 2-oxo acid dehydrogenase enzymes in mitochondria</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006879" target="_blank" class="term-link">
+                                    GO:0006879
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular iron ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0006879" data-r="PMID:27532772" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The BOLA3-GLRX5 complex functions in Fe-S cluster assembly, which indirectly affects iron homeostasis. However, BOLA3&#39;s primary role is in Fe-S cluster biogenesis rather than direct iron sensing or trafficking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While BOLA3 does influence iron homeostasis through its role in Fe-S cluster assembly, this is a downstream consequence rather than the core function. The primary role is in [4Fe-4S] cluster assembly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Bol1 and Bol3 as specific mitochondrial ISC assembly factors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016226" target="_blank" class="term-link">
+                                    GO:0016226
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0016226" data-r="PMID:27532772" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BOLA3 functions in the late phase of mitochondrial Fe-S cluster assembly, specifically facilitating [4Fe-4S] cluster insertion into target proteins. The GLRX5-BOLA3 complex delivers [2Fe-2S] clusters to NFU1 for [4Fe-4S] assembly (PMID:27532772).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function annotation. BOLA3 is a bona fide Fe-S cluster assembly factor as demonstrated by biochemical and genetic studies. The NAS evidence appropriately reflects the complex molecular pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we characterize the BOLA family proteins Bol1 and Bol3 as specific mitochondrial ISC assembly factors that facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial proteins such as lipoate synthase and succinate dehydrogenase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0045454" data-r="PMID:27532772" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BolA proteins interact with glutaredoxins and have been implicated in redox regulation. However, the primary characterized function of BOLA3 is in Fe-S cluster assembly rather than direct redox regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation likely reflects the association with GLRX5, a glutaredoxin. While the BOLA3-GLRX5 interaction is functionally important, the primary role is in Fe-S cluster transfer rather than redox homeostasis per se.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                                        PMID:22746225
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A measured interaction of BOLA1 with the mitochondrial monothiol glutaredoxin GLRX5 provides hints for potential mechanisms behind BOLA1&#39;s effect on mitochondrial redox potential</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-confidence human mitochondrial proteome study confirms mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HTP proteomics evidence is consistent with other evidence for mitochondrial localization of BOLA3.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22746225
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BOLA1 is an aerobic protein that prevents mitochondrial morp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0005739" data-r="PMID:22746225" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from the Willems et al. study that characterized BolA family proteins as mitochondrial.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA evidence for mitochondrial localization is well-supported and consistent with BOLA3&#39;s role in the mitochondrial ISC pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                                        PMID:22746225
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BOLA1 is a mitochondrial protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    GO:0051537
+                                </a>
+                            </span>
+                            <span class="term-label">2 iron, 2 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0051537" data-r="PMID:27532772" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BOLA3 binds a [2Fe-2S] cluster as part of the GLRX5-BOLA3 heterocomplex. NMR and spectroscopic studies demonstrate that BOLA3 Cys59 and His96 serve as cluster ligands (PMID:27532772, PMID:34063696).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function that is well-characterized but not present in the current annotation set. The [2Fe-2S] cluster binding is essential for BOLA3&#39;s function as a cluster carrier.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">residues Cys59 and His96 are conserved within the BOLA3 proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34063696" target="_blank" class="term-link">
+                                        PMID:34063696
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044572" target="_blank" class="term-link">
+                                    GO:0044572
+                                </a>
+                            </span>
+                            <span class="term-label">[4Fe-4S] cluster assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:0044572" data-r="PMID:27532772" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BOLA3 deficiency causes defects in [4Fe-4S] enzyme activities, demonstrating its role in [4Fe-4S] cluster assembly. The GLRX5-BOLA3 complex delivers [2Fe-2S] clusters to NFU1 for [4Fe-4S] assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a more specific term than GO:0016226 (iron-sulfur cluster assembly) and accurately reflects BOLA3&#39;s role in the late ISC pathway for [4Fe-4S] protein maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deficiency of both mitochondrial Bol proteins causes defects in a subset of mitochondrial [4Fe-4S] enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990229" target="_blank" class="term-link">
+                                    GO:1990229
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster assembly complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27532772
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Bol1 and Bol3 function as assembly factors for...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q53S33" data-a="GO:1990229" data-r="PMID:27532772" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BOLA3 is a component of the mitochondrial BOLA3-GLRX5 iron-sulfur cluster assembly complex (ComplexPortal:CPX-6863). This complex functions in Fe-S cluster transfer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ComplexPortal has curated the BOLA3-GLRX5 complex and this annotation appropriately reflects BOLA3&#39;s participation in this assembly complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                        PMID:27532772
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In order to characterize the interaction between BOLA1 or BOLA3 and GLRX5 at the atomic level</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BOLA3 binds a [2Fe-2S] cluster as part of the GLRX5-BOLA3 heterocomplex. The cluster is coordinated by BOLA3 Cys59 and His96 together with GLRX5 Cys67 and glutathione cysteine. Mutations in these ligand residues cause MMDS2 (PMID:27532772, PMID:34063696).</h3>
+                <span class="vote-buttons" data-g="Q53S33" data-a="FUNCTION: BOLA3 binds a [2Fe-2S] cluster as part of the GLRX..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                            2 iron, 2 sulfur cluster binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044572" target="_blank" class="term-link">
+                                [4Fe-4S] cluster assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016226" target="_blank" class="term-link">
+                                iron-sulfur cluster assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990229" target="_blank" class="term-link">
+                            iron-sulfur cluster assembly complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                                PMID:27532772
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we characterize the BOLA family proteins Bol1 and Bol3 as specific mitochondrial ISC assembly factors that facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial proteins such as lipoate synthase and succinate dehydrogenase</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34063696" target="_blank" class="term-link">
+                                PMID:34063696
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 annotated based on phylogenetic inference from yeast orthologs</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22746225" target="_blank" class="term-link">
+                            PMID:22746225
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BOLA1 is an aerobic protein that prevents mitochondrial morphology changes induced by glutathione depletion.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BolA family proteins localize to mitochondria</div>
+                        
+                        <div class="finding-text">"We show that BOLA1 is a mitochondrial protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 implicated in Fe-S cluster biogenesis for OXPHOS complexes</div>
+                        
+                        <div class="finding-text">"BOLA3 has recently been implicated in the biogenesis of [Fe-S] clusters for oxidative phosphorylation complexes and 2-oxo acid dehydrogenase enzymes in mitochondria"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA proteins interact with GLRX5 glutaredoxin</div>
+                        
+                        <div class="finding-text">"A measured interaction of BOLA1 with the mitochondrial monothiol glutaredoxin GLRX5 provides hints for potential mechanisms behind BOLA1&#39;s effect on mitochondrial redox potential"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3-GLRX5 interaction detected in mitochondrial interactome</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27532772" target="_blank" class="term-link">
+                            PMID:27532772
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mitochondrial Bol1 and Bol3 function as assembly factors for specific iron-sulfur proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 is a mitochondrial ISC assembly factor</div>
+                        
+                        <div class="finding-text">"we characterize the BOLA family proteins Bol1 and Bol3 as specific mitochondrial ISC assembly factors"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 facilitates [4Fe-4S] cluster insertion into LIAS and SDH</div>
+                        
+                        <div class="finding-text">"facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial proteins such as lipoate synthase and succinate dehydrogenase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 forms heterocomplex with GLRX5 bridged by [2Fe-2S] cluster</div>
+                        
+                        <div class="finding-text">"Bol1 and Bol3 form dimeric complexes with both monothiol glutaredoxin Grx5 and Nfu1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cys59 and His96 are cluster ligands in BOLA3</div>
+                        
+                        <div class="finding-text">"residues Cys59 and His96 are conserved within the BOLA3 proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 interacts with NFU1 for [4Fe-4S] assembly</div>
+                        
+                        <div class="finding-text">"Bol1 and Bol3 form dimeric complexes with both monothiol glutaredoxin Grx5 and Nfu1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HTP protein interaction data</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HTP proteome-scale interaction data</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34063696" target="_blank" class="term-link">
+                            PMID:34063696
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular Basis of Multiple Mitochondrial Dysfunctions Syndrome 2 Caused by CYS59TYR BOLA3 Mutation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">C59Y mutation perturbs Fe-S cluster-binding region of BOLA3</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">C59Y BOLA3-GLRX5 complex still binds [2Fe-2S] cluster</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutation forms aberrant apo BOLA3-GLRX5 complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Explains partial phenotype recovery in some MMDS2 patients</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BOLA3 identified in high-confidence mitochondrial proteome</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative contribution of BOLA3 vs BOLA1 to different [4Fe-4S] client proteins? Uzarska et al. showed Bol1 and Bol3 have overlapping but distinct client specificities. Understanding this would help interpret MMDS2 pathophysiology.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q53S33" data-a="Q: What is the relative contribution of BOLA3 vs BOLA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BOLA3 have functions independent of the GLRX5-BOLA3 heterocomplex? Some interactions detected in HTP studies may represent additional BOLA3 functions not yet characterized.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q53S33" data-a="Q: Does BOLA3 have functions independent of the GLRX5..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Systematic identification of all BOLA3-dependent [4Fe-4S] client proteins using proteomics in BOLA3-deficient cells. This would provide comprehensive understanding of BOLA3&#39;s role in [4Fe-4S] protein maturation beyond known clients like LIAS and SDH.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BOLA3 deficiency affects specific subset of mitochondrial [4Fe-4S] enzymes that can be comprehensively identified by proteomics.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q53S33" data-a="EXPERIMENT: Systematic identification of all BOLA3-dependent [..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure determination of the BOLA3-GLRX5-[2Fe-2S]-NFU1 transfer complex. This would reveal mechanism of [2Fe-2S] cluster transfer from BOLA3-GLRX5 to NFU1 for [4Fe-4S] assembly.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BOLA3-GLRX5 complex directly interacts with NFU1 during cluster transfer, forming a transient ternary complex.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q53S33" data-a="EXPERIMENT: Structure determination of the BOLA3-GLRX5-[2Fe-2S..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">iron-sulfur-cluster-biogenesis</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BOLA3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q53S33" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T00:22:53.124350'<br />
+end_time: '2025-12-29T00:28:47.190758'<br />
+duration_seconds: 354.07<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: BOLA3<br />
+  gene_symbol: BOLA3<br />
+  uniprot_accession: Q53S33<br />
+  protein_description: 'RecName: Full=BolA-like protein 3 {ECO:0000305};'<br />
+  gene_info: Name=BOLA3 {ECO:0000312|HGNC:HGNC:24415};<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the BolA/IbaG family. .<br />
+  protein_domains: BolA. (IPR002634); BolA-like_sf. (IPR036065); Mt_Fe-S_assembly_factor.<br />
+    (IPR052275); BolA (PF01722)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 30</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q53S33</li>
+<li><strong>Protein Description:</strong> RecName: Full=BolA-like protein 3 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=BOLA3 {ECO:0000312|HGNC:HGNC:24415};</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the BolA/IbaG family. .</li>
+<li><strong>Key Domains:</strong> BolA. (IPR002634); BolA-like_sf. (IPR036065); Mt_Fe-S_assembly_factor. (IPR052275); BolA (PF01722)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "BOLA3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'BOLA3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>BOLA3</strong> (gene ID: BOLA3, UniProt: Q53S33) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q53S33</li>
+<li><strong>Protein Description:</strong> RecName: Full=BolA-like protein 3 {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=BOLA3 {ECO:0000312|HGNC:HGNC:24415};</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the BolA/IbaG family. .</li>
+<li><strong>Key Domains:</strong> BolA. (IPR002634); BolA-like_sf. (IPR036065); Mt_Fe-S_assembly_factor. (IPR052275); BolA (PF01722)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "BOLA3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'BOLA3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>BOLA3</strong> (gene ID: BOLA3, UniProt: Q53S33) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research report: Human BOLA3 (UniProt Q53S33)</p>
+<p>Plan and verification<br />
+- Verified identity: BOLA3 encodes human BolA-like protein 3, a member of the BolA/IbaG family with roles in mitochondrial iron–sulfur (Fe–S) protein biogenesis; recent biochemical and review literature discuss human BOLA3’s function and pathogenic variants, consistent with the UniProt entry (human; BolA family/domain) (bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 40-44).<br />
+- Verified localization: BOLA3 functions within the mitochondrial Fe–S assembly (ISC) pathway, i.e., in mitochondria (zhong2023bola3andnfu1 pages 1-2, sheftel2012thehumanmitochondrial pages 1-2).</p>
+<p>Key concepts and current definitions<br />
+- BOLA3 is a late-acting mitochondrial ISC accessory factor that partners with GLRX5 to form a heterocomplex bridged by a [2Fe–2S] cluster. In this complex, GLRX5 ligates via Cys67 and a glutathione cysteine, and BOLA3 contributes Cys59 and His96 ligands (human numbering). This complex acts as a [2Fe–2S] carrier/chaperone toward late ISC clients, notably NFU1 (bargagna2024molecularpathwaysfora pages 40-44, bargagna2024molecularpathwaysfor pages 40-44).<br />
+- Late ISC network architecture: the GLRX5–BOLA3 node supplies [2Fe–2S] clusters, whereas the ISCA1/ISCA2–IBA57 system and NFU1 are required to assemble and/or deliver [4Fe–4S] clusters to client proteins in mitochondria (zhong2023bola3andnfu1 pages 1-2, sheftel2012thehumanmitochondrial pages 1-2).<br />
+- Downstream processes: Proper BOLA3 function supports maturation of [4Fe–4S] enzymes, including lipoyl synthase (LIAS), thereby enabling protein lipoylation of pyruvate dehydrogenase (PDH), α‑ketoglutarate dehydrogenase (KGDH), and the glycine cleavage system H-protein; BOLA3 also contributes to mitochondrial respiratory complex activities and mitoribosomal Fe–S cluster insertion required for organellar translation (sheftel2012thehumanmitochondrial pages 1-2, zhong2023bola3andnfu1 pages 1-2, baker2014variantnonketotic pages 10-11).</p>
+<p>Recent developments and latest research (emphasis 2023–2024)<br />
+- Mitoribosome Fe–S assembly: Zhong et al. demonstrated that human mitoribosomes contain three [2Fe–2S] clusters and receive them from the GLRX5–BOLA3 node; BOLA3 or NFU1 deficiency attenuates mitochondrial protein synthesis and contributes to the pathophysiology of MMDS (Multiple Mitochondrial Dysfunctions Syndromes). They also propose the ISCA1→NFU1 route inserts a [4Fe–4S] cluster into METTL17, a mitoribosome assembly factor (Nucleic Acids Research; advance access 12 Oct 2023; https://doi.org/10.1093/nar/gkad842) (zhong2023bola3andnfu1 pages 1-2).<br />
+- Variant-level mechanism for MMDS2: Bargagna et al. (2023 IJMS; 2024 review) dissected the pathogenic BOLA3 His96Arg (H96R) mutation. H96R preserves GLRX5 binding but produces an aberrant BOLA3–[2Fe–2S]–GLRX5 complex unable to transfer its cluster to NFU1 to assemble the NFU1 [4Fe–4S] cluster; this mechanistically explains the severe MMDS2 phenotype with impaired respiratory complexes and lipoylation defects. The review also catalogues BOLA3 variants, including Cys59Tyr (ligand site) with partial residual function (2023: https://doi.org/10.3390/ijms241411734) (bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 55-56, bargagna2024molecularpathwaysfora pages 55-56, bargagna2023understandingthemolecular pages 11-12).<br />
+- Consolidation of late ISC roles: Earlier foundational work (Sheftel et al., 2012) established that ISCA1/ISCA2/IBA57 are required for mitochondrial [4Fe–4S] protein maturation and linked these factors to LIAS and lipoylation, a framework into which the GLRX5–BOLA3 node integrates (Mol Biol Cell; Apr 2012; https://doi.org/10.1091/mbc.e11-09-0772) (sheftel2012thehumanmitochondrial pages 1-2).</p>
+<p>Current applications and real-world implementations<br />
+- Diagnostics: In variant nonketotic hyperglycinemia (vNKH) workups, sequencing of LIAS, BOLA3 and GLRX5 identifies etiologies; functional confirmation often uses western blot for lipoylated E2 subunits of PDH/KGDH and PDH enzyme assays. Baker et al. reported deficient protein lipoylation in 8/10 families and used complementation in fibroblasts to prove causality (Brain; Feb 2014; https://doi.org/10.1093/brain/awt328) (baker2014variantnonketotic pages 10-11, baker2014variantnonketotic pages 7-8, baker2014variantnonketotic pages 9-10).<br />
+- Mechanistic cell models: Zhong et al. used patient fibroblasts and gene knockdown to relate BOLA3/NFU1 deficiency to mitoribosome Fe–S cluster insertion and mitochondrial translation, now a platform for assessing pathogenic variants (zhong2023bola3andnfu1 pages 1-2).<br />
+- Gene/variant interpretation: Structural-biochemical assays (SEC, NMR, EPR, UV–vis/CD) of BOLA3 variants (H96R, C59Y) quantify effects on GLRX5 heterocomplex formation and NFU1 [4Fe–4S] assembly, informing pathogenicity classification (bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 55-56, bargagna2024molecularpathwaysfora pages 55-56, bargagna2023understandingthemolecular pages 11-12).</p>
+<p>Expert opinions and analyses from authoritative sources<br />
+- NAR 2023 (Zhong et al.) proposes a partitioned late ISC map: GLRX5–BOLA3 provides [2Fe–2S] to the mitoribosome, while ISCA1→NFU1 provides [4Fe–4S] to METTL17, arguing that impaired BOLA3 or NFU1 causes combined defects in electron transport chain enzymes and mitochondrial translation (zhong2023bola3andnfu1 pages 1-2).<br />
+- 2023–2024 expert reviews emphasize that BOLA3’s conserved His96 and Cys59 residues coordinate the [2Fe–2S] bridge within the GLRX5–BOLA3 complex, and that pathogenic substitution of these ligands explains loss of downstream [4Fe–4S] maturation and lipoylation (bargagna2024molecularpathwaysfora pages 40-44, bargagna2024molecularpathwaysfor pages 55-56, bargagna2024molecularpathwaysfor pages 40-44).</p>
+<p>Relevant statistics and recent clinical data<br />
+- Variant NKH cohort: Baker et al. studied 11 patients from 10 families; genetic etiologies were defined for 8 patients with mutations in LIAS, BOLA3, or GLRX5. In that series, protein lipoylation defects were shown in 8 of 10 families tested (Brain; 2014) (baker2014variantnonketotic pages 2-3, baker2014variantnonketotic pages 10-11).<br />
+- BOLA3 clinical course: BOLA3-associated vNKH/MMDS2 is typically infantile and often fatal in the first year of life; recurrent truncating BOLA3 variant c.136C&gt;T (p.R46X) occurred homozygously in multiple families (baker2014variantnonketotic pages 2-3, baker2014variantnonketotic pages 7-8).<br />
+- GLRX5 context for the node: A 2024 case report of GLRX5-mediated NKH presented with early-onset severe disease and death by ~4 months, underscoring the GLRX5–BOLA3–LIAS functional axis in lipoylation and glycine cleavage (Frontiers in Genetics; Sep 2024; https://doi.org/10.3389/fgene.2024.1432272) (marin2024casereportunveiling pages 3-4).</p>
+<p>Mechanistic pathway synthesis<br />
+- Early ISC steps produce [2Fe–2S] clusters that are transferred to GLRX5. The GLRX5–BOLA3 heterocomplex binds a bridged [2Fe–2S] cluster via GLRX5 Cys67/glutathione and BOLA3 Cys59/His96, forming a mobile chaperone unit. Two such [2Fe–2S] equivalents can be delivered to NFU1, where reductive coupling yields a [4Fe–4S] cluster for late clients including LIAS and additional [4Fe–4S] assembly factors; in parallel, ISCA1/ISCA2/IBA57 function in [4Fe–4S] biogenesis/delivery, and GLRX5–BOLA3 supplies [2Fe–2S] to the mitoribosome (bargagna2024molecularpathwaysfora pages 40-44, bargagna2024molecularpathwaysfor pages 40-44, zhong2023bola3andnfu1 pages 1-2, sheftel2012thehumanmitochondrial pages 1-2).<br />
+- Pathogenic H96R disrupts BOLA3’s histidine ligand, generating an aberrant GLRX5–BOLA3 complex that cannot complete [2Fe–2S] → [4Fe–4S] transfer on NFU1, mechanistically explaining combined defects in respiratory complexes and lipoylation (bargagna2023understandingthemolecular pages 1-2, bargagna2023understandingthemolecular pages 11-12). C59Y produces partial loss consistent with milder phenotypes (bargagna2024molecularpathwaysfora pages 55-56).</p>
+<p>Clinical phenotypes and disease links<br />
+- Multiple Mitochondrial Dysfunctions Syndrome type 2 (MMDS2): Biallelic BOLA3 variants cause leukodystrophy/encephalopathy with lactic acidosis and hyperglycinemia; biochemical findings include reduced activities of respiratory complexes and decreased activity of lipoyl-dependent enzymes (PDH, KGDH, glycine cleavage H-protein). Infantile lethality is common (bargagna2023understandingthemolecular pages 1-2, baker2014variantnonketotic pages 2-3).<br />
+- Variant nonketotic hyperglycinemia (vNKH): Mutations in LIAS, BOLA3, or GLRX5 lead to vNKH characterized by elevated plasma (and milder CSF) glycine and defective protein lipoylation; diagnostic lipoylation blotting was abnormal in most studied families (baker2014variantnonketotic pages 10-11, baker2014variantnonketotic pages 3-3, baker2014variantnonketotic pages 11-12).</p>
+<p>URLs and publication dates (where available)<br />
+- Zhong et al., Nucleic Acids Research, advance access 12 Oct 2023: https://doi.org/10.1093/nar/gkad842 (zhong2023bola3andnfu1 pages 1-2).<br />
+- Bargagna et al., IJMS, 21 Jul 2023: https://doi.org/10.3390/ijms241411734 (bargagna2023understandingthemolecular pages 1-2).<br />
+- Sheftel et al., Mol Biol Cell, Apr 2012: https://doi.org/10.1091/mbc.e11-09-0772 (sheftel2012thehumanmitochondrial pages 1-2).<br />
+- Baker et al., Brain, Feb 2014: https://doi.org/10.1093/brain/awt328 (baker2014variantnonketotic pages 10-11, baker2014variantnonketotic pages 2-3, baker2014variantnonketotic pages 7-8, baker2014variantnonketotic pages 9-10, baker2014variantnonketotic pages 11-11, baker2014variantnonketotic pages 11-12, baker2014variantnonketotic pages 3-3).<br />
+- Marin et al., Frontiers in Genetics, Sep 2024: https://doi.org/10.3389/fgene.2024.1432272 (marin2024casereportunveiling pages 3-4).</p>
+<p>Embedded summary table<br />
+| Category | Key points (compact) | Evidence |<br />
+|---|---|---|<br />
+| Identity / verification | Human gene BOLA3 (UniProt Q53S33). Member of BolA family with BolA/BolA-like and Mt_Fe-S_assembly_factor domains (BolA, BolA-like_sf, IPR052275). | (bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 40-44) |<br />
+| Cellular localization | Mitochondrial matrix/mitochondrial ISC system (mitochondrial targeting; functions in mitochondrial Fe–S biogenesis). | (zhong2023bola3andnfu1 pages 1-2, sheftel2012thehumanmitochondrial pages 1-2) |<br />
+| Mechanistic role &amp; primary interactors | Forms a heterocomplex with mitochondrial GLRX5 that binds a bridged [2Fe-2S] cluster; functions as a late-acting ISC accessory/chaperone delivering cluster equivalents toward NFU1 and clients. Interacts functionally with NFU1; works in network with ISCA1/2 and IBA57. | (bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 40-44, zhong2023bola3andnfu1 pages 1-2, sheftel2012thehumanmitochondrial pages 1-2) |<br />
+| ISC pathway nodes (who supplies which) | GLRX5–BOLA3 node: supplies/hosts [2Fe-2S] bridged clusters (donor node). ISCA1/2–IBA57 (and ISCA1/2→NFU1) route: late [4Fe-4S] assembly/delivery to mitochondrial clients; NFU1 receives/converts two [2Fe-2S] inputs to a [4Fe-4S] on NFU1. | (zhong2023bola3andnfu1 pages 1-2, bargagna2023understandingthemolecular pages 1-2, sheftel2012thehumanmitochondrial pages 1-2) |<br />
+| Downstream processes affected | LIAS (lipoyl synthase) maturation and protein lipoylation (PDH, KGDH, GCS H-protein), respiratory complex activities, and mitoribosome [2Fe-2S] insertion/assembly → impacts mitochondrial protein synthesis. | (sheftel2012thehumanmitochondrial pages 1-2, zhong2023bola3andnfu1 pages 1-2, baker2014variantnonketotic pages 10-11) |<br />
+| Key 2023–2024 advances | 2023: Zhong et al. linked GLRX5–BOLA3 node to mitoribosomal [2Fe-2S] clusters and showed BOLA3/NFU1 loss attenuates mitochondrial translation (mitoribosome stability) (zhong2023bola3andnfu1 pages 1-2). 2023–2024: Bargagna et al. biochemical/structural dissection of H96R and C59Y variants showed H96R forms aberrant GLRX5–BOLA3 heterocomplex that cannot assemble [4Fe-4S] on NFU1 (mechanistic basis for MMDS2); reviews (2024) consolidate late-ISC pathway roles. | (zhong2023bola3andnfu1 pages 1-2, bargagna2023understandingthemolecular pages 1-2, bargagna2024molecularpathwaysfor pages 40-44, bargagna2024molecularpathwaysfor pages 55-56) |<br />
+| Disease links &amp; clinical phenotype | Biallelic BOLA3 mutations → MMDS2 (multiple mitochondrial dysfunctions syndrome type 2): leukodystrophy/encephalopathy, lactic acidosis, hyperglycinemia, early lethal neonatal/infantile course. BOLA3 (with LIAS, GLRX5) implicated in variant non‑ketotic hyperglycinemia (vNKH) with lipoylation defects. | (bargagna2023understandingthemolecular pages 1-2, baker2014variantnonketotic pages 10-11, baker2014variantnonketotic pages 2-3) |<br />
+| Variants (functional effects) &amp; selected statistics | Functionally characterized: H96R (c.287A&gt;G) — preserves GLRX5 binding but yields nonfunctional BOLA3–[2Fe-2S]–GLRX5 unable to transfer/assemble [4Fe-4S] on NFU1; associated with severe MMDS2 and death in infancy (reported fatal &lt;1 yr) (bargagna2023understandingthemolecular pages 1-2, bargagna2023understandingthemolecular pages 11-12). C59Y — perturbs cluster ligand, retains partial activity → milder phenotype (bargagna2024molecularpathwaysfor pages 40-44). R46X (c.136C&gt;T) recurrent truncation seen homozygous in multiple families (baker2014variantnonketotic pages 7-8). Reported counts: Baker et al. cohort = 11 patients (10 families) with vNKH; genetic diagnosis in 8/11 (LIAS, BOLA3, GLRX5) and several pathogenic BOLA3 alleles reported (~8 described in literature excerpt). Typical BOLA3 cases often fatal in first year (cohort-level note). | (bargagna2023understandingthemolecular pages 11-12, bargagna2024molecularpathwaysfor pages 40-44, baker2014variantnonketotic pages 7-8, baker2014variantnonketotic pages 2-3, baker2014variantnonketotic pages 9-10) |</p>
+<p><em>Table: Compact summary table of human BOLA3 (Q53S33) covering identity, localization, mechanistic role in Fe–S biogenesis, downstream processes, 2023–2024 advances, disease links, key variants and available cohort statistics with primary evidence citations.</em></p>
+<p>Conclusion<br />
+Human BOLA3 is a mitochondrial BolA-family factor that forms a [2Fe–2S]-bridged heterocomplex with GLRX5, acting at a late ISC node to support NFU1-dependent [4Fe–4S] maturation, lipoyl synthase function and mitoribosomal Fe–S insertion. 2023–2024 work clarified that GLRX5–BOLA3 supplies mitoribosomal [2Fe–2S] clusters and that specific BOLA3 ligand-site variants (H96R, C59Y) explain MMDS2 mechanistically. Clinically, BOLA3 deficiency underlies MMDS2 and contributes to variant NKH with characteristic lipoylation defects, often with infantile lethality. These insights guide molecular diagnostics (sequencing of LIAS/BOLA3/GLRX5; lipoylation assays) and functional variant assessment strategies (zhong2023bola3andnfu1 pages 1-2, bargagna2023understandingthemolecular pages 1-2, baker2014variantnonketotic pages 10-11).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bargagna2023understandingthemolecular pages 1-2): Beatrice Bargagna, Lucia Banci, and Francesca Camponeschi. Understanding the molecular basis of the multiple mitochondrial dysfunctions syndrome 2: the disease-causing his96arg mutation of bola3. International Journal of Molecular Sciences, 24:11734, Jul 2023. URL: https://doi.org/10.3390/ijms241411734, doi:10.3390/ijms241411734. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(bargagna2024molecularpathwaysfor pages 40-44): B Bargagna. Molecular pathways for the maturation of mitochondrial and cytosolic human fe-s proteins. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(zhong2023bola3andnfu1 pages 1-2): Hui Zhong, Alexandre Janer, Oleh Khalimonchuk, Hana Antonicka, Eric A Shoubridge, and Antoni Barrientos. Bola3 and nfu1 link mitoribosome iron–sulfur cluster assembly to multiple mitochondrial dysfunctions syndrome. Nucleic Acids Research, 51:11797-11812, Oct 2023. URL: https://doi.org/10.1093/nar/gkad842, doi:10.1093/nar/gkad842. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sheftel2012thehumanmitochondrial pages 1-2): Alex D. Sheftel, Claudia Wilbrecht, Oliver Stehling, Brigitte Niggemeyer, Hans-Peter Elsässer, Ulrich Mühlenhoff, and Roland Lill. The human mitochondrial isca1, isca2, and iba57 proteins are required for [4fe-4s] protein maturation. Molecular Biology of the Cell, 23:1157-1166, Apr 2012. URL: https://doi.org/10.1091/mbc.e11-09-0772, doi:10.1091/mbc.e11-09-0772. This article has 250 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bargagna2024molecularpathwaysfora pages 40-44): B Bargagna. Molecular pathways for the maturation of mitochondrial and cytosolic human fe-s proteins. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 10-11): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(bargagna2024molecularpathwaysfor pages 55-56): B Bargagna. Molecular pathways for the maturation of mitochondrial and cytosolic human fe-s proteins. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(bargagna2024molecularpathwaysfora pages 55-56): B Bargagna. Molecular pathways for the maturation of mitochondrial and cytosolic human fe-s proteins. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(bargagna2023understandingthemolecular pages 11-12): Beatrice Bargagna, Lucia Banci, and Francesca Camponeschi. Understanding the molecular basis of the multiple mitochondrial dysfunctions syndrome 2: the disease-causing his96arg mutation of bola3. International Journal of Molecular Sciences, 24:11734, Jul 2023. URL: https://doi.org/10.3390/ijms241411734, doi:10.3390/ijms241411734. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 7-8): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 9-10): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 2-3): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(marin2024casereportunveiling pages 3-4): Victor Marin, Louis Lebreton, Claire Guibet, Samir Mesli, Isabelle Redonnet-Vernhet, Mathurin Dexant, Delphine Lamireau, Sandrine Roche, Margaux Gaschignard, Jean Delmas, Henri Margot, and Claire Bar. Case report: unveiling genetic and phenotypic variability in nonketotic hyperglycinemia: an atypical early onset case associated with a novel glrx5 variant. Frontiers in Genetics, Sep 2024. URL: https://doi.org/10.3389/fgene.2024.1432272, doi:10.3389/fgene.2024.1432272. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 3-3): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 11-12): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+<li>
+<p>(baker2014variantnonketotic pages 11-11): Peter R. Baker, Marisa W. Friederich, Michael A. Swanson, Tamim Shaikh, Kaustuv Bhattacharya, Gunter H. Scharer, Joseph Aicher, Geralyn Creadon-Swindell, Elizabeth Geiger, Kenneth N. MacLean, Wang-Tso Lee, Charu Deshpande, Mary-Louise Freckmann, Ling-Yu Shih, Melissa Wasserstein, Malene B. Rasmussen, Allan M. Lund, Peter Procopis, Jessie M. Cameron, Brian H. Robinson, Garry K. Brown, Ruth M. Brown, Alison G. Compton, Carol L. Dieckmann, Renata Collard, Curtis R. Coughlin, Elaine Spector, Michael F. Wempe, and Johan L.K. Van Hove. Variant non ketotic hyperglycinemia is caused by mutations in lias, bola3 and the novel gene glrx5. Brain : a journal of neurology, 137 Pt 2:366-79, Feb 2014. URL: https://doi.org/10.1093/brain/awt328, doi:10.1093/brain/awt328. This article has 258 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sheftel2012thehumanmitochondrial pages 1-2</li>
+<li>marin2024casereportunveiling pages 3-4</li>
+<li>bargagna2024molecularpathwaysfora pages 55-56</li>
+<li>bargagna2023understandingthemolecular pages 1-2</li>
+<li>bargagna2024molecularpathwaysfor pages 40-44</li>
+<li>baker2014variantnonketotic pages 7-8</li>
+<li>bargagna2024molecularpathwaysfora pages 40-44</li>
+<li>baker2014variantnonketotic pages 10-11</li>
+<li>bargagna2024molecularpathwaysfor pages 55-56</li>
+<li>bargagna2023understandingthemolecular pages 11-12</li>
+<li>baker2014variantnonketotic pages 9-10</li>
+<li>baker2014variantnonketotic pages 2-3</li>
+<li>baker2014variantnonketotic pages 3-3</li>
+<li>baker2014variantnonketotic pages 11-12</li>
+<li>baker2014variantnonketotic pages 11-11</li>
+<li>2Fe–2S</li>
+<li>4Fe–4S</li>
+<li>2Fe-2S</li>
+<li>4Fe-4S</li>
+<li>4fe-4s</li>
+<li>https://doi.org/10.1093/nar/gkad842</li>
+<li>https://doi.org/10.3390/ijms241411734</li>
+<li>https://doi.org/10.1091/mbc.e11-09-0772</li>
+<li>https://doi.org/10.1093/brain/awt328</li>
+<li>https://doi.org/10.3389/fgene.2024.1432272</li>
+<li>https://doi.org/10.3390/ijms241411734,</li>
+<li>https://doi.org/10.1093/nar/gkad842,</li>
+<li>https://doi.org/10.1091/mbc.e11-09-0772,</li>
+<li>https://doi.org/10.1093/brain/awt328,</li>
+<li>https://doi.org/10.3389/fgene.2024.1432272,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q53S33
+gene_symbol: BOLA3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: BOLA3 is a mitochondrial BolA-family protein that functions as a late-acting
+  iron-sulfur (Fe-S) cluster assembly factor. BOLA3 forms a heterocomplex with the
+  mitochondrial monothiol glutaredoxin GLRX5, bridged by a [2Fe-2S] cluster (coordinated
+  by BOLA3 Cys59 and His96, and GLRX5 Cys67 plus glutathione). This GLRX5-BOLA3 complex
+  acts as a [2Fe-2S] carrier/chaperone that delivers cluster equivalents to NFU1,
+  where two [2Fe-2S] clusters are converted to a [4Fe-4S] cluster for insertion into
+  downstream client proteins including lipoyl synthase (LIAS), succinate dehydrogenase,
+  and the mitoribosome. BOLA3 deficiency causes Multiple Mitochondrial Dysfunctions
+  Syndrome type 2 (MMDS2), characterized by defective protein lipoylation, impaired
+  respiratory chain complex activities, and attenuated mitochondrial translation.
+existing_annotations:
+- term:
+    id: GO:0051604
+    label: protein maturation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This annotation captures BOLA3&#39;s role in facilitating Fe-S cluster insertion
+      into mitochondrial proteins, which is a form of protein maturation. BOLA3 functions
+      in the late ISC pathway to enable [4Fe-4S] protein maturation (PMID:27532772).
+    action: MODIFY
+    reason: While &#34;protein maturation&#34; is technically accurate, it is too general.
+      BOLA3 specifically functions in iron-sulfur cluster assembly and insertion.
+      More precise terms exist that better describe the molecular function.
+    proposed_replacement_terms:
+    - id: GO:0016226
+      label: iron-sulfur cluster assembly
+    - id: GO:0044572
+      label: &#39;[4Fe-4S] cluster assembly&#39;
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: Bol1 and Bol3 as specific mitochondrial ISC assembly factors
+        that facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial
+        proteins such as lipoate synthase and succinate dehydrogenase
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: BOLA3 localizes to mitochondria where it functions in the mitochondrial
+      ISC assembly pathway. Multiple lines of evidence support mitochondrial localization
+      (PMID:22746225, PMID:27532772).
+    action: ACCEPT
+    reason: The mitochondrial matrix localization is well-supported by phylogenetic
+      inference (IBA) and is consistent with experimental data. BOLA3 functions within
+      the mitochondrial ISC pathway alongside GLRX5 and NFU1.
+    supported_by:
+    - reference_id: PMID:22746225
+      supporting_text: BOLA1 is a mitochondrial protein
+    - reference_id: PMID:27532772
+      supporting_text: Mitochondrial Bol1 and Bol3 function as assembly factors for
+        specific iron-sulfur proteins
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Automated annotation of mitochondrial localization is correct and consistent
+      with experimental data showing BOLA3 is a mitochondrial protein (PMID:22746225).
+    action: ACCEPT
+    reason: This IEA annotation is broader than the IBA to mitochondrial matrix but
+      is not incorrect. Multiple annotations at different specificity levels are acceptable.
+    supported_by:
+    - reference_id: PMID:22746225
+      supporting_text: We show that BOLA1 is a mitochondrial protein
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  review:
+    summary: This annotation captures interaction with GLRX5 from a mitochondrial
+      protein interaction mapping study. The interaction is functionally significant.
+    action: MODIFY
+    reason: &#39;&#34;Protein binding&#34; is too vague and uninformative. BOLA3 specifically
+      binds GLRX5 to form a Fe-S cluster-bridged heterocomplex. A more informative
+      MF term should be used.&#39;
+    proposed_replacement_terms:
+    - id: GO:0051537
+      label: 2 iron, 2 sulfur cluster binding
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: BOLA1 or BOLA3 and GLRX5 at the atomic level
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27532772
+  review:
+    summary: This annotation reflects the physical interaction between BOLA3 and GLRX5
+      demonstrated by NMR spectroscopy. BOLA3 forms a [2Fe-2S]-bridged heterocomplex
+      with GLRX5, with BOLA3 Cys59 and His96 serving as cluster ligands (PMID:27532772).
+    action: MODIFY
+    reason: &#39;&#34;Protein binding&#34; does not capture the specific nature of the BOLA3-GLRX5
+      interaction. The interaction involves forming a Fe-S cluster-bridged complex
+      essential for cluster transfer.&#39;
+    proposed_replacement_terms:
+    - id: GO:0051537
+      label: 2 iron, 2 sulfur cluster binding
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: The structures of (A) BOLA1 and (B) BOLA3 were solved by solution
+        NMR. Residues His58, His67 and His102 are conserved within the eukaryotic
+        BOLA1 proteins, and residues Cys59 and His96 are conserved within the BOLA3
+        proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: High-throughput binary interactome mapping study. The specific interaction
+      partners from this study include GLRX5.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic &#34;protein binding&#34; from HTP studies provides limited functional
+      insight. The functionally relevant interactions (GLRX5, NFU1) are better captured
+      through more specific annotations.
+    supported_by: []
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  review:
+    summary: Dual proteome-scale interactome study. This is a high-throughput study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic &#34;protein binding&#34; from HTP proteome-scale studies is not informative
+      for functional annotation. The core BOLA3-GLRX5 interaction is better captured
+      with more specific terms.
+    supported_by: []
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34063696
+  review:
+    summary: This study examined the C59Y BOLA3 variant and demonstrated that the
+      mutant still forms a heterocomplex with GLRX5, though with altered properties.
+      The interaction between BOLA3 and GLRX5 involves [2Fe-2S] cluster coordination.
+    action: MODIFY
+    reason: The study provides detailed molecular characterization of the BOLA3-GLRX5
+      interaction showing cluster binding. More specific terms should be used.
+    proposed_replacement_terms:
+    - id: GO:0051537
+      label: 2 iron, 2 sulfur cluster binding
+    supported_by:
+    - reference_id: PMID:34063696
+      supporting_text: C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: HPA immunofluorescence data supporting mitochondrial localization.
+    action: ACCEPT
+    reason: Direct experimental evidence for mitochondrial localization is consistent
+      with the known function of BOLA3 in the mitochondrial ISC assembly pathway.
+    supported_by: []
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: NAS
+  original_reference_id: PMID:22746225
+  review:
+    summary: This study primarily characterized BOLA1 but also demonstrated that the
+      BolA family proteins are mitochondrial. BOLA3 was mentioned in the context of
+      mitochondrial Fe-S cluster biogenesis.
+    action: ACCEPT
+    reason: The study provides supporting evidence for mitochondrial localization
+      of the BolA family proteins, consistent with their role in mitochondrial ISC
+      assembly.
+    supported_by:
+    - reference_id: PMID:22746225
+      supporting_text: BOLA3 has recently been implicated in the biogenesis of [Fe-S]
+        clusters for oxidative phosphorylation complexes and 2-oxo acid dehydrogenase
+        enzymes in mitochondria
+- term:
+    id: GO:0006879
+    label: intracellular iron ion homeostasis
+  evidence_type: NAS
+  original_reference_id: PMID:27532772
+  review:
+    summary: The BOLA3-GLRX5 complex functions in Fe-S cluster assembly, which indirectly
+      affects iron homeostasis. However, BOLA3&#39;s primary role is in Fe-S cluster biogenesis
+      rather than direct iron sensing or trafficking.
+    action: KEEP_AS_NON_CORE
+    reason: While BOLA3 does influence iron homeostasis through its role in Fe-S cluster
+      assembly, this is a downstream consequence rather than the core function. The
+      primary role is in [4Fe-4S] cluster assembly.
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: Bol1 and Bol3 as specific mitochondrial ISC assembly factors
+- term:
+    id: GO:0016226
+    label: iron-sulfur cluster assembly
+  evidence_type: NAS
+  original_reference_id: PMID:27532772
+  review:
+    summary: BOLA3 functions in the late phase of mitochondrial Fe-S cluster assembly,
+      specifically facilitating [4Fe-4S] cluster insertion into target proteins. The
+      GLRX5-BOLA3 complex delivers [2Fe-2S] clusters to NFU1 for [4Fe-4S] assembly
+      (PMID:27532772).
+    action: ACCEPT
+    reason: This is a core function annotation. BOLA3 is a bona fide Fe-S cluster
+      assembly factor as demonstrated by biochemical and genetic studies. The NAS
+      evidence appropriately reflects the complex molecular pathway.
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: we characterize the BOLA family proteins Bol1 and Bol3 as specific
+        mitochondrial ISC assembly factors that facilitate [4Fe-4S] cluster insertion
+        into a subset of mitochondrial proteins such as lipoate synthase and succinate
+        dehydrogenase
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: NAS
+  original_reference_id: PMID:27532772
+  review:
+    summary: BolA proteins interact with glutaredoxins and have been implicated in
+      redox regulation. However, the primary characterized function of BOLA3 is in
+      Fe-S cluster assembly rather than direct redox regulation.
+    action: KEEP_AS_NON_CORE
+    reason: This annotation likely reflects the association with GLRX5, a glutaredoxin.
+      While the BOLA3-GLRX5 interaction is functionally important, the primary role
+      is in Fe-S cluster transfer rather than redox homeostasis per se.
+    supported_by:
+    - reference_id: PMID:22746225
+      supporting_text: A measured interaction of BOLA1 with the mitochondrial monothiol
+        glutaredoxin GLRX5 provides hints for potential mechanisms behind BOLA1&#39;s
+        effect on mitochondrial redox potential
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: High-confidence human mitochondrial proteome study confirms mitochondrial
+      localization.
+    action: ACCEPT
+    reason: HTP proteomics evidence is consistent with other evidence for mitochondrial
+      localization of BOLA3.
+    supported_by: []
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:22746225
+  review:
+    summary: Direct experimental evidence from the Willems et al. study that characterized
+      BolA family proteins as mitochondrial.
+    action: ACCEPT
+    reason: IDA evidence for mitochondrial localization is well-supported and consistent
+      with BOLA3&#39;s role in the mitochondrial ISC pathway.
+    supported_by:
+    - reference_id: PMID:22746225
+      supporting_text: BOLA1 is a mitochondrial protein
+- term:
+    id: GO:0051537
+    label: 2 iron, 2 sulfur cluster binding
+  evidence_type: IDA
+  original_reference_id: PMID:27532772
+  review:
+    summary: BOLA3 binds a [2Fe-2S] cluster as part of the GLRX5-BOLA3 heterocomplex.
+      NMR and spectroscopic studies demonstrate that BOLA3 Cys59 and His96 serve as
+      cluster ligands (PMID:27532772, PMID:34063696).
+    action: NEW
+    reason: This is a core molecular function that is well-characterized but not present
+      in the current annotation set. The [2Fe-2S] cluster binding is essential for
+      BOLA3&#39;s function as a cluster carrier.
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: residues Cys59 and His96 are conserved within the BOLA3 proteins
+    - reference_id: PMID:34063696
+      supporting_text: C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster
+- term:
+    id: GO:0044572
+    label: &#39;[4Fe-4S] cluster assembly&#39;
+  evidence_type: IMP
+  original_reference_id: PMID:27532772
+  review:
+    summary: BOLA3 deficiency causes defects in [4Fe-4S] enzyme activities, demonstrating
+      its role in [4Fe-4S] cluster assembly. The GLRX5-BOLA3 complex delivers [2Fe-2S]
+      clusters to NFU1 for [4Fe-4S] assembly.
+    action: NEW
+    reason: This is a more specific term than GO:0016226 (iron-sulfur cluster assembly)
+      and accurately reflects BOLA3&#39;s role in the late ISC pathway for [4Fe-4S] protein
+      maturation.
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: Deficiency of both mitochondrial Bol proteins causes defects
+        in a subset of mitochondrial [4Fe-4S] enzymes
+- term:
+    id: GO:1990229
+    label: iron-sulfur cluster assembly complex
+  evidence_type: IDA
+  original_reference_id: PMID:27532772
+  review:
+    summary: BOLA3 is a component of the mitochondrial BOLA3-GLRX5 iron-sulfur cluster
+      assembly complex (ComplexPortal:CPX-6863). This complex functions in Fe-S cluster
+      transfer.
+    action: NEW
+    reason: ComplexPortal has curated the BOLA3-GLRX5 complex and this annotation
+      appropriately reflects BOLA3&#39;s participation in this assembly complex.
+    supported_by:
+    - reference_id: PMID:27532772
+      supporting_text: In order to characterize the interaction between BOLA1 or BOLA3
+        and GLRX5 at the atomic level
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: BOLA3 annotated based on phylogenetic inference from yeast orthologs
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22746225
+  title: BOLA1 is an aerobic protein that prevents mitochondrial morphology changes
+    induced by glutathione depletion.
+  findings:
+  - statement: BolA family proteins localize to mitochondria
+    supporting_text: We show that BOLA1 is a mitochondrial protein
+  - statement: BOLA3 implicated in Fe-S cluster biogenesis for OXPHOS complexes
+    supporting_text: BOLA3 has recently been implicated in the biogenesis of [Fe-S]
+      clusters for oxidative phosphorylation complexes and 2-oxo acid dehydrogenase
+      enzymes in mitochondria
+  - statement: BOLA proteins interact with GLRX5 glutaredoxin
+    supporting_text: A measured interaction of BOLA1 with the mitochondrial monothiol
+      glutaredoxin GLRX5 provides hints for potential mechanisms behind BOLA1&#39;s effect
+      on mitochondrial redox potential
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings:
+  - statement: BOLA3-GLRX5 interaction detected in mitochondrial interactome
+- id: PMID:27532772
+  title: Mitochondrial Bol1 and Bol3 function as assembly factors for specific iron-sulfur
+    proteins.
+  findings:
+  - statement: BOLA3 is a mitochondrial ISC assembly factor
+    supporting_text: we characterize the BOLA family proteins Bol1 and Bol3 as specific
+      mitochondrial ISC assembly factors
+  - statement: BOLA3 facilitates [4Fe-4S] cluster insertion into LIAS and SDH
+    supporting_text: facilitate [4Fe-4S] cluster insertion into a subset of mitochondrial
+      proteins such as lipoate synthase and succinate dehydrogenase
+  - statement: BOLA3 forms heterocomplex with GLRX5 bridged by [2Fe-2S] cluster
+    supporting_text: Bol1 and Bol3 form dimeric complexes with both monothiol glutaredoxin
+      Grx5 and Nfu1
+  - statement: Cys59 and His96 are cluster ligands in BOLA3
+    supporting_text: residues Cys59 and His96 are conserved within the BOLA3 proteins
+  - statement: BOLA3 interacts with NFU1 for [4Fe-4S] assembly
+    supporting_text: Bol1 and Bol3 form dimeric complexes with both monothiol glutaredoxin
+      Grx5 and Nfu1
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: HTP protein interaction data
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: HTP proteome-scale interaction data
+- id: PMID:34063696
+  title: Molecular Basis of Multiple Mitochondrial Dysfunctions Syndrome 2 Caused
+    by CYS59TYR BOLA3 Mutation.
+  findings:
+  - statement: C59Y mutation perturbs Fe-S cluster-binding region of BOLA3
+  - statement: C59Y BOLA3-GLRX5 complex still binds [2Fe-2S] cluster
+  - statement: Mutation forms aberrant apo BOLA3-GLRX5 complex
+  - statement: Explains partial phenotype recovery in some MMDS2 patients
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: BOLA3 identified in high-confidence mitochondrial proteome
+core_functions:
+- molecular_function:
+    id: GO:0051537
+    label: 2 iron, 2 sulfur cluster binding
+  description: BOLA3 binds a [2Fe-2S] cluster as part of the GLRX5-BOLA3 heterocomplex.
+    The cluster is coordinated by BOLA3 Cys59 and His96 together with GLRX5 Cys67
+    and glutathione cysteine. Mutations in these ligand residues cause MMDS2 (PMID:27532772,
+    PMID:34063696).
+  directly_involved_in:
+  - id: GO:0044572
+    label: &#39;[4Fe-4S] cluster assembly&#39;
+  - id: GO:0016226
+    label: iron-sulfur cluster assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  in_complex:
+    id: GO:1990229
+    label: iron-sulfur cluster assembly complex
+  supported_by:
+  - reference_id: PMID:27532772
+    supporting_text: we characterize the BOLA family proteins Bol1 and Bol3 as specific
+      mitochondrial ISC assembly factors that facilitate [4Fe-4S] cluster insertion
+      into a subset of mitochondrial proteins such as lipoate synthase and succinate
+      dehydrogenase
+  - reference_id: PMID:34063696
+    supporting_text: C59Y BOLA3-GLRX5 Complex Bound a [2Fe-2S]2+ Cluster
+proposed_new_terms: []
+suggested_questions:
+- question: What is the relative contribution of BOLA3 vs BOLA1 to different [4Fe-4S]
+    client proteins? Uzarska et al. showed Bol1 and Bol3 have overlapping but distinct
+    client specificities. Understanding this would help interpret MMDS2 pathophysiology.
+- question: Does BOLA3 have functions independent of the GLRX5-BOLA3 heterocomplex?
+    Some interactions detected in HTP studies may represent additional BOLA3 functions
+    not yet characterized.
+suggested_experiments:
+- description: Systematic identification of all BOLA3-dependent [4Fe-4S] client proteins
+    using proteomics in BOLA3-deficient cells. This would provide comprehensive understanding
+    of BOLA3&#39;s role in [4Fe-4S] protein maturation beyond known clients like LIAS
+    and SDH.
+  hypothesis: BOLA3 deficiency affects specific subset of mitochondrial [4Fe-4S] enzymes
+    that can be comprehensively identified by proteomics.
+- description: Structure determination of the BOLA3-GLRX5-[2Fe-2S]-NFU1 transfer complex.
+    This would reveal mechanism of [2Fe-2S] cluster transfer from BOLA3-GLRX5 to NFU1
+    for [4Fe-4S] assembly.
+  hypothesis: BOLA3-GLRX5 complex directly interacts with NFU1 during cluster transfer,
+    forming a transient ternary complex.
+tags:
+- iron-sulfur-cluster-biogenesis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

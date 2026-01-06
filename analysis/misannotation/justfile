@@ -1,0 +1,117 @@
+# Misannotation Analysis Justfile
+# Computational checks for potentially misannotated genes
+
+# Analyze genes for potential misannotations using sequence similarity
+analyze-sequence organism="" output="risk_report.json":
+    @echo "Analyzing genes for potential misannotations..."
+    @mkdir -p cache reports
+    #!/usr/bin/env bash
+    if [ -n "{{organism}}" ]; then \
+        echo "Analyzing {{organism}} genes only..."; \
+        uv run python sequence_similarity_analyzer.py ../../genes --organism {{organism}} --output {{output}}; \
+    else \
+        echo "Analyzing all genes..."; \
+        uv run python sequence_similarity_analyzer.py ../../genes --output {{output}}; \
+    fi
+
+# Analyze protein domains for annotation consistency
+analyze-domains organism="" output="domain_report.json":
+    @echo "Analyzing protein domains for annotation consistency..."
+    @mkdir -p cache reports
+    #!/usr/bin/env bash
+    if [ -n "{{organism}}" ]; then \
+        echo "Analyzing {{organism}} domains only..."; \
+        uv run python domain_analyzer.py ../../genes --organism {{organism}} --output {{output}}; \
+    else \
+        echo "Analyzing all domains..."; \
+        uv run python domain_analyzer.py ../../genes --output {{output}}; \
+    fi
+
+# Run comprehensive misannotation analysis (sequence + domains)
+analyze-full organism="":
+    @echo "Running comprehensive misannotation analysis..."
+    @mkdir -p cache reports
+    just analyze-sequence {{organism}} sequence_risk.json
+    just analyze-domains {{organism}} domain_risk.json
+    @echo "Analysis complete! Check reports for detailed results"
+
+# Quick analysis of human genes only (faster, focuses on likely problems)
+analyze-quick organism="human":
+    @echo "Quick misannotation analysis for {{organism}}..."
+    @mkdir -p cache reports
+    uv run python sequence_similarity_analyzer.py ../../genes --organism {{organism}} --output {{organism}}_risk_quick.json
+
+# Test with a single gene first (full analysis with BLAST - slow)
+test-single organism="human" gene="TP53":
+    @echo "Testing misannotation analysis with {{organism}}/{{gene}}..."
+    @mkdir -p cache reports
+    uv run python sequence_similarity_analyzer.py ../../genes --organism {{organism}} --output test_{{gene}}.json
+
+# Quick test without BLAST (fast)
+test-quick organism="human" gene="TP53":
+    @echo "Quick test with {{organism}}/{{gene}} (no BLAST)..."
+    @mkdir -p cache reports
+    python quick_test.py ../../genes/{{organism}}/{{gene}}
+
+# Generate summary report of all misannotation analyses
+summarize-risk:
+    #!/usr/bin/env python3
+    import json
+    from pathlib import Path
+
+    print("Generating misannotation risk summary...")
+    analysis_dir = Path(".")
+    reports = list(analysis_dir.glob("*_risk*.json"))
+
+    if not reports:
+        print("No risk analysis reports found. Run 'just analyze-full' first.")
+        exit(1)
+
+    high_risk_genes = set()
+    all_genes = set()
+
+    for report_file in reports:
+        try:
+            with open(report_file) as f:
+                data = json.load(f)
+                if "high_risk_genes" in data:
+                    for gene in data["high_risk_genes"]:
+                        high_risk_genes.add(gene["gene_symbol"])
+                if "detailed_analysis" in data:
+                    for gene in data["detailed_analysis"]:
+                        all_genes.add(gene["gene_symbol"])
+        except Exception as e:
+            print(f"Error reading {report_file}: {e}")
+
+    risk_rate = (len(high_risk_genes) / len(all_genes)) * 100 if all_genes else 0
+
+    print(f"Misannotation Risk Summary:")
+    print(f"========================")
+    print(f"Total genes analyzed: {len(all_genes)}")
+    print(f"High-risk genes: {len(high_risk_genes)}")
+    print(f"Risk rate: {risk_rate:.1f}%")
+    print(f"")
+    if high_risk_genes:
+        print(f"High-risk genes: {', '.join(sorted(high_risk_genes))}")
+    else:
+        print("No high-risk genes identified")
+
+# Clean cache and reports
+clean:
+    @echo "Cleaning cache and reports..."
+    rm -rf cache/*.json cache/*.fasta
+    rm -f *.json *.tsv
+    @echo "Cleaned analysis directory"
+
+# Show available commands
+help:
+    @echo "Misannotation Analysis Commands:"
+    @echo "==============================="
+    @echo "just test-quick human TP53       - Quick test (no BLAST, fast)"
+    @echo "just test-single human TP53      - Test with single gene (with BLAST, slow)"
+    @echo "just analyze-quick human          - Quick analysis (human only)"
+    @echo "just analyze-sequence human       - Sequence similarity analysis"
+    @echo "just analyze-domains human        - Domain architecture analysis"
+    @echo "just analyze-full human           - Full analysis for organism"
+    @echo "just summarize-risk               - Generate summary report"
+    @echo "just clean                        - Clean cache and reports"

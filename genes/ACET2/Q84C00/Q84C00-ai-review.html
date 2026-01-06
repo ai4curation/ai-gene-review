@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>licB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>licB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q84C00" target="_blank" class="term-link">
+                        Q84C00
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Acetivibrio thermocellus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">LicB</span>
+                    
+                    <span class="badge">Laminarinase</span>
+                    
+                    <span class="badge">Beta-1,3-1,4-glucanase</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "licB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q84C00" data-a="DESCRIPTION: LicB (also known as Lam1) is a thermostable beta-g..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LicB (also known as Lam1) is a thermostable beta-glucanase (lichenase, EC 3.2.1.73) from Acetivibrio thermocellus (formerly Clostridium thermocellum). It is a GH16 family glycoside hydrolase that catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in mixed-linkage beta-D-glucans containing both (1-&gt;3) and (1-&gt;4) bonds, such as lichenan and barley beta-glucan. The enzyme contains a C-terminal type-I dockerin domain that enables its incorporation into the cellulosome, the large extracellular enzyme complex characteristic of this bacterium that efficiently degrades plant cell wall polysaccharides.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0000272" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from InterPro domain matches (IPR002105, IPR016134, IPR036439 - dockerin domains). While LicB does participate in polysaccharide catabolism, this term is too general. The enzyme specifically degrades mixed-linkage beta-glucans. A more specific term like &#39;beta-glucan catabolic process&#39; (GO:0051275) would be more accurate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;polysaccharide catabolic process&#39; is overly broad. LicB is a lichenase that specifically hydrolyzes beta-glucans containing (1-&gt;3) and (1-&gt;4) linkages. UniProt confirms the catalytic activity with EC 3.2.1.73. A more specific biological process term should be used.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051275" target="_blank" class="term-link">
+                                    beta-glucan catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in beta-D- glucans containing (1-&gt;3)- and (1-&gt;4)-bonds.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/Q84C00/Q84C00-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">LicB is a GH16 family lichenase that degrades beta-glucans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but represents a high-level parent term. LicB does indeed have O-glycosyl hydrolase activity, but the specific term &#39;licheninase activity&#39; (GO:0042972) already captures this more precisely. This annotation can be retained as it is not incorrect, but it provides less information than the more specific term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this is a general parent term, it is not incorrect for LicB. The enzyme hydrolyzes O-glycosyl bonds in beta-glucans. Since the more specific &#39;licheninase activity&#39; (GO:0042972) is also annotated, this broader term provides hierarchical context and is acceptable to retain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 16 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very high-level biological process term. While technically correct (lichenase participates in carbohydrate metabolism), this term is too general to be informative. It should be replaced with a more specific term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#39;Carbohydrate metabolic process&#39; is the grandparent term for nearly all sugar-related processes. For a specific enzyme like lichenase, a more informative term such as &#39;beta-glucan catabolic process&#39; (GO:0051275) should be used to accurately reflect the enzyme&#39;s biological role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051275" target="_blank" class="term-link">
+                                    beta-glucan catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in beta-D- glucans containing (1-&gt;3)- and (1-&gt;4)-bonds.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from UniProtKB keyword mapping (KW-0378 Hydrolase). While LicB is indeed a hydrolase, this is the root molecular function term for all hydrolases and is too general to be informative when more specific terms are available.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;hydrolase activity&#39; is the most general hydrolase term in GO. Since LicB already has the specific annotation &#39;licheninase activity&#39; (GO:0042972), retaining this very general term adds no informational value and clutters the annotation set.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">Glycosidase; Hydrolase; Signal.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0016798" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation comes from UniProtKB keyword mapping (KW-0326 Glycosidase). It is a parent term of &#39;hydrolase activity, hydrolyzing O-glycosyl compounds&#39; (GO:0004553). While correct, it is redundant given the presence of more specific glycosidase terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term correctly captures the glycosidase activity of LicB. Although it is a mid-level term in the hierarchy (parent of GO:0004553), it is informative enough to retain alongside the specific &#39;licheninase activity&#39; term. It provides appropriate hierarchical context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 16 family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042972" target="_blank" class="term-link">
+                                    GO:0042972
+                                </a>
+                            </span>
+                            <span class="term-label">licheninase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0042972" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and accurate molecular function annotation for LicB. Licheninase activity (EC 3.2.1.73) catalyzes the hydrolysis of (1-&gt;4)-beta-D- glucosidic linkages in beta-D-glucans containing (1-&gt;3) and (1-&gt;4) bonds. This precisely matches the documented function of LicB.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is derived from EC number mapping (EC:3.2.1.73) and accurately represents the core molecular function of LicB. UniProt explicitly assigns EC 3.2.1.73 to this enzyme, and the catalytic activity described matches the GO term definition exactly. This is the primary functional annotation for this enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Beta-glucanase;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990311" target="_blank" class="term-link">
+                                    GO:1990311
+                                </a>
+                            </span>
+                            <span class="term-label">type-I cohesin domain binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            UniProtKB:Q84C00
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:1990311" data-r="UniProtKB:Q84C00" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LicB contains a type-I dockerin domain (residues 267-334) that mediates binding to type-I cohesin domains on the CipA scaffoldin protein of the cellulosome. This domain architecture is characteristic of cellulosomal enzymes in A. thermocellus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt entry clearly documents a dockerin domain (PROSITE pattern PS51766). The dockerin domain binds to cohesin domains on the scaffoldin protein, enabling incorporation of the enzyme into the cellulosome. This is a core function of the protein enabling its biological role in extracellular polysaccharide degradation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR002105; Dockerin_1_rpt.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                                    GO:0043263
+                                </a>
+                            </span>
+                            <span class="term-label">cellulosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            UniProtKB:Q84C00
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q84C00" data-a="GO:0043263" data-r="UniProtKB:Q84C00" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LicB is a component of the cellulosome based on its dockerin domain, which mediates attachment to the scaffoldin. The cellulosome is the characteristic extracellular enzyme complex of A. thermocellus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The presence of a type-I dockerin domain (IPR002105, PS51766) strongly indicates that LicB is a cellulosomal enzyme. The dockerin domain is the hallmark of cellulosomal enzymes in Clostridia, enabling their incorporation into the multi-enzyme complex via binding to cohesin domains on the scaffoldin.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProtKB:Q84C00
+                                    
+                                </span>
+                                
+                                <div class="support-text">PROSITE; PS00448; CLOS_CELLULOSOME_RPT; 2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LicB is definitively a licheninase (EC 3.2.1.73) based on UniProt annotation and enzyme classification. This is its primary catalytic function.</h3>
+                <span class="vote-buttons" data-g="Q84C00" data-a="FUNCTION: LicB is definitively a licheninase (EC 3.2.1.73) b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042972" target="_blank" class="term-link">
+                            licheninase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051275" target="_blank" class="term-link">
+                                beta-glucan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                                cellulosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProtKB:Q84C00
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for LicB (Beta-glucanase) from Acetivibrio thermocellus</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EC 3.2.1.73 (licheninase) assignment confirmed</div>
+                        
+                        <div class="finding-text">"RecName: Full=Beta-glucanase;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GH16 domain identified (residues 28-248)</div>
+                        
+                        <div class="finding-text">"Pfam; PF00722; Glyco_hydro_16; 1."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Dockerin domain identified (residues 267-334)</div>
+                        
+                        <div class="finding-text">"Pfam; PF00404; Dockerin_1; 1."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Active site residues identified at positions 136 and 140</div>
+                        
+                        <div class="finding-text">"/evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU10064&#34;"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations based on domain matches</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of licheninase activity annotation from EC 3.2.1.73 mapping</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of general hydrolase annotations from UniProt keywords</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1755832" target="_blank" class="term-link">
+                            PMID:1755832
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nucleotide sequence of the Clostridium thermocellum laminarinase gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original cloning and sequencing of the licB gene</div>
+                        
+                        <div class="finding-text">"The sequence presented (1022 bp) shows the Clostridium thermocellum laminarinase gene (lam1) and its flanking regions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gene was originally named laminarinase (lam1)</div>
+                        
+                        <div class="finding-text">"The gene lam1 comprises an open reading frame of 726 nt, encoding a 242-aa protein with predicted Mr 27661"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate specificity of LicB compared to other GH16 enzymes in A. thermocellus? Does it preferentially cleave lichenan vs barley beta-glucan?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84C00" data-a="Q: What is the substrate specificity of LicB compared..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is LicB constitutively expressed or is its expression regulated by carbon source availability?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84C00" data-a="Q: Is LicB constitutively expressed or is its express..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Kinetic characterization of recombinant LicB with different beta-glucan substrates (lichenan, barley beta-glucan, laminarin) to determine substrate specificity and kinetic parameters.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Would provide quantitative data to better annotate substrate specificity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84C00" data-a="EXPERIMENT: Kinetic characterization of recombinant LicB with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Pulldown or co-IP experiments to confirm cellulosome incorporation and identify specific cohesin binding partners.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Would provide direct experimental evidence for cellulosome localization annotation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q84C00" data-a="EXPERIMENT: Pulldown or co-IP experiments to confirm celluloso..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q84C00-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q84C00" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T17:03:37.900555'<br />
+end_time: '2025-12-26T17:12:21.591856'<br />
+duration_seconds: 523.69<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ACET2<br />
+  gene_id: Q84C00<br />
+  gene_symbol: licB<br />
+  uniprot_accession: Q84C00<br />
+  protein_description: 'RecName: Full=Beta-glucanase; EC=3.2.1.73; AltName: Full=1,3-1,4-beta-D-glucan<br />
+    4-glucanohydrolase; AltName: Full=Endo-beta-1,3-1,4 glucanase; AltName: Full=Laminarinase;<br />
+    AltName: Full=Lichenase; Flags: Precursor;'<br />
+  gene_info: Name=licB; Synonyms=lam1;<br />
+  organism_full: Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium<br />
+    thermocellum).<br />
+  protein_family: Belongs to the glycosyl hydrolase 16 family. .<br />
+  protein_domains: Beta-glucanase/XTH. (IPR044791); Beta_glucanase. (IPR008264); ConA-like_dom_sf.<br />
+    (IPR013320); Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 18</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q84C00</li>
+<li><strong>Protein Description:</strong> RecName: Full=Beta-glucanase; EC=3.2.1.73; AltName: Full=1,3-1,4-beta-D-glucan 4-glucanohydrolase; AltName: Full=Endo-beta-1,3-1,4 glucanase; AltName: Full=Laminarinase; AltName: Full=Lichenase; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=licB; Synonyms=lam1;</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 16 family. .</li>
+<li><strong>Key Domains:</strong> Beta-glucanase/XTH. (IPR044791); Beta_glucanase. (IPR008264); ConA-like_dom_sf. (IPR013320); Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "licB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'licB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>licB</strong> (gene ID: Q84C00, UniProt: Q84C00) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q84C00</li>
+<li><strong>Protein Description:</strong> RecName: Full=Beta-glucanase; EC=3.2.1.73; AltName: Full=1,3-1,4-beta-D-glucan 4-glucanohydrolase; AltName: Full=Endo-beta-1,3-1,4 glucanase; AltName: Full=Laminarinase; AltName: Full=Lichenase; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=licB; Synonyms=lam1;</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 16 family. .</li>
+<li><strong>Key Domains:</strong> Beta-glucanase/XTH. (IPR044791); Beta_glucanase. (IPR008264); ConA-like_dom_sf. (IPR013320); Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "licB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'licB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>licB</strong> (gene ID: Q84C00, UniProt: Q84C00) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Verified target identity and nomenclature, given symbol ambiguity. LicB in Clostridium thermocellum (synonyms: Hungateiclostridium thermocellum; Acetivibrio thermocellus) corresponds to a GH16 lichenase (EC 3.2.1.73) with a dockerin module and is incorporated into the cellulosome; proteomic datasets detect LicB specifically in isolated C. thermocellum cellulosomes (URLs and dates provided below). Focused the review on function, substrate specificity, domain architecture, localization, pathway context, and applications. (gold2007proteomicanalysisof pages 77-79, gold2007globalviewof pages 6-8, schwarz2004extracellularglycosylhydrolases pages 22-26)</p>
+<p>Gene/protein verification and identity<br />
+- Symbol disambiguation: “licB” is used across bacteria; here, licB encodes a GH16 lichenase in C. thermocellum (Acetivibrio/Hungateiclostridium thermocellum). Quantitative proteomics of C. thermocellum cellulosomes lists “LicB lichenase (GH16)” among identified enzymes, providing organism- and gene-level confirmation. The study mapped proteins in affinity-isolated cellulosomes by LC–MS/MS, with stringent filters for secreted proteins, and reports LicB detection metrics (emPAI), establishing the correct protein identity and context. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07). (gold2007globalviewof pages 6-8, gold2007proteomicanalysisof pages 50-55, gold2007proteomicanalysisof pages 77-79)</p>
+<p>1) Key concepts and definitions<br />
+- Enzyme class and reaction: LicB is a lichenase (EC 3.2.1.73), an endo-β-1,3/1,4-glucanase that cleaves β-1,4 glycosidic bonds adjacent to β-1,3 linkages in mixed-linkage glucans (e.g., lichenan and cereal β-glucans), producing predominantly trisaccharides and tetrasaccharides from these substrates; it is not a cellulase acting on crystalline cellulose. Reviews of clostridial extracellular glycosyl hydrolases and cellulosome composition categorize GH16 lichenases as hemicellulases targeting mixed-linkage β-glucans within plant cell walls rather than cellulose microfibrils. Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0). (schwarz2004extracellularglycosylhydrolases pages 22-26)<br />
+- Cellulosome architecture and localization: In C. thermocellum, cellulosomes are extracellular, multienzyme complexes organized by a noncatalytic scaffoldin (CipA) bearing a cellulose-binding module and multiple type I cohesins that recruit catalytic enzymes via type I dockerins; scaffoldin attachment to the cell surface involves type II dockerin/cohesin interactions on anchoring proteins with SLH motifs. This architecture positions enzymes at the cell–substrate interface and can also yield cell-free extracellular complexes later in growth. Microbiology and Molecular Biology Reviews, 2005-03 (URL: https://doi.org/10.1128/MMBR.69.1.124-154.2005); Journal of Structural Biology, 1998-12 (URL: https://doi.org/10.1006/jsbi.1998.4065). (demain2005cellulaseclostridiaand pages 6-7, bayer1998cellulosomesstructureandultrastructure. pages 6-7, munir2014cellulosehydrolysisand pages 37-42)</p>
+<p>2) Recent developments and latest research (2023–2025 context)<br />
+- Contemporary perspectives on cellulosome structure/function and cohesin–dockerin specificity emphasize modular assembly, dynamic composition, and engineering opportunities (designer cellulosomes), situating GH16 hemicellulases like LicB as accessory enzymes that increase deconstruction efficiency by removing matrix polysaccharides. Frontiers in Microbiology, 2025-09 (URL: https://doi.org/10.3389/fmicb.2025.1638551). Although beyond 2024, this review synthesizes recent advances pertinent to LicB’s role within the ensemble. (lindic2025structuralandfunctional pages 19-20, lindic2025structuralandfunctional pages 19-19)<br />
+- Proteome-centric views continue to validate dockerin-bearing hemicellulases in cellulosomes and to highlight condition-dependent incorporation (e.g., differential detection of specific enzymes on Avicel vs other carbon sources), consistent with adaptive inclusion of GH16 lichenase LicB. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07). Methods details for confident identification of secreted, cellulosome-associated enzymes are described (LC–MS/MS after cellulose-affinity purification; signals for secretion required), which remain methodological standards. (gold2007globalviewof pages 6-8, gold2007proteomicanalysisof pages 50-55)</p>
+<p>3) Current applications and implementations<br />
+- Biomass deconstruction and biofuels: Cellulosomes, including hemicellulases such as GH16 lichenases, enhance plant cell wall degradation by synergistically removing noncellulosic barriers to cellulose; this supports consolidated bioprocessing strategies for lignocellulosic bioethanol in thermophilic clostridia. Foundational and expert reviews on clostridia and cellulosomes frame these applications and the extracellular deployment of enzyme consortia. Microbiology and Molecular Biology Reviews, 2005-03 (URL: https://doi.org/10.1128/MMBR.69.1.124-154.2005). (demain2005cellulaseclostridiaand pages 6-7)<br />
+- Designer/synthetic cellulosomes: Recent expert reviews summarize progress in reconstituting/engineering cellulosomes to optimize enzyme sets (including hemicellulases) for various substrates, reinforcing the practical value of incorporating GH16 activities to access mixed-linkage glucans in grasses and cereals. Frontiers in Microbiology, 2025-09 (URL: https://doi.org/10.3389/fmicb.2025.1638551). (lindic2025structuralandfunctional pages 19-20, lindic2025structuralandfunctional pages 19-19)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Extracellular, modular design is central to efficiency. Canonical reviews emphasize that a scaffoldin with a cellulose-binding module recruits dockerin-bearing enzymes to the substrate surface, enabling proximity and synergy; hemicellulases such as GH16 lichenases contribute by peeling away matrix glucans that otherwise impede cellulase access. Journal of Structural Biology, 1998-12 (URL: https://doi.org/10.1006/jsbi.1998.4065); Microbiology and Molecular Biology Reviews, 2005-03 (URL: https://doi.org/10.1128/MMBR.69.1.124-154.2005). (bayer1998cellulosomesstructureandultrastructure. pages 6-7, demain2005cellulaseclostridiaand pages 6-7)<br />
+- Adaptive composition and detection: Quantitative proteomics revealed condition-specific incorporation of cellulosomal enzymes and detected LicB in Avicel-derived complexes, supporting the view that GH16 lichenases are selectively deployed to facilitate degradation of plant materials rich in mixed-linkage glucans. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07). (gold2007globalviewof pages 6-8)</p>
+<p>5) Relevant statistics and data from recent and primary studies<br />
+- Proteomic identification of LicB in isolated cellulosomes: LicB (annotated GH16 lichenase) appears in cellulosome proteomes with quantitative metrics (e.g., emPAI ~0.30 in a representative dataset) following stringent identification criteria (≥2 unique peptides; signal peptide; cellulose-affinity isolation), supporting its bona fide inclusion in the complex. Experimental workflow and identification thresholds are detailed and widely adopted. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07); additional proteomic methods description provided in a complementary analysis. (gold2007proteomicanalysisof pages 77-79, gold2007proteomicanalysisof pages 50-55, gold2007globalviewof pages 6-8)<br />
+- Domain/module annotation: Reviews of clostridial extracellular glycosyl hydrolases explicitly classify LicB as GH16 with a dockerin type I (GH16–Doc1), consistent with cellulosomal catalytic components recruited to the primary scaffoldin (CipA); this implies an N-terminal signal peptide for secretion and C-terminal dockerin for complex assembly. Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0). (schwarz2004extracellularglycosylhydrolases pages 22-26)</p>
+<p>Functional annotation for licB (Q84C00) in C. thermocellum<br />
+- Primary function and reaction: LicB encodes a GH16 lichenase that hydrolyzes β-1,4 linkages adjacent to β-1,3 linkages within mixed-linkage β-glucans (e.g., lichenan, cereal β-glucan), consistent with EC 3.2.1.73. It contributes to hemicellulose/mixed-linkage glucan deconstruction rather than crystalline cellulose hydrolysis. Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0). (schwarz2004extracellularglycosylhydrolases pages 22-26)<br />
+- Substrate specificity: Mixed-linkage β-glucans in plant cell walls (lichenan, barley/oat β-glucan) are canonical substrates for GH16 lichenases; these are matrix polysaccharides distinct from cellulose. LicB is consistently grouped with GH16 lichenases in C. thermocellum cellulosomes, indicating this specificity in vivo. Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0); Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07). (schwarz2004extracellularglycosylhydrolases pages 22-26, gold2007globalviewof pages 6-8)<br />
+- Domain architecture and localization: Evidence indicates a secreted modular enzyme architecture: N-terminal signal peptide for secretion; GH16 catalytic domain; C-terminal type I dockerin (Doc1) that tethers the enzyme to CipA type I cohesins within the extracellular cellulosome attached to cellulose and, via anchor scaffoldins, to the cell surface. Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0); Journal of Structural Biology, 1998-12 (URL: https://doi.org/10.1006/jsbi.1998.4065); Microbiology and Molecular Biology Reviews, 2005-03 (URL: https://doi.org/10.1128/MMBR.69.1.124-154.2005). (schwarz2004extracellularglycosylhydrolases pages 22-26, bayer1998cellulosomesstructureandultrastructure. pages 6-7, demain2005cellulaseclostridiaand pages 6-7)<br />
+- Proteomic and gene-level evidence supporting cellulosome incorporation: LicB is directly detected in affinity-purified cellulosomes of C. thermocellum by LC–MS/MS, with quantitative values reported and with methodology that required secretion signals; a related analysis lists LicB (GH16 lichenase) explicitly in the cellulosome protein catalog. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07); complementary proteomic methods resource. (gold2007globalviewof pages 6-8, gold2007proteomicanalysisof pages 77-79, gold2007proteomicanalysisof pages 50-55)</p>
+<p>Pathway and systems context<br />
+- Role within plant cell wall deconstruction: GH16 lichenases in the cellulosome act as accessory hemicellulases to remove mixed-linkage β-glucans that encase or cross-link cellulose microfibrils, thereby increasing cellulase access and improving overall saccharification. Classic reviews on cellulosome structure and extracellular localization support this mechanistic role for noncellulase components within the multienzyme assembly. Microbiology and Molecular Biology Reviews, 2005-03 (URL: https://doi.org/10.1128/MMBR.69.1.124-154.2005); Journal of Structural Biology, 1998-12 (URL: https://doi.org/10.1006/jsbi.1998.4065). (demain2005cellulaseclostridiaand pages 6-7, bayer1998cellulosomesstructureandultrastructure. pages 6-7)</p>
+<p>Ambiguity note<br />
+- The symbol licB is used in multiple bacteria (sometimes for lichenases or unrelated functions), but proteomic identification in C. thermocellum cellulosomes and authoritative reviews of clostridial extracellular GHs confirm that, in this organism, licB encodes a GH16 lichenase with a dockerin module integrated into the cellulosome. Journal of Bacteriology, 2007-10 (URL: https://doi.org/10.1128/jb.00882-07); Advances in Applied Microbiology, 2004-01 (URL: https://doi.org/10.1016/S0065-2164(04)56007-0). (gold2007globalviewof pages 6-8, schwarz2004extracellularglycosylhydrolases pages 22-26)</p>
+<p>Limitations and open needs<br />
+- Although the proteomic and review literature strongly supports LicB’s function and localization, enzyme kinetics and precise pH/temperature optima for LicB specifically were not captured in the accessible excerpts; targeted biochemical characterization and structural data for the LicB catalytic module (GH16) would further refine the annotation. The cellulosome-focused reviews from 2023–2025 strengthen the systems context but provide limited LicB-specific quantitative biochemistry. Additional recent primary studies focused directly on LicB would be valuable for detailed kinetic parameters. (lindic2025structuralandfunctional pages 19-20, gold2007globalviewof pages 6-8)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gold2007proteomicanalysisof pages 77-79): N Gold. Proteomic analysis of the clostridium thermocellum cellulosome. Unknown journal, 2007.</p>
+</li>
+<li>
+<p>(gold2007globalviewof pages 6-8): Nicholas D. Gold and Vincent J. J. Martin. Global view of the <i>clostridium thermocellum</i> cellulosome revealed by quantitative proteomic analysis. Journal of Bacteriology, 189:6787-6795, Oct 2007. URL: https://doi.org/10.1128/jb.00882-07, doi:10.1128/jb.00882-07. This article has 271 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarz2004extracellularglycosylhydrolases pages 22-26): Wolfgang H. Schwarz, Vladimir V. Zverlov, and Hubert Bahl. Extracellular glycosyl hydrolases from clostridia. Advances in applied microbiology, 56:215-61, Jan 2004. URL: https://doi.org/10.1016/s0065-2164(04)56007-0, doi:10.1016/s0065-2164(04)56007-0. This article has 65 citations.</p>
+</li>
+<li>
+<p>(gold2007proteomicanalysisof pages 50-55): N Gold. Proteomic analysis of the clostridium thermocellum cellulosome. Unknown journal, 2007.</p>
+</li>
+<li>
+<p>(demain2005cellulaseclostridiaand pages 6-7): Arnold L. Demain, Michael Newcomb, and J. H. David Wu. Cellulase, clostridia, and ethanol. Microbiology and Molecular Biology Reviews, 69:124-154, Mar 2005. URL: https://doi.org/10.1128/mmbr.69.1.124-154.2005, doi:10.1128/mmbr.69.1.124-154.2005. This article has 1268 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bayer1998cellulosomesstructureandultrastructure. pages 6-7): Edward A. Bayer, Linda J.W. Shimon, Yuval Shoham, and Raphael Lamed. Cellulosomes-structure and ultrastructure. Journal of structural biology, 124 2-3:221-34, Dec 1998. URL: https://doi.org/10.1006/jsbi.1998.4065, doi:10.1006/jsbi.1998.4065. This article has 474 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(munir2014cellulosehydrolysisand pages 37-42): R Munir. Cellulose hydrolysis and metabolism in the mesophilic, cellulolytic bacterium, clostridium termitidis ct1112. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(lindic2025structuralandfunctional pages 19-20): Nataša Lindič and Maša Vodovnik. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. Frontiers in Microbiology, Sep 2025. URL: https://doi.org/10.3389/fmicb.2025.1638551, doi:10.3389/fmicb.2025.1638551. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(lindic2025structuralandfunctional pages 19-19): Nataša Lindič and Maša Vodovnik. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. Frontiers in Microbiology, Sep 2025. URL: https://doi.org/10.3389/fmicb.2025.1638551, doi:10.3389/fmicb.2025.1638551. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>schwarz2004extracellularglycosylhydrolases pages 22-26</li>
+<li>demain2005cellulaseclostridiaand pages 6-7</li>
+<li>gold2007globalviewof pages 6-8</li>
+<li>gold2007proteomicanalysisof pages 77-79</li>
+<li>gold2007proteomicanalysisof pages 50-55</li>
+<li>munir2014cellulosehydrolysisand pages 37-42</li>
+<li>lindic2025structuralandfunctional pages 19-20</li>
+<li>lindic2025structuralandfunctional pages 19-19</li>
+<li>https://doi.org/10.1128/jb.00882-07</li>
+<li>https://doi.org/10.1016/S0065-2164(04</li>
+<li>https://doi.org/10.1128/MMBR.69.1.124-154.2005</li>
+<li>https://doi.org/10.1006/jsbi.1998.4065</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551</li>
+<li>https://doi.org/10.1128/jb.00882-07,</li>
+<li>https://doi.org/10.1016/s0065-2164(04</li>
+<li>https://doi.org/10.1128/mmbr.69.1.124-154.2005,</li>
+<li>https://doi.org/10.1006/jsbi.1998.4065,</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q84C00
+gene_symbol: licB
+aliases:
+  - LicB
+  - Laminarinase
+  - Beta-1,3-1,4-glucanase
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1515
+  label: Acetivibrio thermocellus
+description: &gt;-
+  LicB (also known as Lam1) is a thermostable beta-glucanase (lichenase, EC 3.2.1.73)
+  from Acetivibrio thermocellus (formerly Clostridium thermocellum). It is a GH16
+  family glycoside hydrolase that catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic
+  linkages in mixed-linkage beta-D-glucans containing both (1-&gt;3) and (1-&gt;4) bonds,
+  such as lichenan and barley beta-glucan. The enzyme contains a C-terminal type-I
+  dockerin domain that enables its incorporation into the cellulosome, the large
+  extracellular enzyme complex characteristic of this bacterium that efficiently
+  degrades plant cell wall polysaccharides.
+existing_annotations:
+- term:
+    id: GO:0000272
+    label: polysaccharide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from InterPro domain matches (IPR002105,
+      IPR016134, IPR036439 - dockerin domains). While LicB does participate in
+      polysaccharide catabolism, this term is too general. The enzyme specifically
+      degrades mixed-linkage beta-glucans. A more specific term like
+      &#39;beta-glucan catabolic process&#39; (GO:0051275) would be more accurate.
+    action: MODIFY
+    reason: &gt;-
+      The term &#39;polysaccharide catabolic process&#39; is overly broad. LicB is a
+      lichenase that specifically hydrolyzes beta-glucans containing (1-&gt;3) and
+      (1-&gt;4) linkages. UniProt confirms the catalytic activity with EC 3.2.1.73.
+      A more specific biological process term should be used.
+    proposed_replacement_terms:
+      - id: GO:0051275
+        label: beta-glucan catabolic process
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          Hydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in beta-D-
+          glucans containing (1-&gt;3)- and (1-&gt;4)-bonds.
+      - reference_id: file:ACET2/Q84C00/Q84C00-deep-research-falcon.md
+        supporting_text: &#34;LicB is a GH16 family lichenase that degrades beta-glucans&#34;
+
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is correct but represents a high-level parent term. LicB does
+      indeed have O-glycosyl hydrolase activity, but the specific term &#39;licheninase
+      activity&#39; (GO:0042972) already captures this more precisely. This annotation
+      can be retained as it is not incorrect, but it provides less information than
+      the more specific term.
+    action: ACCEPT
+    reason: &gt;-
+      While this is a general parent term, it is not incorrect for LicB. The enzyme
+      hydrolyzes O-glycosyl bonds in beta-glucans. Since the more specific
+      &#39;licheninase activity&#39; (GO:0042972) is also annotated, this broader term
+      provides hierarchical context and is acceptable to retain.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          Belongs to the glycosyl hydrolase 16 family.
+
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This is a very high-level biological process term. While technically correct
+      (lichenase participates in carbohydrate metabolism), this term is too general
+      to be informative. It should be replaced with a more specific term.
+    action: MODIFY
+    reason: &gt;-
+      &#39;Carbohydrate metabolic process&#39; is the grandparent term for nearly all
+      sugar-related processes. For a specific enzyme like lichenase, a more
+      informative term such as &#39;beta-glucan catabolic process&#39; (GO:0051275)
+      should be used to accurately reflect the enzyme&#39;s biological role.
+    proposed_replacement_terms:
+      - id: GO:0051275
+        label: beta-glucan catabolic process
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          Hydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in beta-D-
+          glucans containing (1-&gt;3)- and (1-&gt;4)-bonds.
+
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is derived from UniProtKB keyword mapping (KW-0378 Hydrolase).
+      While LicB is indeed a hydrolase, this is the root molecular function term for
+      all hydrolases and is too general to be informative when more specific terms
+      are available.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term &#39;hydrolase activity&#39; is the most general hydrolase term in GO.
+      Since LicB already has the specific annotation &#39;licheninase activity&#39;
+      (GO:0042972), retaining this very general term adds no informational value
+      and clutters the annotation set.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          Glycosidase; Hydrolase; Signal.
+
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation comes from UniProtKB keyword mapping (KW-0326 Glycosidase).
+      It is a parent term of &#39;hydrolase activity, hydrolyzing O-glycosyl compounds&#39;
+      (GO:0004553). While correct, it is redundant given the presence of more
+      specific glycosidase terms.
+    action: ACCEPT
+    reason: &gt;-
+      This term correctly captures the glycosidase activity of LicB. Although it
+      is a mid-level term in the hierarchy (parent of GO:0004553), it is informative
+      enough to retain alongside the specific &#39;licheninase activity&#39; term. It
+      provides appropriate hierarchical context.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          Belongs to the glycosyl hydrolase 16 family.
+
+- term:
+    id: GO:0042972
+    label: licheninase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      This is the most specific and accurate molecular function annotation for LicB.
+      Licheninase activity (EC 3.2.1.73) catalyzes the hydrolysis of (1-&gt;4)-beta-D-
+      glucosidic linkages in beta-D-glucans containing (1-&gt;3) and (1-&gt;4) bonds. This
+      precisely matches the documented function of LicB.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is derived from EC number mapping (EC:3.2.1.73) and accurately
+      represents the core molecular function of LicB. UniProt explicitly assigns
+      EC 3.2.1.73 to this enzyme, and the catalytic activity described matches
+      the GO term definition exactly. This is the primary functional annotation
+      for this enzyme.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          RecName: Full=Beta-glucanase;
+
+- term:
+    id: GO:1990311
+    label: type-I cohesin domain binding
+  evidence_type: ISS
+  original_reference_id: UniProtKB:Q84C00
+  review:
+    summary: &gt;-
+      LicB contains a type-I dockerin domain (residues 267-334) that mediates
+      binding to type-I cohesin domains on the CipA scaffoldin protein of the
+      cellulosome. This domain architecture is characteristic of cellulosomal
+      enzymes in A. thermocellus.
+    action: NEW
+    reason: &gt;-
+      The UniProt entry clearly documents a dockerin domain (PROSITE pattern
+      PS51766). The dockerin domain binds to cohesin domains on the scaffoldin
+      protein, enabling incorporation of the enzyme into the cellulosome. This
+      is a core function of the protein enabling its biological role in
+      extracellular polysaccharide degradation.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          InterPro; IPR002105; Dockerin_1_rpt.
+
+- term:
+    id: GO:0043263
+    label: cellulosome
+  evidence_type: ISS
+  original_reference_id: UniProtKB:Q84C00
+  review:
+    summary: &gt;-
+      LicB is a component of the cellulosome based on its dockerin domain, which
+      mediates attachment to the scaffoldin. The cellulosome is the characteristic
+      extracellular enzyme complex of A. thermocellus.
+    action: NEW
+    reason: &gt;-
+      The presence of a type-I dockerin domain (IPR002105, PS51766) strongly
+      indicates that LicB is a cellulosomal enzyme. The dockerin domain is the
+      hallmark of cellulosomal enzymes in Clostridia, enabling their incorporation
+      into the multi-enzyme complex via binding to cohesin domains on the scaffoldin.
+    supported_by:
+      - reference_id: UniProtKB:Q84C00
+        supporting_text: &gt;-
+          PROSITE; PS00448; CLOS_CELLULOSOME_RPT; 2.
+
+references:
+- id: UniProtKB:Q84C00
+  title: UniProt entry for LicB (Beta-glucanase) from Acetivibrio thermocellus
+  findings:
+    - statement: EC 3.2.1.73 (licheninase) assignment confirmed
+      supporting_text: &gt;-
+        RecName: Full=Beta-glucanase;
+    - statement: GH16 domain identified (residues 28-248)
+      supporting_text: &gt;-
+        Pfam; PF00722; Glyco_hydro_16; 1.
+    - statement: Dockerin domain identified (residues 267-334)
+      supporting_text: &gt;-
+        Pfam; PF00404; Dockerin_1; 1.
+    - statement: Active site residues identified at positions 136 and 140
+      supporting_text: &gt;-
+        /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU10064&#34;
+
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Source of IEA annotations based on domain matches
+
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings:
+    - statement: Source of licheninase activity annotation from EC 3.2.1.73 mapping
+
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Source of general hydrolase annotations from UniProt keywords
+
+- id: PMID:1755832
+  title: Nucleotide sequence of the Clostridium thermocellum laminarinase gene
+  findings:
+    - statement: Original cloning and sequencing of the licB gene
+      supporting_text: &#34;The sequence presented (1022 bp) shows the Clostridium thermocellum laminarinase gene (lam1) and its flanking regions&#34;
+    - statement: Gene was originally named laminarinase (lam1)
+      supporting_text: &#34;The gene lam1 comprises an open reading frame of 726 nt, encoding a 242-aa protein with predicted Mr 27661&#34;
+
+core_functions:
+- molecular_function:
+    id: GO:0042972
+    label: licheninase activity
+  description: &gt;-
+    LicB is definitively a licheninase (EC 3.2.1.73) based on UniProt annotation
+    and enzyme classification. This is its primary catalytic function.
+  directly_involved_in:
+    - id: GO:0051275
+      label: beta-glucan catabolic process
+  locations:
+    - id: GO:0043263
+      label: cellulosome
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: &gt;-
+    What is the substrate specificity of LicB compared to other GH16 enzymes
+    in A. thermocellus? Does it preferentially cleave lichenan vs barley beta-glucan?
+
+- question: &gt;-
+    Is LicB constitutively expressed or is its expression regulated by carbon
+    source availability?
+
+suggested_experiments:
+- description: &gt;-
+    Kinetic characterization of recombinant LicB with different beta-glucan
+    substrates (lichenan, barley beta-glucan, laminarin) to determine substrate
+    specificity and kinetic parameters.
+  hypothesis: &gt;-
+    Would provide quantitative data to better annotate substrate specificity.
+
+- description: &gt;-
+    Pulldown or co-IP experiments to confirm cellulosome incorporation and
+    identify specific cohesin binding partners.
+  hypothesis: &gt;-
+    Would provide direct experimental evidence for cellulosome localization
+    annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

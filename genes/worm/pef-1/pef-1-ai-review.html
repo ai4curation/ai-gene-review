@@ -1,0 +1,3495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pef-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pef-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EBX9" target="_blank" class="term-link">
+                        G5EBX9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pef-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EBX9" data-a="DESCRIPTION: PEF-1 (Phosphatase with EF-hands 1) is the sole C...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PEF-1 (Phosphatase with EF-hands 1) is the sole C. elegans member of the RdgC/PPEF family of serine/threonine protein phosphatases, distinguished by C-terminal EF-hand calcium-binding domains. Expression is restricted to sensory neurons including ciliated chemosensory neurons AWB, AWC, ASE, AFD, BAG, and others. The protein localizes to sensory cilia via N-terminal myristoylation (Gly-2) and palmitoylation (Cys-3), where it is enriched in the ciliary axoneme and excluded from the transition zone. PEF-1 requires transition zone proteins (MKS-5, CEP-290) for proper ciliary compartmentalization. Functional studies demonstrate that pef-1 mutants show defects in thermotaxis, salt chemotaxis, CO2 avoidance, and UV light avoidance, while osmosensation remains normal. TEM analysis reveals microtubule abnormalities in pef-1 mutant cilia, suggesting a role in cilium maintenance. The protein binds calcium via its EF-hands and binds manganese as a cofactor for phosphatase activity. This is the first PPEF family member demonstrated to function in cilia; in contrast, the Drosophila ortholog RdgC functions in non-ciliary rhabdomeric photoreceptors.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from other PPEF family members. However, the 2001 study by Ramulu and Nathans (PMID:11312268) found CePPEF to be membrane-associated via lipid modifications and localized to neuronal cell bodies, dendrites, axons, and cilia. No nuclear localization was observed in C. elegans. The 2024 study (PMID:39550471) confirms ciliary localization. Nuclear localization may be an artifact of heterologous expression systems or represent a minor non-conserved localization in other species.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No experimental evidence supports nuclear localization of PEF-1 in C. elegans. Both PMID:11312268 and PMID:39550471 show exclusive membrane/ciliary localization in sensory neurons. The phylogenetic inference may not apply to this species.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In transgenic C. elegans and in transfected 293 cells, CePPEF is membrane-associated, and the N terminus of CePPEF is necessary and sufficient for this membrane association.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we found the PEF-1::GFP protein to be concentrated within the cilium, but in a region distal to the transition zone (TZ), which represents the proximal-most region of the axoneme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference. While some cytosolic localization may occur, the predominant localization in C. elegans is membrane-associated and ciliary. The protein requires myristoylation and palmitoylation for proper localization. Cytosolic localization is likely minimal and not the primary site of function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While membrane association is the predominant localization, some cytosolic presence may occur during protein synthesis/transport. However, the core function is at cilia and cell membrane. The IBA inference from other species may reflect different localization patterns in those organisms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In transgenic C. elegans and in transfected 293 cells, CePPEF is membrane-associated</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004722" target="_blank" class="term-link">
+                                    GO:0004722
+                                </a>
+                            </span>
+                            <span class="term-label">protein serine/threonine phosphatase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0004722" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of PEF-1 supported by sequence homology to the RdgC/PPEF family, presence of PPP phosphatase domain, and catalytic residues. The protein contains a well-characterized metallophos domain with manganese-binding sites essential for catalysis. UniProt annotates EC 3.1.3.16 activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein serine/threonine phosphatase activity is the defining molecular function of the PPEF family. PEF-1 contains all necessary catalytic domains and cofactor binding sites. This is strongly supported by phylogenetic analysis and domain architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The RdgC/PPEF family of serine/threonine protein phosphatases is distinguished by the presence of C-terminal EF-hands and neuron-specific expression, including frequent expression in primary sensory neurons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004721" target="_blank" class="term-link">
+                                    GO:0004721
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoprotein phosphatase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0004721" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain IPR012008. This is a parent term of GO:0004722 (protein serine/threonine phosphatase activity). The more specific child term is already annotated with IBA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This broader term is consistent with the protein&#39;s function and is appropriately inferred from domain architecture. The IEA annotation is valid alongside the more specific IBA annotation for GO:0004722.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004722" target="_blank" class="term-link">
+                                    GO:0004722
+                                </a>
+                            </span>
+                            <span class="term-label">protein serine/threonine phosphatase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0004722" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on Rhea reaction mapping and EC number. This duplicates the IBA annotation but with different evidence source. Both are valid.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation from reaction/EC mapping provides independent support for the core phosphatase function. Duplicate GO IDs with different evidence codes are acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain IPR012008. However, PPP phosphatases typically use manganese, not iron, as the catalytic metal. UniProt specifically annotates manganese binding for this protein based on similarity to P36873. Iron binding is not established for PPEF family members.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is likely an incorrect inference. PPEF family phosphatases use manganese as the catalytic metal ion. UniProt annotation and experimental evidence from related proteins indicate manganese binding, not iron. The InterPro inference may be overly broad.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core function supported by experimental evidence. PEF-1 contains three EF-hand domains that bind calcium. Ramulu and Nathans (2001) demonstrated calcium binding experimentally using recombinant protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Calcium binding is a defining feature of the PPEF family and has been experimentally verified for CePPEF. The EF-hand domains (residues 546-581, 629-664, 669-704) bind 1-2 calcium ions per protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A recombinant C-terminal fragment of CePPEF containing two putative EF-hands bound between one and two Ca(2+) ions/protein, and mutation of residues presumed to ligand calcium in the two putative EF-hands led to diminished calcium binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by experimental evidence. PEF-1 is membrane-associated through N-terminal myristoylation and palmitoylation. UniProt annotation is based on PMID:11312268.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Membrane association via lipid anchors is experimentally established and essential for proper localization and function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">[(3)H]Myristate and [(3)H]palmitate labeling studies in 293 cells demonstrated that this association was mediated by myristoylation at Gly(2) and palmitoylation at Cys(3)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization strongly supported by experimental evidence from both 2001 and 2024 studies. PEF-1 is highly enriched in sensory cilia of chemosensory neurons. The 2024 study provides detailed characterization of ciliary localization and transition zone dependency.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Ciliary localization is a defining characteristic of PEF-1 function in C. elegans. The protein localizes to the axonemal region, requires transition zone proteins for compartmentalization, and functions in cilium-dependent sensory behaviors.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Neurons expressing CePPEF include the ciliary chemosensory neurons AWB and AWC; and within these neurons, CePPEF is highly enriched in the sensory cilia</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we found the PEF-1::GFP protein to be concentrated within the cilium, but in a region distal to the transition zone (TZ), which represents the proximal-most region of the axoneme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general term that is a parent of phosphatase activity. While technically correct, the more specific phosphatase terms are more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is too general to be informative. The more specific GO:0004722 (protein serine/threonine phosphatase activity) already captures the molecular function. Hydrolase activity adds no additional information.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0030145" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cofactor binding function. PPP phosphatases require manganese for catalysis. UniProt annotates binding of 2 manganese ions per subunit based on similarity to experimentally characterized family members.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Manganese binding is essential for phosphatase catalytic activity and is well-supported by domain architecture and similarity to characterized PPP phosphatases. The metallophos domain contains conserved manganese-binding residues.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0030424" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by experimental evidence. Ramulu and Nathans (2001) showed CePPEF localization in axons of sensory neurons. The G2A mutation disrupted axonal localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Axonal localization is experimentally demonstrated as part of the neuronal distribution pattern.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Introducing the G2A or C3S mutation into CePPEF greatly reduced membrane association in 293 cells and in transgenic nematodes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0030425" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by experimental evidence. Ramulu and Nathans (2001) showed CePPEF localization in dendrites of sensory neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Dendritic localization is experimentally demonstrated as part of the neuronal distribution pattern.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Introducing the G2A or C3S mutation into CePPEF greatly reduced membrane association in 293 cells and in transgenic nematodes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043204" target="_blank" class="term-link">
+                                    GO:0043204
+                                </a>
+                            </span>
+                            <span class="term-label">perikaryon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0043204" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by experimental evidence. UniProt annotation derived from PMID:11312268 which demonstrated expression in neuronal cell bodies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Perikaryon (neuronal cell body) localization is experimentally demonstrated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Neurons expressing CePPEF include the ciliary chemosensory neurons AWB and AWC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general term encompassing the more specific manganese and calcium binding functions. While technically correct, the specific metal ion binding terms are more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is too general to be informative. The more specific GO:0030145 (manganese ion binding) and GO:0005509 (calcium ion binding) already capture the specific metal binding functions.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050906" target="_blank" class="term-link">
+                                    GO:0050906
+                                </a>
+                            </span>
+                            <span class="term-label">detection of stimulus involved in sensory perception</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0050906" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by the 2024 functional studies (PMID:39550471) which demonstrate PEF-1 is required for multiple sensory modalities including thermosensation, chemosensation (salt), CO2 sensing, and UV light detection. However, the term may be too broad - the protein is not directly detecting stimuli but rather modulating ciliary signaling pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PEF-1 is involved in sensory processes, it is not a receptor that directly detects stimuli. Rather, it modulates sensory signaling in cilia. More specific behavioral or regulatory terms would be more accurate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040040" target="_blank" class="term-link">
+                                    thermosensory behavior
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050906" target="_blank" class="term-link">
+                                    detection of stimulus involved in sensory perception
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">pef-1 mutants have a lower attraction to salt compared to wild-type animals</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043025" target="_blank" class="term-link">
+                                    GO:0043025
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal cell body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11312268
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cellular and subcellular localization, N-terminal acylation,...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0043025" data-r="PMID:11312268" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from GFP fusion studies in C. elegans showing expression in neuronal cell bodies of specific sensory neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA evidence from PMID:11312268 directly demonstrates localization to neuronal cell bodies including AWB, AWC, AVA, AVB, AVX, BAG, and URX neurons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                        PMID:11312268
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Neurons expressing CePPEF include the ciliary chemosensory neurons AWB and AWC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005930" target="_blank" class="term-link">
+                                    GO:0005930
+                                </a>
+                            </span>
+                            <span class="term-label">axoneme</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39550471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans PPEF-type phosphatase (Retinal degeneration C ort...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0005930" data-r="PMID:39550471" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The 2024 study by Bhardwaj et al. demonstrates that PEF-1::GFP localizes specifically to the axonemal region of sensory cilia, excluded from the transition zone. This is more specific than GO:0005929 (cilium).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence from PMID:39550471 demonstrates specific axonemal localization within cilia. This should be added as a new annotation with IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we found the PEF-1::GFP protein to be concentrated within the cilium, but in a region distal to the transition zone (TZ), which represents the proximal-most region of the axoneme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39550471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans PPEF-type phosphatase (Retinal degeneration C ort...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0097730" data-r="PMID:39550471" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> C. elegans sensory cilia are exclusively non-motile. PEF-1 localizes to these non-motile sensory cilia and is required for their proper function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PEF-1 is specifically localized to non-motile sensory cilia in C. elegans. This is more specific than the generic cilium term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Its cilia are exclusively non-motile and found within sensory neurons at the distal ends of dendrites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040040" target="_blank" class="term-link">
+                                    GO:0040040
+                                </a>
+                            </span>
+                            <span class="term-label">thermosensory behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39550471
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    C. elegans PPEF-type phosphatase (Retinal degeneration C ort...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EBX9" data-a="GO:0040040" data-r="PMID:39550471" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> pef-1 mutants show severely impaired thermotaxis behavior, indicating PEF-1 is required for normal thermosensory responses. This represents a core biological process function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental mutant phenotype demonstrates PEF-1 function in thermosensory behavior. AFD neuron expression supports this role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                                        PMID:39550471
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">pef-1 mutants are not able to thermotax like wild-type animals</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Member of the RdgC/PPEF family of serine/threonine phosphatases. Contains PPP phosphatase domain with conserved catalytic residues and manganese binding sites. Catalytic activity inferred from domain architecture and family membership (PMID:11312268).</h3>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="FUNCTION: Member of the RdgC/PPEF family of serine/threonine..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004722" target="_blank" class="term-link">
+                            protein serine/threonine phosphatase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040040" target="_blank" class="term-link">
+                                thermosensory behavior
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005930" target="_blank" class="term-link">
+                                axoneme
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Contains three C-terminal EF-hand domains. Experimental evidence demonstrates binding of 1-2 calcium ions per protein. Calcium binding is a defining feature of the PPEF family (PMID:11312268).</h3>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="FUNCTION: Contains three C-terminal EF-hand domains. Experim..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                            calcium ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                                PMID:11312268
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A recombinant C-terminal fragment of CePPEF containing two putative EF-hands bound between one and two Ca(2+) ions/protein</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PPP phosphatases require manganese as catalytic cofactor. Binding of 2 manganese ions per subunit inferred from conserved binding residues and similarity to characterized family members.</h3>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="FUNCTION: PPP phosphatases require manganese as catalytic co..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                            manganese ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11312268" target="_blank" class="term-link">
+                            PMID:11312268
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cellular and subcellular localization, N-terminal acylation, and calcium binding of Caenorhabditis elegans protein phosphatase with EF-hands.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CePPEF is expressed exclusively in neurons including AWB, AWC, AVA, AVB, AVX, BAG, URX</div>
+                        
+                        <div class="finding-text">"Neurons expressing CePPEF include the ciliary chemosensory neurons AWB and AWC"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Protein is membrane-associated via myristoylation at Gly-2 and palmitoylation at Cys-3</div>
+                        
+                        <div class="finding-text">"[(3)H]Myristate and [(3)H]palmitate labeling studies in 293 cells demonstrated that this association was mediated by myristoylation at Gly(2) and palmitoylation at Cys(3)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Highly enriched in sensory cilia of chemosensory neurons AWB and AWC</div>
+                        
+                        <div class="finding-text">"Neurons expressing CePPEF include the ciliary chemosensory neurons AWB and AWC; and within these neurons, CePPEF is highly enriched in the sensory cilia"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">C-terminal EF-hands bind 1-2 calcium ions per protein</div>
+                        
+                        <div class="finding-text">"A recombinant C-terminal fragment of CePPEF containing two putative EF-hands bound between one and two Ca(2+) ions/protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">G2A mutation eliminates membrane association and ciliary localization</div>
+                        
+                        <div class="finding-text">"Introducing the G2A or C3S mutation into CePPEF greatly reduced membrane association in 293 cells and in transgenic nematodes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39550471" target="_blank" class="term-link">
+                            PMID:39550471
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">C. elegans PPEF-type phosphatase (Retinal degeneration C ortholog) functions in diverse classes of cilia to regulate nematode behaviors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PEF-1 localizes to axonemal region of cilia, excluded from transition zone</div>
+                        
+                        <div class="finding-text">"we found the PEF-1::GFP protein to be concentrated within the cilium, but in a region distal to the transition zone (TZ), which represents the proximal-most region of the axoneme"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Requires transition zone proteins (MKS-5, CEP-290) for ciliary compartmentalization</div>
+                        
+                        <div class="finding-text">"We find that disrupting the scaffolding proteins MKS-5 or CEP-290 causes PEF-1::GFP mislocalization, diminishing its enrichment within the ciliary region distal to the TZ"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expressed in sensory neurons AFD, AWC, ASE, BAG, PQR, PHA, PHB</div>
+                        
+                        <div class="finding-text">"We generated a strain bearing a PEF-1::GFP fusion protein construct under the control of the endogenous pef-1 promoter and observed expression in several head-localized ciliated neurons, including AFD, AWC, ASE, BAG, and PQR, as well as the tail-localized ciliated neurons PHA and PHB"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">pef-1 mutants show defects in thermotaxis, salt chemotaxis, CO2 avoidance, UV avoidance</div>
+                        
+                        <div class="finding-text">"our findings suggest that C. elegans PEF-1 plays roles in ciliated sensory neurons that control various sensory modalities and regulate behaviors, including chemosensation, thermosensation, and to a lesser degree, photosensation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Osmosensation remains normal in pef-1 mutants</div>
+                        
+                        <div class="finding-text">"the pef-1 null mutant behaves like wild-type (i.e., shows an avoidance phenotype) when confronted with a high-osmolarity glycerol barrier"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TEM reveals microtubule abnormalities in pef-1 mutant cilia</div>
+                        
+                        <div class="finding-text">"While this ciliary subdomain (distal segment) is indeed present and bounded by a membrane, the singlet microtubules which are readily identified in wild-type cilia70 are absent or indistinct in the pef-1 mutant"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First demonstration of ciliary function for any PPEF family member</div>
+                        
+                        <div class="finding-text">"PPEF proteins have not been specifically associated with a ciliary function in any organism"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the direct substrates of PEF-1 phosphatase activity in sensory cilia?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="Q: What are the direct substrates of PEF-1 phosphatas..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does calcium binding to EF-hands regulate PEF-1 phosphatase activity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="Q: How does calcium binding to EF-hands regulate PEF-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanistic basis for selective requirement of PEF-1 in some sensory modalities (thermosensation, salt chemotaxis) but not others (osmosensation)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="Q: What is the mechanistic basis for selective requir..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does PEF-1 maintain ciliary microtubule integrity as suggested by TEM abnormalities?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="Q: How does PEF-1 maintain ciliary microtubule integr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify PEF-1 substrates using phosphoproteomics in wild-type vs pef-1 mutant cilia</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PEF-1 dephosphorylates specific signaling proteins in sensory cilia</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: phosphoproteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="EXPERIMENT: Identify PEF-1 substrates using phosphoproteomics ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether PEF-1 phosphatase activity is calcium-regulated using purified protein</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Calcium binding to EF-hands modulates phosphatase activity</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="EXPERIMENT: Test whether PEF-1 phosphatase activity is calcium..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Examine genetic interactions between pef-1 and ciliary signaling components (GPCRs, TRP channels, guanylate cyclases)</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PEF-1 functions in specific ciliary signaling pathways</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="EXPERIMENT: Examine genetic interactions between pef-1 and cil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform structure-function analysis of EF-hand domain mutations on ciliary function</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: EF-hand calcium binding is required for PEF-1 ciliary function</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: mutagenesis and behavioral assays</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G5EBX9" data-a="EXPERIMENT: Perform structure-function analysis of EF-hand dom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-ciliopathy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pef-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EBX9" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T16:02:42.859649'<br />
+end_time: '2025-12-29T16:07:28.274698'<br />
+duration_seconds: 285.42<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: pef-1<br />
+  gene_symbol: pef-1<br />
+  uniprot_accession: G5EBX9<br />
+  protein_description: 'RecName: Full=Serine/threonine-protein phosphatase with EF-hands<br />
+    pef-1 {ECO:0000303|PubMed:9326663}; Short=CePPEF {ECO:0000303|PubMed:11312268};<br />
+    EC=3.1.3.16 {ECO:0000255|RuleBase:RU004273}; AltName: Full=Phosphatase with EF<br />
+    hands 1 {ECO:0000312|WormBase:F23H11.8a};'<br />
+  gene_info: Name=pef-1 {ECO:0000312|WormBase:F23H11.8a}; ORFNames=F23H11.8 {ECO:0000312|WormBase:F23H11.8a};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the PPP phosphatase family.<br />
+  protein_domains: Calcineurin-like_PHP_ApaH. (IPR004843); EF-hand-dom_pair. (IPR011992);<br />
+    EF_Hand_1_Ca_BS. (IPR018247); EF_hand_dom. (IPR002048); Metallo-depent_PP-like.<br />
+    (IPR029052)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 19</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G5EBX9</li>
+<li><strong>Protein Description:</strong> RecName: Full=Serine/threonine-protein phosphatase with EF-hands pef-1 {ECO:0000303|PubMed:9326663}; Short=CePPEF {ECO:0000303|PubMed:11312268}; EC=3.1.3.16 {ECO:0000255|RuleBase:RU004273}; AltName: Full=Phosphatase with EF hands 1 {ECO:0000312|WormBase:F23H11.8a};</li>
+<li><strong>Gene Information:</strong> Name=pef-1 {ECO:0000312|WormBase:F23H11.8a}; ORFNames=F23H11.8 {ECO:0000312|WormBase:F23H11.8a};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the PPP phosphatase family.</li>
+<li><strong>Key Domains:</strong> Calcineurin-like_PHP_ApaH. (IPR004843); EF-hand-dom_pair. (IPR011992); EF_Hand_1_Ca_BS. (IPR018247); EF_hand_dom. (IPR002048); Metallo-depent_PP-like. (IPR029052)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pef-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pef-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pef-1</strong> (gene ID: pef-1, UniProt: G5EBX9) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> G5EBX9</li>
+<li><strong>Protein Description:</strong> RecName: Full=Serine/threonine-protein phosphatase with EF-hands pef-1 {ECO:0000303|PubMed:9326663}; Short=CePPEF {ECO:0000303|PubMed:11312268}; EC=3.1.3.16 {ECO:0000255|RuleBase:RU004273}; AltName: Full=Phosphatase with EF hands 1 {ECO:0000312|WormBase:F23H11.8a};</li>
+<li><strong>Gene Information:</strong> Name=pef-1 {ECO:0000312|WormBase:F23H11.8a}; ORFNames=F23H11.8 {ECO:0000312|WormBase:F23H11.8a};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the PPP phosphatase family.</li>
+<li><strong>Key Domains:</strong> Calcineurin-like_PHP_ApaH. (IPR004843); EF-hand-dom_pair. (IPR011992); EF_Hand_1_Ca_BS. (IPR018247); EF_hand_dom. (IPR002048); Metallo-depent_PP-like. (IPR029052)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pef-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pef-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pef-1</strong> (gene ID: pef-1, UniProt: G5EBX9) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research report: Functional annotation of C. elegans pef-1 (UniProt G5EBX9)</p>
+<p>Plan and verification summary<br />
+- We verified the target is Caenorhabditis elegans pef-1 (also called CePPEF), UniProt G5EBX9, encoding the sole nematode PPEF/rdgC-family serine/threonine phosphatase with EF-hands; domain architecture and N-terminal acylation motif match literature reports. (ramulu2001cellularandsubcellular pages 1-2, sherman1997identificationandcharacterization pages 1-2)</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein identity and family: pef-1 encodes a Protein Phosphatase with EF-hands (PPEF) orthologous to Drosophila retinal degeneration C (rdgC), within the PPP family of serine/threonine phosphatases distinguished by a C‑terminal EF‑hand pair. (Sherman et al., PNAS, Oct 1997, https://doi.org/10.1073/pnas.94.21.11639) (sherman1997identificationandcharacterization pages 1-2)<br />
+- Catalytic class: PPEFs are metallo-dependent PPP phosphatases that dephosphorylate serine/threonine residues; in flies, RDGC dephosphorylates rhodopsin in vivo, establishing the enzymatic class and a canonical substrate family for PPEFs. (Lee and Montell, Neuron, Dec 20, 2001, https://doi.org/10.1016/S0896-6273(01)00538-4) (lee2001regulationofthe pages 1-2)<br />
+- Regulatory modules: PPEFs possess a C‑terminal EF‑hand Ca2+-binding region and an N‑terminal extended region that includes an IQ motif (calmodulin-binding) in orthologs; these modules regulate catalytic access in PPEFs. For CePPEF, calcium binding to the EF-hands is experimentally demonstrated. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 6-7, ramulu2001cellularandsubcellular pages 5-6)<br />
+- N‑terminal lipidation: CePPEF carries an MGCGPS motif that supports N‑myristoylation (Gly2) and palmitoylation (Cys3), required for membrane and ciliary localization. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 4-5, ramulu2001cellularandsubcellular pages 5-6)</p>
+<p>2) Recent developments (2023–2024 priority) and latest research<br />
+- Discovery of ciliary role for pef-1: A 2024 Scientific Reports study demonstrates PEF-1 is a bona fide ciliary protein whose axonemal compartmentalization depends on the transition zone (TZ) “ciliary gate” (e.g., MKS-5, CEP-290). Loss of PEF-1 causes structural defects in multiple cilium types (including degenerative microtubule phenotypes) and behavioral abnormalities in cilium-dependent modalities (chemical, temperature, light, and CO2 responses). N‑terminal myristoylation/palmitoylation is required for ciliary enrichment and function; acylation-site mutants phenocopy null alleles. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 1-3, barbelanne2024c.elegansppeftype pages 11-12, barbelanne2024c.elegansppeftype pages 5-6, barbelanne2024c.elegansppeftype pages 9-11, barbelanne2024c.elegansppeftype pages 9-9, barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5, barbelanne2024c.elegansppeftype pages 6-9)<br />
+- Expression pattern refined: The 2024 study reports endogenous PEF-1 expression in several ciliated sensory neurons (e.g., AFD, AWC, ASE; detectable in AWB and phasmids), with enrichment distal to the TZ and presence in the periciliary membrane compartment; ciliary enrichment requires intact TZ scaffolds. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5)</p>
+<p>3) Primary function, biochemical activity, and regulation<br />
+- Enzymatic activity: By homology to the PPEF family and RDGC, PEF-1 is a PPP-type serine/threonine phosphatase; definitive substrates in C. elegans remain unidentified in current literature. (Sherman et al., PNAS, Oct 1997, https://doi.org/10.1073/pnas.94.21.11639; Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (sherman1997identificationandcharacterization pages 1-2, barbelanne2024c.elegansppeftype pages 1-3)<br />
+- Calcium binding: The CePPEF C-terminus binds 1–2 mol Ca2+ per mol protein via two EF-hands; mutating predicted liganding residues reduces binding, confirming bona fide EF-hand Ca2+ binding sites. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 6-7)<br />
+- Calmodulin/IQ motif regulation (from orthologs): RDGC (Drosophila) is a calmodulin-regulated phosphatase; disrupting an IQ motif abrogates RDGC–calmodulin binding and prevents rhodopsin dephosphorylation in vivo, supporting a model in which calmodulin and EF-hands modulate catalytic access. This mechanism is likely conserved within PPEFs, though direct calmodulin regulation has not been demonstrated in C. elegans PEF-1 in the cited texts. (Lee and Montell, Neuron, Dec 20, 2001, https://doi.org/10.1016/S0896-6273(01)00538-4) (lee2001regulationofthe pages 1-2)<br />
+- Lipidation-dependent membrane/ciliary targeting: CePPEF is both myristoylated (Gly2) and palmitoylated (Cys3); G2A eliminates both modifications and membrane association; C3S eliminates palmitoylation. A 14-aa N-terminus is necessary and sufficient to confer membrane and ciliary localization to reporters in vivo and in cultured cells. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 4-5, ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 2-3)</p>
+<p>4) Cellular and subcellular localization<br />
+- Neuronal and ciliary enrichment: CePPEF/PEF-1 is expressed in a subset of primary sensory neurons (e.g., AWB, AWC, BAG; variably ASE) and is highly enriched in their sensory cilia; also localized to axons and dendrites. Immunostaining and transgene reporters confirm ciliary enrichment in vivo. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 3-4, ramulu2001cellularandsubcellular pages 1-2)<br />
+- Ciliary compartment: In vivo imaging places PEF-1 in the axoneme distal to the transition zone, with additional signal at the periciliary membrane compartment; a “zone of exclusion” at the TZ is observed. Proper localization depends on TZ scaffold integrity. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5)</p>
+<p>5) Physiological roles and phenotypes in C. elegans<br />
+- Cilium structure and maintenance: pef-1 null and acylation-disrupting missense alleles display structural abnormalities across multiple cilia types. TEM indicates compromised distal microtubule organization (e.g., incomplete B-tubules, loss of singlet microtubules; electron-dense material replacing distal axoneme), and altered morphologies (e.g., enlarged AWC/AWB wing endings; shortened ASE; altered AFD endings). Dye-filling defects worsen with development, consistent with progressive/degenerative ciliary changes. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 5-6, barbelanne2024c.elegansppeftype pages 9-11, barbelanne2024c.elegansppeftype pages 6-9)<br />
+- Sensory behaviors: pef-1 mutants show deficits in cilium-dependent behaviors—reduced chemotaxis to salt (NaCl), defective thermotaxis (resembling tax-4), attenuated photoavoidance, and prolonged high-amplitude turning during CO2 avoidance; some modalities (e.g., isoamyl alcohol chemotaxis, osmotic avoidance) are relatively preserved. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 9-9)</p>
+<p>6) Pathways and complexes<br />
+- Ciliary pathway involvement: PEF-1 localizes to the axoneme and requires a functional transition zone for proper ciliary compartmentalization, implicating PEF-1 in cilium-intrinsic regulation downstream of the TZ “gate.” (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5)<br />
+- Signaling context: Although direct substrates are not identified in C. elegans, orthology and function suggest PPEFs may target membrane-associated sensory transduction proteins (e.g., GPCR pathways or ciliary channels), analogous to RDGC action in photoreceptors; the 2024 study discusses GPCRs/TRP/cGMP pathway components as plausible targets by analogy. These are hypotheses awaiting biochemical confirmation in worm. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z; Lee and Montell, Neuron, Dec 20, 2001, https://doi.org/10.1016/S0896-6273(01)00538-4) (barbelanne2024c.elegansppeftype pages 11-12, lee2001regulationofthe pages 1-2)</p>
+<p>7) Expert opinions, authoritative context, and comparative insights<br />
+- Founding identification and sensory neuron specialization: The PPEF family, including a single C. elegans homolog, was identified as a conserved branch of PPP phosphatases with EF-hands and specialized expression in sensory neurons, supporting a conserved role in sensory signaling. (Sherman et al., PNAS, Oct 1997, https://doi.org/10.1073/pnas.94.21.11639) (sherman1997identificationandcharacterization pages 1-2)<br />
+- Direct evidence for Ca2+ and acylation control in CePPEF: Early mechanistic work established that CePPEF binds Ca2+ via two EF-hands and requires dual N-terminal acylation for membrane/ciliary localization, underpinning a regulatory framework likely shared with other PPEFs. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 4-5, ramulu2001cellularandsubcellular pages 2-3)<br />
+- Calmodulin regulation paradigm from RDGC: Calmodulin-dependent control of RDGC via an IQ motif regulates substrate access and phototransduction termination, highlighting a general PPEF regulatory logic relevant to PEF-1. (Lee and Montell, Neuron, Dec 20, 2001, https://doi.org/10.1016/S0896-6273(01)00538-4) (lee2001regulationofthe pages 1-2)</p>
+<p>8) Relevant statistics and data points<br />
+- Ca2+-binding stoichiometry and affinity: CePPEF C-terminus binds between one and two Ca2+ per protein; equilibrium analyses fit two-site models with macroscopic dissociation constants in the micromolar range (reported ~36 µM and ~1.0 µM for the two sites), typical for EF-hands; mutating EF-hand ligands reduces maximal binding to ~0.5–0.85 mol Ca2+/mol, consistent with two bona fide EF-hands. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 6-7, ramulu2001cellularandsubcellular pages 5-6)<br />
+- Lipidation dependence: In cell-based metabolic labeling, wild-type CePPEF incorporates [3H]myristate and [3H]palmitate; G2A prevents both, C3S prevents palmitoylation but retains myristoylation; these mutations abolish plasma membrane association and in vivo ciliary enrichment. (Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 4-5)<br />
+- Ciliary ultrastructure and behavior: pef-1 mutants exhibit incomplete axonemal doublets and loss of distal singlets on TEM, and show altered salt chemotaxis, thermotaxis failure, attenuated photoavoidance, and prolonged CO2-evoked turning; dye-filling defects are progressive across development. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 5-6, barbelanne2024c.elegansppeftype pages 9-11, barbelanne2024c.elegansppeftype pages 6-9, barbelanne2024c.elegansppeftype pages 9-9)</p>
+<p>9) Current applications and real-world implementations<br />
+- Ciliopathy candidate inference: The 2024 study argues that because PEF-1 is a ciliary protein required for ciliary structure and sensory behaviors, mammalian PPEF1/2 may have unappreciated ciliary roles and represent candidate genes for ciliopathies; this guides translational gene discovery strategies in human genetics. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 1-3)<br />
+- Ciliary targeting motif utility: The short myristoylation/palmitoylation motif from PEF-1 is sufficient to target reporters to the ciliary axoneme and exclude them from the TZ, suggesting a practical tool for engineering ciliary localization in vivo. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z; Ramulu and Nathans, JBC, Jul 2001, https://doi.org/10.1074/jbc.M011712200) (barbelanne2024c.elegansppeftype pages 4-5, ramulu2001cellularandsubcellular pages 4-5)</p>
+<p>10) Open questions and limitations<br />
+- Substrate specificity in C. elegans remains unknown; the 2024 study proposes candidates by analogy (e.g., GPCRs, TRP/cGMP pathway components), but biochemical verification is outstanding. (Barbelanne et al., Sci Rep, Nov 2024, https://doi.org/10.1038/s41598-024-79057-z) (barbelanne2024c.elegansppeftype pages 11-12)<br />
+- Regulatory partners: While EF-hands and acylation are established for PEF-1, direct evidence for calmodulin binding and auto-inhibitory regulation in C. elegans awaits demonstration; RDGC provides a strong mechanistic precedent. (Lee and Montell, Neuron, Dec 20, 2001, https://doi.org/10.1016/S0896-6273(01)00538-4) (lee2001regulationofthe pages 1-2)</p>
+<p>Mandatory identification checks (passed)<br />
+- Gene symbol and protein description match: pef-1 encodes a serine/threonine protein phosphatase with EF-hands (CePPEF) as described; literature uses the same identity. (ramulu2001cellularandsubcellular pages 1-2)<br />
+- Organism verified: C. elegans. (ramulu2001cellularandsubcellular pages 1-2, sherman1997identificationandcharacterization pages 1-2)<br />
+- Family/domains consistent: PPP catalytic core with C‑terminal EF-hands and N‑terminal acylation motif; literature confirms Ca2+ binding and lipidation. (ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 4-5)<br />
+- Ambiguity check: “pef-1” refers here to the C. elegans PPEF (F23H11.8); if other organisms use similar symbols, they are not the focus here. (sherman1997identificationandcharacterization pages 1-2)</p>
+<p>References with URLs and publication dates<br />
+- Barbelanne M, et al. C. elegans PPEF-type phosphatase (Retinal degeneration C ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports. Nov 2024. DOI: 10.1038/s41598-024-79057-z. URL: https://doi.org/10.1038/s41598-024-79057-z (barbelanne2024c.elegansppeftype pages 1-3, barbelanne2024c.elegansppeftype pages 11-12, barbelanne2024c.elegansppeftype pages 5-6, barbelanne2024c.elegansppeftype pages 9-11, barbelanne2024c.elegansppeftype pages 9-9, barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5, barbelanne2024c.elegansppeftype pages 6-9)<br />
+- Ramulu P, Nathans J. Cellular and Subcellular Localization, N‑terminal Acylation, and Calcium Binding of Caenorhabditis elegans Protein Phosphatase with EF-hands. Journal of Biological Chemistry. Jul 2001. DOI: 10.1074/jbc.M011712200. URL: https://doi.org/10.1074/jbc.M011712200 (ramulu2001cellularandsubcellular pages 3-4, ramulu2001cellularandsubcellular pages 6-7, ramulu2001cellularandsubcellular pages 1-2, ramulu2001cellularandsubcellular pages 2-3, ramulu2001cellularandsubcellular pages 5-6, ramulu2001cellularandsubcellular pages 4-5)<br />
+- Sherman PM, et al. Identification and characterization of a conserved family of protein serine/threonine phosphatases homologous to Drosophila retinal degeneration C (rdgC). PNAS. Oct 1997. DOI: 10.1073/pnas.94.21.11639. URL: https://doi.org/10.1073/pnas.94.21.11639 (sherman1997identificationandcharacterization pages 1-2)<br />
+- Lee SJ, Montell C. Regulation of the Rhodopsin Protein Phosphatase, RDGC, through Interaction with Calmodulin. Neuron. Dec 20, 2001. DOI: 10.1016/S0896-6273(01)00538-4. URL: https://doi.org/10.1016/S0896-6273(01)00538-4 (lee2001regulationofthe pages 1-2)</p>
+<p>Conclusion<br />
+C. elegans pef-1 encodes a cilia-enriched, acylation-dependent, Ca2+-binding PPP-family serine/threonine phosphatase of the PPEF/rdgC lineage. Recent work (2024) establishes a direct role in ciliary structure and multiple cilium-dependent behaviors, with proper ciliary compartmentalization requiring transition zone integrity. While worm substrates are not yet defined, EF-hand Ca2+ binding and likely calmodulin-based regulation (by orthology) frame a model wherein PEF-1 modulates membrane-associated sensory signaling within cilia. (barbelanne2024c.elegansppeftype pages 1-3, barbelanne2024c.elegansppeftype pages 11-12, barbelanne2024c.elegansppeftype pages 5-6, barbelanne2024c.elegansppeftype pages 9-11, barbelanne2024c.elegansppeftype pages 3-4, barbelanne2024c.elegansppeftype pages 4-5, ramulu2001cellularandsubcellular pages 5-6, lee2001regulationofthe pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 1-2): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+<li>
+<p>(sherman1997identificationandcharacterization pages 1-2): Patti M. Sherman, Hui Sun, Jennifer P. Macke, John Williams, Philip M. Smallwood, and Jeremy Nathans. Identification and characterization of a conserved family of protein serine/threonine phosphatases homologous to drosophila retinal degeneration c (rdgc). Proceedings of the National Academy of Sciences of the United States of America, 94:11639-11644, Oct 1997. URL: https://doi.org/10.1073/pnas.94.21.11639, doi:10.1073/pnas.94.21.11639. This article has 70 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2001regulationofthe pages 1-2): Seung-Jae Lee and Craig Montell. Regulation of the rhodopsin protein phosphatase, rdgc, through interaction with calmodulin. Neuron, 32:1097-1106, Dec 2001. URL: https://doi.org/10.1016/s0896-6273(01)00538-4, doi:10.1016/s0896-6273(01)00538-4. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 6-7): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 5-6): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 4-5): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 1-3): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 11-12): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 5-6): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 9-11): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 9-9): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 3-4): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 4-5): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbelanne2024c.elegansppeftype pages 6-9): Marine Barbelanne, Yun Lu, Keerthana Kumar, Xinxing Zhang, Chunmei Li, Kwangjin Park, Adam Warner, X. Z. Shawn Xu, Shai Shaham, and Michel R. Leroux. C. elegans ppef-type phosphatase (retinal degeneration c ortholog) functions in diverse classes of cilia to regulate nematode behaviors. Scientific Reports, Nov 2024. URL: https://doi.org/10.1038/s41598-024-79057-z, doi:10.1038/s41598-024-79057-z. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 2-3): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+<li>
+<p>(ramulu2001cellularandsubcellular pages 3-4): Pradeep Ramulu and Jeremy Nathans. Cellular and subcellular localization, n-terminal acylation, and calcium binding of caenorhabditis elegans protein phosphatase with ef-hands*. The Journal of Biological Chemistry, 276:25127-25135, Jul 2001. URL: https://doi.org/10.1074/jbc.m011712200, doi:10.1074/jbc.m011712200. This article has 21 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sherman1997identificationandcharacterization pages 1-2</li>
+<li>lee2001regulationofthe pages 1-2</li>
+<li>ramulu2001cellularandsubcellular pages 1-2</li>
+<li>ramulu2001cellularandsubcellular pages 6-7</li>
+<li>ramulu2001cellularandsubcellular pages 5-6</li>
+<li>ramulu2001cellularandsubcellular pages 4-5</li>
+<li>ramulu2001cellularandsubcellular pages 2-3</li>
+<li>ramulu2001cellularandsubcellular pages 3-4</li>
+<li>3H</li>
+<li>https://doi.org/10.1073/pnas.94.21.11639</li>
+<li>https://doi.org/10.1016/S0896-6273(01</li>
+<li>https://doi.org/10.1074/jbc.M011712200</li>
+<li>https://doi.org/10.1038/s41598-024-79057-z</li>
+<li>https://doi.org/10.1073/pnas.94.21.11639;</li>
+<li>https://doi.org/10.1038/s41598-024-79057-z;</li>
+<li>https://doi.org/10.1074/jbc.m011712200,</li>
+<li>https://doi.org/10.1073/pnas.94.21.11639,</li>
+<li>https://doi.org/10.1016/s0896-6273(01</li>
+<li>https://doi.org/10.1038/s41598-024-79057-z,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EBX9
+gene_symbol: pef-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: PEF-1 (Phosphatase with EF-hands 1) is the sole C. elegans member of
+  the RdgC/PPEF family of serine/threonine protein phosphatases, distinguished by
+  C-terminal EF-hand calcium-binding domains. Expression is restricted to sensory
+  neurons including ciliated chemosensory neurons AWB, AWC, ASE, AFD, BAG, and others.
+  The protein localizes to sensory cilia via N-terminal myristoylation (Gly-2) and
+  palmitoylation (Cys-3), where it is enriched in the ciliary axoneme and excluded
+  from the transition zone. PEF-1 requires transition zone proteins (MKS-5, CEP-290)
+  for proper ciliary compartmentalization. Functional studies demonstrate that pef-1
+  mutants show defects in thermotaxis, salt chemotaxis, CO2 avoidance, and UV light
+  avoidance, while osmosensation remains normal. TEM analysis reveals microtubule
+  abnormalities in pef-1 mutant cilia, suggesting a role in cilium maintenance. The
+  protein binds calcium via its EF-hands and binds manganese as a cofactor for phosphatase
+  activity. This is the first PPEF family member demonstrated to function in cilia;
+  in contrast, the Drosophila ortholog RdgC functions in non-ciliary rhabdomeric photoreceptors.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference from other PPEF family
+      members. However, the 2001 study by Ramulu and Nathans (PMID:11312268) found
+      CePPEF to be membrane-associated via lipid modifications and localized to neuronal
+      cell bodies, dendrites, axons, and cilia. No nuclear localization was observed
+      in C. elegans. The 2024 study (PMID:39550471) confirms ciliary localization.
+      Nuclear localization may be an artifact of heterologous expression systems or
+      represent a minor non-conserved localization in other species.
+    action: REMOVE
+    reason: No experimental evidence supports nuclear localization of PEF-1 in C.
+      elegans. Both PMID:11312268 and PMID:39550471 show exclusive membrane/ciliary
+      localization in sensory neurons. The phylogenetic inference may not apply to
+      this species.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: In transgenic C. elegans and in transfected 293 cells, CePPEF
+        is membrane-associated, and the N terminus of CePPEF is necessary and sufficient
+        for this membrane association.
+    - reference_id: PMID:39550471
+      supporting_text: we found the PEF-1::GFP protein to be concentrated within the
+        cilium, but in a region distal to the transition zone (TZ), which represents
+        the proximal-most region of the axoneme
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference. While some cytosolic
+      localization may occur, the predominant localization in C. elegans is membrane-associated
+      and ciliary. The protein requires myristoylation and palmitoylation for proper
+      localization. Cytosolic localization is likely minimal and not the primary site
+      of function.
+    action: KEEP_AS_NON_CORE
+    reason: While membrane association is the predominant localization, some cytosolic
+      presence may occur during protein synthesis/transport. However, the core function
+      is at cilia and cell membrane. The IBA inference from other species may reflect
+      different localization patterns in those organisms.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: In transgenic C. elegans and in transfected 293 cells, CePPEF
+        is membrane-associated
+- term:
+    id: GO:0004722
+    label: protein serine/threonine phosphatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core molecular function of PEF-1 supported by sequence homology to the
+      RdgC/PPEF family, presence of PPP phosphatase domain, and catalytic residues.
+      The protein contains a well-characterized metallophos domain with manganese-binding
+      sites essential for catalysis. UniProt annotates EC 3.1.3.16 activity.
+    action: ACCEPT
+    reason: Protein serine/threonine phosphatase activity is the defining molecular
+      function of the PPEF family. PEF-1 contains all necessary catalytic domains
+      and cofactor binding sites. This is strongly supported by phylogenetic analysis
+      and domain architecture.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: The RdgC/PPEF family of serine/threonine protein phosphatases
+        is distinguished by the presence of C-terminal EF-hands and neuron-specific
+        expression, including frequent expression in primary sensory neurons
+- term:
+    id: GO:0004721
+    label: phosphoprotein phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro domain IPR012008. This is a parent term
+      of GO:0004722 (protein serine/threonine phosphatase activity). The more specific
+      child term is already annotated with IBA evidence.
+    action: ACCEPT
+    reason: This broader term is consistent with the protein&#39;s function and is appropriately
+      inferred from domain architecture. The IEA annotation is valid alongside the
+      more specific IBA annotation for GO:0004722.
+- term:
+    id: GO:0004722
+    label: protein serine/threonine phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on Rhea reaction mapping and EC number. This duplicates
+      the IBA annotation but with different evidence source. Both are valid.
+    action: ACCEPT
+    reason: This annotation from reaction/EC mapping provides independent support
+      for the core phosphatase function. Duplicate GO IDs with different evidence
+      codes are acceptable.
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro domain IPR012008. However, PPP phosphatases
+      typically use manganese, not iron, as the catalytic metal. UniProt specifically
+      annotates manganese binding for this protein based on similarity to P36873.
+      Iron binding is not established for PPEF family members.
+    action: REMOVE
+    reason: This is likely an incorrect inference. PPEF family phosphatases use manganese
+      as the catalytic metal ion. UniProt annotation and experimental evidence from
+      related proteins indicate manganese binding, not iron. The InterPro inference
+      may be overly broad.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Core function supported by experimental evidence. PEF-1 contains three
+      EF-hand domains that bind calcium. Ramulu and Nathans (2001) demonstrated calcium
+      binding experimentally using recombinant protein.
+    action: ACCEPT
+    reason: Calcium binding is a defining feature of the PPEF family and has been
+      experimentally verified for CePPEF. The EF-hand domains (residues 546-581, 629-664,
+      669-704) bind 1-2 calcium ions per protein.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: A recombinant C-terminal fragment of CePPEF containing two
+        putative EF-hands bound between one and two Ca(2+) ions/protein, and mutation
+        of residues presumed to ligand calcium in the two putative EF-hands led to
+        diminished calcium binding
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Supported by experimental evidence. PEF-1 is membrane-associated through
+      N-terminal myristoylation and palmitoylation. UniProt annotation is based on
+      PMID:11312268.
+    action: ACCEPT
+    reason: Membrane association via lipid anchors is experimentally established and
+      essential for proper localization and function.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: &#39;[(3)H]Myristate and [(3)H]palmitate labeling studies in 293
+        cells demonstrated that this association was mediated by myristoylation at
+        Gly(2) and palmitoylation at Cys(3)&#39;
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Core localization strongly supported by experimental evidence from both
+      2001 and 2024 studies. PEF-1 is highly enriched in sensory cilia of chemosensory
+      neurons. The 2024 study provides detailed characterization of ciliary localization
+      and transition zone dependency.
+    action: ACCEPT
+    reason: Ciliary localization is a defining characteristic of PEF-1 function in
+      C. elegans. The protein localizes to the axonemal region, requires transition
+      zone proteins for compartmentalization, and functions in cilium-dependent sensory
+      behaviors.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: Neurons expressing CePPEF include the ciliary chemosensory
+        neurons AWB and AWC; and within these neurons, CePPEF is highly enriched in
+        the sensory cilia
+    - reference_id: PMID:39550471
+      supporting_text: we found the PEF-1::GFP protein to be concentrated within the
+        cilium, but in a region distal to the transition zone (TZ), which represents
+        the proximal-most region of the axoneme
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Very general term that is a parent of phosphatase activity. While technically
+      correct, the more specific phosphatase terms are more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is too general to be informative. The more specific GO:0004722 (protein
+      serine/threonine phosphatase activity) already captures the molecular function.
+      Hydrolase activity adds no additional information.
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Core cofactor binding function. PPP phosphatases require manganese for
+      catalysis. UniProt annotates binding of 2 manganese ions per subunit based on
+      similarity to experimentally characterized family members.
+    action: ACCEPT
+    reason: Manganese binding is essential for phosphatase catalytic activity and
+      is well-supported by domain architecture and similarity to characterized PPP
+      phosphatases. The metallophos domain contains conserved manganese-binding residues.
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Supported by experimental evidence. Ramulu and Nathans (2001) showed
+      CePPEF localization in axons of sensory neurons. The G2A mutation disrupted
+      axonal localization.
+    action: ACCEPT
+    reason: Axonal localization is experimentally demonstrated as part of the neuronal
+      distribution pattern.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: Introducing the G2A or C3S mutation into CePPEF greatly reduced
+        membrane association in 293 cells and in transgenic nematodes
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Supported by experimental evidence. Ramulu and Nathans (2001) showed
+      CePPEF localization in dendrites of sensory neurons.
+    action: ACCEPT
+    reason: Dendritic localization is experimentally demonstrated as part of the neuronal
+      distribution pattern.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: Introducing the G2A or C3S mutation into CePPEF greatly reduced
+        membrane association in 293 cells and in transgenic nematodes
+- term:
+    id: GO:0043204
+    label: perikaryon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Supported by experimental evidence. UniProt annotation derived from PMID:11312268
+      which demonstrated expression in neuronal cell bodies.
+    action: ACCEPT
+    reason: Perikaryon (neuronal cell body) localization is experimentally demonstrated.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: Neurons expressing CePPEF include the ciliary chemosensory
+        neurons AWB and AWC
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Very general term encompassing the more specific manganese and calcium
+      binding functions. While technically correct, the specific metal ion binding
+      terms are more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is too general to be informative. The more specific GO:0030145 (manganese
+      ion binding) and GO:0005509 (calcium ion binding) already capture the specific
+      metal binding functions.
+- term:
+    id: GO:0050906
+    label: detection of stimulus involved in sensory perception
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Supported by the 2024 functional studies (PMID:39550471) which demonstrate
+      PEF-1 is required for multiple sensory modalities including thermosensation,
+      chemosensation (salt), CO2 sensing, and UV light detection. However, the term
+      may be too broad - the protein is not directly detecting stimuli but rather
+      modulating ciliary signaling pathways.
+    action: MODIFY
+    reason: While PEF-1 is involved in sensory processes, it is not a receptor that
+      directly detects stimuli. Rather, it modulates sensory signaling in cilia. More
+      specific behavioral or regulatory terms would be more accurate.
+    proposed_replacement_terms:
+    - id: GO:0040040
+      label: thermosensory behavior
+    - id: GO:0050906
+      label: detection of stimulus involved in sensory perception
+    additional_reference_ids:
+    - PMID:39550471
+    supported_by:
+    - reference_id: PMID:39550471
+      supporting_text: pef-1 mutants have a lower attraction to salt compared to wild-type
+        animals
+- term:
+    id: GO:0043025
+    label: neuronal cell body
+  evidence_type: IDA
+  original_reference_id: PMID:11312268
+  review:
+    summary: Direct experimental evidence from GFP fusion studies in C. elegans showing
+      expression in neuronal cell bodies of specific sensory neurons.
+    action: ACCEPT
+    reason: IDA evidence from PMID:11312268 directly demonstrates localization to
+      neuronal cell bodies including AWB, AWC, AVA, AVB, AVX, BAG, and URX neurons.
+    supported_by:
+    - reference_id: PMID:11312268
+      supporting_text: Neurons expressing CePPEF include the ciliary chemosensory
+        neurons AWB and AWC
+- term:
+    id: GO:0005930
+    label: axoneme
+  evidence_type: IDA
+  original_reference_id: PMID:39550471
+  review:
+    summary: The 2024 study by Bhardwaj et al. demonstrates that PEF-1::GFP localizes
+      specifically to the axonemal region of sensory cilia, excluded from the transition
+      zone. This is more specific than GO:0005929 (cilium).
+    action: NEW
+    reason: Experimental evidence from PMID:39550471 demonstrates specific axonemal
+      localization within cilia. This should be added as a new annotation with IDA
+      evidence.
+    supported_by:
+    - reference_id: PMID:39550471
+      supporting_text: we found the PEF-1::GFP protein to be concentrated within the
+        cilium, but in a region distal to the transition zone (TZ), which represents
+        the proximal-most region of the axoneme
+- term:
+    id: GO:0097730
+    label: non-motile cilium
+  evidence_type: IDA
+  original_reference_id: PMID:39550471
+  review:
+    summary: C. elegans sensory cilia are exclusively non-motile. PEF-1 localizes
+      to these non-motile sensory cilia and is required for their proper function.
+    action: NEW
+    reason: PEF-1 is specifically localized to non-motile sensory cilia in C. elegans.
+      This is more specific than the generic cilium term.
+    supported_by:
+    - reference_id: PMID:39550471
+      supporting_text: Its cilia are exclusively non-motile and found within sensory
+        neurons at the distal ends of dendrites
+- term:
+    id: GO:0040040
+    label: thermosensory behavior
+  evidence_type: IMP
+  original_reference_id: PMID:39550471
+  review:
+    summary: pef-1 mutants show severely impaired thermotaxis behavior, indicating
+      PEF-1 is required for normal thermosensory responses. This represents a core
+      biological process function.
+    action: NEW
+    reason: Experimental mutant phenotype demonstrates PEF-1 function in thermosensory
+      behavior. AFD neuron expression supports this role.
+    supported_by:
+    - reference_id: PMID:39550471
+      supporting_text: pef-1 mutants are not able to thermotax like wild-type animals
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11312268
+  title: Cellular and subcellular localization, N-terminal acylation, and calcium
+    binding of Caenorhabditis elegans protein phosphatase with EF-hands.
+  findings:
+  - statement: CePPEF is expressed exclusively in neurons including AWB, AWC, AVA,
+      AVB, AVX, BAG, URX
+    supporting_text: Neurons expressing CePPEF include the ciliary chemosensory neurons
+      AWB and AWC
+  - statement: Protein is membrane-associated via myristoylation at Gly-2 and palmitoylation
+      at Cys-3
+    supporting_text: &#39;[(3)H]Myristate and [(3)H]palmitate labeling studies in 293
+      cells demonstrated that this association was mediated by myristoylation at Gly(2)
+      and palmitoylation at Cys(3)&#39;
+  - statement: Highly enriched in sensory cilia of chemosensory neurons AWB and AWC
+    supporting_text: Neurons expressing CePPEF include the ciliary chemosensory neurons
+      AWB and AWC; and within these neurons, CePPEF is highly enriched in the sensory
+      cilia
+  - statement: C-terminal EF-hands bind 1-2 calcium ions per protein
+    supporting_text: A recombinant C-terminal fragment of CePPEF containing two putative
+      EF-hands bound between one and two Ca(2+) ions/protein
+  - statement: G2A mutation eliminates membrane association and ciliary localization
+    supporting_text: Introducing the G2A or C3S mutation into CePPEF greatly reduced
+      membrane association in 293 cells and in transgenic nematodes
+- id: PMID:39550471
+  title: C. elegans PPEF-type phosphatase (Retinal degeneration C ortholog) functions
+    in diverse classes of cilia to regulate nematode behaviors
+  findings:
+  - statement: PEF-1 localizes to axonemal region of cilia, excluded from transition
+      zone
+    supporting_text: we found the PEF-1::GFP protein to be concentrated within the
+      cilium, but in a region distal to the transition zone (TZ), which represents
+      the proximal-most region of the axoneme
+  - statement: Requires transition zone proteins (MKS-5, CEP-290) for ciliary compartmentalization
+    supporting_text: We find that disrupting the scaffolding proteins MKS-5 or CEP-290
+      causes PEF-1::GFP mislocalization, diminishing its enrichment within the ciliary
+      region distal to the TZ
+  - statement: Expressed in sensory neurons AFD, AWC, ASE, BAG, PQR, PHA, PHB
+    supporting_text: We generated a strain bearing a PEF-1::GFP fusion protein construct
+      under the control of the endogenous pef-1 promoter and observed expression in
+      several head-localized ciliated neurons, including AFD, AWC, ASE, BAG, and PQR,
+      as well as the tail-localized ciliated neurons PHA and PHB
+  - statement: pef-1 mutants show defects in thermotaxis, salt chemotaxis, CO2 avoidance,
+      UV avoidance
+    supporting_text: our findings suggest that C. elegans PEF-1 plays roles in ciliated
+      sensory neurons that control various sensory modalities and regulate behaviors,
+      including chemosensation, thermosensation, and to a lesser degree, photosensation
+  - statement: Osmosensation remains normal in pef-1 mutants
+    supporting_text: the pef-1 null mutant behaves like wild-type (i.e., shows an
+      avoidance phenotype) when confronted with a high-osmolarity glycerol barrier
+  - statement: TEM reveals microtubule abnormalities in pef-1 mutant cilia
+    supporting_text: While this ciliary subdomain (distal segment) is indeed present
+      and bounded by a membrane, the singlet microtubules which are readily identified
+      in wild-type cilia70 are absent or indistinct in the pef-1 mutant
+  - statement: First demonstration of ciliary function for any PPEF family member
+    supporting_text: PPEF proteins have not been specifically associated with a ciliary
+      function in any organism
+core_functions:
+- molecular_function:
+    id: GO:0004722
+    label: protein serine/threonine phosphatase activity
+  description: Member of the RdgC/PPEF family of serine/threonine phosphatases. Contains
+    PPP phosphatase domain with conserved catalytic residues and manganese binding
+    sites. Catalytic activity inferred from domain architecture and family membership
+    (PMID:11312268).
+  locations:
+  - id: GO:0005929
+    label: cilium
+  - id: GO:0005930
+    label: axoneme
+  directly_involved_in:
+  - id: GO:0040040
+    label: thermosensory behavior
+- molecular_function:
+    id: GO:0005509
+    label: calcium ion binding
+  description: Contains three C-terminal EF-hand domains. Experimental evidence demonstrates
+    binding of 1-2 calcium ions per protein. Calcium binding is a defining feature
+    of the PPEF family (PMID:11312268).
+  supported_by:
+  - reference_id: PMID:11312268
+    supporting_text: A recombinant C-terminal fragment of CePPEF containing two putative
+      EF-hands bound between one and two Ca(2+) ions/protein
+- molecular_function:
+    id: GO:0030145
+    label: manganese ion binding
+  description: PPP phosphatases require manganese as catalytic cofactor. Binding of
+    2 manganese ions per subunit inferred from conserved binding residues and similarity
+    to characterized family members.
+proposed_new_terms: []
+suggested_questions:
+- question: What are the direct substrates of PEF-1 phosphatase activity in sensory
+    cilia?
+- question: How does calcium binding to EF-hands regulate PEF-1 phosphatase activity?
+- question: What is the mechanistic basis for selective requirement of PEF-1 in some
+    sensory modalities (thermosensation, salt chemotaxis) but not others (osmosensation)?
+- question: How does PEF-1 maintain ciliary microtubule integrity as suggested by
+    TEM abnormalities?
+suggested_experiments:
+- description: Identify PEF-1 substrates using phosphoproteomics in wild-type vs pef-1
+    mutant cilia
+  hypothesis: PEF-1 dephosphorylates specific signaling proteins in sensory cilia
+  experiment_type: phosphoproteomics
+- description: Test whether PEF-1 phosphatase activity is calcium-regulated using
+    purified protein
+  hypothesis: Calcium binding to EF-hands modulates phosphatase activity
+  experiment_type: in vitro enzyme assay
+- description: Examine genetic interactions between pef-1 and ciliary signaling components
+    (GPCRs, TRP channels, guanylate cyclases)
+  hypothesis: PEF-1 functions in specific ciliary signaling pathways
+  experiment_type: genetic epistasis
+- description: Perform structure-function analysis of EF-hand domain mutations on
+    ciliary function
+  hypothesis: EF-hand calcium binding is required for PEF-1 ciliary function
+  experiment_type: mutagenesis and behavioral assays
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

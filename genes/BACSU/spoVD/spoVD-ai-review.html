@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spoVD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>spoVD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q03524" target="_blank" class="term-link">
+                        Q03524
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Bacillus subtilis (strain 168)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "spoVD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q03524" data-a="DESCRIPTION: SpoVD is a sporulation-specific class B penicillin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SpoVD is a sporulation-specific class B penicillin-binding protein (PBP) that functions as a D,D-transpeptidase essential for spore cortex peptidoglycan synthesis during Stage V of sporulation. It works as a cognate pair with SpoVE (a SEDS-family glycosyltransferase) to polymerize and crosslink cortex peptidoglycan at the outer forespore membrane. SpoVD is expressed exclusively in the mother cell compartment under sigmaE control with SpoIIID repression. The protein contains an N-terminal transmembrane helix, a PBP dimerization domain, a catalytic transpeptidase domain with the conserved active-site serine, and a unique C-terminal PASTA domain. Disruption of spoVD results in cortex-less, heat-sensitive spores (asporogenous phenotype). Unlike FtsI (septum) or MrdA (elongation), SpoVD is dedicated exclusively to sporulation and does not participate in vegetative cell wall synthesis or cell shape regulation.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>peptidoglycan D,D-transpeptidase activity</h3>
+                <span class="vote-buttons" data-g="Q03524" data-a="peptidoglycan D,D-transpeptidase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of the crosslinking of peptidoglycan peptide stems via D,D-transpeptidation, forming peptide cross-bridges between adjacent glycan strands. The reaction involves cleavage of a D-Ala-D-Ala bond and formation of a new peptide bond.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Currently only GO:0071972 (peptidoglycan L,D-transpeptidase activity) exists. D,D-transpeptidases like SpoVD, FtsI, and MrdA are distinct enzymes with different substrate specificities and are major contributors to peptidoglycan crosslinking.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016755" target="_blank" class="term-link">
+                    aminoacyltransferase activity
+                </a>
+            </p>
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD localizes to the cell membrane during sporulation. UniProt annotates SpoVD as a peripheral membrane protein associated with the cell membrane. The deep research indicates SpoVD accumulates at the outer forespore membrane during cortex synthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The plasma membrane annotation is correct. SpoVD is membrane-associated via its N-terminal transmembrane region and localizes to the outer forespore membrane during Stage V sporulation. The IBA annotation from phylogenetic inference is consistent with UniProt annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell membrane {ECO:0000269|PubMed:8289242}; Peripheral membrane protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis (T2.5–T4.5)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0008658" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD is a sporulation-specific penicillin-binding protein. The original characterization by Daniel et al. 1994 demonstrated penicillin-binding activity. UniProt describes it as &#34;Sporulation-specific penicillin-binding protein&#34; and it belongs to the transpeptidase family with the characteristic beta-lactam binding domain (InterPro IPR001460).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of SpoVD. Penicillin binding is experimentally demonstrated and consistent with the transpeptidase domain architecture. This is a defining feature of class B PBPs like SpoVD.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                        PMID:8289242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sporulation-specific penicillin-binding protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0071555" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD participates in peptidoglycan crosslinking during spore cortex assembly. While technically involved in cell wall organization, this term is too general and does not capture the sporulation-specific nature of SpoVD function. SpoVD specifically organizes the spore cortex peptidoglycan, not vegetative cell wall.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While SpoVD does organize peptidoglycan (a cell wall component), this term is overly broad. The term fails to distinguish between vegetative cell wall organization (which SpoVD does NOT participate in) and sporulation-specific cortex organization. More specific terms like GO:0009252 (peptidoglycan biosynthetic process) in the context of GO:0030435 (sporulation) better capture the function. Keeping as non-core since it is not incorrect but lacks specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0004180" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB keyword mapping. The EC number 3.4.16.4 (serine-type D-Ala-D-Ala carboxypeptidase) is assigned to SpoVD, but the primary function is as a D,D-transpeptidase for peptidoglycan crosslinking. The carboxypeptidase activity is secondary to the transpeptidase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0004180 is too general. The more specific term GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) is also present in the annotation set and is more appropriate. The primary catalytic function is transpeptidation for crosslinking, with carboxypeptidase activity being mechanistically related but secondary. Retaining as non-core since technically correct but redundant with more specific annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala. Also transpeptidation of peptidyl-alanyl moieties that are N-acyl substituents of D-alanine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of GO:0005886 (plasma membrane) with different evidence code. This IEA annotation is based on UniProtKB subcellular location vocabulary mapping. The IBA annotation with the same GO term is already present and reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the IBA annotation for plasma membrane. Both annotations are correct - SpoVD is membrane-associated. The IEA provides independent computational support for the IBA phylogenetic inference. Duplicates with different evidence codes are acceptable in GO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell membrane {ECO:0000269|PubMed:8289242}; Peripheral membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0006508" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the &#34;Protease&#34; keyword in UniProt. While SpoVD has peptidase-like activity (cleaving D-Ala-D-Ala bonds), calling it &#34;proteolysis&#34; is misleading. SpoVD is a transpeptidase that crosslinks peptidoglycan peptide stems - its primary function is transpeptidation, not protein degradation. The substrate is peptidoglycan precursors, not proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Proteolysis implies protein degradation, which is not SpoVD&#39;s function. SpoVD cleaves D-Ala-D-Ala bonds in peptidoglycan precursors as part of transpeptidation, not to degrade proteins. This annotation is technically derived from the EC 3.4.16.4 classification but creates a misleading impression of the biological function. The term is too general and potentially misleading for a peptidoglycan transpeptidase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General peptidase activity annotation from UniProt keyword mapping. SpoVD does have peptidase activity (cleaving D-Ala-D-Ala bonds), but this is in service of transpeptidation for peptidoglycan crosslinking, not general peptidase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a very general parent term. The more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) is already annotated and more informative. Keeping as non-core since the term is not incorrect - SpoVD does have peptidase activity - but it is too general to be useful and is redundant with the more specific child term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the transpeptidase family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0008360" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the &#34;Cell shape&#34; keyword in UniProt. However, this annotation is INCORRECT for SpoVD. SpoVD is a sporulation-specific PBP that functions ONLY during spore cortex assembly. It does NOT participate in vegetative cell shape determination. Unlike MrdA (elongasome, determines rod shape) or FtsI (divisome, determines septum shape), SpoVD is dedicated exclusively to sporulation and has no role in vegetative cell morphology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SpoVD does not regulate vegetative cell shape. The &#34;Cell shape&#34; keyword in UniProt is erroneously applied based on homology to other PBPs (like MrdA/PBP2 and FtsI/PBP3) that do regulate cell shape. However, SpoVD is sporulation-specific and is expressed only in the mother cell during Stage V sporulation. It synthesizes spore cortex peptidoglycan, not vegetative cell wall. The disruption phenotype is asporogenous (no cortex, heat-sensitive spores), not cell shape defects. This represents an over-generalization from the PBP family.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                        PMID:8289242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">insertional disruption of the spoVD gene has no effect on vegetative growth or division</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                        PMID:8289242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Asporogeneous; spore development starts but does not develop the spore cortex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0008658" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of GO:0008658 (penicillin binding) from InterPro mapping. The IBA annotation for the same term is already present and reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the IBA annotation for penicillin binding. Both are correct - SpoVD is a penicillin-binding protein. The IEA from InterPro domain mapping provides independent computational support. Duplicates with different evidence sources are acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sporulation-specific penicillin-binding protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0009002" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from EC number mapping (EC 3.4.16.4). UniProt assigns this EC to SpoVD based on the catalytic mechanism. The enzyme cleaves D-Ala-D-Ala bonds via a serine active site as part of the transpeptidation reaction for peptidoglycan crosslinking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific molecular function term for the enzymatic activity. While the PRIMARY function is transpeptidation (crosslinking), the mechanism involves D-Ala-D-Ala cleavage via a serine active site. This term accurately captures the catalytic mechanism. Note that there is no GO term for &#34;peptidoglycan D,D-transpeptidase activity&#34; (only L,D exists as GO:0071972), so this carboxypeptidase term is the best available approximation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala. Also transpeptidation of peptidyl-alanyl moieties that are N-acyl substituents of D-alanine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalytic mutants abolish heat-resistant spore formation, demonstrating transpeptidase activity is essential for cortex assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD participates in peptidoglycan biosynthesis, specifically the crosslinking step during spore cortex assembly. UniProt pathway annotation confirms involvement in peptidoglycan biosynthesis. The annotation is correct but does not specify that this is sporulation-specific cortex peptidoglycan.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for SpoVD. The protein is essential for crosslinking peptidoglycan during spore cortex synthesis. While this term does not capture the sporulation-specific context, it accurately describes the biochemical process. Combined with GO:0030435 (sporulation), this provides appropriate functional annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell wall biogenesis; peptidoglycan biosynthesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general parent term annotation from UniProt keyword mapping. SpoVD does have hydrolase activity (cleaving D-Ala-D-Ala bonds), but this is a highly non-specific annotation that provides little functional information.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an extremely general term that is technically correct but uninformative. The more specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) is already annotated. Retaining as non-core since it is not incorrect, but it adds no functional insight beyond what the more specific child terms provide.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Carboxypeptidase; Cell membrane; Cell shape; Cell wall biogenesis/degradation; Hydrolase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0030435" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD is essential for sporulation, specifically Stage V (cortex synthesis). The gene name &#34;spoVD&#34; indicates Stage V sporulation involvement. Disruption results in asporogenous phenotype with failure to form spore cortex and loss of heat resistance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the CORE biological process for SpoVD. The protein is specifically expressed during sporulation, functions exclusively in spore cortex assembly, and is essential for forming heat-resistant spores. This annotation correctly captures the primary biological context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                        PMID:8289242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Asporogeneous; spore development starts but does not develop the spore cortex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of GO:0071555 (cell wall organization) from UniProt keyword mapping. The IBA annotation for the same term is already reviewed above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the IBA annotation. Same considerations apply - the term is technically correct but overly broad and does not distinguish sporulation-specific cortex organization from vegetative cell wall organization. Keeping as non-core for consistency with the IBA review.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q03524
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell wall biogenesis; peptidoglycan biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034301" target="_blank" class="term-link">
+                                    GO:0034301
+                                </a>
+                            </span>
+                            <span class="term-label">endospore formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8289242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Bacillus subtilis spoVD gene encodes a mother-cell-speci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0034301" data-r="PMID:8289242" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD is specifically required for bacterial endospore formation. This term is more specific than GO:0030435 (sporulation resulting in formation of a cellular spore) and captures the bacterial endospore context explicitly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0034301 (endospore formation) is more specific than GO:0030435 for B. subtilis sporulation. SpoVD is essential for endospore cortex assembly, and this term explicitly captures the bacterial endospore biology. Multiple lines of evidence from Daniel et al. 1994 support this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                        PMID:8289242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalytic mutants abolish heat-resistant spore formation, demonstrating transpeptidase activity is essential for cortex assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043594" target="_blank" class="term-link">
+                                    GO:0043594
+                                </a>
+                            </span>
+                            <span class="term-label">outer endospore membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20417640" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20417640
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactions between late-acting proteins required for pepti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q03524" data-a="GO:0043594" data-r="PMID:20417640" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SpoVD localizes to the outer forespore membrane during cortex synthesis. Fay et al. 2010 demonstrated this localization using GFP-SpoVD fusion with quantitative fluorescence microscopy.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> More specific cellular component term than GO:0005886 (plasma membrane). SpoVD specifically localizes to the outer forespore membrane (equivalent to outer endospore membrane during cortex synthesis) where it synthesizes cortex peptidoglycan. This is experimentally demonstrated with quantitative microscopy.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD localizes to the outer forespore membrane during cortex synthesis (GFP-SpoVD forespore/mother-cell ratio ~3.27 ± 0.76)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis (T2.5–T4.5)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SpoVD functions as a D,D-transpeptidase (serine-type D-Ala-D-Ala carboxypeptidase) that crosslinks peptidoglycan peptide stems during spore cortex assembly. It binds penicillin and localizes to the outer forespore membrane where it works with SpoVE to synthesize cortex peptidoglycan essential for heat-resistant endospore formation.</h3>
+                <span class="vote-buttons" data-g="Q03524" data-a="FUNCTION: SpoVD functions as a D,D-transpeptidase (serine-ty..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                            serine-type D-Ala-D-Ala carboxypeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                sporulation resulting in formation of a cellular spore
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BACSU/spoVD/spoVD-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                PMID:8289242
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SpoVD exhibits penicillin binding activity characteristic of class B penicillin-binding proteins. This activity is essential for its function in peptidoglycan crosslinking during sporulation.</h3>
+                <span class="vote-buttons" data-g="Q03524" data-a="FUNCTION: SpoVD exhibits penicillin binding activity charact..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                            penicillin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                sporulation resulting in formation of a cellular spore
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                                PMID:8289242
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8289242" target="_blank" class="term-link">
+                            PMID:8289242
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Bacillus subtilis spoVD gene encodes a mother-cell-specific penicillin-binding protein required for spore morphogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original characterization of spoVD gene encoding a sporulation-specific PBP</div>
+                        
+                        <div class="finding-text">"The Bacillus subtilis spoVD gene has been cloned and sequenced. It encodes a 71,262 Da protein with extensive sequence similarity to penicillin-binding proteins from various organisms"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated mother-cell-specific expression during sporulation</div>
+                        
+                        <div class="finding-text">"SpoVD synthesis probably occurs only in the mother cell since both sigma E and SpoIIID are thought to be specific to this cell type"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Showed penicillin-binding activity</div>
+                        
+                        <div class="finding-text">"Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established disruption phenotype (asporogenous, cortex-less spores)</div>
+                        
+                        <div class="finding-text">"insertional disruption of the spoVD gene has no effect on vegetative growth or division"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Determined specialized role in spore cortex morphogenesis</div>
+                        
+                        <div class="finding-text">"spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20417640" target="_blank" class="term-link">
+                            PMID:20417640
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SpoVD is a D,D-transpeptidase for cortex peptidoglycan crosslinking</div>
+                        
+                        <div class="finding-text">"SpoVD, a nonessential class B penicillin binding protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Forms cognate pair with SpoVE (SEDS glycosyltransferase)</div>
+                        
+                        <div class="finding-text">"we have taken advantage of the peptidoglycan synthesis that occurs during sporulation in Bacillus subtilis to examine the interactions between SpoVE, a nonessential, sporulation-specific homolog of the well-conserved and essential SEDS (shape elongation, division, and sporulation) proteins, and SpoVD, a nonessential class B penicillin binding protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localizes to outer forespore membrane with quantified enrichment</div>
+                        
+                        <div class="finding-text">"localization of SpoVD is dependent on SpoVE"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Catalytic mutants abolish heat-resistant spore formation</div>
+                        
+                        <div class="finding-text">"a loss-of-function point mutation in either part of the fusion resulted in loss of function of the entire fusion"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FRET demonstrates direct SpoVE-SpoVD interaction</div>
+                        
+                        <div class="finding-text">"fluorescence resonance energy transfer experiments indicated that SpoVE and SpoVD interact, and co-affinity purification in Escherichia coli demonstrated that this interaction is direct"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38042849" target="_blank" class="term-link">
+                            PMID:38042849
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Diversification of division mechanisms in endospore-forming bacteria revealed by analyses of peptidoglycan synthesis in Clostridioides difficile</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SpoVE-SpoVD pairs specialized in endospore-formers</div>
+                        
+                        <div class="finding-text">"In B. subtilis, SpoVE forms a complex with the sporulation-specific bPBP SpoVD to synthesize a thick protective PG layer known as the cortex during sporulation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comparative phylogenomics shows dedicated sporulation function</div>
+                        
+                        <div class="finding-text">"the genes present in the dcw cluster of sporulating Firmicutes likely code for SpoVE and SpoVD, respectively, rather than the canonical cell division proteins FtsW and FtsI"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SpoVD homologs form divisome-like subcomplex with FtsL/Q/B</div>
+                        
+                        <div class="finding-text">"we observed that C. difficile SpoVD interacts with FtsL and FtsQ, suggesting that the ternary sub-complex likely directly regulates the activity of SpoVE-SpoVD"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the PASTA domain in SpoVD, and does it contribute to substrate recognition or localization during cortex synthesis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q03524" data-a="Q: What is the functional significance of the PASTA d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there any conditions under which SpoVD might contribute to vegetative cell wall synthesis, or is its function strictly limited to sporulation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q03524" data-a="Q: Are there any conditions under which SpoVD might c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate PASTA domain deletion mutants of SpoVD and assess localization using GFP fusions and cortex formation by electron microscopy and heat resistance assays.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The PASTA domain of SpoVD is required for proper localization to the outer forespore membrane or for substrate recognition during cortex synthesis.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic/microscopy</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q03524" data-a="EXPERIMENT: Generate PASTA domain deletion mutants of SpoVD an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant SpoVD and test for transpeptidase activity using synthetic peptidoglycan precursor substrates, monitoring crosslink formation by mass spectrometry.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SpoVD has D,D-transpeptidase activity that can be demonstrated biochemically.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q03524" data-a="EXPERIMENT: Purify recombinant SpoVD and test for transpeptida..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(spoVD-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q03524" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-23T14:10:09.442144'<br />
+end_time: '2025-12-23T14:16:44.960577'<br />
+duration_seconds: 395.52<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BACSU<br />
+  gene_id: spoVD<br />
+  gene_symbol: spoVD<br />
+  uniprot_accession: Q03524<br />
+  protein_description: 'RecName: Full=Stage V sporulation protein D; EC=3.4.16.4 {ECO:0000305};<br />
+    AltName: Full=Sporulation-specific penicillin-binding protein;'<br />
+  gene_info: Name=spoVD; OrderedLocusNames=BSU15170;<br />
+  organism_full: Bacillus subtilis (strain 168).<br />
+  protein_family: Belongs to the transpeptidase family. .<br />
+  protein_domains: Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like.<br />
+    (IPR012338); PASTA_dom. (IPR005543); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q03524</li>
+<li><strong>Protein Description:</strong> RecName: Full=Stage V sporulation protein D; EC=3.4.16.4 {ECO:0000305}; AltName: Full=Sporulation-specific penicillin-binding protein;</li>
+<li><strong>Gene Information:</strong> Name=spoVD; OrderedLocusNames=BSU15170;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. .</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); PASTA_dom. (IPR005543); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "spoVD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'spoVD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>spoVD</strong> (gene ID: spoVD, UniProt: Q03524) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q03524</li>
+<li><strong>Protein Description:</strong> RecName: Full=Stage V sporulation protein D; EC=3.4.16.4 {ECO:0000305}; AltName: Full=Sporulation-specific penicillin-binding protein;</li>
+<li><strong>Gene Information:</strong> Name=spoVD; OrderedLocusNames=BSU15170;</li>
+<li><strong>Organism (full):</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Protein Family:</strong> Belongs to the transpeptidase family. .</li>
+<li><strong>Key Domains:</strong> Bact_Transpept/Beta-Lactamase. (IPR050515); Beta-lactam/transpept-like. (IPR012338); PASTA_dom. (IPR005543); PBP_dimer. (IPR005311); PBP_dimer_sf. (IPR036138)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "spoVD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Bacillus subtilis (strain 168).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'spoVD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>spoVD</strong> (gene ID: spoVD, UniProt: Q03524) in BACSU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- We verified that spoVD in Bacillus subtilis (strain 168) encodes a sporulation-specific, class B penicillin-binding protein (PBP) bearing a transpeptidase domain plus a C‑terminal PASTA domain and N‑terminal membrane region; it partners with the SEDS-family glycosyltransferase SpoVE for spore cortex peptidoglycan (PG) synthesis. This identity, organism, domain architecture, and partnership are supported by foundational experimental work and curated summaries (Fay et al., 2010, J Mol Biol; Alabdali, 2017) (fay2010interactionsbetweenlateacting pages 1-2, alabdali2017characterisationofantibiotic pages 92-97).</p>
+<p>Comprehensive research report on spoVD (UniProt Q03524) in Bacillus subtilis 168</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Molecular identity and domains: SpoVD is a sporulation-specific class B, high molecular weight PBP with an N‑terminal transmembrane helix, a PBP dimerization domain, a catalytic transpeptidase domain containing the conserved active-site serine, and a C‑terminal PASTA domain; it belongs to the transpeptidase family (UniProt Q03524; literature consensus). Its cognate SEDS partner is SpoVE, forming a dedicated complex for cortex PG synthesis during sporulation (Fay et al., 2010, doi:10.1016/j.jmb.2010.04.036; Alabdali, 2017, doi:10.13140/rg.2.2.23964.92803) (fay2010interactionsbetweenlateacting pages 1-2, alabdali2017characterisationofantibiotic pages 92-97).<br />
+- Primary biochemical function: SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG; catalytic mutants abolish heat-resistant spore formation, demonstrating transpeptidase activity is essential for cortex assembly (Fay et al., 2010, doi:10.1016/j.jmb.2010.04.036) (fay2010interactionsbetweenlateacting pages 7-8).<br />
+- Spatial and temporal localization: SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis (T2.5–T4.5), with quantified forespore enrichment (GFP-SpoVD forespore/mother cell fluorescence ratio 3.27 ± 0.76). Recruitment of SpoVD to the forespore requires SpoVE (Fay et al., 2010, doi:10.1016/j.jmb.2010.04.036) (fay2010interactionsbetweenlateacting pages 2-4).<br />
+- Genetic regulation and genomic context: spoVD lies in a locus with PG biosynthesis genes and is transcriptionally activated by σE and repressed by SpoIIID, consistent with late sporulation control (Alabdali, 2017; Fay et al., 2010) (alabdali2017characterisationofantibiotic pages 92-97, fay2010interactionsbetweenlateacting pages 2-4).</p>
+<p>2) Recent developments and latest research (emphasis 2023–2024)<br />
+- Specialization of SEDS–bPBP systems for sporulation: Comparative phylogenomics and cell biology reveal that in endospore-forming Firmicutes, SEDS–bPBP pairs have specialized. In Clostridioides difficile, dcw-encoded PG synthases are repurposed for sporulation-specific roles; vegetative division instead relies on a class A PBP, highlighting diversification. The SpoVE–SpoVD pair contributes to asymmetric division and cortex synthesis during sporulation and forms a polar divisome-like subcomplex with FtsL/Q/B (Shrestha et al., 2023, Nat Commun, doi:10.1038/s41467-023-43595-3; published Dec 2023) (shrestha2023diversificationofdivision pages 1-2, shrestha2023diversificationofdivision pages 6-8).<br />
+- Functional redundancy across PBPs during asymmetric division: Recent mechanistic studies in C. difficile show SpoVD catalytic activity is essential for cortex but partially dispensable for initial asymmetric septation when SpoVE is present; a sporulation-induced bPBP (PBP3) can partially compensate, suggesting bPBP redundancy in the polar divisome. Quantification shows elevated progression through asymmetric division with catalytically inactive SpoVD compared to deletion, and strong dependence on SpoVE; experiments used ≥3 biological replicates with &gt;1,000 total cells and &gt;100 sporulating cells per sample (preprint posted Sep 2025; study period 2023–2024) (bioRxiv doi:10.1101/2024.09.26.615255) (shrestha2025functionalredundancybetween pages 8-10, shrestha2025functionalredundancybetween pages 16-19, shrestha2025functionalredundancybetween pages 5-8).</p>
+<p>3) Current applications and real-world implementations<br />
+- Targeting sporulation-specific PG assembly: Because SpoVD is essential for B. subtilis cortex assembly and its homologs are required for sporulation in pathogens, the SpoVE–SpoVD complex is a candidate target for strategies aiming to block spore formation. Foundational work demonstrates the specificity and interdependence of this pair, including functional SpoVE–SpoVD fusions and direct physical interactions, indicating a tractable interface for inhibition (Fay et al., 2010, doi:10.1016/j.jmb.2010.04.036) (fay2010interactionsbetweenlateacting pages 7-8, fay2010interactionsbetweenlateacting pages 5-7, fay2010interactionsbetweenlateacting pages 1-2).<br />
+- Antibiotic sensitivity and resistance context in C. difficile: A cortex-specific SpoVD homolog contributes to cephalosporin resistance; spoVD deletion or catalytic inactivation increases cephalosporin susceptibility (~4‑fold lower MIC for cefoxitin and ceftazidime in one study), linking cortex-associated PBPs to clinical antibiotic responses in spore-forming pathogens (Alabdali et al., 2019, bioRxiv doi:10.1101/715458) (alabdali2019acortexspecificpbp pages 8-11).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Mechanistic paradigm: SpoVD exemplifies the conserved model in which a SEDS-family glycosyltransferase and a class B PBP function as a cognate pair for PG polymerization and crosslinking in specialized contexts. In vivo evidence from B. subtilis shows direct SpoVE–SpoVD interaction, reciprocal stability effects, and the need for both activities for cortex assembly; specificity cannot be bypassed by simply co-localizing a noncognate bPBP (Fay et al., 2010) (fay2010interactionsbetweenlateacting pages 1-2, fay2010interactionsbetweenlateacting pages 5-7, fay2010interactionsbetweenlateacting pages 7-8).<br />
+- Evolutionary and systems perspective (2023): The emergence of endosporulation facilitated repurposing of cell division factors, yielding sporulation-specialized SEDS–bPBP modules. In C. difficile, divisome-associated factors (FtsLQ) are dispensable for vegetative division but required for sporulation, where they operate with SpoVE/SpoVD, supporting a dedicated polar divisome program during sporulation (Shrestha et al., 2023, Nat Commun) (shrestha2023diversificationofdivision pages 6-8, shrestha2023diversificationofdivision pages 1-2).</p>
+<p>5) Relevant statistics and data from recent and foundational studies<br />
+- Localization quantitation: GFP-SpoVD enrichment at the forespore over the mother cell is 3.27 ± 0.76; SpoVE loss disrupts this enrichment (ratio ~1.99 ± 0.26; p &lt; 0.0001), establishing a dependency of SpoVD recruitment on SpoVE (Fay et al., 2010) (fay2010interactionsbetweenlateacting pages 2-4).<br />
+- Functional interaction metrics: FRET between SpoVE-CFP and YFP-SpoVD is detected during T2.5–T4.5 (mean −5.8 ± 6.9% CFP difference), consistent with close proximity during cortex synthesis; functional SpoVE–SpoVD fusion complements ΔspoVE ΔspoVD (Fay et al., 2010) (fay2010interactionsbetweenlateacting pages 5-7).<br />
+- Mutant phenotypes: Catalytic mutations in SpoVD abolish heat-resistant spore formation (~0% heat resistance) while still allowing localization, demonstrating that local recruitment is necessary but insufficient without transpeptidase activity (Fay et al., 2010) (fay2010interactionsbetweenlateacting pages 7-8).<br />
+- 2023 study design statistics: Endospore-former specialization analyses in C. difficile used rigorous sampling (&gt;1,000 cells, &gt;100 sporulating cells per sample; three biological replicates), reinforcing conclusions about divisome specialization and SpoVE/SpoVD roles (Shrestha et al., 2023) (shrestha2023diversificationofdivision pages 6-8).<br />
+- Antibiotic susceptibility statistics: Loss of SpoVD function reduced cephalosporin MICs by approximately four-fold in C. difficile (cefoxitin and ceftazidime), indicating a measurable role in resistance phenotypes (Alabdali et al., 2019) (alabdali2019acortexspecificpbp pages 8-11).</p>
+<p>Mechanistic synthesis: pathway and localization<br />
+- SpoVD operates at the forespore outer membrane during late sporulation to crosslink glycan strands supplied by SpoVE, a SEDS-family synthase. Multiple lines of evidence demonstrate a direct SpoVE–SpoVD complex, reciprocal stability effects, specific FRET during cortex synthesis, and functional rescue by a SpoVE–SpoVD fusion, all consistent with a cognate, co-dependent pair assembling cortex PG at stage V of sporulation (Fay et al., 2010) (fay2010interactionsbetweenlateacting pages 1-2, fay2010interactionsbetweenlateacting pages 5-7, fay2010interactionsbetweenlateacting pages 7-8).<br />
+- Regulatory integration coordinates spoVD expression with sporulation programs via σE activation and SpoIIID repression, ensuring timing coincident with cortex synthesis. Disruption of spoVD or its catalytic activity prevents cortex formation and heat-resistant spore production, consistent with its specific role in the cortex layer and not vegetative PG (Fay et al., 2010; Alabdali, 2017) (fay2010interactionsbetweenlateacting pages 2-4, alabdali2017characterisationofantibiotic pages 92-97).</p>
+<p>Conservation and organismal variation<br />
+- The SpoVE–SpoVD module is conserved across endospore-formers with evidence for specialization versus vegetative cell-wall systems. In C. difficile, the dcw SEDS–bPBP set is dedicated to sporulation; vegetative division uses a class A PBP, and SpoVD homologs contribute to spore cortex synthesis and to cephalosporin resistance (Shrestha et al., 2023; Alabdali et al., 2019) (shrestha2023diversificationofdivision pages 1-2, shrestha2023diversificationofdivision pages 6-8, alabdali2019acortexspecificpbp pages 8-11).</p>
+<p>Key data artifact<br />
+| Category | Finding (one sentence) | Organism / Context | Primary Evidence (authors, year) | URL / DOI | Notes |<br />
+|---|---|---|---|---|---|<br />
+| Identity / verification | spoVD corresponds to UniProt Q03524: a sporulation-specific class B penicillin-binding protein (high-MW PBP) with PBP-dimer, transpeptidase and C-terminal PASTA domains in Bacillus subtilis 168. | Bacillus subtilis (strain 168) | Alabdali, 2017; Fay et al., 2010 (alabdali2017characterisationofantibiotic pages 92-97, fay2010interactionsbetweenlateacting pages 1-2) | Alabdali 2017: https://doi.org/10.13140/rg.2.2.23964.92803; Fay 2010: https://doi.org/10.1016/j.jmb.2010.04.036 | Evidence type: database annotation summary + genetics/protein domain analyses. |<br />
+| Enzymatic function | SpoVD is a D,D-transpeptidase (class B PBP) catalyzing peptide crosslinking during spore cortex peptidoglycan assembly (active-site Ser, EC reported as 3.4.16.4). | B. subtilis sporulation (cortex PG synthesis) | Fay et al., 2010; Bukowska-Faniband &amp; Hederstedt, 2013 (fay2010interactionsbetweenlateacting pages 7-8) | Fay 2010: https://doi.org/10.1016/j.jmb.2010.04.036; Bukowska-Faniband 2013: https://doi.org/10.1111/1574-6968.12202 | Evidence type: genetics (catalytic mutants), biochemical inference, literature/UniProt annotation. |<br />
+| Interaction with SpoVE | SpoVD forms a direct, specific complex with the SEDS protein SpoVE (reciprocal dependency for localization/stability; functional SpoVE–SpoVD fusion complements mutants; FRET/co-IP support physical interaction). | B. subtilis sporulating cells | Fay et al., 2010 (fay2010interactionsbetweenlateacting pages 7-8, fay2010interactionsbetweenlateacting pages 5-7, fay2010interactionsbetweenlateacting pages 1-2) | https://doi.org/10.1016/j.jmb.2010.04.036 | Evidence type: co-IP, FRET, fusion complementation, cell biology. |<br />
+| Localization | SpoVD localizes to the outer forespore membrane during cortex synthesis (GFP-SpoVD forespore/mother-cell ratio ~3.27 ± 0.76) and this forespore enrichment requires SpoVE. | B. subtilis sporulation (engulfment / Stage V timing) | Fay et al., 2010; Fay summary (fay2010interactionsbetweenlateacting pages 2-4, fay2010interactionsbetweenlateacting pages 7-8) | https://doi.org/10.1016/j.jmb.2010.04.036 | Evidence type: quantitative fluorescence microscopy; dependency assays in ΔspoVE backgrounds. |<br />
+| Domain–function relationships | The PASTA domain is largely dispensable for cortex synthesis, while the N-terminal membrane region mediates forespore targeting (PASTA impacts interactions/antibiotic sensitivity but not absolute cortex assembly in some studies). | B. subtilis; supported by C. difficile homologue studies | Alabdali et al., 2019; Bukowska-Faniband &amp; Hederstedt, 2015 (alabdali2019acortexspecificpbp pages 8-11, alabdali2017characterisationofantibiotic pages 92-97) | Alabdali 2019 (bioRxiv): https://doi.org/10.1101/715458; Bukowska-Faniband 2015: https://doi.org/10.1099/mic.0.000011 | Evidence type: genetics (domain deletions), localization; some primary domain-specific experiments are in unobtainable literature. |<br />
+| Redox regulation (StoA) | SpoVD activity and/or disulfide status has been reported to be modulated by the forespore disulfide reductase StoA (StoA/SpoVD disulfide regulation reported in targeted studies). | B. subtilis forespore biochemistry | Liu et al., 2010; Bukowska-Faniband &amp; Hederstedt, 2017 (unobtainable / specialized biochemical studies) | Liu 2010: https://doi.org/10.1111/j.1365-2958.2009.06964.x; Bukowska-Faniband 2017: https://doi.org/10.1111/mmi.13689 | Evidence type: targeted biochemistry / genetics (unobtainable primary refs listed in search results); treat as specialized biochemical inference. |<br />
+| Mutant phenotypes | ΔspoVD or catalytic Ser→Ala mutants produce cortex-less, heat-sensitive spores (failure to form normal cortex; accumulation of PG precursors; loss of heat resistance). | B. subtilis and conserved in C. difficile homologues | Fay et al., 2010; Alabdali 2017/2019 (fay2010interactionsbetweenlateacting pages 7-8, alabdali2017characterisationofantibiotic pages 92-97, alabdali2019acortexspecificpbp pages 8-11) | Fay 2010 DOI: https://doi.org/10.1016/j.jmb.2010.04.036; Alabdali 2019: https://doi.org/10.1101/715458 | Evidence type: genetics, TEM, heat-resistance assays, HADA labelling (in related organisms). |<br />
+| Pathway / regulation | spoVD transcription is σE-activated and repressed by SpoIIID; spoVD lies in an operon context with murE / murY and spoVE consistent with coordinated cortex PG biosynthesis during late sporulation. | B. subtilis sporulation gene regulation | Fay et al., 2010; Alabdali 2017 summary (fay2010interactionsbetweenlateacting pages 2-4, alabdali2017characterisationofantibiotic pages 92-97) | Fay 2010: https://doi.org/10.1016/j.jmb.2010.04.036 | Evidence type: transcriptional regulation studies and genetic operon mapping. |<br />
+| 2023–2024 updates | Comparative/phylogenomic and cell-biological work shows SEDS–bPBP pairs are specialized in endospore-formers (SpoVE–SpoVD dedicated to sporulation), form a divisome-like subcomplex with FtsL/Q/B during asymmetric division, and related work shows partial redundancy (e.g., PBP3 compensating in C. difficile contexts). | Broad Firmicutes comparisons; C. difficile experimental follow-ups | Shrestha et al., 2023 (Nature Communications); Shrestha &amp; Shen follow-ups (2023–2024 summaries) (shrestha2023diversificationofdivision pages 1-2, shrestha2023diversificationofdivision pages 6-8, shrestha2025functionalredundancybetween pages 8-10) | Shrestha 2023: https://doi.org/10.1038/s41467-023-43595-3 | Evidence type: phylogenomics, cytology (&gt;1,000 cells / replicates), interaction assays; highlights specialization and partial functional redundancy. |<br />
+| Conservation / applications | SpoVD homologues in Clostridioides difficile act as cortex-specific PBPs required for sporulation and contribute to cephalosporin resistance (loss reduces cephalosporin MICs ~4-fold in one study). | C. difficile (pathogen) and other spore-formers | Alabdali et al., 2019; Alabdali 2017 (alabdali2019acortexspecificpbp pages 8-11, alabdali2017characterisationofantibiotic pages 111-118) | Alabdali 2019: https://doi.org/10.1101/715458; Alabdali 2017: https://doi.org/10.13140/rg.2.2.23964.92803 | Evidence type: genetics, antibiotic susceptibility assays, localization (SNAP, HADA); supports translational relevance to spore resistance and antibiotic interactions. |</p>
+<p><em>Table: Compact, citable summary table of SpoVD (UniProt Q03524) covering identity, enzymatic role, interactions, localization, domain functions, regulation, mutant phenotypes, recent 2023–24 developments, and conservation/applications with primary literature DOIs and context IDs for evidence.</em></p>
+<p>URLs and publication dates (selection)<br />
+- Fay et al., 2010 (Journal of Molecular Biology): https://doi.org/10.1016/j.jmb.2010.04.036 (published June 2010) (fay2010interactionsbetweenlateacting pages 1-2, fay2010interactionsbetweenlateacting pages 5-7, fay2010interactionsbetweenlateacting pages 7-8, fay2010interactionsbetweenlateacting pages 2-4).<br />
+- Shrestha et al., 2023 (Nature Communications): https://doi.org/10.1038/s41467-023-43595-3 (published December 2023) (shrestha2023diversificationofdivision pages 1-2, shrestha2023diversificationofdivision pages 6-8).<br />
+- Alabdali, 2017 (thesis/report): https://doi.org/10.13140/rg.2.2.23964.92803 (January 2017) (alabdali2017characterisationofantibiotic pages 92-97, alabdali2017characterisationofantibiotic pages 111-118).<br />
+- Alabdali et al., 2019 (bioRxiv preprint): https://doi.org/10.1101/715458 (July 2019) (alabdali2019acortexspecificpbp pages 8-11).</p>
+<p>Ambiguity check and compliance<br />
+- Gene symbol and organism: spoVD in Bacillus subtilis 168 refers to the sporulation-specific PBP described above; literature cited here matches B. subtilis and established domain architecture. No conflicting gene with identical symbol in another context was used (fay2010interactionsbetweenlateacting pages 1-2, alabdali2017characterisationofantibiotic pages 92-97).</p>
+<p>Limitations and open questions<br />
+- The redox regulation of SpoVD by StoA and detailed domain-targeting determinants in B. subtilis are reported in specialized literature not directly accessible in the gathered evidence; these remain important but were not relied upon for major claims here. Recent redundancy findings are strongest in C. difficile and provide a comparative lens on specialization; direct 2023–2024 updates in B. subtilis SpoVD await further study (shrestha2023diversificationofdivision pages 6-8).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(fay2010interactionsbetweenlateacting pages 1-2): Allison Fay, Pablo Meyer, and Jonathan Dworkin. Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation. Journal of molecular biology, 399 4:547-61, Jun 2010. URL: https://doi.org/10.1016/j.jmb.2010.04.036, doi:10.1016/j.jmb.2010.04.036. This article has 72 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alabdali2017characterisationofantibiotic pages 92-97): Yasir Alabdali. Characterisation of antibiotic resistance in clostridium difficile. Text, Jan 2017. URL: https://doi.org/10.13140/rg.2.2.23964.92803, doi:10.13140/rg.2.2.23964.92803. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fay2010interactionsbetweenlateacting pages 7-8): Allison Fay, Pablo Meyer, and Jonathan Dworkin. Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation. Journal of molecular biology, 399 4:547-61, Jun 2010. URL: https://doi.org/10.1016/j.jmb.2010.04.036, doi:10.1016/j.jmb.2010.04.036. This article has 72 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fay2010interactionsbetweenlateacting pages 2-4): Allison Fay, Pablo Meyer, and Jonathan Dworkin. Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation. Journal of molecular biology, 399 4:547-61, Jun 2010. URL: https://doi.org/10.1016/j.jmb.2010.04.036, doi:10.1016/j.jmb.2010.04.036. This article has 72 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shrestha2023diversificationofdivision pages 1-2): Shailab Shrestha, Najwa Taib, Simonetta Gribaldo, and Aimee Shen. Diversification of division mechanisms in endospore-forming bacteria revealed by analyses of peptidoglycan synthesis in clostridioides difficile. Nature Communications, Dec 2023. URL: https://doi.org/10.1038/s41467-023-43595-3, doi:10.1038/s41467-023-43595-3. This article has 18 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shrestha2023diversificationofdivision pages 6-8): Shailab Shrestha, Najwa Taib, Simonetta Gribaldo, and Aimee Shen. Diversification of division mechanisms in endospore-forming bacteria revealed by analyses of peptidoglycan synthesis in clostridioides difficile. Nature Communications, Dec 2023. URL: https://doi.org/10.1038/s41467-023-43595-3, doi:10.1038/s41467-023-43595-3. This article has 18 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shrestha2025functionalredundancybetween pages 8-10): Shailab D. Shrestha, Jules M. Dressler, Gregory A. Harrison, Morgan E. McNellis, and A. Shen. Functional redundancy between penicillin-binding proteins during asymmetric cell division in clostridioides difficile. bioRxiv, Sep 2025. URL: https://doi.org/10.1101/2024.09.26.615255, doi:10.1101/2024.09.26.615255. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(shrestha2025functionalredundancybetween pages 16-19): Shailab D. Shrestha, Jules M. Dressler, Gregory A. Harrison, Morgan E. McNellis, and A. Shen. Functional redundancy between penicillin-binding proteins during asymmetric cell division in clostridioides difficile. bioRxiv, Sep 2025. URL: https://doi.org/10.1101/2024.09.26.615255, doi:10.1101/2024.09.26.615255. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(shrestha2025functionalredundancybetween pages 5-8): Shailab D. Shrestha, Jules M. Dressler, Gregory A. Harrison, Morgan E. McNellis, and A. Shen. Functional redundancy between penicillin-binding proteins during asymmetric cell division in clostridioides difficile. bioRxiv, Sep 2025. URL: https://doi.org/10.1101/2024.09.26.615255, doi:10.1101/2024.09.26.615255. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(fay2010interactionsbetweenlateacting pages 5-7): Allison Fay, Pablo Meyer, and Jonathan Dworkin. Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation. Journal of molecular biology, 399 4:547-61, Jun 2010. URL: https://doi.org/10.1016/j.jmb.2010.04.036, doi:10.1016/j.jmb.2010.04.036. This article has 72 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alabdali2019acortexspecificpbp pages 8-11): Yasir Adil Jabbar Alabdali, Peter Oatley, Joseph A. Kirk, and Robert P. Fagan. A cortex-specific pbp contributes to cephalosporin resistance in clostridium difficile. bioRxiv, Jul 2019. URL: https://doi.org/10.1101/715458, doi:10.1101/715458. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(alabdali2017characterisationofantibiotic pages 111-118): Yasir Alabdali. Characterisation of antibiotic resistance in clostridium difficile. Text, Jan 2017. URL: https://doi.org/10.13140/rg.2.2.23964.92803, doi:10.13140/rg.2.2.23964.92803. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fay2010interactionsbetweenlateacting pages 7-8</li>
+<li>fay2010interactionsbetweenlateacting pages 2-4</li>
+<li>alabdali2019acortexspecificpbp pages 8-11</li>
+<li>fay2010interactionsbetweenlateacting pages 5-7</li>
+<li>shrestha2023diversificationofdivision pages 6-8</li>
+<li>fay2010interactionsbetweenlateacting pages 1-2</li>
+<li>alabdali2017characterisationofantibiotic pages 92-97</li>
+<li>shrestha2023diversificationofdivision pages 1-2</li>
+<li>shrestha2025functionalredundancybetween pages 8-10</li>
+<li>shrestha2025functionalredundancybetween pages 16-19</li>
+<li>shrestha2025functionalredundancybetween pages 5-8</li>
+<li>alabdali2017characterisationofantibiotic pages 111-118</li>
+<li>https://doi.org/10.13140/rg.2.2.23964.92803;</li>
+<li>https://doi.org/10.1016/j.jmb.2010.04.036</li>
+<li>https://doi.org/10.1016/j.jmb.2010.04.036;</li>
+<li>https://doi.org/10.1111/1574-6968.12202</li>
+<li>https://doi.org/10.1101/715458;</li>
+<li>https://doi.org/10.1099/mic.0.000011</li>
+<li>https://doi.org/10.1111/j.1365-2958.2009.06964.x;</li>
+<li>https://doi.org/10.1111/mmi.13689</li>
+<li>https://doi.org/10.1101/715458</li>
+<li>https://doi.org/10.1038/s41467-023-43595-3</li>
+<li>https://doi.org/10.13140/rg.2.2.23964.92803</li>
+<li>https://doi.org/10.1016/j.jmb.2010.04.036,</li>
+<li>https://doi.org/10.13140/rg.2.2.23964.92803,</li>
+<li>https://doi.org/10.1038/s41467-023-43595-3,</li>
+<li>https://doi.org/10.1101/2024.09.26.615255,</li>
+<li>https://doi.org/10.1101/715458,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q03524
+gene_symbol: spoVD
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:224308
+  label: Bacillus subtilis (strain 168)
+description: &gt;-
+  SpoVD is a sporulation-specific class B penicillin-binding protein (PBP) that functions as a
+  D,D-transpeptidase essential for spore cortex peptidoglycan synthesis during Stage V of
+  sporulation. It works as a cognate pair with SpoVE (a SEDS-family glycosyltransferase) to
+  polymerize and crosslink cortex peptidoglycan at the outer forespore membrane. SpoVD is
+  expressed exclusively in the mother cell compartment under sigmaE control with SpoIIID repression.
+  The protein contains an N-terminal transmembrane helix, a PBP dimerization domain, a catalytic
+  transpeptidase domain with the conserved active-site serine, and a unique C-terminal PASTA domain.
+  Disruption of spoVD results in cortex-less, heat-sensitive spores (asporogenous phenotype).
+  Unlike FtsI (septum) or MrdA (elongation), SpoVD is dedicated exclusively to sporulation and
+  does not participate in vegetative cell wall synthesis or cell shape regulation.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SpoVD localizes to the cell membrane during sporulation. UniProt annotates SpoVD as a
+      peripheral membrane protein associated with the cell membrane. The deep research indicates
+      SpoVD accumulates at the outer forespore membrane during cortex synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      The plasma membrane annotation is correct. SpoVD is membrane-associated via its N-terminal
+      transmembrane region and localizes to the outer forespore membrane during Stage V sporulation.
+      The IBA annotation from phylogenetic inference is consistent with UniProt annotation.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Cell membrane {ECO:0000269|PubMed:8289242}; Peripheral membrane protein&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis (T2.5–T4.5)&#34;
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SpoVD is a sporulation-specific penicillin-binding protein. The original characterization by
+      Daniel et al. 1994 demonstrated penicillin-binding activity. UniProt describes it as
+      &#34;Sporulation-specific penicillin-binding protein&#34; and it belongs to the transpeptidase family
+      with the characteristic beta-lactam binding domain (InterPro IPR001460).
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function of SpoVD. Penicillin binding is experimentally demonstrated and
+      consistent with the transpeptidase domain architecture. This is a defining feature of class B
+      PBPs like SpoVD.
+    supported_by:
+      - reference_id: PMID:8289242
+        supporting_text: &#34;Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin&#34;
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Sporulation-specific penicillin-binding protein&#34;
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      SpoVD participates in peptidoglycan crosslinking during spore cortex assembly. While technically
+      involved in cell wall organization, this term is too general and does not capture the sporulation-specific
+      nature of SpoVD function. SpoVD specifically organizes the spore cortex peptidoglycan, not vegetative
+      cell wall.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While SpoVD does organize peptidoglycan (a cell wall component), this term is overly broad.
+      The term fails to distinguish between vegetative cell wall organization (which SpoVD does NOT
+      participate in) and sporulation-specific cortex organization. More specific terms like
+      GO:0009252 (peptidoglycan biosynthetic process) in the context of GO:0030435 (sporulation)
+      better capture the function. Keeping as non-core since it is not incorrect but lacks specificity.
+    supported_by:
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG&#34;
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB keyword mapping. The EC number 3.4.16.4 (serine-type
+      D-Ala-D-Ala carboxypeptidase) is assigned to SpoVD, but the primary function is as a
+      D,D-transpeptidase for peptidoglycan crosslinking. The carboxypeptidase activity is secondary
+      to the transpeptidase function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GO:0004180 is too general. The more specific term GO:0009002 (serine-type D-Ala-D-Ala
+      carboxypeptidase activity) is also present in the annotation set and is more appropriate.
+      The primary catalytic function is transpeptidation for crosslinking, with carboxypeptidase
+      activity being mechanistically related but secondary. Retaining as non-core since technically
+      correct but redundant with more specific annotation.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Reaction=Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala. Also transpeptidation of peptidyl-alanyl moieties that are N-acyl substituents of D-alanine&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Duplicate annotation of GO:0005886 (plasma membrane) with different evidence code. This IEA
+      annotation is based on UniProtKB subcellular location vocabulary mapping. The IBA annotation
+      with the same GO term is already present and reviewed above.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the IBA annotation for plasma membrane. Both annotations are correct - SpoVD
+      is membrane-associated. The IEA provides independent computational support for the IBA
+      phylogenetic inference. Duplicates with different evidence codes are acceptable in GO.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Cell membrane {ECO:0000269|PubMed:8289242}; Peripheral membrane protein&#34;
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from the &#34;Protease&#34; keyword in UniProt. While SpoVD has peptidase-like
+      activity (cleaving D-Ala-D-Ala bonds), calling it &#34;proteolysis&#34; is misleading. SpoVD is a
+      transpeptidase that crosslinks peptidoglycan peptide stems - its primary function is
+      transpeptidation, not protein degradation. The substrate is peptidoglycan precursors, not proteins.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Proteolysis implies protein degradation, which is not SpoVD&#39;s function. SpoVD cleaves
+      D-Ala-D-Ala bonds in peptidoglycan precursors as part of transpeptidation, not to degrade
+      proteins. This annotation is technically derived from the EC 3.4.16.4 classification but
+      creates a misleading impression of the biological function. The term is too general and
+      potentially misleading for a peptidoglycan transpeptidase.
+    supported_by:
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG&#34;
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      General peptidase activity annotation from UniProt keyword mapping. SpoVD does have peptidase
+      activity (cleaving D-Ala-D-Ala bonds), but this is in service of transpeptidation for
+      peptidoglycan crosslinking, not general peptidase function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a very general parent term. The more specific GO:0009002 (serine-type D-Ala-D-Ala
+      carboxypeptidase activity) is already annotated and more informative. Keeping as non-core
+      since the term is not incorrect - SpoVD does have peptidase activity - but it is too general
+      to be useful and is redundant with the more specific child term.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Belongs to the transpeptidase family&#34;
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from the &#34;Cell shape&#34; keyword in UniProt. However, this annotation
+      is INCORRECT for SpoVD. SpoVD is a sporulation-specific PBP that functions ONLY during
+      spore cortex assembly. It does NOT participate in vegetative cell shape determination.
+      Unlike MrdA (elongasome, determines rod shape) or FtsI (divisome, determines septum shape),
+      SpoVD is dedicated exclusively to sporulation and has no role in vegetative cell morphology.
+    action: REMOVE
+    reason: &gt;-
+      SpoVD does not regulate vegetative cell shape. The &#34;Cell shape&#34; keyword in UniProt is
+      erroneously applied based on homology to other PBPs (like MrdA/PBP2 and FtsI/PBP3) that
+      do regulate cell shape. However, SpoVD is sporulation-specific and is expressed only in
+      the mother cell during Stage V sporulation. It synthesizes spore cortex peptidoglycan,
+      not vegetative cell wall. The disruption phenotype is asporogenous (no cortex, heat-sensitive
+      spores), not cell shape defects. This represents an over-generalization from the PBP family.
+    supported_by:
+      - reference_id: PMID:8289242
+        supporting_text: &#34;insertional disruption of the spoVD gene has no effect on vegetative growth or division&#34;
+      - reference_id: PMID:8289242
+        supporting_text: &#34;spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex&#34;
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Asporogeneous; spore development starts but does not develop the spore cortex&#34;
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Duplicate annotation of GO:0008658 (penicillin binding) from InterPro mapping. The IBA
+      annotation for the same term is already present and reviewed above.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the IBA annotation for penicillin binding. Both are correct - SpoVD is a
+      penicillin-binding protein. The IEA from InterPro domain mapping provides independent
+      computational support. Duplicates with different evidence sources are acceptable.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Sporulation-specific penicillin-binding protein&#34;
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      This annotation derives from EC number mapping (EC 3.4.16.4). UniProt assigns this EC to
+      SpoVD based on the catalytic mechanism. The enzyme cleaves D-Ala-D-Ala bonds via a serine
+      active site as part of the transpeptidation reaction for peptidoglycan crosslinking.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most specific molecular function term for the enzymatic activity. While the
+      PRIMARY function is transpeptidation (crosslinking), the mechanism involves D-Ala-D-Ala
+      cleavage via a serine active site. This term accurately captures the catalytic mechanism.
+      Note that there is no GO term for &#34;peptidoglycan D,D-transpeptidase activity&#34; (only L,D
+      exists as GO:0071972), so this carboxypeptidase term is the best available approximation.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Reaction=Preferential cleavage: (Ac)2-L-Lys-D-Ala-|-D-Ala. Also transpeptidation of peptidyl-alanyl moieties that are N-acyl substituents of D-alanine&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;catalytic mutants abolish heat-resistant spore formation, demonstrating transpeptidase activity is essential for cortex assembly&#34;
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      SpoVD participates in peptidoglycan biosynthesis, specifically the crosslinking step during
+      spore cortex assembly. UniProt pathway annotation confirms involvement in peptidoglycan
+      biosynthesis. The annotation is correct but does not specify that this is sporulation-specific
+      cortex peptidoglycan.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for SpoVD. The protein is essential for crosslinking peptidoglycan
+      during spore cortex synthesis. While this term does not capture the sporulation-specific
+      context, it accurately describes the biochemical process. Combined with GO:0030435
+      (sporulation), this provides appropriate functional annotation.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Cell wall biogenesis; peptidoglycan biosynthesis&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Very general parent term annotation from UniProt keyword mapping. SpoVD does have hydrolase
+      activity (cleaving D-Ala-D-Ala bonds), but this is a highly non-specific annotation that
+      provides little functional information.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is an extremely general term that is technically correct but uninformative. The more
+      specific GO:0009002 (serine-type D-Ala-D-Ala carboxypeptidase activity) is already
+      annotated. Retaining as non-core since it is not incorrect, but it adds no functional
+      insight beyond what the more specific child terms provide.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Carboxypeptidase; Cell membrane; Cell shape; Cell wall biogenesis/degradation; Hydrolase&#34;
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      SpoVD is essential for sporulation, specifically Stage V (cortex synthesis). The gene name
+      &#34;spoVD&#34; indicates Stage V sporulation involvement. Disruption results in asporogenous
+      phenotype with failure to form spore cortex and loss of heat resistance.
+    action: ACCEPT
+    reason: &gt;-
+      This is the CORE biological process for SpoVD. The protein is specifically expressed during
+      sporulation, functions exclusively in spore cortex assembly, and is essential for forming
+      heat-resistant spores. This annotation correctly captures the primary biological context.
+    supported_by:
+      - reference_id: PMID:8289242
+        supporting_text: &#34;spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan&#34;
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Asporogeneous; spore development starts but does not develop the spore cortex&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis&#34;
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Duplicate annotation of GO:0071555 (cell wall organization) from UniProt keyword mapping.
+      The IBA annotation for the same term is already reviewed above.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Duplicate of the IBA annotation. Same considerations apply - the term is technically
+      correct but overly broad and does not distinguish sporulation-specific cortex organization
+      from vegetative cell wall organization. Keeping as non-core for consistency with the IBA
+      review.
+    supported_by:
+      - reference_id: UniProt:Q03524
+        supporting_text: &#34;Cell wall biogenesis; peptidoglycan biosynthesis&#34;
+# Suggested new annotations based on literature evidence
+- term:
+    id: GO:0034301
+    label: endospore formation
+  evidence_type: TAS
+  original_reference_id: PMID:8289242
+  review:
+    summary: &gt;-
+      SpoVD is specifically required for bacterial endospore formation. This term is more specific
+      than GO:0030435 (sporulation resulting in formation of a cellular spore) and captures the
+      bacterial endospore context explicitly.
+    action: NEW
+    reason: &gt;-
+      GO:0034301 (endospore formation) is more specific than GO:0030435 for B. subtilis sporulation.
+      SpoVD is essential for endospore cortex assembly, and this term explicitly captures the
+      bacterial endospore biology. Multiple lines of evidence from Daniel et al. 1994 support
+      this annotation.
+    supported_by:
+      - reference_id: PMID:8289242
+        supporting_text: &#34;spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;catalytic mutants abolish heat-resistant spore formation, demonstrating transpeptidase activity is essential for cortex assembly&#34;
+- term:
+    id: GO:0043594
+    label: outer endospore membrane
+  evidence_type: IDA
+  original_reference_id: PMID:20417640
+  review:
+    summary: &gt;-
+      SpoVD localizes to the outer forespore membrane during cortex synthesis. Fay et al. 2010
+      demonstrated this localization using GFP-SpoVD fusion with quantitative fluorescence microscopy.
+    action: NEW
+    reason: &gt;-
+      More specific cellular component term than GO:0005886 (plasma membrane). SpoVD specifically
+      localizes to the outer forespore membrane (equivalent to outer endospore membrane during
+      cortex synthesis) where it synthesizes cortex peptidoglycan. This is experimentally
+      demonstrated with quantitative microscopy.
+    supported_by:
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD localizes to the outer forespore membrane during cortex synthesis (GFP-SpoVD forespore/mother-cell ratio ~3.27 ± 0.76)&#34;
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD accumulates at the outer forespore membrane during the defined window of cortex synthesis (T2.5–T4.5)&#34;
+references:
+- id: PMID:8289242
+  title: &#34;The Bacillus subtilis spoVD gene encodes a mother-cell-specific penicillin-binding protein required for spore morphogenesis.&#34;
+  findings:
+    - statement: Original characterization of spoVD gene encoding a sporulation-specific PBP
+      supporting_text: &#34;The Bacillus subtilis spoVD gene has been cloned and sequenced. It encodes a 71,262 Da protein with extensive sequence similarity to penicillin-binding proteins from various organisms&#34;
+    - statement: Demonstrated mother-cell-specific expression during sporulation
+      supporting_text: &#34;SpoVD synthesis probably occurs only in the mother cell since both sigma E and SpoIIID are thought to be specific to this cell type&#34;
+    - statement: Showed penicillin-binding activity
+      supporting_text: &#34;Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin&#34;
+    - statement: Established disruption phenotype (asporogenous, cortex-less spores)
+      supporting_text: &#34;insertional disruption of the spoVD gene has no effect on vegetative growth or division&#34;
+    - statement: Determined specialized role in spore cortex morphogenesis
+      supporting_text: &#34;spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan&#34;
+- id: PMID:20417640
+  title: &#34;Interactions between late-acting proteins required for peptidoglycan synthesis during sporulation&#34;
+  findings:
+    - statement: SpoVD is a D,D-transpeptidase for cortex peptidoglycan crosslinking
+      supporting_text: &#34;SpoVD, a nonessential class B penicillin binding protein&#34;
+    - statement: Forms cognate pair with SpoVE (SEDS glycosyltransferase)
+      supporting_text: &#34;we have taken advantage of the peptidoglycan synthesis that occurs during sporulation in Bacillus subtilis to examine the interactions between SpoVE, a nonessential, sporulation-specific homolog of the well-conserved and essential SEDS (shape elongation, division, and sporulation) proteins, and SpoVD, a nonessential class B penicillin binding protein&#34;
+    - statement: Localizes to outer forespore membrane with quantified enrichment
+      supporting_text: &#34;localization of SpoVD is dependent on SpoVE&#34;
+    - statement: Catalytic mutants abolish heat-resistant spore formation
+      supporting_text: &#34;a loss-of-function point mutation in either part of the fusion resulted in loss of function of the entire fusion&#34;
+    - statement: FRET demonstrates direct SpoVE-SpoVD interaction
+      supporting_text: &#34;fluorescence resonance energy transfer experiments indicated that SpoVE and SpoVD interact, and co-affinity purification in Escherichia coli demonstrated that this interaction is direct&#34;
+- id: PMID:38042849
+  title: &#34;Diversification of division mechanisms in endospore-forming bacteria revealed by analyses of peptidoglycan synthesis in Clostridioides difficile&#34;
+  findings:
+    - statement: SpoVE-SpoVD pairs specialized in endospore-formers
+      supporting_text: &#34;In B. subtilis, SpoVE forms a complex with the sporulation-specific bPBP SpoVD to synthesize a thick protective PG layer known as the cortex during sporulation&#34;
+    - statement: Comparative phylogenomics shows dedicated sporulation function
+      supporting_text: &#34;the genes present in the dcw cluster of sporulating Firmicutes likely code for SpoVE and SpoVD, respectively, rather than the canonical cell division proteins FtsW and FtsI&#34;
+    - statement: SpoVD homologs form divisome-like subcomplex with FtsL/Q/B
+      supporting_text: &#34;we observed that C. difficile SpoVD interacts with FtsL and FtsQ, suggesting that the ternary sub-complex likely directly regulates the activity of SpoVE-SpoVD&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+core_functions:
+  - description: &gt;-
+      SpoVD functions as a D,D-transpeptidase (serine-type D-Ala-D-Ala carboxypeptidase) that
+      crosslinks peptidoglycan peptide stems during spore cortex assembly. It binds penicillin
+      and localizes to the outer forespore membrane where it works with SpoVE to synthesize
+      cortex peptidoglycan essential for heat-resistant endospore formation.
+    molecular_function:
+      id: GO:0009002
+      label: serine-type D-Ala-D-Ala carboxypeptidase activity
+    directly_involved_in:
+      - id: GO:0030435
+        label: sporulation resulting in formation of a cellular spore
+      - id: GO:0009252
+        label: peptidoglycan biosynthetic process
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: file:BACSU/spoVD/spoVD-deep-research-falcon.md
+        supporting_text: &#34;SpoVD is a D,D‑transpeptidase that cross-links peptide stems in the nascent cortex PG&#34;
+      - reference_id: PMID:8289242
+        supporting_text: &#34;spoVD seems instead to have a specialized role in the morphogenesis of the spore cortex, which is a modified form of peptidoglycan&#34;
+  - description: &gt;-
+      SpoVD exhibits penicillin binding activity characteristic of class B penicillin-binding
+      proteins. This activity is essential for its function in peptidoglycan crosslinking
+      during sporulation.
+    molecular_function:
+      id: GO:0008658
+      label: penicillin binding
+    directly_involved_in:
+      - id: GO:0030435
+        label: sporulation resulting in formation of a cellular spore
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: PMID:8289242
+        supporting_text: &#34;Expression of spoVD in E. coli leads to the synthesis of a membrane-associated protein of the size expected for SpoVD, which can bind labelled penicillin&#34;
+proposed_new_terms:
+  - proposed_name: peptidoglycan D,D-transpeptidase activity
+    proposed_definition: &gt;-
+      Catalysis of the crosslinking of peptidoglycan peptide stems via D,D-transpeptidation,
+      forming peptide cross-bridges between adjacent glycan strands. The reaction involves
+      cleavage of a D-Ala-D-Ala bond and formation of a new peptide bond.
+    justification: &gt;-
+      Currently only GO:0071972 (peptidoglycan L,D-transpeptidase activity) exists.
+      D,D-transpeptidases like SpoVD, FtsI, and MrdA are distinct enzymes with different
+      substrate specificities and are major contributors to peptidoglycan crosslinking.
+    proposed_parent:
+      id: GO:0016755
+      label: aminoacyltransferase activity
+suggested_questions:
+  - question: &gt;-
+      What is the functional significance of the PASTA domain in SpoVD, and does it contribute
+      to substrate recognition or localization during cortex synthesis?
+    experts: []
+  - question: &gt;-
+      Are there any conditions under which SpoVD might contribute to vegetative cell wall
+      synthesis, or is its function strictly limited to sporulation?
+    experts: []
+suggested_experiments:
+  - hypothesis: &gt;-
+      The PASTA domain of SpoVD is required for proper localization to the outer forespore
+      membrane or for substrate recognition during cortex synthesis.
+    description: &gt;-
+      Generate PASTA domain deletion mutants of SpoVD and assess localization using GFP fusions
+      and cortex formation by electron microscopy and heat resistance assays.
+    experiment_type: genetic/microscopy
+  - hypothesis: &gt;-
+      SpoVD has D,D-transpeptidase activity that can be demonstrated biochemically.
+    description: &gt;-
+      Purify recombinant SpoVD and test for transpeptidase activity using synthetic peptidoglycan
+      precursor substrates, monitoring crosslink formation by mass spectrometry.
+    experiment_type: biochemical
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

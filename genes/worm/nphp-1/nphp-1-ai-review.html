@@ -1,0 +1,3589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nphp-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nphp-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O17972" target="_blank" class="term-link">
+                        O17972
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nphp-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O17972" data-a="DESCRIPTION: NPHP-1 is the C. elegans ortholog of human nephroc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NPHP-1 is the C. elegans ortholog of human nephrocystin-1 (NPHP1), a protein mutated in nephronophthisis. It localizes specifically to the ciliary transition zone (TZ) in sensory neurons and functions as part of the NPHP module that works redundantly with the MKS module to establish the ciliary gate. NPHP-1 plays important roles in ciliary structure, sensory signal transduction, and male mating behaviors. The protein contains an SH3 domain and requires NPHP-4 for proper TZ localization. Together with NPHP-4, it regulates ciliary access of IFT machinery components, axonemal structural proteins, and signaling molecules.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic analysis. While NPHP-1 is predominantly localized to the ciliary transition zone, cytoplasmic localization is plausible as the protein must transit through the cytoplasm. However, this is a generic term that does not capture the protein&#39;s specific and functionally relevant localization at the transition zone.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not incorrect but does not represent the core localization of NPHP-1. The protein&#39;s critical function is at the transition zone. Cytoplasmic localization may represent transit or a minor pool, but the more informative and functionally relevant localizations are the TZ-related terms.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0005929" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic analysis. NPHP-1 localizes to the ciliary transition zone, which is a subdomain of the cilium. Multiple studies demonstrate TZ-specific localization in C. elegans [PMID:15817158, PMID:18316409, PMID:21422230].
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the more specific term &#39;ciliary transition zone&#39; (GO:0035869) better captures NPHP-1&#39;s localization, this broader term is accurate since the TZ is part of the cilium. The IBA annotation aligns with experimental evidence showing ciliary localization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                                        PMID:15817158
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090251" target="_blank" class="term-link">
+                                    GO:0090251
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization involved in establishment of planar polarity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0090251" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference. This annotation likely derives from mammalian data where NPHP1 has been implicated in planar cell polarity pathways. There is no direct evidence for this function in C. elegans.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this may be a conserved function based on phylogenetic analysis, there is no direct experimental evidence for a role in planar polarity in C. elegans. The IBA annotation is reasonable given conservation, but without C. elegans-specific data, this remains speculative.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030030" target="_blank" class="term-link">
+                                    GO:0030030
+                                </a>
+                            </span>
+                            <span class="term-label">cell projection organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0030030" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (cilium biogenesis/degradation). NPHP-1 is involved in cilium structure and organization, particularly through its role at the transition zone.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is supported by experimental evidence showing that nphp-1 mutants have defects in CEM cilia morphology [PMID:18316409]. NPHP-1 and NPHP-4 act globally at the TZ to regulate ciliary structure, and loss causes cell type-specific phenotypes in cilia organization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nphp-1 and nphp-4 are important modulators of ciliary ultrastructure, with defects resulting in a broad phenotypic spectrum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27623382" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27623382
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A Conserved Role for Girdin in Basal Body Positioning and Ci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0036064" data-r="PMID:27623382" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from a study on Girdin&#39;s role in basal body positioning. The paper examines various ciliary proteins including NPHP-1 localization. However, multiple C. elegans studies show NPHP-1 specifically localizes to the transition zone rather than the basal body proper [PMID:18316409, PMID:21422230].
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> In C. elegans, the basal body and transition zone are distinct regions. Multiple detailed studies using GFP-tagged NPHP-1 show specific localization to the transition zone, not the basal body. The transition zone is adjacent to but distinct from the basal body region where IFT proteins concentrate. This annotation should be modified to reflect TZ localization.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    ciliary transition zone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26595381
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TMEM107 recruits ciliopathy proteins to subdomains of the ci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0035869" data-r="PMID:26595381" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from a study on TMEM107 and ciliopathy proteins. NPHP-1 TZ localization is well-established across multiple C. elegans studies.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core localization for NPHP-1. Multiple studies demonstrate specific TZ localization using fluorescently tagged proteins [PMID:15817158, PMID:18316409, PMID:21422230, PMID:26595381]. NPHP-1 is part of the NPHP module that localizes to and functions at the transition zone.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link">
+                                        PMID:26595381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nematode TMEM-107 occupies an intermediate layer of the TZ-localized MKS module by organizing recruitment of the ciliopathy proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NPHP-1 and NPHP-4 localize to the TZ in mks-5 mutants, but to a subregion smaller than that occupied in N2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000015
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ND (No biological Data) annotation indicating no molecular function is annotated. This is a placeholder annotation used when no experimental data defines a specific molecular function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Despite extensive characterization of NPHP-1&#39;s cellular role, no specific molecular function (e.g., enzyme activity, specific binding activity) has been experimentally determined. The protein contains an SH3 domain which suggests protein-protein interaction capability, but no specific molecular function has been annotated with experimental evidence. The ND annotation is appropriate.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                    GO:0097546
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary base</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25335890
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ciliopathy proteins establish a bipartite signaling compartm...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0097546" data-r="PMID:25335890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from a study on ciliopathy proteins in AFD thermosensory neurons. The study examines how ciliary proteins establish signaling compartments.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ciliary base encompasses the transition zone and basal body region. NPHP-1 localization to this region is well-documented. This broader term is accurate as an annotation alongside the more specific TZ term.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link">
+                                        PMID:25335890
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">proteins associated with Bardet-Biedl syndrome (BBS), Meckel syndrome and nephronophthisis at its base</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0023041" target="_blank" class="term-link">
+                                    GO:0023041
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15817158
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of the C. elegans nephrocystins ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0023041" data-r="PMID:15817158" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC (Inferred by Curator) annotation inferring a role in neuronal signal transduction based on localization to non-motile cilia in sensory neurons and mating behavior phenotypes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NPHP-1 localizes to sensory cilia in neurons and contributes to sensory behaviors. The double mutant nphp-1;nphp-4 shows response defects, supporting a role in sensory signal transduction. The IC inference from localization and behavioral phenotypes is reasonable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                                        PMID:15817158
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We propose that NPHP-1 and NPHP-4 proteins play important and redundant roles in facilitating ciliary sensory signal transduction.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034606" target="_blank" class="term-link">
+                                    GO:0034606
+                                </a>
+                            </span>
+                            <span class="term-label">response to hermaphrodite contact</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15817158
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of the C. elegans nephrocystins ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0034606" data-r="PMID:15817158" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI (Inferred from Genetic Interaction) annotation based on interaction with nphp-4. Double mutant nphp-1;nphp-4 males show defects in response behaviors during mating.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation captures the redundant role of NPHP-1 and NPHP-4 in male mating behaviors. While single mutants have mild phenotypes, the double mutant shows clear behavioral defects.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                                        PMID:15817158
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nphp-1; nphp-4 double, but not single, mutant males are response defective.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034607" target="_blank" class="term-link">
+                                    GO:0034607
+                                </a>
+                            </span>
+                            <span class="term-label">turning behavior involved in mating</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15817158
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of the C. elegans nephrocystins ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0034607" data-r="PMID:15817158" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation based on genetic interaction with nphp-4. Male turning behavior during mating requires NPHP-1 and NPHP-4 function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Part of the male mating behavior phenotype observed in nphp-1;nphp-4 double mutants. The annotation is appropriately made as IGI given the genetic interaction requirement.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                                        PMID:15817158
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nphp-1; nphp-4 double, but not single, mutant males are response defective.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15817158
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of the C. elegans nephrocystins ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0097730" data-r="PMID:15817158" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation showing NPHP-1 localizes to non-motile (primary/sensory) cilia. C. elegans sensory neurons have non-motile cilia, and NPHP-1 localizes to these structures.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> All C. elegans sensory cilia are non-motile (9+0 configuration), and NPHP-1 is expressed in and localizes to ciliated sensory neurons. This is a correct and well-supported annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                                        PMID:15817158
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                    GO:0035869
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary transition zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21422230
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MKS and NPHP modules cooperate to establish basal body/trans...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0035869" data-r="PMID:21422230" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the comprehensive study on MKS and NPHP modules at the transition zone. This paper provides detailed characterization of NPHP-1 TZ localization and function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core localization for NPHP-1 supported by extensive experimental evidence. The study uses fluorophore-tagged proteins and demonstrates NPHP-1 specifically localizes to the TZ region. Duplicate with PMID:26595381 annotation but from different reference.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                    GO:0008340
+                                </a>
+                            </span>
+                            <span class="term-label">determination of adult lifespan</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19208769
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional interactions between the ciliopathy-associated Me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0008340" data-r="PMID:19208769" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on lifespan phenotype in double mutants. The study on MKS1-related proteins found that mks/mksr double mutants with nphp mutations show increased lifespan due to abnormal insulin-IGF-I signaling.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a pleiotropic phenotype likely resulting from disrupted ciliary function affecting sensory signaling pathways that regulate lifespan (insulin/IGF-1 signaling). Not a core function of NPHP-1 but rather a consequence of ciliary/sensory dysfunction.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                                        PMID:19208769
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we find genetic interactions between all double mks/mksr mutant combinations, manifesting as an increased lifespan phenotype, which is due to abnormal insulin-IGF-I signaling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008104" target="_blank" class="term-link">
+                                    GO:0008104
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein localization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18316409
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Caenorhabditis elegans nephrocystins act as global modif...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0008104" data-r="PMID:18316409" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation indicating NPHP-1 participates in regulating protein localization within the cell, specifically at the ciliary transition zone.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is too general. NPHP-1 specifically functions at the TZ to regulate ciliary access of IFT components and other proteins. A more specific term related to ciliary protein localization or ciliary gate function would be more appropriate.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035721" target="_blank" class="term-link">
+                                    intraciliary transport involved in cilium assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In conclusion, loss of both NPHP-1 and NPHP-4 but not NPHP-1 alone leads to the abnormal ciliary localization of the IFT-B polypeptide OSM-6, the OSM-3-kinesin, and the BBS proteins BBS-7 and BBS-8.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the two modules restrict inappropriate accumulation of membrane-associated proteins inside cilia</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097730" target="_blank" class="term-link">
+                                    GO:0097730
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18316409
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Caenorhabditis elegans nephrocystins act as global modif...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:0097730" data-r="PMID:18316409" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation confirming localization to non-motile cilia based on comprehensive characterization of nephrocystin function in C. elegans.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Duplicate of annotation from PMID:15817158 but from different reference. Both support NPHP-1 localization to non-motile sensory cilia. Valid annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">C. elegans nphp-1 and nphp-4 orthologues are expressed in the ciliated sensory nervous system</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                    GO:1905515
+                                </a>
+                            </span>
+                            <span class="term-label">non-motile cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18316409
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Caenorhabditis elegans nephrocystins act as global modif...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O17972" data-a="GO:1905515" data-r="PMID:18316409" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on ciliary assembly defects observed in nephrocystin mutants. The study shows NPHP-1 and NPHP-4 are important for proper cilium assembly and structure.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt states NPHP-1 may be necessary for initial assembly of the cilium. The Jauregui 2008 study demonstrates that NPHP-1 and NPHP-4 act at the TZ to regulate ciliary components, and double mutants have ciliary structure defects. NPHP-1 contributes to cilium assembly through its role at the TZ.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                        PMID:18316409
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">nphp-1 and nphp-4 are important modulators of ciliary ultrastructure, with defects resulting in a broad phenotypic spectrum</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                        PMID:21422230
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NPHP-1 is a transition zone scaffold protein that functions as part of the NPHP module. It localizes specifically to the ciliary transition zone where it contributes to establishing the ciliary gate and regulating cilium assembly. The protein works redundantly with NPHP-4 and cooperates with the MKS module to anchor the basal body/TZ to the membrane.
+</h3>
+                <span class="vote-buttons" data-g="O17972" data-a="FUNCTION: NPHP-1 is a transition zone scaffold protein that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905515" target="_blank" class="term-link">
+                                non-motile cilium assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0023041" target="_blank" class="term-link">
+                                neuronal signal transduction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035869" target="_blank" class="term-link">
+                                ciliary transition zone
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                                PMID:21422230
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                                PMID:18316409
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15817158" target="_blank" class="term-link">
+                            PMID:15817158
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional characterization of the C. elegans nephrocystins NPHP-1 and NPHP-4 and their role in cilia and male sensory behaviors.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 localizes to ciliated sensory endings of dendrites</div>
+                        
+                        <div class="finding-text">"GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 colocalize with PKD-2 in male-specific sensory cilia</div>
+                        
+                        <div class="finding-text">"GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nphp-1;nphp-4 double mutant males are response defective</div>
+                        
+                        <div class="finding-text">"nphp-1; nphp-4 double, but not single, mutant males are response defective."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 play redundant roles in ciliary sensory signal transduction</div>
+                        
+                        <div class="finding-text">"We propose that NPHP-1 and NPHP-4 proteins play important and redundant roles in facilitating ciliary sensory signal transduction."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                            PMID:18316409
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Caenorhabditis elegans nephrocystins act as global modifiers of cilium structure.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 localize to ciliary transition zones</div>
+                        
+                        <div class="finding-text">"GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 requires NPHP-4 for TZ localization</div>
+                        
+                        <div class="finding-text">"GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 regulate ciliary access of IFT machinery and signaling molecules</div>
+                        
+                        <div class="finding-text">"We propose that NPHP-1 and NPHP-4 act globally at the TZ to regulate ciliary access of the IFT machinery, axonemal structural components, and signaling molecules"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of NPHP-1 and NPHP-4 causes changes in localization of specific ciliary components</div>
+                        
+                        <div class="finding-text">"In conclusion, loss of both NPHP-1 and NPHP-4 but not NPHP-1 alone leads to the abnormal ciliary localization of the IFT-B polypeptide OSM-6, the OSM-3-kinesin, and the BBS proteins BBS-7 and BBS-8."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nphp-1 mutants have stunted or misshaped CEM cilia</div>
+                        
+                        <div class="finding-text">"In nphp-1 mutants, CEM cilia are stunted or misshaped"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19208769" target="_blank" class="term-link">
+                            PMID:19208769
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional interactions between the ciliopathy-associated Meckel syndrome 1 (MKS1) protein and two novel MKS1-related (MKSR) proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MKS/MKSR proteins localize to transition zones/basal bodies of sensory cilia</div>
+                        
+                        <div class="finding-text">"MKS-1 and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize to transition zones/basal bodies of sensory cilia"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic interactions between mks/mksr mutants manifest as increased lifespan due to abnormal insulin-IGF-I signaling</div>
+                        
+                        <div class="finding-text">"we find genetic interactions between all double mks/mksr mutant combinations, manifesting as an increased lifespan phenotype, which is due to abnormal insulin-IGF-I signaling"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21422230" target="_blank" class="term-link">
+                            PMID:21422230
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MKS and NPHP modules cooperate to establish basal body/transition zone membrane associations and ciliary gate function during ciliogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 localize to the transition zone</div>
+                        
+                        <div class="finding-text">"Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP proteins in a region corresponding to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB)."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP-1 and NPHP-4 are part of the NPHP module</div>
+                        
+                        <div class="finding-text">"we group MKS-1, MKSR-1, MKSR-2, MKS-3, and MKS-6 into an MKS/MKSR module and NPHP-1 and NPHP-4 into an NPHP module"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPHP and MKS modules cooperate for BB/TZ membrane associations</div>
+                        
+                        <div class="finding-text">"MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments before or coinciding with intraflagellar transport-dependent axoneme extension"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TZ proteins establish a ciliary gate that restricts protein accumulation in cilia</div>
+                        
+                        <div class="finding-text">"the two modules restrict inappropriate accumulation of membrane-associated proteins inside cilia"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25335890" target="_blank" class="term-link">
+                            PMID:25335890
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ciliopathy proteins establish a bipartite signaling compartment in a C. elegans thermosensory neuron.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ciliopathy proteins including nephronophthisis proteins localize to the ciliary base</div>
+                        
+                        <div class="finding-text">"proteins associated with Bardet-Biedl syndrome (BBS), Meckel syndrome and nephronophthisis at its base"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link">
+                            PMID:26595381
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TMEM107 recruits ciliopathy proteins to subdomains of the ciliary transition zone and causes Joubert syndrome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TMEM-107 functions redundantly with NPHP-4 to regulate cilium integrity</div>
+                        
+                        <div class="finding-text">"nematode TMEM-107 occupies an intermediate layer of the TZ-localized MKS module by organizing recruitment of the ciliopathy proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TZ proteins organize recruitment of ciliopathy proteins</div>
+                        
+                        <div class="finding-text">"nematode TMEM-107 occupies an intermediate layer of the TZ-localized MKS module by organizing recruitment of the ciliopathy proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27623382" target="_blank" class="term-link">
+                            PMID:27623382
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A Conserved Role for Girdin in Basal Body Positioning and Ciliogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15659564" target="_blank" class="term-link">
+                            PMID:15659564
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression and phenotype analysis of the nephrocystin-1 and nephrocystin-4 homologs in Caenorhabditis elegans.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise molecular function of the SH3 domain in NPHP-1?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="Q: What is the precise molecular function of the SH3 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NPHP-1 directly participate in Y-link formation at the transition zone?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="Q: Does NPHP-1 directly participate in Y-link formati..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there specific protein-protein interactions mediated by NPHP-1 that are essential for ciliary gate function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="Q: Are there specific protein-protein interactions me..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify direct binding partners of NPHP-1 using immunoprecipitation or proximity labeling approaches</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NPHP-1 interacts with specific TZ proteins through its SH3 domain</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="EXPERIMENT: Identify direct binding partners of NPHP-1 using i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine if the SH3 domain is required for TZ localization using domain deletion constructs</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The SH3 domain mediates protein-protein interactions required for TZ anchoring</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="EXPERIMENT: Determine if the SH3 domain is required for TZ loc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Examine whether NPHP-1 is a structural component of Y-links using immuno-EM</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NPHP-1 may be a direct structural component of Y-link connectors</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O17972" data-a="EXPERIMENT: Examine whether NPHP-1 is a structural component o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-ciliopathy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nphp-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O17972" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T15:29:07.013379'<br />
+end_time: '2025-12-29T15:35:32.162205'<br />
+duration_seconds: 385.15<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: nphp-1<br />
+  gene_symbol: nphp-1<br />
+  uniprot_accession: O17972<br />
+  protein_description: 'RecName: Full=Nephrocystin-1-like protein; AltName: Full=Nephronophthisis<br />
+    homolog;'<br />
+  gene_info: Name=nphp-1 {ECO:0000312|WormBase:M28.7}; ORFNames=M28.7 {ECO:0000312|WormBase:M28.7};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the nephrocystin-1 family. .<br />
+  protein_domains: NPHP1. (IPR039687); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452);<br />
+    SH3_1 (PF00018)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 26</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O17972</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nephrocystin-1-like protein; AltName: Full=Nephronophthisis homolog;</li>
+<li><strong>Gene Information:</strong> Name=nphp-1 {ECO:0000312|WormBase:M28.7}; ORFNames=M28.7 {ECO:0000312|WormBase:M28.7};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the nephrocystin-1 family. .</li>
+<li><strong>Key Domains:</strong> NPHP1. (IPR039687); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452); SH3_1 (PF00018)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nphp-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nphp-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nphp-1</strong> (gene ID: nphp-1, UniProt: O17972) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O17972</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nephrocystin-1-like protein; AltName: Full=Nephronophthisis homolog;</li>
+<li><strong>Gene Information:</strong> Name=nphp-1 {ECO:0000312|WormBase:M28.7}; ORFNames=M28.7 {ECO:0000312|WormBase:M28.7};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the nephrocystin-1 family. .</li>
+<li><strong>Key Domains:</strong> NPHP1. (IPR039687); SH3-like_dom_sf. (IPR036028); SH3_domain. (IPR001452); SH3_1 (PF00018)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nphp-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nphp-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nphp-1</strong> (gene ID: nphp-1, UniProt: O17972) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan and verification<br />
+We verified the target as Caenorhabditis elegans nphp-1 (UniProt O17972), encoding a nephrocystin-1-like protein in the nephrocystin-1 family with an SH3 domain and additional interaction motifs; literature consistently localizes C. elegans NPHP-1 to the ciliary transition zone (TZ) in ciliated sensory neurons and functionally groups it with the NPHP module (notably NPHP-4), matching the UniProt description and domain annotations (Dec 2005 Journal of Cell Science; Mar 2008 J Cell Biol; May 2008 Mol Biol Cell) (winkelbauer2005thec.elegans pages 1-2, jauregui2008thecaenorhabditiselegans pages 1-2, williams2008functionalredundancyof pages 1-2).</p>
+<p>Key concepts and definitions with current understanding<br />
+- Identity and family: nphp-1 encodes the C. elegans ortholog of human NPHP1, a ciliopathy protein; NPHP-1 contains interaction modules including an SH3 region and a nephrocystin homology domain, consistent with an adaptor/scaffold role rather than an enzyme or transporter (Dec 2005, J Cell Sci, doi:10.1242/jcs.02665) (winkelbauer2005thec.elegans pages 1-2).<br />
+- Subcellular localization: In vivo, NPHP-1 concentrates at the ciliary transition zone (base of cilia/basal body–TZ region) in ciliated sensory neurons and is excluded from distal axoneme; its TZ localization depends on NPHP-4 (Aug 2011, Hum Mol Genet, doi:10.1093/hmg/ddr198; Dec 2005, J Cell Sci) (masyukova2011assessingthepathogenic pages 2-2, winkelbauer2005thec.elegans pages 1-2).<br />
+- Primary function: NPHP-1 functions as a TZ adaptor/modifier that regulates gatekeeping of protein access, impacting intraflagellar transport (IFT) cargo entry and axonemal composition; single mutants often have mild or subtle ultrastructural phenotypes, indicating NPHP-1 modulates rather than absolutely drives ciliogenesis (Mar 2008, J Cell Biol, doi:10.1083/jcb.200707090) (jauregui2008thecaenorhabditiselegans pages 1-2).<br />
+- Pathway/module context: NPHP-1 and NPHP-4 comprise the NPHP module at the TZ; this module cooperates and shows genetic redundancy with MKS module proteins (e.g., MKS-1, MKSR-1/2, MKS-3, MKS-5/RPGRIP1L, CEP-290/MKS4) and interfaces with IFT/BBS components; modular interactions underpin TZ assembly and gating (Nov 2015, PLoS Genet, doi:10.1371/journal.pgen.1005627; Mar 2016, PLoS Biol, doi:10.1371/journal.pbio.1002416; Jun 2012, J Cell Sci, doi:10.1242/jcs.095539) (masyukova2016ascreenfor pages 26-27, warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2).</p>
+<p>Recent developments and latest research (emphasis 2023–2024)<br />
+- Transition zone as gated compartment and modular organization: Recent reviews synthesize advances that define the TZ as a ringed, modular diffusion barrier whose integrity and selectivity are conferred by MKS and NPHP complexes; these frameworks contextualize NPHP-1’s adaptor role in maintaining ciliary compartmentalization (Apr 2023, Nature Reviews Genetics, doi:10.1038/s41576-023-00587-9) (williams2008functionalredundancyof pages 11-11).<br />
+- Methodological advances: Super-resolution and expansion microscopy now resolve TZ architecture at tens-of-nanometers to sub-10 nm scales, enabling precise mapping of TZ adaptors like NPHP-1 within discrete rings and nanodomains; these methods support re-interpretation of prior localization and interaction data in C. elegans and mammals (Jan 2024, Laser &amp; Optoelectronics Progress, doi:10.3788/lop232684) (zhen2024superresolutionfluorescencemicroscopy pages 1-3).<br />
+- Broader ciliopathy synthesis: Contemporary nephrology-focused reviews highlight actin–TZ crosstalk and reiterate the cooperative role of NPHP and MKS modules in TZ integrity and ciliogenesis, aligning with C. elegans genetic paradigms that placed NPHP-1/4 as gate modifiers (Jan 2024, Frontiers in Nephrology, doi:10.3389/fneph.2023.1331847) (williams2008functionalredundancyof pages 11-11).<br />
+- Additional genetic landscape updates: A 2023 study on DCDC2 (RPI-1)–NPHP-4 redundancy in C. elegans reinforces the modular, partially redundant nature of TZ and ciliary biogenesis networks within which NPHP-1 operates, supporting an adaptor network with distributed robustness (Jan 2023, Turkish Journal of Biology, doi:10.55730/1300-0152.2642) (williams2008functionalredundancyof pages 11-11).</p>
+<p>Primary experimental evidence in C. elegans for function and localization<br />
+- TZ localization and dependency: NPHP-1 and NPHP-4 localize to the TZ and require DAF-19 (RFX) transcriptional regulation; NPHP-4 is required for correct TZ localization of NPHP-1 (Dec 2005, J Cell Sci; Aug 2011, Hum Mol Genet) (winkelbauer2005thec.elegans pages 1-2, masyukova2011assessingthepathogenic pages 2-2).<br />
+- Adaptor/gatekeeper function: Loss of NPHP-1/4 changes localization of specific ciliary components and induces subtle ultrastructural axonemal defects; nphp-4 mutants show B-tubule defects that perturb IFT, supporting a role for the NPHP-1/4 module in regulating cargo access and axonemal integrity at the TZ (Mar 2008, J Cell Biol) (jauregui2008thecaenorhabditiselegans pages 1-2).<br />
+- Genetic interactions with MKS and other complexes: NPHP-1/4 display synthetic interactions with MKS genes (mks-1, mks-3, mks-5/RPGRIP1L, mksr-1/2, mks-6), indicating cooperative parallel pathways that support TZ assembly, basal body/TZ membrane anchoring, and ciliogenesis (May 2008, Mol Biol Cell; Jun 2012, J Cell Sci; Mar 2016, PLoS Biol) (williams2008functionalredundancyof pages 1-2, warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2).<br />
+- Interactions with IFT motors and BBSome context: A modifier screen in worms uncovered a specific genetic interaction between the IFT kinesin OSM-3 and nphp-4, implicating the NPHP module in coordinating distal segment assembly and IFT motor function; this genetic cross-talk supports the idea that NPHP-1, via the NPHP module, interfaces with IFT and BBS-dependent trafficking at the TZ gate (Feb 2016, PLoS Genet, doi:10.1371/journal.pgen.1005841; Nov 2015, PLoS Genet) (masyukova2016ascreenfor pages 26-27).<br />
+- Conservation with human NPHP1: Mammalian NPHP1 and NPHP4 physically interact, and cross-species studies converge on conserved TZ localization and gating functions, reinforcing use of C. elegans to model human NPHP1 biology (Jun 2012, J Cell Sci; reviews cited therein) (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2).</p>
+<p>Phenotypes and quantitative readouts in C. elegans<br />
+- Cilia structure and ultrastructure: nphp-1 or nphp-4 single mutants typically retain gross cilia by dye filling, yet transmission electron microscopy reveals axonemal abnormalities (e.g., B-tubule defects in amphid channel cilia) and altered IFT dynamics in nphp-4 mutants; double or specific sensitized backgrounds show stronger ciliogenesis defects, including truncated axonemes and dendrite attachment issues (Mar 2008, J Cell Biol; May 2008, Mol Biol Cell) (jauregui2008thecaenorhabditiselegans pages 1-2, williams2008functionalredundancyof pages 1-2).<br />
+- Sensory function: Behavioral assays show chemosensory deficits and male sensory behavioral changes consistent with impaired ciliary signaling when the NPHP module is perturbed (Dec 2005, J Cell Sci) (winkelbauer2005thec.elegans pages 1-2).<br />
+- Genetic interaction statistics/examples: Screens in nphp-4 backgrounds identified ≥10 loci that exacerbate NPHP phenotypes, including multiple MKS genes and the osm-3 kinesin; dyf/osm behavioral penetrance rises markedly in double mutants compared to single mutants, illustrating quantitative genetic modifiers (Feb 2016, PLoS Genet) (masyukova2016ascreenfor pages 26-27).</p>
+<p>Subcellular context and assembly pathway<br />
+- TZ hierarchy and assembly: C. elegans studies place MKS-5 (RPGRIP1L) and CEP-290 as central assembly factors establishing TZ architecture, with NPHP and MKS modules showing interdependent, yet partially separable, localization dependencies; within this pathway, NPHP-1/4 act as early NPHP-module components engaged in gating and membrane anchoring functions (Mar 2016, PLoS Biol) (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2).</p>
+<p>Expert opinions and authoritative analyses<br />
+- Cross-disciplinary reviews conclude the TZ comprises modular complexes (NPHP and MKS) forming diffusion barriers essential for ciliary signaling, and that gene–gene interactions between modules (including with BBS/IFT) shape penetrance and expressivity in ciliopathies; C. elegans genetics is highlighted for revealing conserved module logic applicable to human disease (Apr 2023, Nat Rev Genet; Jan 2024, Frontiers in Nephrology) (williams2008functionalredundancyof pages 11-11).<br />
+- Imaging method reviews emphasize that super-resolution modalities now robustly resolve TZ rings and substructures, providing the technical basis to refine NPHP-1 spatial models in vivo (Jan 2024, Laser &amp; Optoelectronics Progress) (zhen2024superresolutionfluorescencemicroscopy pages 1-3).</p>
+<p>Current applications and real-world implementations<br />
+- Variant interpretation and functional modeling: C. elegans is used to functionally assess human nephronophthisis alleles (e.g., NPHP4) with in vivo phenotyping of TZ localization and cilia function; dependency of NPHP-1 localization on NPHP-4 in worm informs variant pathogenicity frameworks and cross-species conservation (Aug 2011, Hum Mol Genet) (masyukova2011assessingthepathogenic pages 2-2).<br />
+- Systems genetics of ciliopathies: Worm genetic interaction maps (NPHP–MKS–IFT/BBS) are applied conceptually to interpret human oligogenic cases and modifiers in nephronophthisis and related ciliopathies (Nov 2015, PLoS Genet; Mar 2016, PLoS Biol) (masyukova2016ascreenfor pages 26-27, warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2).<br />
+- Imaging pipelines: The application of SRM/expansion microscopy to TZ architecture underpins diagnostic imaging development and enables hypothesis-driven mapping of pathogenic variants impacting NPHP/MKS rings, relevant to research translation (Jan 2024, Laser &amp; Optoelectronics Progress) (zhen2024superresolutionfluorescencemicroscopy pages 1-3).</p>
+<p>URLs and publication dates (selection)<br />
+- Winkelbauer et al., J Cell Sci, published Dec 2005 (online Nov 15, 2005): https://doi.org/10.1242/jcs.02665 (winkelbauer2005thec.elegans pages 1-2)<br />
+- Jauregui et al., J Cell Biol, Mar 3, 2008: https://doi.org/10.1083/jcb.200707090 (jauregui2008thecaenorhabditiselegans pages 1-2)<br />
+- Williams et al., Mol Biol Cell, May 2008 (published online Mar 12, 2008): https://doi.org/10.1091/mbc.E07-10-1070 (williams2008functionalredundancyof pages 1-2)<br />
+- Warburton‑Pitt et al., J Cell Sci, Jun 2012: https://doi.org/10.1242/jcs.095539 (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2)<br />
+- Yee et al., PLoS Genet, Nov 2015: https://doi.org/10.1371/journal.pgen.1005627 (masyukova2016ascreenfor pages 26-27)<br />
+- Li et al., PLoS Biol, Mar 2016: https://doi.org/10.1371/journal.pbio.1002416 (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2)<br />
+- Masyukova et al., PLoS Genet, Feb 2016: https://doi.org/10.1371/journal.pgen.1005841 (masyukova2016ascreenfor pages 26-27)<br />
+- Masyukova et al., Hum Mol Genet, Aug 2011: https://doi.org/10.1093/hmg/ddr198 (masyukova2011assessingthepathogenic pages 2-2)<br />
+- Mill et al., Nat Rev Genet, Apr 2023: https://doi.org/10.1038/s41576-023-00587-9 (williams2008functionalredundancyof pages 11-11)<br />
+- Zhen &amp; Yang, Laser &amp; Optoelectronics Progress, Jan 2024: https://doi.org/10.3788/lop232684 (zhen2024superresolutionfluorescencemicroscopy pages 1-3)<br />
+- Kalot et al., Frontiers in Nephrology, Jan 2024: https://doi.org/10.3389/fneph.2023.1331847 (williams2008functionalredundancyof pages 11-11)<br />
+- Kaplan, Turkish J Biol, Jan 2023: https://doi.org/10.55730/1300-0152.2642 (williams2008functionalredundancyof pages 11-11)</p>
+<p>Embedded key-source summary<br />
+| Year | Citation (first author et al.) | System | Method(s) | Key Finding(s) | URL / DOI |<br />
+|---:|---|---|---|---|---|<br />
+| 2005 | Winkelbauer et al. | Caenorhabditis elegans | Immunofluorescence localization, genetic mutants, chemotaxis/behavioral assays | NPHP-1 and NPHP-4 localize to the ciliary transition zone; NPHP-1 contains coiled-coils, an SH3 region and NPHP homology domain; required for chemosensory perception though gross ciliogenesis appears largely intact (winkelbauer2005thec.elegans pages 1-2) | https://doi.org/10.1242/jcs.02665 |<br />
+| 2008 | Jauregui et al. | Caenorhabditis elegans | IF localization, TEM ultrastructure, IFT assays, genetics | NPHP-1 and NPHP-4 act as global TZ modifiers that regulate ciliary access of IFT machinery and axonemal components; nphp-4 mutants show B-tubule defects and altered IFT (jauregui2008thecaenorhabditiselegans pages 1-2) | https://doi.org/10.1083/jcb.200707090 |<br />
+| 2008 | Williams et al. | Caenorhabditis elegans | Genetics, localization, TEM | B9 proteins function redundantly with nephrocystins (nph-1/nph-4) in ciliogenesis; double mutants exacerbate ciliary/dendrite defects and implicate TZ-localized complexes in cilia/basal-body function (williams2008functionalredundancyof pages 1-2) | https://doi.org/10.1091/mbc.E07-10-1070 |<br />
+| 2012 | Warburton-Pitt et al. | Caenorhabditis elegans | Genetic interaction mapping, localization | nphp-1/nphp-4 genetically interact with nphp-2 and MKS-module genes to regulate TZ placement/orientation and ciliogenesis; single mutants often mild but specific pairwise combinations produce severe ciliogenesis defects (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2) | https://doi.org/10.1242/jcs.095539 |<br />
+| 2015 | Yee et al. | C. elegans (comparative with mouse) | Genetic interaction assays, localization | Identified conserved TZ inter-module interactions: TCTN-1 (MKS-related) interacts genetically with NPHP components (including nphp-1/nphp-4) and BBS to cooperatively support ciliogenesis and ciliary signaling (supporting references summarized in C. elegans studies) (masyukova2016ascreenfor pages 26-27, warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2) | https://doi.org/10.1371/journal.pgen.1005627 |<br />
+| 2016 | Li et al. | Caenorhabditis elegans | Localization dependency, assembly-pathway analysis | Defined MKS-5 and CEP-290 dependent assembly pathway for TZ; places NPHP-1/NPHP-4 as early NPHP-module components required for proper TZ gating and ciliogenesis (related context summarized in C. elegans TZ literature) (warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2) | https://doi.org/10.1371/journal.pbio.1002416 |<br />
+| 2016 | Masyukova et al. | Caenorhabditis elegans | Genetic modifier screen, IFT assays, behavioral assays | Modifier screen of nphp-4 uncovered osm-3 (kinesin) interaction; demonstrates genetic cross-talk between NPHP module and IFT/motor components and reveals loci that exacerbate TZ-dependent phenotypes (masyukova2016ascreenfor pages 26-27) | https://doi.org/10.1371/journal.pgen.1005841 |<br />
+| 2011 | Masyukova et al. | Caenorhabditis elegans | Human-variant functional assay, localization, phenotypic analysis | Modeled human NPHP4 missense alleles in worm; demonstrated NPHP-4 is required for proper localization of NPHP-1 to the TZ and validated C. elegans as a platform to assess pathogenicity (masyukova2011assessingthepathogenic pages 2-2) | https://doi.org/10.1093/hmg/ddr198 |</p>
+<p><em>Table: Concise table of primary C. elegans studies on nphp-1/NPHP-1 summarizing year, methods, main findings, and DOI; citations reference extracted context IDs supporting each row.</em></p>
+<p>Conclusions<br />
+- nphp-1 encodes a TZ-localized adaptor in C. elegans that acts with NPHP-4 to regulate the ciliary gate, affecting IFT access and axonemal composition; its core function is scaffolding/signaling modulation rather than enzymatic catalysis or transport (Dec 2005; Mar 2008) (winkelbauer2005thec.elegans pages 1-2, jauregui2008thecaenorhabditiselegans pages 1-2).<br />
+- NPHP-1/4 comprise an NPHP module that cooperates with the MKS module and interfaces with IFT/BBS pathways; genetic redundancy/interaction patterns underlie variable phenotypic penetrance and sensilla specificity (May 2008; Jun 2012; Nov 2015; Mar 2016; Feb 2016) (williams2008functionalredundancyof pages 1-2, warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2, masyukova2016ascreenfor pages 26-27).<br />
+- 2023–2024 reviews and methods consolidate the TZ as a modular diffusion barrier and provide tools to refine NPHP-1 spatial models and variant interpretation, reinforcing conservation with human NPHP1 function in ciliopathies (Apr 2023; Jan 2024) (williams2008functionalredundancyof pages 11-11, zhen2024superresolutionfluorescencemicroscopy pages 1-3).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(winkelbauer2005thec.elegans pages 1-2): Marlene E. Winkelbauer, Jenny C. Schafer, Courtney J. Haycraft, Peter Swoboda, and Bradley K. Yoder. The c. elegans homologs of nephrocystin-1 and nephrocystin-4 are cilia transition zone proteins involved in chemosensory perception. Journal of Cell Science, 118:5575-5587, Dec 2005. URL: https://doi.org/10.1242/jcs.02665, doi:10.1242/jcs.02665. This article has 141 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jauregui2008thecaenorhabditiselegans pages 1-2): Andrew R. Jauregui, Ken C.Q. Nguyen, David H. Hall, and Maureen M. Barr. The caenorhabditis elegans nephrocystins act as global modifiers of cilium structure. The Journal of Cell Biology, 180:973-988, Mar 2008. URL: https://doi.org/10.1083/jcb.200707090, doi:10.1083/jcb.200707090. This article has 125 citations.</p>
+</li>
+<li>
+<p>(williams2008functionalredundancyof pages 1-2): Corey L. Williams, Marlene E. Winkelbauer, Jenny C. Schafer, Edward J. Michaud, and Bradley K. Yoder. Functional redundancy of the b9 proteins and nephrocystins in caenorhabditis elegans ciliogenesis. Molecular biology of the cell, 19 5:2154-68, May 2008. URL: https://doi.org/10.1091/mbc.e07-10-1070, doi:10.1091/mbc.e07-10-1070. This article has 120 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(masyukova2011assessingthepathogenic pages 2-2): Svetlana V. Masyukova, Marlene E. Winkelbauer, Corey L. Williams, Jay N. Pieczynski, and Bradley K. Yoder. Assessing the pathogenic potential of human nephronophthisis disease-associated nphp-4 missense mutations in c. elegans. Human molecular genetics, 20 15:2942-54, Aug 2011. URL: https://doi.org/10.1093/hmg/ddr198, doi:10.1093/hmg/ddr198. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(masyukova2016ascreenfor pages 26-27): Svetlana V. Masyukova, Dawn E. Landis, Scott J. Henke, Corey L. Williams, Jay N. Pieczynski, Kelly N. Roszczynialski, Jannese E. Covington, Erik B. Malarkey, and Bradley K. Yoder. A screen for modifiers of cilia phenotypes reveals novel mks alleles and uncovers a specific genetic interaction between osm-3 and nphp-4. PLOS Genetics, 12:e1005841, Feb 2016. URL: https://doi.org/10.1371/journal.pgen.1005841, doi:10.1371/journal.pgen.1005841. This article has 25 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2): Simon R. F. Warburton-Pitt, Andrew R. Jauregui, Chunmei Li, Juan Wang, M. Leroux, and M. Barr. Ciliogenesis in caenorhabditis elegans requires genetic interactions between ciliary middle segment localized nphp-2 (inversin) and transition zone-associated proteins. Journal of Cell Science, 125:2592-2603, Jun 2012. URL: https://doi.org/10.1242/jcs.095539, doi:10.1242/jcs.095539. This article has 57 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williams2008functionalredundancyof pages 11-11): Corey L. Williams, Marlene E. Winkelbauer, Jenny C. Schafer, Edward J. Michaud, and Bradley K. Yoder. Functional redundancy of the b9 proteins and nephrocystins in caenorhabditis elegans ciliogenesis. Molecular biology of the cell, 19 5:2154-68, May 2008. URL: https://doi.org/10.1091/mbc.e07-10-1070, doi:10.1091/mbc.e07-10-1070. This article has 120 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhen2024superresolutionfluorescencemicroscopy pages 1-3): Liu Zhen and Wu Yang. Super-resolution fluorescence microscopy for cilia investigation and ciliopathy diagnosis (invited). Laser &amp; Optoelectronics Progress, 61:0618016, Jan 2024. URL: https://doi.org/10.3788/lop232684, doi:10.3788/lop232684. This article has 1 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>jauregui2008thecaenorhabditiselegans pages 1-2</li>
+<li>williams2008functionalredundancyof pages 11-11</li>
+<li>zhen2024superresolutionfluorescencemicroscopy pages 1-3</li>
+<li>masyukova2016ascreenfor pages 26-27</li>
+<li>warburtonpitt2012ciliogenesisincaenorhabditis pages 1-2</li>
+<li>masyukova2011assessingthepathogenic pages 2-2</li>
+<li>williams2008functionalredundancyof pages 1-2</li>
+<li>https://doi.org/10.1242/jcs.02665</li>
+<li>https://doi.org/10.1083/jcb.200707090</li>
+<li>https://doi.org/10.1091/mbc.E07-10-1070</li>
+<li>https://doi.org/10.1242/jcs.095539</li>
+<li>https://doi.org/10.1371/journal.pgen.1005627</li>
+<li>https://doi.org/10.1371/journal.pbio.1002416</li>
+<li>https://doi.org/10.1371/journal.pgen.1005841</li>
+<li>https://doi.org/10.1093/hmg/ddr198</li>
+<li>https://doi.org/10.1038/s41576-023-00587-9</li>
+<li>https://doi.org/10.3788/lop232684</li>
+<li>https://doi.org/10.3389/fneph.2023.1331847</li>
+<li>https://doi.org/10.55730/1300-0152.2642</li>
+<li>https://doi.org/10.1242/jcs.02665,</li>
+<li>https://doi.org/10.1083/jcb.200707090,</li>
+<li>https://doi.org/10.1091/mbc.e07-10-1070,</li>
+<li>https://doi.org/10.1093/hmg/ddr198,</li>
+<li>https://doi.org/10.1371/journal.pgen.1005841,</li>
+<li>https://doi.org/10.1242/jcs.095539,</li>
+<li>https://doi.org/10.3788/lop232684,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O17972
+gene_symbol: nphp-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &#39;NPHP-1 is the C. elegans ortholog of human nephrocystin-1 (NPHP1), a
+  protein mutated in nephronophthisis. It localizes specifically to the ciliary transition
+  zone (TZ) in sensory neurons and functions as part of the NPHP module that works
+  redundantly with the MKS module to establish the ciliary gate. NPHP-1 plays important
+  roles in ciliary structure, sensory signal transduction, and male mating behaviors.
+  The protein contains an SH3 domain and requires NPHP-4 for proper TZ localization.
+  Together with NPHP-4, it regulates ciliary access of IFT machinery components, axonemal
+  structural proteins, and signaling molecules.
+
+  &#39;
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation based on phylogenetic analysis. While NPHP-1 is predominantly
+      localized to the ciliary transition zone, cytoplasmic localization is plausible
+      as the protein must transit through the cytoplasm. However, this is a generic
+      term that does not capture the protein&#39;&#39;s specific and functionally relevant
+      localization at the transition zone.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;The annotation is not incorrect but does not represent the core localization
+      of NPHP-1. The protein&#39;&#39;s critical function is at the transition zone. Cytoplasmic
+      localization may represent transit or a minor pool, but the more informative
+      and functionally relevant localizations are the TZ-related terms.
+
+      &#39;
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation based on phylogenetic analysis. NPHP-1 localizes to the
+      ciliary transition zone, which is a subdomain of the cilium. Multiple studies
+      demonstrate TZ-specific localization in C. elegans [PMID:15817158, PMID:18316409,
+      PMID:21422230].
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;While the more specific term &#39;&#39;ciliary transition zone&#39;&#39; (GO:0035869)
+      better captures NPHP-1&#39;&#39;s localization, this broader term is accurate since
+      the TZ is part of the cilium. The IBA annotation aligns with experimental evidence
+      showing ciliary localization.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:15817158
+      supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated
+        sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory
+        cilia.
+    - reference_id: PMID:18316409
+      supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary
+        TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization
+- term:
+    id: GO:0090251
+    label: protein localization involved in establishment of planar polarity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;IBA annotation based on phylogenetic inference. This annotation likely
+      derives from mammalian data where NPHP1 has been implicated in planar cell polarity
+      pathways. There is no direct evidence for this function in C. elegans.
+
+      &#39;
+    action: UNDECIDED
+    reason: &#39;While this may be a conserved function based on phylogenetic analysis,
+      there is no direct experimental evidence for a role in planar polarity in C.
+      elegans. The IBA annotation is reasonable given conservation, but without C.
+      elegans-specific data, this remains speculative.
+
+      &#39;
+- term:
+    id: GO:0030030
+    label: cell projection organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;IEA annotation based on UniProtKB keyword mapping (cilium biogenesis/degradation).
+      NPHP-1 is involved in cilium structure and organization, particularly through
+      its role at the transition zone.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;The annotation is supported by experimental evidence showing that nphp-1
+      mutants have defects in CEM cilia morphology [PMID:18316409]. NPHP-1 and NPHP-4
+      act globally at the TZ to regulate ciliary structure, and loss causes cell type-specific
+      phenotypes in cilia organization.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:18316409
+      supporting_text: nphp-1 and nphp-4 are important modulators of ciliary ultrastructure,
+        with defects resulting in a broad phenotypic spectrum
+- term:
+    id: GO:0036064
+    label: ciliary basal body
+  evidence_type: IDA
+  original_reference_id: PMID:27623382
+  review:
+    summary: &#39;IDA annotation from a study on Girdin&#39;&#39;s role in basal body positioning.
+      The paper examines various ciliary proteins including NPHP-1 localization. However,
+      multiple C. elegans studies show NPHP-1 specifically localizes to the transition
+      zone rather than the basal body proper [PMID:18316409, PMID:21422230].
+
+      &#39;
+    action: MODIFY
+    reason: &#39;In C. elegans, the basal body and transition zone are distinct regions.
+      Multiple detailed studies using GFP-tagged NPHP-1 show specific localization
+      to the transition zone, not the basal body. The transition zone is adjacent
+      to but distinct from the basal body region where IFT proteins concentrate. This
+      annotation should be modified to reflect TZ localization.
+
+      &#39;
+    proposed_replacement_terms:
+    - id: GO:0035869
+      label: ciliary transition zone
+    supported_by:
+    - reference_id: PMID:18316409
+      supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary
+        TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization
+    - reference_id: PMID:21422230
+      supporting_text: we detect MKS/MKSR/NPHP proteins in a region corresponding
+        to the TZ (adjacent to where IFT proteins concentrate at the TFs/BB)
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IDA
+  original_reference_id: PMID:26595381
+  review:
+    summary: &#39;Direct experimental evidence from a study on TMEM107 and ciliopathy
+      proteins. NPHP-1 TZ localization is well-established across multiple C. elegans
+      studies.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is the core localization for NPHP-1. Multiple studies demonstrate
+      specific TZ localization using fluorescently tagged proteins [PMID:15817158,
+      PMID:18316409, PMID:21422230, PMID:26595381]. NPHP-1 is part of the NPHP module
+      that localizes to and functions at the transition zone.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:26595381
+      supporting_text: nematode TMEM-107 occupies an intermediate layer of the TZ-localized
+        MKS module by organizing recruitment of the ciliopathy proteins
+    - reference_id: PMID:21422230
+      supporting_text: NPHP-1 and NPHP-4 localize to the TZ in mks-5 mutants, but
+        to a subregion smaller than that occupied in N2
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  review:
+    summary: &#39;ND (No biological Data) annotation indicating no molecular function
+      is annotated. This is a placeholder annotation used when no experimental data
+      defines a specific molecular function.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Despite extensive characterization of NPHP-1&#39;&#39;s cellular role, no specific
+      molecular function (e.g., enzyme activity, specific binding activity) has been
+      experimentally determined. The protein contains an SH3 domain which suggests
+      protein-protein interaction capability, but no specific molecular function has
+      been annotated with experimental evidence. The ND annotation is appropriate.
+
+      &#39;
+- term:
+    id: GO:0097546
+    label: ciliary base
+  evidence_type: IDA
+  original_reference_id: PMID:25335890
+  review:
+    summary: &#39;IDA annotation from a study on ciliopathy proteins in AFD thermosensory
+      neurons. The study examines how ciliary proteins establish signaling compartments.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;The ciliary base encompasses the transition zone and basal body region.
+      NPHP-1 localization to this region is well-documented. This broader term is
+      accurate as an annotation alongside the more specific TZ term.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:25335890
+      supporting_text: proteins associated with Bardet-Biedl syndrome (BBS), Meckel
+        syndrome and nephronophthisis at its base
+- term:
+    id: GO:0023041
+    label: neuronal signal transduction
+  evidence_type: IC
+  original_reference_id: PMID:15817158
+  review:
+    summary: &#39;IC (Inferred by Curator) annotation inferring a role in neuronal signal
+      transduction based on localization to non-motile cilia in sensory neurons and
+      mating behavior phenotypes.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;NPHP-1 localizes to sensory cilia in neurons and contributes to sensory
+      behaviors. The double mutant nphp-1;nphp-4 shows response defects, supporting
+      a role in sensory signal transduction. The IC inference from localization and
+      behavioral phenotypes is reasonable.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:15817158
+      supporting_text: We propose that NPHP-1 and NPHP-4 proteins play important and
+        redundant roles in facilitating ciliary sensory signal transduction.
+- term:
+    id: GO:0034606
+    label: response to hermaphrodite contact
+  evidence_type: IGI
+  original_reference_id: PMID:15817158
+  review:
+    summary: &#39;IGI (Inferred from Genetic Interaction) annotation based on interaction
+      with nphp-4. Double mutant nphp-1;nphp-4 males show defects in response behaviors
+      during mating.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;The annotation captures the redundant role of NPHP-1 and NPHP-4 in male
+      mating behaviors. While single mutants have mild phenotypes, the double mutant
+      shows clear behavioral defects.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:15817158
+      supporting_text: nphp-1; nphp-4 double, but not single, mutant males are response
+        defective.
+- term:
+    id: GO:0034607
+    label: turning behavior involved in mating
+  evidence_type: IGI
+  original_reference_id: PMID:15817158
+  review:
+    summary: &#39;IGI annotation based on genetic interaction with nphp-4. Male turning
+      behavior during mating requires NPHP-1 and NPHP-4 function.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Part of the male mating behavior phenotype observed in nphp-1;nphp-4
+      double mutants. The annotation is appropriately made as IGI given the genetic
+      interaction requirement.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:15817158
+      supporting_text: nphp-1; nphp-4 double, but not single, mutant males are response
+        defective.
+- term:
+    id: GO:0097730
+    label: non-motile cilium
+  evidence_type: IDA
+  original_reference_id: PMID:15817158
+  review:
+    summary: &#39;IDA annotation showing NPHP-1 localizes to non-motile (primary/sensory)
+      cilia. C. elegans sensory neurons have non-motile cilia, and NPHP-1 localizes
+      to these structures.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;All C. elegans sensory cilia are non-motile (9+0 configuration), and
+      NPHP-1 is expressed in and localizes to ciliated sensory neurons. This is a
+      correct and well-supported annotation.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:15817158
+      supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated
+        sensory endings of dendrites and colocalize with PKD-2 in male-specific sensory
+        cilia.
+- term:
+    id: GO:0035869
+    label: ciliary transition zone
+  evidence_type: IDA
+  original_reference_id: PMID:21422230
+  review:
+    summary: &#39;IDA annotation from the comprehensive study on MKS and NPHP modules
+      at the transition zone. This paper provides detailed characterization of NPHP-1
+      TZ localization and function.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;This is a core localization for NPHP-1 supported by extensive experimental
+      evidence. The study uses fluorophore-tagged proteins and demonstrates NPHP-1
+      specifically localizes to the TZ region. Duplicate with PMID:26595381 annotation
+      but from different reference.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:21422230
+      supporting_text: Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+        proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+        concentrate at the TFs/BB).
+- term:
+    id: GO:0008340
+    label: determination of adult lifespan
+  evidence_type: IMP
+  original_reference_id: PMID:19208769
+  review:
+    summary: &#39;IMP annotation based on lifespan phenotype in double mutants. The study
+      on MKS1-related proteins found that mks/mksr double mutants with nphp mutations
+      show increased lifespan due to abnormal insulin-IGF-I signaling.
+
+      &#39;
+    action: KEEP_AS_NON_CORE
+    reason: &#39;This is a pleiotropic phenotype likely resulting from disrupted ciliary
+      function affecting sensory signaling pathways that regulate lifespan (insulin/IGF-1
+      signaling). Not a core function of NPHP-1 but rather a consequence of ciliary/sensory
+      dysfunction.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:19208769
+      supporting_text: we find genetic interactions between all double mks/mksr mutant
+        combinations, manifesting as an increased lifespan phenotype, which is due
+        to abnormal insulin-IGF-I signaling
+- term:
+    id: GO:0008104
+    label: intracellular protein localization
+  evidence_type: IGI
+  original_reference_id: PMID:18316409
+  review:
+    summary: &#39;IGI annotation indicating NPHP-1 participates in regulating protein
+      localization within the cell, specifically at the ciliary transition zone.
+
+      &#39;
+    action: MODIFY
+    reason: &#39;This annotation is too general. NPHP-1 specifically functions at the
+      TZ to regulate ciliary access of IFT components and other proteins. A more specific
+      term related to ciliary protein localization or ciliary gate function would
+      be more appropriate.
+
+      &#39;
+    proposed_replacement_terms:
+    - id: GO:0035721
+      label: intraciliary transport involved in cilium assembly
+    additional_reference_ids:
+    - PMID:21422230
+    supported_by:
+    - reference_id: PMID:18316409
+      supporting_text: In conclusion, loss of both NPHP-1 and NPHP-4 but not NPHP-1
+        alone leads to the abnormal ciliary localization of the IFT-B polypeptide
+        OSM-6, the OSM-3-kinesin, and the BBS proteins BBS-7 and BBS-8.
+    - reference_id: PMID:21422230
+      supporting_text: the two modules restrict inappropriate accumulation of membrane-associated
+        proteins inside cilia
+- term:
+    id: GO:0097730
+    label: non-motile cilium
+  evidence_type: IDA
+  original_reference_id: PMID:18316409
+  review:
+    summary: &#39;IDA annotation confirming localization to non-motile cilia based on
+      comprehensive characterization of nephrocystin function in C. elegans.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;Duplicate of annotation from PMID:15817158 but from different reference.
+      Both support NPHP-1 localization to non-motile sensory cilia. Valid annotation.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:18316409
+      supporting_text: C. elegans nphp-1 and nphp-4 orthologues are expressed in the
+        ciliated sensory nervous system
+- term:
+    id: GO:1905515
+    label: non-motile cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:18316409
+  review:
+    summary: &#39;IMP annotation based on ciliary assembly defects observed in nephrocystin
+      mutants. The study shows NPHP-1 and NPHP-4 are important for proper cilium assembly
+      and structure.
+
+      &#39;
+    action: ACCEPT
+    reason: &#39;UniProt states NPHP-1 may be necessary for initial assembly of the cilium.
+      The Jauregui 2008 study demonstrates that NPHP-1 and NPHP-4 act at the TZ to
+      regulate ciliary components, and double mutants have ciliary structure defects.
+      NPHP-1 contributes to cilium assembly through its role at the TZ.
+
+      &#39;
+    supported_by:
+    - reference_id: PMID:18316409
+      supporting_text: nphp-1 and nphp-4 are important modulators of ciliary ultrastructure,
+        with defects resulting in a broad phenotypic spectrum
+    - reference_id: PMID:21422230
+      supporting_text: MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+        before or coinciding with intraflagellar transport-dependent axoneme extension
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:15817158
+  title: Functional characterization of the C. elegans nephrocystins NPHP-1 and NPHP-4
+    and their role in cilia and male sensory behaviors.
+  findings:
+  - statement: NPHP-1 localizes to ciliated sensory endings of dendrites
+    supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory
+      endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia.
+  - statement: NPHP-1 and NPHP-4 colocalize with PKD-2 in male-specific sensory cilia
+    supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to ciliated sensory
+      endings of dendrites and colocalize with PKD-2 in male-specific sensory cilia.
+  - statement: nphp-1;nphp-4 double mutant males are response defective
+    supporting_text: nphp-1; nphp-4 double, but not single, mutant males are response
+      defective.
+  - statement: NPHP-1 and NPHP-4 play redundant roles in ciliary sensory signal transduction
+    supporting_text: We propose that NPHP-1 and NPHP-4 proteins play important and
+      redundant roles in facilitating ciliary sensory signal transduction.
+- id: PMID:18316409
+  title: The Caenorhabditis elegans nephrocystins act as global modifiers of cilium
+    structure.
+  findings:
+  - statement: NPHP-1 and NPHP-4 localize to ciliary transition zones
+    supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary
+      TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization
+  - statement: NPHP-1 requires NPHP-4 for TZ localization
+    supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary
+      TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization
+  - statement: NPHP-1 and NPHP-4 regulate ciliary access of IFT machinery and signaling
+      molecules
+    supporting_text: We propose that NPHP-1 and NPHP-4 act globally at the TZ to regulate
+      ciliary access of the IFT machinery, axonemal structural components, and signaling
+      molecules
+  - statement: Loss of NPHP-1 and NPHP-4 causes changes in localization of specific
+      ciliary components
+    supporting_text: In conclusion, loss of both NPHP-1 and NPHP-4 but not NPHP-1
+      alone leads to the abnormal ciliary localization of the IFT-B polypeptide OSM-6,
+      the OSM-3-kinesin, and the BBS proteins BBS-7 and BBS-8.
+  - statement: nphp-1 mutants have stunted or misshaped CEM cilia
+    supporting_text: In nphp-1 mutants, CEM cilia are stunted or misshaped
+- id: PMID:19208769
+  title: Functional interactions between the ciliopathy-associated Meckel syndrome
+    1 (MKS1) protein and two novel MKS1-related (MKSR) proteins.
+  findings:
+  - statement: MKS/MKSR proteins localize to transition zones/basal bodies of sensory
+      cilia
+    supporting_text: MKS-1 and MKS-1-related proteins 1 and 2 (MKSR-1, MKSR-2), localize
+      to transition zones/basal bodies of sensory cilia
+  - statement: Genetic interactions between mks/mksr mutants manifest as increased
+      lifespan due to abnormal insulin-IGF-I signaling
+    supporting_text: we find genetic interactions between all double mks/mksr mutant
+      combinations, manifesting as an increased lifespan phenotype, which is due to
+      abnormal insulin-IGF-I signaling
+- id: PMID:21422230
+  title: MKS and NPHP modules cooperate to establish basal body/transition zone membrane
+    associations and ciliary gate function during ciliogenesis.
+  findings:
+  - statement: NPHP-1 and NPHP-4 localize to the transition zone
+    supporting_text: Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+      proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+      concentrate at the TFs/BB).
+  - statement: NPHP-1 and NPHP-4 are part of the NPHP module
+    supporting_text: we group MKS-1, MKSR-1, MKSR-2, MKS-3, and MKS-6 into an MKS/MKSR
+      module and NPHP-1 and NPHP-4 into an NPHP module
+  - statement: NPHP and MKS modules cooperate for BB/TZ membrane associations
+    supporting_text: MKS/MKSR/NPHP proteins establish basal body/TZ membrane attachments
+      before or coinciding with intraflagellar transport-dependent axoneme extension
+  - statement: TZ proteins establish a ciliary gate that restricts protein accumulation
+      in cilia
+    supporting_text: the two modules restrict inappropriate accumulation of membrane-associated
+      proteins inside cilia
+- id: PMID:25335890
+  title: Ciliopathy proteins establish a bipartite signaling compartment in a C. elegans
+    thermosensory neuron.
+  findings:
+  - statement: Ciliopathy proteins including nephronophthisis proteins localize to
+      the ciliary base
+    supporting_text: proteins associated with Bardet-Biedl syndrome (BBS), Meckel
+      syndrome and nephronophthisis at its base
+- id: PMID:26595381
+  title: TMEM107 recruits ciliopathy proteins to subdomains of the ciliary transition
+    zone and causes Joubert syndrome.
+  findings:
+  - statement: TMEM-107 functions redundantly with NPHP-4 to regulate cilium integrity
+    supporting_text: nematode TMEM-107 occupies an intermediate layer of the TZ-localized
+      MKS module by organizing recruitment of the ciliopathy proteins
+  - statement: TZ proteins organize recruitment of ciliopathy proteins
+    supporting_text: nematode TMEM-107 occupies an intermediate layer of the TZ-localized
+      MKS module by organizing recruitment of the ciliopathy proteins
+- id: PMID:27623382
+  title: A Conserved Role for Girdin in Basal Body Positioning and Ciliogenesis.
+  findings: []
+- id: PMID:15659564
+  title: Expression and phenotype analysis of the nephrocystin-1 and nephrocystin-4
+    homologs in Caenorhabditis elegans.
+  findings: []
+core_functions:
+- description: &#39;NPHP-1 is a transition zone scaffold protein that functions as part
+    of the NPHP module. It localizes specifically to the ciliary transition zone where
+    it contributes to establishing the ciliary gate and regulating cilium assembly.
+    The protein works redundantly with NPHP-4 and cooperates with the MKS module to
+    anchor the basal body/TZ to the membrane.
+
+    &#39;
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+  directly_involved_in:
+  - id: GO:1905515
+    label: non-motile cilium assembly
+  - id: GO:0023041
+    label: neuronal signal transduction
+  locations:
+  - id: GO:0035869
+    label: ciliary transition zone
+  supported_by:
+  - reference_id: PMID:21422230
+    supporting_text: Using fluorescently tagged proteins, we detect MKS/MKSR/NPHP
+      proteins in a region corresponding to the TZ (adjacent to where IFT proteins
+      concentrate at the TFs/BB).
+  - reference_id: PMID:18316409
+    supporting_text: GFP-tagged NPHP-1 and NPHP-4 proteins localize to the ciliary
+      TZ, with NPHP-1 requiring the presence of NPHP-4 for TZ localization
+proposed_new_terms: []
+suggested_questions:
+- question: What is the precise molecular function of the SH3 domain in NPHP-1?
+- question: Does NPHP-1 directly participate in Y-link formation at the transition
+    zone?
+- question: Are there specific protein-protein interactions mediated by NPHP-1 that
+    are essential for ciliary gate function?
+suggested_experiments:
+- description: Identify direct binding partners of NPHP-1 using immunoprecipitation
+    or proximity labeling approaches
+  hypothesis: NPHP-1 interacts with specific TZ proteins through its SH3 domain
+- description: Determine if the SH3 domain is required for TZ localization using domain
+    deletion constructs
+  hypothesis: The SH3 domain mediates protein-protein interactions required for TZ
+    anchoring
+- description: Examine whether NPHP-1 is a structural component of Y-links using immuno-EM
+  hypothesis: NPHP-1 may be a direct structural component of Y-link connectors
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

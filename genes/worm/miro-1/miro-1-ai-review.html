@@ -1,0 +1,3549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>miro-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>miro-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q94263" target="_blank" class="term-link">
+                        Q94263
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "miro-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q94263" data-a="DESCRIPTION: MIRO-1 is a mitochondrial Rho GTPase that function..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MIRO-1 is a mitochondrial Rho GTPase that functions as an outer mitochondrial membrane adaptor/scaffold linking mitochondria to cytoskeletal motor proteins for transport along microtubules. The protein contains two GTPase domains (N- and C-terminal Miro domains) flanking two EF-hand calcium-binding motifs. MIRO-1 is tail-anchored to the outer mitochondrial membrane and integrates calcium signals with motor engagement, facilitating both anterograde (via kinesin) and retrograde (via dynein) mitochondrial transport in neurons. Beyond transport, MIRO-1 maintains mitochondrial membrane potential through interaction with VDAC-1, and participates in stress-induced mitochondrial dynamics including wound-triggered fragmentation. The protein is essential for proper mitochondrial distribution in neurons and influences organismal lifespan.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0003924" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 contains two Miro GTPase domains (N-terminal and C-terminal) with conserved GTP-binding and hydrolysis motifs. The domain architecture is confirmed by UniProt annotations showing GTP binding sites at positions 16-23, 62-66, 123-126 (first GTPase domain) and 433-440, 470-474, 537-540 (second GTPase domain). The IBA annotation is well-supported by phylogenetic inference from the mitochondrial Rho GTPase family (Aspenstrom 2024, Cells).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core enzymatic function supported by domain architecture and evolutionary conservation. The dual GTPase domain structure is characteristic of the Miro family and is essential for its function in mitochondrial transport regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO proteins have tandem GTPase domains, tandem EF-hand Ca2+-binding motifs, and regulate motor/adaptor interactions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005525" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP binding is the prerequisite for GTPase activity. UniProt shows detailed GTP binding sites in both GTPase domains. This function is essential for the regulatory role of MIRO-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Molecular function directly follows from domain architecture. GTP binding is confirmed by sequence analysis and is required for the GTPase cycle that regulates motor coupling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q94263
+                                    
+                                </span>
+                                
+                                <div class="support-text">BINDING         16..23 /ligand=&#34;GTP&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047497" target="_blank" class="term-link">
+                                    GO:0047497
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion transport along microtubule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0047497" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core function of Miro proteins. In C. elegans, MIRO-1 collaborates with MTX-1/2 (metaxins) and TRAK-1 to couple mitochondria to kinesin and dynein motors for bidirectional transport. Loss of miro-1 largely immobilizes axonal mitochondria (Zhao et al. 2021, Wu et al. 2024).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary biological process function of MIRO-1. Multiple C. elegans studies demonstrate that MIRO-1 is essential for mitochondrial motility in neurons via adaptor complex formation with metaxins and TRAK.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form adaptor complexes; MTX-2, MIRO-1, TRAK-1 form a distinct adaptor for dynein-based transport</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria and optimizes kinesin-1-mediated anterograde transport</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007005" target="_blank" class="term-link">
+                                    GO:0007005
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0007005" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 is involved in maintaining mitochondrial morphology and organization. In C. elegans, miro-1 mutants show reduced mitochondrial content (~50% of wild type) and altered mitochondrial distribution in neurons (Shen et al. 2016).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broad but accurate term capturing MIRO-1&#39;s role in mitochondrial dynamics including distribution, morphology maintenance, and transport. Supported by direct experimental evidence in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">miro-1(tm1966) mutants show ~50% of wild-type mitochondrial amount</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005741" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 is a tail-anchored outer mitochondrial membrane protein. UniProt shows a transmembrane helix at positions 602-622 that anchors the protein to the outer membrane, with the bulk of the protein (residues 1-601) facing the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subcellular localization is well-established. The C-terminal transmembrane domain is characteristic of Miro proteins and required for mitochondrial anchoring.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q94263
+                                    
+                                </span>
+                                
+                                <div class="support-text">TRANSMEM        602..622 /note=&#34;Helical; Anchor for type IV membrane protein&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 is tail-anchored to the outer mitochondrial membrane; in vivo worm studies show MIRO-1 enrichment on fragmented mitochondria during stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a parent term of GTP binding and is technically correct but less informative than the more specific GO:0005525 (GTP binding) annotation that is already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While redundant with more specific annotations, this general IEA annotation from UniProt keywords is not incorrect. It can be retained as a broader classification.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0003924" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation for GTPase activity, inferred from InterPro domain annotations (IPR001806, IPR020860, IPR021181).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same as IBA annotation. Multiple evidence sources for core GTPase activity are appropriate. InterPro-based inference is consistent with the phylogenetic evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 contains two EF-hand calcium-binding domains (EF-hand 1 at positions 188-223 and EF-hand 2 at positions 308-343). UniProt shows detailed Ca2+ binding residues. In C. elegans, EF-hand mutation impairs mitochondrial membrane potential maintenance (Ren et al. 2023).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Calcium binding through EF-hands is a core molecular function that enables calcium-dependent regulation of mitochondrial transport. Essential for the calcium-sensing function of Miro proteins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q94263
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          188..223 /note=&#34;EF-hand 1&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 EF-hand mutation impairs mitochondrial membrane potential and stress responses, consistent with Ca2+-responsive regulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005525" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation for GTP binding from combined automated annotation methods.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same function as IBA annotation. Multiple independent evidence sources reinforce the annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005741" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation for mitochondrial outer membrane localization from combined automated methods.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same localization as IBA annotation. Consistent with domain architecture showing C-terminal transmembrane anchor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007005" target="_blank" class="term-link">
+                                    GO:0007005
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0007005" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation for mitochondrion organization inferred from InterPro.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same process as IBA annotation. Multiple evidence sources support this biological process role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very broad parent term of GTPase activity. GTPases are NTP hydrolases. While technically correct, this term adds no information beyond the more specific GTPase activity annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic. Retained as it reflects the UniProt keyword mapping. The more informative GTPase activity annotations take precedence for understanding function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General term that encompasses calcium ion binding. MIRO-1 binds Ca2+ through its EF-hand domains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than GO:0005509 (calcium ion binding). Retained as it reflects UniProt keyword mapping.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007005" target="_blank" class="term-link">
+                                    GO:0007005
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25190516" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25190516
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The small GTPase Arf1 modulates mitochondrial morphology and...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0007005" data-r="PMID:25190516" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IMP annotation is based on the study by Ackema et al. (2014) which primarily focused on Arf1 function in mitochondrial morphology. The study examined miro-1 RNAi knockdown effects and found hyper-connected mitochondrial networks in body wall muscle, demonstrating MIRO-1&#39;s role in mitochondrial morphology regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence in C. elegans showing that miro-1 knockdown alters mitochondrial morphology (hyper-connected network phenotype). This supports MIRO-1&#39;s role in mitochondrion organization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q94263
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi-mediated knockdown results in a hyper- connected mitochondrial network in body wall muscle cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097345" target="_blank" class="term-link">
+                                    GO:0097345
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane permeabilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0097345" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is transferred from human RHOT1 (Q8IXI2). While Miro proteins are targeted by PINK1/Parkin during mitophagy in mammalian systems, direct evidence for MIRO-1 involvement in outer membrane permeabilization in C. elegans is limited.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ISS transfer from human RHOT1 may not fully apply to C. elegans. Outer membrane permeabilization is typically associated with apoptosis/mitophagy pathways. While Miro proteins are Parkin substrates in mammals, the worm pathway may differ. More direct evidence is needed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0005741" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for localization transferred from human RHOT1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Localization is well-conserved across species and supported by domain architecture. Multiple other evidence codes support this annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019725" target="_blank" class="term-link">
+                                    GO:0019725
+                                </a>
+                            </span>
+                            <span class="term-label">cellular homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0019725" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very broad term transferred from human RHOT1. While MIRO-1 does contribute to cellular homeostasis through mitochondrial function, this term is too general to be informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too broad and does not capture specific MIRO-1 function. More specific process terms like mitochondrion organization and mitochondrial transport are more appropriate. Many proteins could be annotated to cellular homeostasis.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047497" target="_blank" class="term-link">
+                                    GO:0047497
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion transport along microtubule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0047497" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation for microtubule-based mitochondrial transport transferred from human RHOT1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This core function is well-conserved and directly demonstrated in C. elegans through multiple studies. The ISS annotation is consistent with the IBA annotation and C. elegans experimental data.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019896" target="_blank" class="term-link">
+                                    GO:0019896
+                                </a>
+                            </span>
+                            <span class="term-label">axonal transport of mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/miro-1/miro-1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0019896" data-r="file:worm/miro-1/miro-1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 is essential for axonal mitochondrial transport in C. elegans neurons. Studies in PVD and DA9 neurons demonstrate that MIRO-1 forms adaptor complexes with metaxins and TRAK-1 to couple mitochondria to kinesin and dynein motors for bidirectional axonal transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a more specific term than GO:0047497 that captures the neuronal axonal transport function which is well-documented in C. elegans studies. The existing annotations do not specifically capture the axonal context of mitochondrial transport.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 binds MTX-1/MTX-2 and KLC-1, forming adaptor assemblies; MIRO-1 with MTX-2 and TRAK-1 also forms an adaptor complex for dynein-based transport. Genetic and biochemical data in PVD and DA9 neurons support motor-specific adaptor roles</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">miro mutants show largely immobilized axonal mitochondria yet residual long-timescale anterograde movement depends on RIC-7 + kinesin-1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019894" target="_blank" class="term-link">
+                                    GO:0019894
+                                </a>
+                            </span>
+                            <span class="term-label">kinesin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/miro-1/miro-1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0019894" data-r="file:worm/miro-1/miro-1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 interacts with kinesin light chain (KLC-1) as part of the mitochondrial transport adaptor complex. Biochemical pull-down and gel filtration experiments demonstrate MIRO-1/MTX-1/MTX-2/KLC-1 complex formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Kinesin binding is a core molecular function enabling anterograde mitochondrial transport. Direct biochemical evidence exists in C. elegans for this interaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form adaptor complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048312" target="_blank" class="term-link">
+                                    GO:0048312
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular distribution of mitochondria</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/miro-1/miro-1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0048312" data-r="file:worm/miro-1/miro-1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 is required for proper subcellular distribution of mitochondria. Loss of miro-1 alters mitochondrial density in neurons and causes mitochondrial network alterations in muscle cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is more specific than general mitochondrion organization and captures MIRO-1&#39;s role in establishing proper mitochondrial distribution patterns within cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">miro-1(tm1966) mutants have approximately half the mitochondrial amount of wild type (~50%) with only mildly reduced oxygen consumption</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 influences mitochondrial numbers in a neuron-specific manner</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051881" target="_blank" class="term-link">
+                                    GO:0051881
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mitochondrial membrane potential</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/miro-1/miro-1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0051881" data-r="file:worm/miro-1/miro-1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 interacts with VDAC-1 and is required to maintain mitochondrial membrane potential in C. elegans. Loss of MIRO-1 or EF-hand mutations significantly reduce membrane potential as measured by TMRE and JC-1 assays.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a key biological process function distinct from transport that is directly demonstrated in C. elegans. The existing annotations do not capture this regulatory role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MIRO-1 physically interacts with VDAC-1 and is required to maintain mitochondrial membrane potential and ATP levels</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090140" target="_blank" class="term-link">
+                                    GO:0090140
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of mitochondrial fission</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/miro-1/miro-1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q94263" data-a="GO:0090140" data-r="file:worm/miro-1/miro-1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MIRO-1 is required for calcium-dependent mitochondrial fragmentation after epidermal wounding. Wounding triggers rapid, reversible mitochondrial fragmentation that requires MIRO-1 and cytosolic Ca2+.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MIRO-1&#39;s role in regulating mitochondrial fission during stress responses is documented in C. elegans and represents a distinct function from steady-state transport.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/miro-1/miro-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wounding triggers rapid, reversible mitochondrial fragmentation that requires MIRO-1 and cytosolic Ca2+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MIRO-1 possesses GTPase activity through its two Miro GTPase domains. This enzymatic function is essential for the regulatory cycle that controls motor protein coupling.</h3>
+                <span class="vote-buttons" data-g="Q94263" data-a="FUNCTION: MIRO-1 possesses GTPase activity through its two M..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                            GTPase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calcium binding through tandem EF-hand domains enables MIRO-1 to sense intracellular calcium levels and regulate mitochondrial transport and dynamics accordingly.</h3>
+                <span class="vote-buttons" data-g="Q94263" data-a="FUNCTION: Calcium binding through tandem EF-hand domains ena..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                            calcium ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MIRO-1 binds kinesin light chain (KLC-1) as part of adaptor complexes that link mitochondria to kinesin-1 motors for anterograde transport.</h3>
+                <span class="vote-buttons" data-g="Q94263" data-a="FUNCTION: MIRO-1 binds kinesin light chain (KLC-1) as part o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019894" target="_blank" class="term-link">
+                            kinesin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019896" target="_blank" class="term-link">
+                                axonal transport of mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MIRO-1 binds GTP through conserved motifs in both Miro GTPase domains, which is required for GTPase cycle and motor protein regulation.</h3>
+                <span class="vote-buttons" data-g="Q94263" data-a="FUNCTION: MIRO-1 binds GTP through conserved motifs in both ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                            GTP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25190516" target="_blank" class="term-link">
+                            PMID:25190516
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The small GTPase Arf1 modulates mitochondrial morphology and function</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/miro-1/miro-1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for miro-1 gene function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">miro-1(tm1966) mutants have ~50% wild-type mitochondrial content</div>
+                        
+                        <div class="finding-text">"miro-1(tm1966) mutants show ~50% of wild-type mitochondrial amount"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reduced mitochondrial amount correlates with lifespan extension dependent on daf-16/FOXO</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Oxygen consumption only mildly reduced despite reduced mitochondrial content</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1 physically interacts with VDAC-1</div>
+                        
+                        <div class="finding-text">"MIRO-1 physically interacts with VDAC-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Required for maintaining mitochondrial membrane potential (measured by TMRE, JC-1)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EF-hand mutations impair membrane potential maintenance</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1 enriched on fragmented mitochondria during stress</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1/MTX-1/MTX-2/KLC-1 complex for kinesin-based anterograde transport</div>
+                        
+                        <div class="finding-text">"MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form adaptor complexes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1/MTX-2/TRAK-1 complex for dynein-based retrograde transport</div>
+                        
+                        <div class="finding-text">"MTX-2, MIRO-1, TRAK-1 form a distinct adaptor for dynein-based transport"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biochemical evidence from gel filtration and immunoprecipitation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic evidence from PVD and DA9 neuron studies</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1 promotes RIC-7 recruitment to mitochondria</div>
+                        
+                        <div class="finding-text">"MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1 optimizes but is not strictly required for anterograde transport</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">miro-1 mutants show largely immobilized axonal mitochondria</div>
+                        
+                        <div class="finding-text">"miro mutants show largely immobilized axonal mitochondria"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Neuron-specific effects on mitochondrial distribution</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MIRO-1 required for Ca2+-dependent mitochondrial fragmentation after wounding</div>
+                        
+                        <div class="finding-text">"Wounding triggers rapid, reversible mitochondrial fragmentation that requires MIRO-1 and cytosolic Ca2+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Fragmentation accelerates actin-based wound repair</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Links MIRO-1 calcium sensing to stress response</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of Miro domain architecture and function</div>
+                        
+                        <div class="finding-text">"MIRO proteins have tandem GTPase domains, tandem EF-hand Ca2+-binding motifs, and regulate motor/adaptor interactions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EF-hands as Ca2+ sensors regulate transport</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PINK1/Parkin targeting of Miro during mitophagy</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ER-mitochondria contact regulation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between MIRO-1&#39;s transport function and its role in maintaining mitochondrial membrane potential through VDAC-1 interaction? These appear to be independent functions, but the mechanistic connection and relative importance under different physiological conditions is unclear.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94263" data-a="Q: What is the relationship between MIRO-1&#39;s transpor..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does C. elegans have a functional PINK1/Parkin pathway that targets MIRO-1 for degradation during mitophagy, as occurs in mammals? The ISS annotation for mitochondrial outer membrane permeabilization is transferred from human RHOT1 but the relevance of this pathway in C. elegans is uncertain.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94263" data-a="Q: Does C. elegans have a functional PINK1/Parkin pat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the neuron-specific effects on mitochondrial density observed in miro-1 mutants (increased in AIY, decreased in DA9)? Understanding this heterogeneity could reveal cell-type-specific regulatory mechanisms.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94263" data-a="Q: What determines the neuron-specific effects on mit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test GTPase activity of purified MIRO-1 domains in vitro to confirm enzymatic function directly in the C. elegans protein. Current GTPase annotations are based on domain conservation rather than direct biochemical demonstration in the worm protein.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Purified MIRO-1 GTPase domains will show measurable GTP hydrolysis activity comparable to mammalian Miro proteins.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94263" data-a="EXPERIMENT: Test GTPase activity of purified MIRO-1 domains in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Examine whether C. elegans PINK1/Parkin orthologs (pink-1, pdr-1) target MIRO-1 for degradation during mitochondrial stress. This would clarify whether the outer membrane permeabilization annotation transferred from human RHOT1 is applicable to C. elegans.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MIRO-1 protein levels will decrease upon mitochondrial depolarization in a pink-1 and pdr-1 dependent manner if the PINK1/Parkin pathway is conserved.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q94263" data-a="EXPERIMENT: Examine whether C. elegans PINK1/Parkin orthologs ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-mitophagy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(miro-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q94263" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T08:51:45.208972'<br />
+end_time: '2025-12-28T08:59:39.833929'<br />
+duration_seconds: 474.62<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: miro-1<br />
+  gene_symbol: miro-1<br />
+  uniprot_accession: Q94263<br />
+  protein_description: 'RecName: Full=Mitochondrial Rho GTPase 1; Short=Miro; EC=3.6.5.-;'<br />
+  gene_info: Name=miro-1 {ECO:0000312|WormBase:K08F11.5}; ORFNames=K08F11.5 {ECO:0000312|WormBase:K08F11.5};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the mitochondrial Rho GTPase family.<br />
+  protein_domains: EF-hand-dom_pair. (IPR011992); EF_Hand_1_Ca_BS. (IPR018247); EF_hand_assoc_1.<br />
+    (IPR013566); EF_hand_assoc_2. (IPR013567); EF_hand_dom. (IPR002048)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 22</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q94263</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial Rho GTPase 1; Short=Miro; EC=3.6.5.-;</li>
+<li><strong>Gene Information:</strong> Name=miro-1 {ECO:0000312|WormBase:K08F11.5}; ORFNames=K08F11.5 {ECO:0000312|WormBase:K08F11.5};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the mitochondrial Rho GTPase family.</li>
+<li><strong>Key Domains:</strong> EF-hand-dom_pair. (IPR011992); EF_Hand_1_Ca_BS. (IPR018247); EF_hand_assoc_1. (IPR013566); EF_hand_assoc_2. (IPR013567); EF_hand_dom. (IPR002048)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "miro-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'miro-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>miro-1</strong> (gene ID: miro-1, UniProt: Q94263) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q94263</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial Rho GTPase 1; Short=Miro; EC=3.6.5.-;</li>
+<li><strong>Gene Information:</strong> Name=miro-1 {ECO:0000312|WormBase:K08F11.5}; ORFNames=K08F11.5 {ECO:0000312|WormBase:K08F11.5};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the mitochondrial Rho GTPase family.</li>
+<li><strong>Key Domains:</strong> EF-hand-dom_pair. (IPR011992); EF_Hand_1_Ca_BS. (IPR018247); EF_hand_assoc_1. (IPR013566); EF_hand_assoc_2. (IPR013567); EF_hand_dom. (IPR002048)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "miro-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'miro-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>miro-1</strong> (gene ID: miro-1, UniProt: Q94263) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan of work<br />
+- Verified identity and domain architecture for C. elegans miro-1 (K08F11.5; UniProt Q94263), then gathered worm-specific primary literature, prioritizing 2023–2024 sources, and complemented with mechanistic reviews for cross-species context. Extracted quantitative data and organized key studies in an evidence table embedded below (artifact-00). (shen2016c.elegansmiro1 pages 11-13, aspenstrom2024mirogtpasesat pages 3-4)</p>
+<p>Comprehensive research report: C. elegans miro-1 (UniProt Q94263)</p>
+<p>1) Identity, key concepts, and definitions<br />
+- Gene/protein identity: miro-1 (locus K08F11.5) encodes mitochondrial Rho GTPase 1 (Miro), an outer mitochondrial membrane, tail-anchored small GTPase with two GTPase domains (N- and C-terminal) and tandem EF-hand Ca2+-binding motifs; this architecture is conserved across eukaryotes and matches UniProt Q94263. In C. elegans, miro-1(tm1966) is a commonly used loss-of-function allele. (Shen et al., PLoS ONE, 2016; URL: https://doi.org/10.1371/journal.pone.0153233). Mechanistic reviews detail domain functions, Ca2+ sensing by EF hands, and adaptor binding via the C-terminal region. (Aspenström, Cells, 2024; URL: https://doi.org/10.3390/cells13070647) (shen2016c.elegansmiro1 pages 11-13, aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Subcellular localization: MIRO-1 is tail-anchored to the outer mitochondrial membrane; in vivo worm studies show MIRO-1 enrichment on fragmented mitochondria during stress and a functional requirement for maintaining mitochondrial membrane potential. (Ren et al., EMBO Reports, 2023; URL: https://doi.org/10.15252/embr.202256297) (ren2023miro‐1interactswith pages 4-5)<br />
+- Primary functional concept: Miro proteins link mitochondria to axonal transport machinery and tune motility in response to Ca2+; they also participate in ER–mitochondria contacts and mitochondrial quality control pathways (e.g., PINK1/Parkin-mediated mitophagy regulation across species). (Aspenström, 2024; Tang, 2015; URLs: https://doi.org/10.3390/cells13070647; https://doi.org/10.3390/cells5010001) (aspenstrom2024mirogtpasesat pages 3-4, tang2015mirogtpasesin pages 6-8, tang2015mirogtpasesin pages 5-6)</p>
+<p>2) Recent developments (emphasis 2023–2024)<br />
+- MIRO-1–VDAC-1 axis and membrane potential: In C. elegans, MIRO-1 physically interacts with VDAC-1 and is required to sustain mitochondrial membrane potential (ΔΨm). TMRE/mito::GFP imaging (n &gt; 200 mitochondria) and JC-1 assays (n = 3 replicates) show significant ΔΨm reductions upon miro-1 loss or EF-hand mutation; MIRO-1 levels are stochastically elevated on fragmented mitochondria in wounded animals (2023). (EMBO Reports; URL: https://doi.org/10.15252/embr.202256297) (ren2023miro‐1interactswith pages 4-5)<br />
+- Transport adaptors and directionality in neurons: A 2024 study in C. elegans neurons demonstrates that MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria and optimizes kinesin-1–mediated anterograde transport, while a RIC-7/kinesin-1 pathway can drive residual anterograde movement in miro-1 mutants, indicating partial MIRO-1 independence for anterograde transport. MTX-2 (metaxin-2) helps concentrate RIC-7 at mitochondrial subdomains. (bioRxiv; URL: https://doi.org/10.1101/2023.07.12.548706) (wu2024polarizedlocalizationof pages 14-17)<br />
+- Updated mechanistic synthesis: A 2024 review consolidates Miro’s dual GTPase domains, EF-hand calcium sensing, links to TRAK/Milton adaptors and dynein/kinesin motors, and roles at ER–mitochondria contacts and peroxisomes, relevant for interpreting worm MIRO-1 function. (Cells; URL: https://doi.org/10.3390/cells13070647) (aspenstrom2024mirogtpasesat pages 3-4)</p>
+<p>3) Functions, pathways, and localization in C. elegans<br />
+- Adaptor complexes and motor coupling in vivo<br />
+  • Metaxin-centered adaptor complexes: MIRO-1 binds MTX-1/MTX-2 and KLC-1, forming adaptor assemblies; MIRO-1 with MTX-2 and TRAK-1 also forms an adaptor complex for dynein-based transport. Genetic and biochemical data in PVD and DA9 neurons support motor-specific adaptor roles, with MIRO-1 acting as an accessory organizer. (Zhao et al., Nat Commun, 2021; URL: https://doi.org/10.1038/s41467-020-20346-2) (zhao2021metaxinsarecore pages 10-10)<br />
+  • RIC-7 pathway integration: MIRO-1 facilitates RIC-7 mitochondrial recruitment and puncta formation, enhancing kinesin-1 anterograde transport, but is not strictly required for anterograde flux over long timescales. MTX-2 contributes to RIC-7 concentration at leading mitochondrial edges. (Wu et al., 2024; URL: https://doi.org/10.1101/2023.07.12.548706) (wu2024polarizedlocalizationof pages 14-17)<br />
+- Directionality and transport regulation<br />
+  • Anterograde vs retrograde: Worm studies indicate MIRO-1 optimizes anterograde mitochondrial transport via RIC-7/kinesin-1 and participates in dynein-coupled complexes via MTX-2/TRAK-1 for retrograde transport; without MIRO-1, axonal mitochondria become largely immobilized, although some anterograde motion persists through RIC-7/kinesin-1. (Zhao et al., 2021; Wu et al., 2024) (zhao2021metaxinsarecore pages 10-10, wu2024polarizedlocalizationof pages 14-17)<br />
+  • Ca2+ sensing: EF-hand Ca2+-binding motifs are conserved and functionally implicated in transport regulation across species; in worms, MIRO-1 EF-hand mutation impairs ΔΨm and stress responses, consistent with Ca2+-responsive regulation. (Ren et al., 2023; Aspenström, 2024) (ren2023miro‐1interactswith pages 4-5, aspenstrom2024mirogtpasesat pages 3-4)<br />
+- ER–mitochondria contacts and quality control<br />
+  • ER–mitochondria interfaces: Cross-species data implicate Miro in ER–mitochondria contact regulation; in worms, MIRO-1-dependent mitochondrial relocalization accompanies organismal responses to mitochondrial dysfunction and detoxification programs, consistent with contact/quality-control roles. (Mao et al., Cell Metab, 2019; URL: https://doi.org/10.1016/j.cmet.2019.01.022; Aspenström, 2024) (aspenstrom2024mirogtpasesat pages 3-4)<br />
+  • Mitophagy/quality control axis: Miro is targeted in PINK1/Parkin pathways to halt motility and promote mitophagy in other models; worm phenotypes (reduced mitochondrial abundance, longevity) are consistent with altered turnover/quality control under miro-1 loss. (Tang, 2015; Shen et al., 2016) (tang2015mirogtpasesin pages 6-8, tang2015mirogtpasesin pages 5-6, shen2016c.elegansmiro1 pages 11-13)<br />
+- Outer membrane potential control via VDAC-1<br />
+  • MIRO-1–VDAC-1 interaction directly sustains ΔΨm and ATP production in vivo; disruption (miro-1 loss/EF-hand mutation) reduces ΔΨm and ATP in worms, linking MIRO-1’s Ca2+ signaling to bioenergetic maintenance. (Ren et al., 2023) (ren2023miro‐1interactswith pages 4-5)</p>
+<p>4) Phenotypes and real-world implementations/applications<br />
+- Lifespan and mitochondrial abundance: miro-1(tm1966) mutants have approximately half the mitochondrial amount of wild type (~50%) with only mildly reduced oxygen consumption, modestly reduced oxidative damage, weak UPRmt activation, and significant lifespan extension dependent on daf-16/FOXO; simultaneous tissue loss (muscle + neurons) is required for full lifespan extension. (PLoS ONE, 2016; URL: https://doi.org/10.1371/journal.pone.0153233) (shen2016c.elegansmiro1 pages 11-13)<br />
+- Neuronal mitochondrial density and transport: MIRO-1 influences mitochondrial numbers in a neuron-specific manner (e.g., increased number in AIY upon miro-1 loss; decreased in DA9 in other studies), and loss of miro-1 largely immobilizes axonal mitochondria, revealing reliance on MIRO-1/MTX/TRAK/RIC-7 transport modules. (bioRxiv, 2024; Nat Commun, 2021; URLs: https://doi.org/10.1101/2023.07.12.548706; https://doi.org/10.1038/s41467-020-20346-2) (wu2024polarizedlocalizationof pages 14-17, zhao2021metaxinsarecore pages 10-10)<br />
+- Epidermal wound closure: MIRO-1 is required for rapid, Ca2+-dependent mitochondrial fragmentation after wounding; increasing fragmentation (e.g., in fzo-1 fusion-defective background) accelerates actin-based wound repair via mtROS and cytochrome P450 signaling. (Nat Commun, 2020; URL: https://doi.org/10.1038/s41467-020-14885-x) (ren2023miro‐1interactswith pages 4-5)<br />
+- Stress-induced mitochondrial relocalization: Upon mitochondrial dysfunction, C. elegans mobilizes mitochondria in a MIRO-1/TRAK-dependent manner to coordinate metabolic and detoxification gene programs. (Cell Metab, 2019; URL: https://doi.org/10.1016/j.cmet.2019.01.022) (aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Translational/expert context: Reviews emphasize Miro as a central node linking transport, Ca2+ homeostasis, and quality control; these processes are tied to neurodegeneration across species, underscoring the utility of the worm MIRO-1 system for dissecting disease mechanisms. (Cells, 2024; Cells, 2015) (aspenstrom2024mirogtpasesat pages 3-4, tang2015mirogtpasesin pages 6-8, tang2015mirogtpasesin pages 5-6)</p>
+<p>5) Quantitative data and statistics (selected)<br />
+- Mitochondrial amount: ~50% of wild type mitochondrial content in miro-1 mutants by mtDNA and imaging; lifespan extension significant; oxygen consumption only weakly reduced. (PLoS ONE, 2016; URL: https://doi.org/10.1371/journal.pone.0153233) (shen2016c.elegansmiro1 pages 11-13)<br />
+- Membrane potential and ATP: TMRE/mito::GFP (n &gt; 200 mitochondria) and JC-1 assays (n = 3) show significant ΔΨm and ATP reductions in miro-1 loss and EF-hand mutants (P &lt; 0.01 to P &lt; 0.001). (EMBO Reports, 2023; URL: https://doi.org/10.15252/embr.202256297) (ren2023miro‐1interactswith pages 4-5)<br />
+- RIC-7 recruitment metrics: RIC-7 mitochondrial enrichment is reduced by about 1.3-fold in miro-1 mutants; RIC-7 N-terminus (1–99 aa) colocalizes with ~99% of mitochondria but shows ~10% distal enrichment; 1–470 aa fragment shows ~21% distal enrichment, reflecting MIRO-1’s role in optimizing leading-end concentration. (bioRxiv, 2024; URL: https://doi.org/10.1101/2023.07.12.548706) (wu2024polarizedlocalizationof pages 14-17)<br />
+- Biochemical complex assembly: MIRO-1/MTX-1/MTX-2/KLC-1 and MIRO-1/MTX-2/TRAK-1 assemblies detected by gel filtration and pull-down; one IP represented roughly 25% of eluted complex and n = 3 independent experiments. (Nat Commun, 2021; URL: https://doi.org/10.1038/s41467-020-20346-2) (zhao2021metaxinsarecore pages 10-10)</p>
+<p>6) Mechanistic interpretation and expert analysis<br />
+- Core function in C. elegans: MIRO-1 acts as an outer-membrane adaptor/scaffold that integrates Ca2+ signals (via EF-hands) with motor engagement and bioenergetics control. In neurons, MIRO-1 collaborates with MTX-1/2 and TRAK-1 to couple mitochondria to kinesin-1 and dynein; it also recruits/organizes RIC-7 to optimize anterograde transport. In epidermis and wounded tissues, MIRO-1 mediates Ca2+-dependent mitochondrial fragmentation that accelerates repair. Its interaction with VDAC-1 supports mitochondrial potential and activity. (Ren 2023; Zhao 2021; Wu 2024; Fu 2020) (ren2023miro‐1interactswith pages 4-5, zhao2021metaxinsarecore pages 10-10, wu2024polarizedlocalizationof pages 14-17)<br />
+- Quality control coupling: Across species, PINK1/Parkin control Miro degradation to arrest transport and enable mitophagy; worm data (reduced mitochondrial content, altered activity, longevity) are compatible with enhanced turnover/quality control when miro-1 is reduced. (Tang 2015; Shen 2016; Aspenström 2024) (tang2015mirogtpasesin pages 6-8, tang2015mirogtpasesin pages 5-6, shen2016c.elegansmiro1 pages 11-13, aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Pathway placement: MIRO-1 integrates signals from Ca2+ influx and ER–mitochondria interfaces to regulate transport and ΔΨm, thereby influencing neuronal function, stress response (wounding), and organismal lifespan.</p>
+<p>Embedded evidence table<br />
+| Study (first author, year) | Organism / cell type / neuron | Experimental focus | Key findings | Quantitative data (units) | URL (doi link) | Notes |<br />
+|---|---|---|---|---:|---|---|<br />
+| Ren et al., 2023 (ren2023miro‐1interactswith pages 4-5) | Caenorhabditis elegans (various tissues, isolated mitochondria) | MIRO-1 — VDAC-1 interaction; mitochondrial membrane potential (ΔΨm) | MIRO-1 physically interacts with VDAC-1 and is required to maintain mitochondrial membrane potential and ATP levels; MIRO-1 enriched on fragmented mitochondria after wounding (stress relocalization) | TMRE/mito::GFP imaging: n &gt; 200 mitochondria (normalized TMRE ratio); JC-1 assays on isolated mitochondria: n = 3 biological replicates; significance (<strong>P &lt; 0.01, </strong>*P &lt; 0.001) | https://doi.org/10.15252/embr.202256297 | Strong biochemical + in vivo ΔΨm evidence implicating MIRO-1 in maintaining mitochondrial activity (ren2023miro‐1interactswith pages 4-5). |<br />
+| Fu et al., 2020 (ren2023miro‐1interactswith pages 4-5, aspenstrom2024mirogtpasesat pages 3-4) | C. elegans epidermis (wounding model) | Wound-triggered mitochondrial fragmentation; role of MIRO-1 and Ca2+ in wound repair | Wounding triggers rapid, reversible mitochondrial fragmentation that requires MIRO-1 and cytosolic Ca2+; enhanced fragmentation accelerates actin-based wound closure via mtROS and cytochrome P450 signaling | Fragmentation measurable by confocal imaging; genetic dependence on MIRO-1 and Ca2+ (statistical comparisons reported in paper) | https://doi.org/10.1038/s41467-020-14885-x | Demonstrates MIRO-1 role in stress-induced mitochondrial dynamics and physiological tissue repair (wound closure) (cited with related mechanistic context) (ren2023miro‐1interactswith pages 4-5, aspenstrom2024mirogtpasesat pages 3-4). |<br />
+| Zhao et al., 2021 (zhao2021metaxinsarecore pages 10-10) | C. elegans neurons (PVD, DA9) and biochemical fractions | Metaxins (MTX-1/MTX-2) as core components of mitochondrial transport adaptor complexes with MIRO-1 and TRAK-1 | MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form adaptor complexes; MTX-2, MIRO-1, TRAK-1 form a distinct adaptor for dynein-based transport; MIRO-1 plays accessory role in adaptor assembly and transport specification | Analytical gel-filtration / IP: ~25% of total elution in one assay; experiments repeated (n = 3 independent experiments); neuronal mitochondrial distribution defects and genetic interaction data presented | https://doi.org/10.1038/s41467-020-20346-2 | Provides biochemical and in vivo genetic evidence that MIRO-1 participates in adaptor complexes with metaxins that regulate motor-specific mitochondrial transport (zhao2021metaxinsarecore pages 10-10). |<br />
+| Wu et al., 2024 (bioRxiv) (wu2024polarizedlocalizationof pages 14-17) | C. elegans neurons (AIY, DA9) | RIC-7 / kinesin-1 pathway and MIRO-1 contribution to anterograde vs retrograde transport | MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria and optimizes kinesin-1–mediated anterograde transport but is not strictly essential; miro mutants show largely immobilized axonal mitochondria yet residual long-timescale anterograde movement depends on RIC-7 + kinesin-1; MTX-2 partially redundant with MIRO-1 for RIC-7 localization | RIC-7 mitochondrial enrichment reduced ~1.3-fold in miro mutants; RIC-7 N-term (1–99 aa) colocalizes with mitochondria ~99% but distal enrichment ~10%; 1–470 aa shows ~21% distal enrichment; other localization metrics reported | https://doi.org/10.1101/2023.07.12.548706 | Supports a model where MIRO-1 helps position adaptor machinery (RIC-7) to promote efficient anterograde transport, while alternative/parallel mechanisms exist (wu2024polarizedlocalizationof pages 14-17). |<br />
+| Mao et al., 2019 (aspenstrom2024mirogtpasesat pages 3-4, zhao2021metaxinsarecore pages 10-10) | C. elegans intestinal and other tissues | Mitochondrial relocalization in response to dysfunction; MIRO-1/TRAK involvement | Mitochondrial dysfunction triggers relocalization events that depend on MIRO-1 and TRAK orthologues; relocalization couples to nuclear hormone receptor–dependent detoxification gene activation | Imaging and genetic perturbations show relocalization of mitochondria upon dysfunction (quantitative metrics reported in source) | https://doi.org/10.1016/j.cmet.2019.01.022 | Connects MIRO-1–dependent transport machinery to organismal responses to mitochondrial stress and transcriptional programs (referenced as mechanistic C. elegans evidence) (aspenstrom2024mirogtpasesat pages 3-4, zhao2021metaxinsarecore pages 10-10). |<br />
+| Shen et al., 2016 (shen2016c.elegansmiro1 pages 11-13) | C. elegans whole-animal assays (muscle, neurons) | miro-1 loss-of-function phenotypes: mitochondrial content, lifespan, mitochondrial activity markers | miro-1(tm1966) mutants show ~50% of wild-type mitochondrial amount, modestly reduced oxidative damage, weak activation of UPRmt, and extended organismal lifespan dependent on daf-16/FOXO | Mitochondrial amount ≈ 50% of WT (mtDNA copy number / imaging); lifespan extension statistically significant; oxygen consumption only weakly reduced | https://doi.org/10.1371/journal.pone.0153233 | Demonstrates systemic consequences of miro-1 loss on mitochondrial abundance and organismal longevity; suggests altered turnover/quality control (shen2016c.elegansmiro1 pages 11-13). |<br />
+| Aspenström review, 2024 (aspenstrom2024mirogtpasesat pages 3-4) | Cross-species review (mammal, fly, worm context) | Miro GTPase domain architecture, EF-hand Ca2+ sensing, PINK1/Parkin regulation, ER–mitochondria contact roles | Summarizes that MIRO proteins have tandem GTPase domains, tandem EF-hand Ca2+-binding motifs, and regulate motor/adaptor interactions and ER–mitochondria contacts; Ca2+ binding can arrest transport and MIRO is targeted by PINK1/Parkin during mitophagy | Review synthesizing structural/functional data across models; highlights nGTPase as primary regulatory domain and EF-hands as Ca2+-sensors | https://doi.org/10.3390/cells13070647 | Provides mechanistic framework and up-to-date (2024) context for interpreting C. elegans MIRO-1 experimental results (aspenstrom2024mirogtpasesat pages 3-4). |</p>
+<p><em>Table: Concise evidence table summarizing key C. elegans studies and a recent review on MIRO-1 (miro-1/K08F11.5), listing experimental focus, main findings, quantitative metrics, DOIs and notes; useful as a quick reference linking worm-specific data to mechanistic context.</em></p>
+<p>Ambiguity check and caveats<br />
+- Gene symbol verification: “miro-1” in this report strictly refers to C. elegans K08F11.5 (UniProt Q94263), not to mammalian RHOT1 or other organisms’ Miro proteins; cross-species insights are used only to interpret worm results. (Shen 2016; Aspenström 2024) (shen2016c.elegansmiro1 pages 11-13, aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Preprints: Some 2024 transport data are from a bioRxiv preprint and should be interpreted accordingly until peer review. (Wu 2024) (wu2024polarizedlocalizationof pages 14-17)</p>
+<p>References (with URLs and dates)<br />
+- Shen Y. et al., 2016, PLoS ONE. C. elegans miro-1 mutation reduces mitochondria and extends lifespan. URL: https://doi.org/10.1371/journal.pone.0153233 (Apr 2016). (shen2016c.elegansmiro1 pages 11-13)<br />
+- Ren X. et al., 2023, EMBO Reports. MIRO-1 interacts with VDAC-1 to regulate mitochondrial membrane potential in C. elegans. URL: https://doi.org/10.15252/embr.202256297 (Jun 2023). (ren2023miro‐1interactswith pages 4-5)<br />
+- Wu Y. et al., 2024, bioRxiv. Polarized localization of kinesin-1 and RIC-7 drives axonal mitochondria anterograde transport. URL: https://doi.org/10.1101/2023.07.12.548706 (Jul 2024). (wu2024polarizedlocalizationof pages 14-17)<br />
+- Zhao Y. et al., 2021, Nature Communications. Metaxins are core components of mitochondrial transport adaptor complexes. URL: https://doi.org/10.1038/s41467-020-20346-2 (Jan 2021). (zhao2021metaxinsarecore pages 10-10)<br />
+- Mao K. et al., 2019, Cell Metabolism. Mitochondrial dysfunction in C. elegans activates mitochondrial relocalization and detoxification genes. URL: https://doi.org/10.1016/j.cmet.2019.01.022 (May 2019). (aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Fu H. et al., 2020, Nature Communications. Wounding triggers MIRO-1–dependent mitochondrial fragmentation to accelerate wound closure. URL: https://doi.org/10.1038/s41467-020-14885-x (Feb 2020). (ren2023miro‐1interactswith pages 4-5)<br />
+- Aspenström P., 2024, Cells. Miro GTPases at the crossroads of cytoskeletal dynamics and mitochondrial trafficking (review). URL: https://doi.org/10.3390/cells13070647 (Apr 2024). (aspenstrom2024mirogtpasesat pages 3-4)<br />
+- Tang B., 2015, Cells. MIRO GTPases in mitochondrial transport, homeostasis and pathology (review). URL: https://doi.org/10.3390/cells5010001 (Dec 2015). (tang2015mirogtpasesin pages 6-8, tang2015mirogtpasesin pages 5-6)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(shen2016c.elegansmiro1 pages 11-13): Yanqing Shen, Li Fang Ng, Natarie Pei Wen Low, Thilo Hagen, Jan Gruber, and Takao Inoue. C. elegans miro-1 mutation reduces the amount of mitochondria and extends life span. PLoS ONE, 11:e0153233, Apr 2016. URL: https://doi.org/10.1371/journal.pone.0153233, doi:10.1371/journal.pone.0153233. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aspenstrom2024mirogtpasesat pages 3-4): Pontus Aspenström. Miro gtpases at the crossroads of cytoskeletal dynamics and mitochondrial trafficking. Cells, 13:647, Apr 2024. URL: https://doi.org/10.3390/cells13070647, doi:10.3390/cells13070647. This article has 9 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ren2023miro‐1interactswith pages 4-5): Xuecong Ren, Hengda Zhou, Yujie Sun, Hongying Fu, Yu Ran, Bing Yang, Fan Yang, Mikael Bjorklund, and Suhong Xu. Miro‐1 interacts with vdac‐1 to regulate mitochondrial membrane potential in caenorhabditis elegans. EMBO Reports, Jun 2023. URL: https://doi.org/10.15252/embr.202256297, doi:10.15252/embr.202256297. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tang2015mirogtpasesin pages 6-8): Bor Tang. Miro gtpases in mitochondrial transport, homeostasis and pathology. Cells, 5:1, Dec 2015. URL: https://doi.org/10.3390/cells5010001, doi:10.3390/cells5010001. This article has 81 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(tang2015mirogtpasesin pages 5-6): Bor Tang. Miro gtpases in mitochondrial transport, homeostasis and pathology. Cells, 5:1, Dec 2015. URL: https://doi.org/10.3390/cells5010001, doi:10.3390/cells5010001. This article has 81 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(wu2024polarizedlocalizationof pages 14-17): Youjun Wu, Chen Ding, Alexis Weinreb, Laura Manning, Grace Swaim, Shaul Yogev, Daniel A. Colón-Ramos, and Marc Hammarlund. Polarized localization of kinesin-1 and ric-7 drives axonal mitochondria anterograde transport. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2023.07.12.548706, doi:10.1101/2023.07.12.548706. This article has 22 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(zhao2021metaxinsarecore pages 10-10): Yinsuo Zhao, Eli Song, Wenjuan Wang, Chung-Han Hsieh, Xinnan Wang, Wei Feng, Xiangming Wang, and Kang Shen. Metaxins are core components of mitochondrial transport adaptor complexes. Nature Communications, Jan 2021. URL: https://doi.org/10.1038/s41467-020-20346-2, doi:10.1038/s41467-020-20346-2. This article has 99 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>wu2024polarizedlocalizationof pages 14-17</li>
+<li>aspenstrom2024mirogtpasesat pages 3-4</li>
+<li>zhao2021metaxinsarecore pages 10-10</li>
+<li>tang2015mirogtpasesin pages 6-8</li>
+<li>tang2015mirogtpasesin pages 5-6</li>
+<li>https://doi.org/10.1371/journal.pone.0153233</li>
+<li>https://doi.org/10.3390/cells13070647</li>
+<li>https://doi.org/10.15252/embr.202256297</li>
+<li>https://doi.org/10.3390/cells13070647;</li>
+<li>https://doi.org/10.3390/cells5010001</li>
+<li>https://doi.org/10.1101/2023.07.12.548706</li>
+<li>https://doi.org/10.1038/s41467-020-20346-2</li>
+<li>https://doi.org/10.1016/j.cmet.2019.01.022;</li>
+<li>https://doi.org/10.1101/2023.07.12.548706;</li>
+<li>https://doi.org/10.1038/s41467-020-14885-x</li>
+<li>https://doi.org/10.1016/j.cmet.2019.01.022</li>
+<li>https://doi.org/10.1371/journal.pone.0153233,</li>
+<li>https://doi.org/10.3390/cells13070647,</li>
+<li>https://doi.org/10.15252/embr.202256297,</li>
+<li>https://doi.org/10.3390/cells5010001,</li>
+<li>https://doi.org/10.1101/2023.07.12.548706,</li>
+<li>https://doi.org/10.1038/s41467-020-20346-2,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q94263
+gene_symbol: miro-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: MIRO-1 is a mitochondrial Rho GTPase that functions as an outer mitochondrial
+  membrane adaptor/scaffold linking mitochondria to cytoskeletal motor proteins for
+  transport along microtubules. The protein contains two GTPase domains (N- and C-terminal
+  Miro domains) flanking two EF-hand calcium-binding motifs. MIRO-1 is tail-anchored
+  to the outer mitochondrial membrane and integrates calcium signals with motor engagement,
+  facilitating both anterograde (via kinesin) and retrograde (via dynein) mitochondrial
+  transport in neurons. Beyond transport, MIRO-1 maintains mitochondrial membrane
+  potential through interaction with VDAC-1, and participates in stress-induced mitochondrial
+  dynamics including wound-triggered fragmentation. The protein is essential for proper
+  mitochondrial distribution in neurons and influences organismal lifespan.
+existing_annotations:
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: MIRO-1 contains two Miro GTPase domains (N-terminal and C-terminal) with
+      conserved GTP-binding and hydrolysis motifs. The domain architecture is confirmed
+      by UniProt annotations showing GTP binding sites at positions 16-23, 62-66,
+      123-126 (first GTPase domain) and 433-440, 470-474, 537-540 (second GTPase domain).
+      The IBA annotation is well-supported by phylogenetic inference from the mitochondrial
+      Rho GTPase family (Aspenstrom 2024, Cells).
+    action: ACCEPT
+    reason: Core enzymatic function supported by domain architecture and evolutionary
+      conservation. The dual GTPase domain structure is characteristic of the Miro
+      family and is essential for its function in mitochondrial transport regulation.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO proteins have tandem GTPase domains, tandem EF-hand Ca2+-binding
+        motifs, and regulate motor/adaptor interactions
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: GTP binding is the prerequisite for GTPase activity. UniProt shows detailed
+      GTP binding sites in both GTPase domains. This function is essential for the
+      regulatory role of MIRO-1.
+    action: ACCEPT
+    reason: Molecular function directly follows from domain architecture. GTP binding
+      is confirmed by sequence analysis and is required for the GTPase cycle that
+      regulates motor coupling.
+    supported_by:
+    - reference_id: UniProt:Q94263
+      supporting_text: BINDING         16..23 /ligand=&#34;GTP&#34;
+- term:
+    id: GO:0047497
+    label: mitochondrion transport along microtubule
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This is a core function of Miro proteins. In C. elegans, MIRO-1 collaborates
+      with MTX-1/2 (metaxins) and TRAK-1 to couple mitochondria to kinesin and dynein
+      motors for bidirectional transport. Loss of miro-1 largely immobilizes axonal
+      mitochondria (Zhao et al. 2021, Wu et al. 2024).
+    action: ACCEPT
+    reason: This is the primary biological process function of MIRO-1. Multiple C.
+      elegans studies demonstrate that MIRO-1 is essential for mitochondrial motility
+      in neurons via adaptor complex formation with metaxins and TRAK.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form
+        adaptor complexes; MTX-2, MIRO-1, TRAK-1 form a distinct adaptor for dynein-based
+        transport
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria
+        and optimizes kinesin-1-mediated anterograde transport
+- term:
+    id: GO:0007005
+    label: mitochondrion organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: MIRO-1 is involved in maintaining mitochondrial morphology and organization.
+      In C. elegans, miro-1 mutants show reduced mitochondrial content (~50% of wild
+      type) and altered mitochondrial distribution in neurons (Shen et al. 2016).
+    action: ACCEPT
+    reason: Broad but accurate term capturing MIRO-1&#39;s role in mitochondrial dynamics
+      including distribution, morphology maintenance, and transport. Supported by
+      direct experimental evidence in C. elegans.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: miro-1(tm1966) mutants show ~50% of wild-type mitochondrial
+        amount
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: MIRO-1 is a tail-anchored outer mitochondrial membrane protein. UniProt
+      shows a transmembrane helix at positions 602-622 that anchors the protein to
+      the outer membrane, with the bulk of the protein (residues 1-601) facing the
+      cytoplasm.
+    action: ACCEPT
+    reason: Subcellular localization is well-established. The C-terminal transmembrane
+      domain is characteristic of Miro proteins and required for mitochondrial anchoring.
+    supported_by:
+    - reference_id: UniProt:Q94263
+      supporting_text: TRANSMEM        602..622 /note=&#34;Helical; Anchor for type IV
+        membrane protein&#34;
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 is tail-anchored to the outer mitochondrial membrane;
+        in vivo worm studies show MIRO-1 enrichment on fragmented mitochondria during
+        stress
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is a parent term of GTP binding and is technically correct but less
+      informative than the more specific GO:0005525 (GTP binding) annotation that
+      is already present.
+    action: ACCEPT
+    reason: While redundant with more specific annotations, this general IEA annotation
+      from UniProt keywords is not incorrect. It can be retained as a broader classification.
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Duplicate of the IBA annotation for GTPase activity, inferred from InterPro
+      domain annotations (IPR001806, IPR020860, IPR021181).
+    action: ACCEPT
+    reason: Same as IBA annotation. Multiple evidence sources for core GTPase activity
+      are appropriate. InterPro-based inference is consistent with the phylogenetic
+      evidence.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: MIRO-1 contains two EF-hand calcium-binding domains (EF-hand 1 at positions
+      188-223 and EF-hand 2 at positions 308-343). UniProt shows detailed Ca2+ binding
+      residues. In C. elegans, EF-hand mutation impairs mitochondrial membrane potential
+      maintenance (Ren et al. 2023).
+    action: ACCEPT
+    reason: Calcium binding through EF-hands is a core molecular function that enables
+      calcium-dependent regulation of mitochondrial transport. Essential for the calcium-sensing
+      function of Miro proteins.
+    supported_by:
+    - reference_id: UniProt:Q94263
+      supporting_text: DOMAIN          188..223 /note=&#34;EF-hand 1&#34;
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 EF-hand mutation impairs mitochondrial membrane potential
+        and stress responses, consistent with Ca2+-responsive regulation
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate annotation for GTP binding from combined automated annotation
+      methods.
+    action: ACCEPT
+    reason: Same function as IBA annotation. Multiple independent evidence sources
+      reinforce the annotation.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate annotation for mitochondrial outer membrane localization from
+      combined automated methods.
+    action: ACCEPT
+    reason: Same localization as IBA annotation. Consistent with domain architecture
+      showing C-terminal transmembrane anchor.
+- term:
+    id: GO:0007005
+    label: mitochondrion organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Duplicate annotation for mitochondrion organization inferred from InterPro.
+    action: ACCEPT
+    reason: Same process as IBA annotation. Multiple evidence sources support this
+      biological process role.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is a very broad parent term of GTPase activity. GTPases are NTP
+      hydrolases. While technically correct, this term adds no information beyond
+      the more specific GTPase activity annotations.
+    action: ACCEPT
+    reason: Correct but generic. Retained as it reflects the UniProt keyword mapping.
+      The more informative GTPase activity annotations take precedence for understanding
+      function.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: General term that encompasses calcium ion binding. MIRO-1 binds Ca2+
+      through its EF-hand domains.
+    action: ACCEPT
+    reason: Correct but less specific than GO:0005509 (calcium ion binding). Retained
+      as it reflects UniProt keyword mapping.
+- term:
+    id: GO:0007005
+    label: mitochondrion organization
+  evidence_type: IMP
+  original_reference_id: PMID:25190516
+  review:
+    summary: This IMP annotation is based on the study by Ackema et al. (2014) which
+      primarily focused on Arf1 function in mitochondrial morphology. The study examined
+      miro-1 RNAi knockdown effects and found hyper-connected mitochondrial networks
+      in body wall muscle, demonstrating MIRO-1&#39;s role in mitochondrial morphology
+      regulation.
+    action: ACCEPT
+    reason: Direct experimental evidence in C. elegans showing that miro-1 knockdown
+      alters mitochondrial morphology (hyper-connected network phenotype). This supports
+      MIRO-1&#39;s role in mitochondrion organization.
+    supported_by:
+    - reference_id: UniProt:Q94263
+      supporting_text: RNAi-mediated knockdown results in a hyper- connected mitochondrial
+        network in body wall muscle cells
+- term:
+    id: GO:0097345
+    label: mitochondrial outer membrane permeabilization
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: This annotation is transferred from human RHOT1 (Q8IXI2). While Miro
+      proteins are targeted by PINK1/Parkin during mitophagy in mammalian systems,
+      direct evidence for MIRO-1 involvement in outer membrane permeabilization in
+      C. elegans is limited.
+    action: UNDECIDED
+    reason: The ISS transfer from human RHOT1 may not fully apply to C. elegans. Outer
+      membrane permeabilization is typically associated with apoptosis/mitophagy pathways.
+      While Miro proteins are Parkin substrates in mammals, the worm pathway may differ.
+      More direct evidence is needed.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation for localization transferred from human RHOT1.
+    action: ACCEPT
+    reason: Localization is well-conserved across species and supported by domain
+      architecture. Multiple other evidence codes support this annotation.
+- term:
+    id: GO:0019725
+    label: cellular homeostasis
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Very broad term transferred from human RHOT1. While MIRO-1 does contribute
+      to cellular homeostasis through mitochondrial function, this term is too general
+      to be informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term is too broad and does not capture specific MIRO-1 function.
+      More specific process terms like mitochondrion organization and mitochondrial
+      transport are more appropriate. Many proteins could be annotated to cellular
+      homeostasis.
+- term:
+    id: GO:0047497
+    label: mitochondrion transport along microtubule
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: ISS annotation for microtubule-based mitochondrial transport transferred
+      from human RHOT1.
+    action: ACCEPT
+    reason: This core function is well-conserved and directly demonstrated in C. elegans
+      through multiple studies. The ISS annotation is consistent with the IBA annotation
+      and C. elegans experimental data.
+- term:
+    id: GO:0019896
+    label: axonal transport of mitochondrion
+  evidence_type: IDA
+  original_reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  review:
+    summary: MIRO-1 is essential for axonal mitochondrial transport in C. elegans
+      neurons. Studies in PVD and DA9 neurons demonstrate that MIRO-1 forms adaptor
+      complexes with metaxins and TRAK-1 to couple mitochondria to kinesin and dynein
+      motors for bidirectional axonal transport.
+    action: NEW
+    reason: This is a more specific term than GO:0047497 that captures the neuronal
+      axonal transport function which is well-documented in C. elegans studies. The
+      existing annotations do not specifically capture the axonal context of mitochondrial
+      transport.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 binds MTX-1/MTX-2 and KLC-1, forming adaptor assemblies;
+        MIRO-1 with MTX-2 and TRAK-1 also forms an adaptor complex for dynein-based
+        transport. Genetic and biochemical data in PVD and DA9 neurons support motor-specific
+        adaptor roles
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: miro mutants show largely immobilized axonal mitochondria yet
+        residual long-timescale anterograde movement depends on RIC-7 + kinesin-1
+- term:
+    id: GO:0019894
+    label: kinesin binding
+  evidence_type: IPI
+  original_reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  review:
+    summary: MIRO-1 interacts with kinesin light chain (KLC-1) as part of the mitochondrial
+      transport adaptor complex. Biochemical pull-down and gel filtration experiments
+      demonstrate MIRO-1/MTX-1/MTX-2/KLC-1 complex formation.
+    action: NEW
+    reason: Kinesin binding is a core molecular function enabling anterograde mitochondrial
+      transport. Direct biochemical evidence exists in C. elegans for this interaction.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form
+        adaptor complexes
+- term:
+    id: GO:0048312
+    label: intracellular distribution of mitochondria
+  evidence_type: IMP
+  original_reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  review:
+    summary: MIRO-1 is required for proper subcellular distribution of mitochondria.
+      Loss of miro-1 alters mitochondrial density in neurons and causes mitochondrial
+      network alterations in muscle cells.
+    action: NEW
+    reason: This term is more specific than general mitochondrion organization and
+      captures MIRO-1&#39;s role in establishing proper mitochondrial distribution patterns
+      within cells.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: miro-1(tm1966) mutants have approximately half the mitochondrial
+        amount of wild type (~50%) with only mildly reduced oxygen consumption
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 influences mitochondrial numbers in a neuron-specific
+        manner
+- term:
+    id: GO:0051881
+    label: regulation of mitochondrial membrane potential
+  evidence_type: IMP
+  original_reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  review:
+    summary: MIRO-1 interacts with VDAC-1 and is required to maintain mitochondrial
+      membrane potential in C. elegans. Loss of MIRO-1 or EF-hand mutations significantly
+      reduce membrane potential as measured by TMRE and JC-1 assays.
+    action: NEW
+    reason: This is a key biological process function distinct from transport that
+      is directly demonstrated in C. elegans. The existing annotations do not capture
+      this regulatory role.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: MIRO-1 physically interacts with VDAC-1 and is required to
+        maintain mitochondrial membrane potential and ATP levels
+- term:
+    id: GO:0090140
+    label: regulation of mitochondrial fission
+  evidence_type: IMP
+  original_reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  review:
+    summary: MIRO-1 is required for calcium-dependent mitochondrial fragmentation
+      after epidermal wounding. Wounding triggers rapid, reversible mitochondrial
+      fragmentation that requires MIRO-1 and cytosolic Ca2+.
+    action: NEW
+    reason: MIRO-1&#39;s role in regulating mitochondrial fission during stress responses
+      is documented in C. elegans and represents a distinct function from steady-state
+      transport.
+    supported_by:
+    - reference_id: file:worm/miro-1/miro-1-deep-research-falcon.md
+      supporting_text: Wounding triggers rapid, reversible mitochondrial fragmentation
+        that requires MIRO-1 and cytosolic Ca2+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:25190516
+  title: The small GTPase Arf1 modulates mitochondrial morphology and function
+  full_text_unavailable: true
+  findings: []
+- id: file:worm/miro-1/miro-1-deep-research-falcon.md
+  title: Deep research summary for miro-1 gene function
+  findings:
+  - statement: miro-1(tm1966) mutants have ~50% wild-type mitochondrial content
+    supporting_text: miro-1(tm1966) mutants show ~50% of wild-type mitochondrial amount
+  - statement: Reduced mitochondrial amount correlates with lifespan extension dependent
+      on daf-16/FOXO
+  - statement: Oxygen consumption only mildly reduced despite reduced mitochondrial
+      content
+  - statement: MIRO-1 physically interacts with VDAC-1
+    supporting_text: MIRO-1 physically interacts with VDAC-1
+  - statement: Required for maintaining mitochondrial membrane potential (measured
+      by TMRE, JC-1)
+  - statement: EF-hand mutations impair membrane potential maintenance
+  - statement: MIRO-1 enriched on fragmented mitochondria during stress
+  - statement: MIRO-1/MTX-1/MTX-2/KLC-1 complex for kinesin-based anterograde transport
+    supporting_text: MTX-1/2 bind MIRO-1 and kinesin light chain (KLC-1) to form adaptor
+      complexes
+  - statement: MIRO-1/MTX-2/TRAK-1 complex for dynein-based retrograde transport
+    supporting_text: MTX-2, MIRO-1, TRAK-1 form a distinct adaptor for dynein-based
+      transport
+  - statement: Biochemical evidence from gel filtration and immunoprecipitation
+  - statement: Genetic evidence from PVD and DA9 neuron studies
+  - statement: MIRO-1 promotes RIC-7 recruitment to mitochondria
+    supporting_text: MIRO-1 promotes recruitment/enrichment of RIC-7 on mitochondria
+  - statement: MIRO-1 optimizes but is not strictly required for anterograde transport
+  - statement: miro-1 mutants show largely immobilized axonal mitochondria
+    supporting_text: miro mutants show largely immobilized axonal mitochondria
+  - statement: Neuron-specific effects on mitochondrial distribution
+  - statement: MIRO-1 required for Ca2+-dependent mitochondrial fragmentation after
+      wounding
+    supporting_text: Wounding triggers rapid, reversible mitochondrial fragmentation
+      that requires MIRO-1 and cytosolic Ca2+
+  - statement: Fragmentation accelerates actin-based wound repair
+  - statement: Links MIRO-1 calcium sensing to stress response
+  - statement: Comprehensive review of Miro domain architecture and function
+    supporting_text: MIRO proteins have tandem GTPase domains, tandem EF-hand Ca2+-binding
+      motifs, and regulate motor/adaptor interactions
+  - statement: EF-hands as Ca2+ sensors regulate transport
+  - statement: PINK1/Parkin targeting of Miro during mitophagy
+  - statement: ER-mitochondria contact regulation
+core_functions:
+- molecular_function:
+    id: GO:0003924
+    label: GTPase activity
+  description: MIRO-1 possesses GTPase activity through its two Miro GTPase domains.
+    This enzymatic function is essential for the regulatory cycle that controls motor
+    protein coupling.
+- molecular_function:
+    id: GO:0005509
+    label: calcium ion binding
+  description: Calcium binding through tandem EF-hand domains enables MIRO-1 to sense
+    intracellular calcium levels and regulate mitochondrial transport and dynamics
+    accordingly.
+- molecular_function:
+    id: GO:0019894
+    label: kinesin binding
+  description: MIRO-1 binds kinesin light chain (KLC-1) as part of adaptor complexes
+    that link mitochondria to kinesin-1 motors for anterograde transport.
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  directly_involved_in:
+  - id: GO:0019896
+    label: axonal transport of mitochondrion
+- molecular_function:
+    id: GO:0005525
+    label: GTP binding
+  description: MIRO-1 binds GTP through conserved motifs in both Miro GTPase domains,
+    which is required for GTPase cycle and motor protein regulation.
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+proposed_new_terms: []
+suggested_questions:
+- question: What is the relationship between MIRO-1&#39;s transport function and its role
+    in maintaining mitochondrial membrane potential through VDAC-1 interaction? These
+    appear to be independent functions, but the mechanistic connection and relative
+    importance under different physiological conditions is unclear.
+- question: Does C. elegans have a functional PINK1/Parkin pathway that targets MIRO-1
+    for degradation during mitophagy, as occurs in mammals? The ISS annotation for
+    mitochondrial outer membrane permeabilization is transferred from human RHOT1
+    but the relevance of this pathway in C. elegans is uncertain.
+- question: What determines the neuron-specific effects on mitochondrial density observed
+    in miro-1 mutants (increased in AIY, decreased in DA9)? Understanding this heterogeneity
+    could reveal cell-type-specific regulatory mechanisms.
+suggested_experiments:
+- description: Test GTPase activity of purified MIRO-1 domains in vitro to confirm
+    enzymatic function directly in the C. elegans protein. Current GTPase annotations
+    are based on domain conservation rather than direct biochemical demonstration
+    in the worm protein.
+  hypothesis: Purified MIRO-1 GTPase domains will show measurable GTP hydrolysis activity
+    comparable to mammalian Miro proteins.
+- description: Examine whether C. elegans PINK1/Parkin orthologs (pink-1, pdr-1) target
+    MIRO-1 for degradation during mitochondrial stress. This would clarify whether
+    the outer membrane permeabilization annotation transferred from human RHOT1 is
+    applicable to C. elegans.
+  hypothesis: MIRO-1 protein levels will decrease upon mitochondrial depolarization
+    in a pink-1 and pdr-1 dependent manner if the PINK1/Parkin pathway is conserved.
+tags:
+- caeel-mitophagy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

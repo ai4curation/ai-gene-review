@@ -1,0 +1,3327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOD2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SOD2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P00447" target="_blank" class="term-link">
+                        P00447
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SOD2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P00447" data-a="DESCRIPTION: Manganese-dependent superoxide dismutase localized..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Manganese-dependent superoxide dismutase localized to the mitochondrial matrix. SOD2 catalyzes the dismutation of superoxide radicals (O2•−) to hydrogen peroxide and molecular oxygen, serving as a critical antioxidant defense mechanism against reactive oxygen species generated during mitochondrial respiration. The enzyme contains one manganese ion per subunit and functions as a homotetramer.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for mitochondrial localization based on phylogenetic inference across orthologous SOD2 proteins. Well-supported by multiple direct experimental observations confirming mitochondrial matrix localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SOD2 is a well-established mitochondrial protein. The mitochondrial localization is supported by extensive evidence including direct biochemical purification from mitochondria, subcellular fractionation studies, and the presence of a mitochondrial transit peptide (residues 1-26) that is cleaved upon import. IBA inference from orthologous sequences is appropriate for this annotation as SOD2 localization is conserved across eukaryotes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                        PMID:15851472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0004784" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for superoxide dismutase catalytic activity, inferred from orthologous SOD2 proteins. Core molecular function of SOD2 and highly conserved across eukaryotes. This annotation is more specific and appropriate than broader &#34;oxidoreductase activity&#34; annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SOD2&#39;s primary molecular function is superoxide dismutase activity. The enzyme catalyzes conversion of superoxide anion to hydrogen peroxide and oxygen (EC 1.15.1.1). This is a highly specific and informative functional annotation representing the core catalytic activity. IBA inference is appropriate given the high conservation of this enzyme family across eukaryotes and consistent functional characterization of SOD2 orthologs.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This enzyme has been isolated in good yield from bakers&#39; yeast...This enzyme has activity comparable to that of other previously reported superoxide dismutases</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                        PMID:15851472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0030145" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for manganese ion binding cofactor requirement. SOD2 requires manganese for catalytic activity with 1 Mn2+ per subunit. Critical for enzyme function and essential for distinguishing from cytoplasmic Fe-SOD1.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SOD2 is a manganese-dependent superoxide dismutase, distinguishing it from the iron-dependent SOD1 isoform found in the cytoplasm. The UniProt entry explicitly states &#34;Binds 1 Mn(2+) ion per subunit&#34; with specific binding residues identified (positions 52, 107, 194, 198). Manganese insertion is essential during import into mitochondria and is mechanistically coupled to the mitochondrial import process. This annotation is more specific and informative than generic &#34;metal ion binding&#34; annotations and reflects the specialized cofactor requirement.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This enzyme contains 1 atom of manganese per subunit and its absorption in the visible suggests Mn(III) in the resting enzyme.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                        PMID:15851472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that a mitochondrial localization is essential...Manganese insertion is only possible with a newly synthesized polypeptide.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0004784" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation via InterPro mapping (IPR001189: Mn/Fe superoxide dismutase). Redundant with IBA and IDA annotations for the same function but from automated computational mapping. Acceptable but less evidence-rich than experimental data.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation derives from InterPro domain mapping, which appropriately identifies SOD2 as a superoxide dismutase based on conserved protein domains. While less informative than direct experimental evidence, automated annotations based on InterPro are generally reliable for well-characterized enzyme families. The annotation is not contradicted by experimental evidence and supports the core function identified by IBA and IDA annotations.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">Combined Automated Annotation using Multiple IEA Methods based on InterPro domain mapping</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for mitochondrial localization via ARBA machine learning models. Represents automated inference from amino acid sequence patterns associated with mitochondrial proteins. Redundant with direct experimental evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ARBA machine learning models provide evidence for mitochondrial localization based on sequence patterns trained on experimentally validated mitochondrial proteins. While less directly informative than experimental evidence, this IEA annotation is consistent with and supported by extensive experimental data including direct biochemical purification and subcellular localization studies.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB subcellular location vocabulary mapping to &#34;Mitochondrion matrix&#34;. More specific than broader &#34;mitochondrion&#34; annotation, reflecting SOD2&#39;s precise subcellular compartment.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation correctly identifies the mitochondrial matrix as SOD2&#39;s specific subcellular compartment. This IEA is derived from structured UniProtKB annotation and is supported by direct experimental evidence. The matrix localization is essential for SOD2 function in protecting mitochondrial proteins and DNA from superoxide generated by the electron transport chain. This is more specific and informative than the broader &#34;mitochondrion&#34; annotations.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006801" target="_blank" class="term-link">
+                                    GO:0006801
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0006801" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for involvement in superoxide metabolic process based on InterPro domain mapping. Reasonable but somewhat redundant with more specific process annotations like &#34;removal of superoxide radicals&#34;.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation appropriately captures SOD2&#39;s involvement in superoxide metabolism through the dismutation reaction. However, it is broader than the more specific functional process &#34;removal of superoxide radicals&#34; (GO:0019430) which more precisely describes the biological outcome. The annotation is not incorrect but represents a higher-level categorization of the more specific process.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016209" target="_blank" class="term-link">
+                                    GO:0016209
+                                </a>
+                            </span>
+                            <span class="term-label">antioxidant activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0016209" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (KW-0049: Antioxidant). Accurate but relatively broad characterization of SOD2&#39;s functional role.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SOD2 is correctly characterized as having antioxidant activity through its superoxide dismutase function. While this annotation is less specific than GO:0004784 (superoxide dismutase activity), it is accurate and captures the physiological consequence of the enzyme&#39;s catalytic activity. Antioxidant activity represents an appropriate functional categorization for SOD2.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (KW-0560: Oxidoreductase). Correct but very broad categorization of enzymatic function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct that superoxide dismutase is an oxidoreductase enzyme (catalyzing electron transfer in the dismutation reaction), this annotation is overly broad and lacks specificity. The broader &#34;oxidoreductase activity&#34; encompasses thousands of diverse enzymatic activities and provides minimal functional information. More specific annotations like &#34;superoxide dismutase activity&#34; and &#34;antioxidant activity&#34; are far more informative. However, it is not incorrect, so retaining it as non-core is appropriate to avoid cluttering the functional annotation space.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019430" target="_blank" class="term-link">
+                                    GO:0019430
+                                </a>
+                            </span>
+                            <span class="term-label">removal of superoxide radicals</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0019430" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation inferred via logical inference from the primary superoxide dismutase activity annotation. Accurately captures the functional consequence of SOD2&#39;s enzymatic activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This process annotation appropriately captures the biological function of SOD2. The enzyme removes/detoxifies superoxide radicals by catalyzing their conversion to hydrogen peroxide and oxygen. This is the functional outcome of the superoxide dismutase catalytic activity and is logically inferred from that core function. The annotation is supported by extensive evidence of SOD2&#39;s role in cellular antioxidant defense.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3520557" target="_blank" class="term-link">
+                                        PMID:3520557
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">MnSOD contributes to the natural protection of cells against oxygen toxicity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0046872" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for general metal ion binding based on InterPro domain mapping. Accurate but very broad and less specific than the manganese-specific annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SOD2 does bind a metal ion (specifically manganese), making this annotation technically correct. However, it is overly general and lacks the specificity that makes GO:0030145 (manganese ion binding) superior. While some genes may require annotation at this level of generality, SOD2&#39;s cofactor requirement is specifically and characteristically for manganese rather than other metal ions. The more specific &#34;manganese ion binding&#34; annotation is far more informative and should be prioritized. Retaining this as non-core avoids redundancy.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    GO:0098869
+                                </a>
+                            </span>
+                            <span class="term-label">cellular oxidant detoxification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0098869" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for cellular oxidant detoxification, inferred from antioxidant activity via logical inference. Captures the cellular process consequence of SOD2&#39;s enzymatic function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This process annotation appropriately characterizes SOD2&#39;s role in protecting cells from reactive oxygen species. The enzyme detoxifies superoxide and contributes to overall cellular antioxidant defense. The annotation is logically inferred from the antioxidant activity function and is supported by experimental evidence of SOD2&#39;s essential role in protecting cells against oxidative stress, particularly in mitochondria where high ROS levels are generated.
+
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24769239
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative variations of the mitochondrial proteome and ph...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="PMID:24769239" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from quantitative proteomic study identifying SOD2 in isolated mitochondria during proteomic survey of mitochondrial proteins under different growth conditions. Supports mitochondrial localization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This HDA annotation is based on direct detection of SOD2 protein in isolated mitochondrial fractions using mass spectrometry. Quantitative proteomics provides strong evidence for protein localization. The study systematically identified mitochondrial proteins and their relative abundance across different metabolic conditions. This represents solid experimental evidence for mitochondrial presence, though less specific than subcellular fractionation at the matrix level.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                                        PMID:24769239
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Label free quantitative analysis of protein accumulation revealed significant variation of 176 mitochondrial proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11914276
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular localization of the yeast proteome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="PMID:11914276" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from proteome-scale high-throughput subcellular localization study mapping yeast protein localization. Confirms mitochondrial localization through immunolocalization-based approach.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This study represents the first large-scale proteome localization study in yeast, using high-throughput immunolocalization of epitope-tagged proteins to determine subcellular localization. SOD2 was identified among proteins localized to mitochondria. This represents direct experimental evidence for mitochondrial localization at genome scale. The methodology is robust though localization to the matrix specifically would require additional evidence.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link">
+                                        PMID:11914276
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We estimate the yeast proteome to encompass approximately 5100 soluble proteins and &gt;1000 transmembrane proteins. Our results indicate that 47% of yeast proteins are cytoplasmic, 13% mitochondrial</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14576278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14576278
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The proteome of Saccharomyces cerevisiae mitochondria.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="PMID:14576278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from comprehensive mass spectrometry-based proteomics of purified yeast mitochondria. SOD2 identified in mitochondrial proteome catalog.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This landmark study identified &gt;750 different proteins from highly purified yeast mitochondria using tandem mass spectrometry. SOD2 was identified in this comprehensive mitochondrial proteome. The study analyzed only mitochondrial fractions, providing direct evidence for mitochondrial localization. This represents strong experimental support from a well-cited mitochondrial proteomics resource.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14576278" target="_blank" class="term-link">
+                                        PMID:14576278
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">From &gt;20 million MS spectra, 750 different proteins were identified, indicating an involvement of mitochondria in numerous cellular processes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823961
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Toward the complete yeast mitochondrial proteome: multidimen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="PMID:16823961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA annotation from advanced proteomics study combining multidimensional separation techniques to characterize the complete yeast mitochondrial proteome.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This study used orthogonal proteomics approaches to achieve the most comprehensive characterization of the yeast mitochondrial proteome, identifying 851 different proteins. SOD2 was identified as a mitochondrial protein in this resource. The use of multiple complementary separation and detection methods increases confidence in protein identification. This represents high-quality experimental evidence for mitochondrial localization from a mature proteomics platform.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link">
+                                        PMID:16823961
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A total of 851 different proteins (PROMITO dataset) were identified by use of multidimensional LC-MS/MS</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15851472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Manganese activation of superoxide dismutase 2 in the mitoch...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0004784" data-r="PMID:15851472" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from direct enzymatic assay study characterizing manganese activation of SOD2 in mitochondria. Demonstrates enzyme activity and essential cofactor requirement.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IDA annotation is from direct biochemical characterization of SOD2 enzyme activity in mitochondrial context. The study specifically examined manganese activation of SOD2, demonstrating the enzyme&#39;s superoxide dismutase activity and its dependence on mitochondrial import for proper cofactor insertion. This represents strong experimental evidence for the core molecular function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                        PMID:15851472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress. Here we probed the pathway by which SOD2 acquires its manganese catalytic cofactor.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:238997
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of a manganese-containing sup...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0004784" data-r="PMID:238997" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the landmark 1975 study that first isolated and characterized manganese-containing SOD from yeast. Original biochemical characterization of enzyme activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is from the seminal study that first isolated yeast mitochondrial SOD and demonstrated its superoxide dismutase activity in vitro. The study characterized the enzyme&#39;s molecular weight (96,000 Da tetramer), subunit structure, manganese content (1 Mn per subunit), and catalytic activity. This represents foundational experimental evidence for SOD2&#39;s molecular function and remains a critical reference for the enzyme&#39;s properties.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This enzyme has been isolated in good yield from bakers&#39; yeast...This enzyme contains 1 atom of manganese per subunit...This enzyme has activity comparable to that of other previously reported superoxide dismutases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15851472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Manganese activation of superoxide dismutase 2 in the mitoch...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005739" data-r="PMID:15851472" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from manganese activation study that demonstrated SOD2&#39;s mitochondrial localization is essential for cofactor insertion and activation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study directly showed that mitochondrial localization of SOD2 is essential for proper manganese insertion and enzyme activation. Cytosolic versions of SOD2 remain largely apo (without manganese) unless cells are exposed to toxic manganese levels. This demonstrates mechanistically that SOD2&#39;s mitochondrial localization is not just coincidental but essential for function. The study provides strong experimental evidence for mitochondrial localization integrated with functional characterization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                        PMID:15851472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We found that a mitochondrial localization is essential...By reversibly blocking mitochondrial import in vivo, we noted that newly synthesized Sod2p can enter mitochondria but not a Sod2p polypeptide that was allowed to accumulate in the cytosol.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:238997
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of a manganese-containing sup...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0005759" data-r="PMID:238997" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from original characterization study that specifically localized the enzyme to the mitochondrial matrix compartment. Foundational evidence for subcellular compartmentalization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The seminal 1975 study explicitly localized the cyanide-insensitive (manganese) superoxide dismutase to the mitochondrial matrix, the innermost mitochondrial compartment where the electron transport chain generates superoxide and where SOD2 provides essential antioxidant protection. This specific subcellular localization is more informative than broader mitochondrion annotations and accurately reflects the enzyme&#39;s functional compartment. This remains the gold standard evidence for matrix localization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                        PMID:238997
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072593" target="_blank" class="term-link">
+                                    GO:0072593
+                                </a>
+                            </span>
+                            <span class="term-label">reactive oxygen species metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3520557" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3520557
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A yeast mutant lacking mitochondrial manganese-superoxide di...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00447" data-a="GO:0072593" data-r="PMID:3520557" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from genetic knockout study demonstrating that SOD2 is essential for cellular protection against oxygen-induced ROS toxicity. Establishes biological role in ROS metabolism.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IMP annotation is from a landmark genetic study that created a SOD2-null mutant and demonstrated its hypersensitivity to oxygen. The mutant lacked cyanide-insensitive SOD activity and exhibited growth inhibition in oxygen-containing atmospheres, providing direct genetic evidence that SOD2 contributes to cellular defense against oxygen toxicity through ROS metabolism. This represents the strongest type of biological process evidence showing that loss of protein function impairs the process.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3520557" target="_blank" class="term-link">
+                                        PMID:3520557
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the absence of oxygen, the mutant grew as rapidly as the wild-type parent. However, increasing concentrations of oxygen led to a progressive inhibition of growth. The properties of this mutant provide direct evidence that MnSOD contributes to the natural protection of cells against oxygen toxicity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Superoxide dismutase activity is the core molecular function of SOD2. The enzyme catalyzes the highly specific reaction: 2 O2•− + 2 H+ → H2O2 + O2 (EC 1.15.1.1). Direct biochemical characterization (PMID:238997, PMID:15851472) demonstrates this catalytic activity. The enzyme requires manganese cofactor (1 Mn2+ per subunit) which is specifically inserted during mitochondrial import.
+</h3>
+                <span class="vote-buttons" data-g="P00447" data-a="FUNCTION: Superoxide dismutase activity is the core molecula..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                            superoxide dismutase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072593" target="_blank" class="term-link">
+                                reactive oxygen species metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                                PMID:238997
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">This enzyme has been isolated in good yield from bakers&#39; yeast. This enzyme contains 1 atom of manganese per subunit and its absorption in the visible suggests Mn(III) in the resting enzyme.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                                PMID:15851472
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11914276" target="_blank" class="term-link">
+                            PMID:11914276
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Subcellular localization of the yeast proteome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14576278" target="_blank" class="term-link">
+                            PMID:14576278
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The proteome of Saccharomyces cerevisiae mitochondria.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15851472" target="_blank" class="term-link">
+                            PMID:15851472
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manganese activation of superoxide dismutase 2 in the mitochondria of Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823961" target="_blank" class="term-link">
+                            PMID:16823961
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Toward the complete yeast mitochondrial proteome: multidimensional separation techniques for mitochondrial proteomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/238997" target="_blank" class="term-link">
+                            PMID:238997
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Isolation and characterization of a manganese-containing superoxide dismutase from yeast.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24769239" target="_blank" class="term-link">
+                            PMID:24769239
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative variations of the mitochondrial proteome and phosphoproteome during fermentative and respiratory growth in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3520557" target="_blank" class="term-link">
+                            PMID:3520557
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A yeast mutant lacking mitochondrial manganese-superoxide dismutase is hypersensitive to oxygen.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What role does SOD2 phosphorylation play in regulating its activity or localization?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="Q: What role does SOD2 phosphorylation play in regula..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there condition-specific changes in SOD2 expression or activity in response to metabolic state?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="Q: Are there condition-specific changes in SOD2 expre..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SOD2 interact with other mitochondrial proteins to form a larger antioxidant defense complex?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="Q: Does SOD2 interact with other mitochondrial protei..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Detailed kinetic analysis of SOD2 with various superoxide concentrations and pH conditions to establish optimal activity parameters in vivo
+</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="EXPERIMENT: Detailed kinetic analysis of SOD2 with various sup..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Investigation of SOD2 regulation by reactive oxygen species or other cellular signals that might modulate its expression
+</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="EXPERIMENT: Investigation of SOD2 regulation by reactive oxyge..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Analysis of the relationship between SOD2 activity and cellular aging or replicative lifespan in yeast
+</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P00447" data-a="EXPERIMENT: Analysis of the relationship between SOD2 activity..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P00447
+gene_symbol: SOD2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: Manganese-dependent superoxide dismutase localized to the mitochondrial matrix. SOD2 catalyzes the dismutation of superoxide radicals (O2•−) to hydrogen peroxide and molecular oxygen, serving as a critical antioxidant defense mechanism against reactive oxygen species generated during mitochondrial respiration. The enzyme contains one manganese ion per subunit and functions as a homotetramer.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for mitochondrial localization based on phylogenetic inference across orthologous SOD2 proteins. Well-supported by multiple direct experimental observations confirming mitochondrial matrix localization.
+    action: ACCEPT
+    reason: SOD2 is a well-established mitochondrial protein. The mitochondrial localization is supported by extensive evidence including direct biochemical purification from mitochondria, subcellular fractionation studies, and the presence of a mitochondrial transit peptide (residues 1-26) that is cleaved upon import. IBA inference from orthologous sequences is appropriate for this annotation as SOD2 localization is conserved across eukaryotes.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.&#34;
+      - reference_id: PMID:15851472
+        supporting_text: &#34;Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress.&#34;
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for superoxide dismutase catalytic activity, inferred from orthologous SOD2 proteins. Core molecular function of SOD2 and highly conserved across eukaryotes. This annotation is more specific and appropriate than broader &#34;oxidoreductase activity&#34; annotations.
+    action: ACCEPT
+    reason: &gt;
+      SOD2&#39;s primary molecular function is superoxide dismutase activity. The enzyme
+      catalyzes conversion of superoxide anion to hydrogen peroxide and oxygen
+      (EC 1.15.1.1). This is a highly specific and informative functional annotation
+      representing the core catalytic activity. IBA inference is appropriate given
+      the high conservation of this enzyme family across eukaryotes and consistent
+      functional characterization of SOD2 orthologs.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;This enzyme has been isolated in good yield from bakers&#39; yeast...This enzyme has activity comparable to that of other previously reported superoxide dismutases&#34;
+      - reference_id: PMID:15851472
+        supporting_text: &#34;Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress&#34;
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      IBA annotation for manganese ion binding cofactor requirement. SOD2 requires
+      manganese for catalytic activity with 1 Mn2+ per subunit. Critical for enzyme
+      function and essential for distinguishing from cytoplasmic Fe-SOD1.
+    action: ACCEPT
+    reason: &gt;
+      SOD2 is a manganese-dependent superoxide dismutase, distinguishing it from the
+      iron-dependent SOD1 isoform found in the cytoplasm. The UniProt entry explicitly
+      states &#34;Binds 1 Mn(2+) ion per subunit&#34; with specific binding residues identified
+      (positions 52, 107, 194, 198). Manganese insertion is essential during import
+      into mitochondria and is mechanistically coupled to the mitochondrial import
+      process. This annotation is more specific and informative than generic &#34;metal ion
+      binding&#34; annotations and reflects the specialized cofactor requirement.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;This enzyme contains 1 atom of manganese per subunit and its absorption in the visible suggests Mn(III) in the resting enzyme.&#34;
+      - reference_id: PMID:15851472
+        supporting_text: &#34;We found that a mitochondrial localization is essential...Manganese insertion is only possible with a newly synthesized polypeptide.&#34;
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      IEA annotation via InterPro mapping (IPR001189: Mn/Fe superoxide dismutase).
+      Redundant with IBA and IDA annotations for the same function but from automated
+      computational mapping. Acceptable but less evidence-rich than experimental data.
+    action: ACCEPT
+    reason: &gt;
+      This IEA annotation derives from InterPro domain mapping, which appropriately
+      identifies SOD2 as a superoxide dismutase based on conserved protein domains.
+      While less informative than direct experimental evidence, automated annotations
+      based on InterPro are generally reliable for well-characterized enzyme families.
+      The annotation is not contradicted by experimental evidence and supports the
+      core function identified by IBA and IDA annotations.
+    supported_by:
+      - reference_id: GO_REF:0000120
+        supporting_text: Combined Automated Annotation using Multiple IEA Methods based on InterPro domain mapping
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;
+      IEA annotation for mitochondrial localization via ARBA machine learning models.
+      Represents automated inference from amino acid sequence patterns associated with
+      mitochondrial proteins. Redundant with direct experimental evidence.
+    action: ACCEPT
+    reason: &gt;
+      ARBA machine learning models provide evidence for mitochondrial localization
+      based on sequence patterns trained on experimentally validated mitochondrial
+      proteins. While less directly informative than experimental evidence, this IEA
+      annotation is consistent with and supported by extensive experimental data
+      including direct biochemical purification and subcellular localization studies.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;
+      IEA annotation based on UniProtKB subcellular location vocabulary mapping to
+      &#34;Mitochondrion matrix&#34;. More specific than broader &#34;mitochondrion&#34; annotation,
+      reflecting SOD2&#39;s precise subcellular compartment.
+    action: ACCEPT
+    reason: &gt;
+      The annotation correctly identifies the mitochondrial matrix as SOD2&#39;s specific
+      subcellular compartment. This IEA is derived from structured UniProtKB annotation
+      and is supported by direct experimental evidence. The matrix localization is
+      essential for SOD2 function in protecting mitochondrial proteins and DNA from
+      superoxide generated by the electron transport chain. This is more specific and
+      informative than the broader &#34;mitochondrion&#34; annotations.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.&#34;
+- term:
+    id: GO:0006801
+    label: superoxide metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      IEA annotation for involvement in superoxide metabolic process based on InterPro
+      domain mapping. Reasonable but somewhat redundant with more specific process
+      annotations like &#34;removal of superoxide radicals&#34;.
+    action: ACCEPT
+    reason: &gt;
+      This annotation appropriately captures SOD2&#39;s involvement in superoxide metabolism
+      through the dismutation reaction. However, it is broader than the more specific
+      functional process &#34;removal of superoxide radicals&#34; (GO:0019430) which more
+      precisely describes the biological outcome. The annotation is not incorrect but
+      represents a higher-level categorization of the more specific process.
+- term:
+    id: GO:0016209
+    label: antioxidant activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      IEA annotation based on UniProtKB keyword mapping (KW-0049: Antioxidant).
+      Accurate but relatively broad characterization of SOD2&#39;s functional role.
+    action: ACCEPT
+    reason: &gt;
+      SOD2 is correctly characterized as having antioxidant activity through its
+      superoxide dismutase function. While this annotation is less specific than
+      GO:0004784 (superoxide dismutase activity), it is accurate and captures the
+      physiological consequence of the enzyme&#39;s catalytic activity. Antioxidant
+      activity represents an appropriate functional categorization for SOD2.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      IEA annotation based on UniProtKB keyword mapping (KW-0560: Oxidoreductase).
+      Correct but very broad categorization of enzymatic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      While technically correct that superoxide dismutase is an oxidoreductase enzyme
+      (catalyzing electron transfer in the dismutation reaction), this annotation is
+      overly broad and lacks specificity. The broader &#34;oxidoreductase activity&#34;
+      encompasses thousands of diverse enzymatic activities and provides minimal
+      functional information. More specific annotations like &#34;superoxide dismutase
+      activity&#34; and &#34;antioxidant activity&#34; are far more informative. However, it is
+      not incorrect, so retaining it as non-core is appropriate to avoid cluttering
+      the functional annotation space.
+- term:
+    id: GO:0019430
+    label: removal of superoxide radicals
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;
+      IEA annotation inferred via logical inference from the primary superoxide
+      dismutase activity annotation. Accurately captures the functional consequence
+      of SOD2&#39;s enzymatic activity.
+    action: ACCEPT
+    reason: &gt;
+      This process annotation appropriately captures the biological function of SOD2.
+      The enzyme removes/detoxifies superoxide radicals by catalyzing their conversion
+      to hydrogen peroxide and oxygen. This is the functional outcome of the superoxide
+      dismutase catalytic activity and is logically inferred from that core function.
+      The annotation is supported by extensive evidence of SOD2&#39;s role in cellular
+      antioxidant defense.
+    supported_by:
+      - reference_id: PMID:3520557
+        supporting_text: &#34;MnSOD contributes to the natural protection of cells against oxygen toxicity&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      IEA annotation for general metal ion binding based on InterPro domain mapping.
+      Accurate but very broad and less specific than the manganese-specific annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      SOD2 does bind a metal ion (specifically manganese), making this annotation
+      technically correct. However, it is overly general and lacks the specificity
+      that makes GO:0030145 (manganese ion binding) superior. While some genes may
+      require annotation at this level of generality, SOD2&#39;s cofactor requirement is
+      specifically and characteristically for manganese rather than other metal ions.
+      The more specific &#34;manganese ion binding&#34; annotation is far more informative
+      and should be prioritized. Retaining this as non-core avoids redundancy.
+- term:
+    id: GO:0098869
+    label: cellular oxidant detoxification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;
+      IEA annotation for cellular oxidant detoxification, inferred from antioxidant
+      activity via logical inference. Captures the cellular process consequence of
+      SOD2&#39;s enzymatic function.
+    action: ACCEPT
+    reason: &gt;
+      This process annotation appropriately characterizes SOD2&#39;s role in protecting
+      cells from reactive oxygen species. The enzyme detoxifies superoxide and
+      contributes to overall cellular antioxidant defense. The annotation is logically
+      inferred from the antioxidant activity function and is supported by experimental
+      evidence of SOD2&#39;s essential role in protecting cells against oxidative stress,
+      particularly in mitochondria where high ROS levels are generated.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:24769239
+  review:
+    summary: &gt;
+      HDA annotation from quantitative proteomic study identifying SOD2 in isolated
+      mitochondria during proteomic survey of mitochondrial proteins under different
+      growth conditions. Supports mitochondrial localization.
+    action: ACCEPT
+    reason: &gt;
+      This HDA annotation is based on direct detection of SOD2 protein in isolated
+      mitochondrial fractions using mass spectrometry. Quantitative proteomics provides
+      strong evidence for protein localization. The study systematically identified
+      mitochondrial proteins and their relative abundance across different metabolic
+      conditions. This represents solid experimental evidence for mitochondrial
+      presence, though less specific than subcellular fractionation at the matrix level.
+    supported_by:
+      - reference_id: PMID:24769239
+        supporting_text: &#34;Label free quantitative analysis of protein accumulation revealed significant variation of 176 mitochondrial proteins&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:11914276
+  review:
+    summary: &gt;
+      HDA annotation from proteome-scale high-throughput subcellular localization study
+      mapping yeast protein localization. Confirms mitochondrial localization through
+      immunolocalization-based approach.
+    action: ACCEPT
+    reason: &gt;
+      This study represents the first large-scale proteome localization study in yeast,
+      using high-throughput immunolocalization of epitope-tagged proteins to determine
+      subcellular localization. SOD2 was identified among proteins localized to
+      mitochondria. This represents direct experimental evidence for mitochondrial
+      localization at genome scale. The methodology is robust though localization to
+      the matrix specifically would require additional evidence.
+    supported_by:
+      - reference_id: PMID:11914276
+        supporting_text: &#34;We estimate the yeast proteome to encompass approximately 5100 soluble proteins and &gt;1000 transmembrane proteins. Our results indicate that 47% of yeast proteins are cytoplasmic, 13% mitochondrial&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:14576278
+  review:
+    summary: &gt;
+      HDA annotation from comprehensive mass spectrometry-based proteomics of purified
+      yeast mitochondria. SOD2 identified in mitochondrial proteome catalog.
+    action: ACCEPT
+    reason: &gt;
+      This landmark study identified &gt;750 different proteins from highly purified yeast
+      mitochondria using tandem mass spectrometry. SOD2 was identified in this
+      comprehensive mitochondrial proteome. The study analyzed only mitochondrial
+      fractions, providing direct evidence for mitochondrial localization. This
+      represents strong experimental support from a well-cited mitochondrial proteomics
+      resource.
+    supported_by:
+      - reference_id: PMID:14576278
+        supporting_text: &#34;From &gt;20 million MS spectra, 750 different proteins were identified, indicating an involvement of mitochondria in numerous cellular processes&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:16823961
+  review:
+    summary: &gt;
+      HDA annotation from advanced proteomics study combining multidimensional
+      separation techniques to characterize the complete yeast mitochondrial proteome.
+    action: ACCEPT
+    reason: &gt;
+      This study used orthogonal proteomics approaches to achieve the most comprehensive
+      characterization of the yeast mitochondrial proteome, identifying 851 different
+      proteins. SOD2 was identified as a mitochondrial protein in this resource. The
+      use of multiple complementary separation and detection methods increases
+      confidence in protein identification. This represents high-quality experimental
+      evidence for mitochondrial localization from a mature proteomics platform.
+    supported_by:
+      - reference_id: PMID:16823961
+        supporting_text: &#34;A total of 851 different proteins (PROMITO dataset) were identified by use of multidimensional LC-MS/MS&#34;
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15851472
+  review:
+    summary: &gt;
+      IDA annotation from direct enzymatic assay study characterizing manganese
+      activation of SOD2 in mitochondria. Demonstrates enzyme activity and essential
+      cofactor requirement.
+    action: ACCEPT
+    reason: &gt;
+      This IDA annotation is from direct biochemical characterization of SOD2 enzyme
+      activity in mitochondrial context. The study specifically examined manganese
+      activation of SOD2, demonstrating the enzyme&#39;s superoxide dismutase activity
+      and its dependence on mitochondrial import for proper cofactor insertion. This
+      represents strong experimental evidence for the core molecular function.
+    supported_by:
+      - reference_id: PMID:15851472
+        supporting_text: &#34;Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress. Here we probed the pathway by which SOD2 acquires its manganese catalytic cofactor.&#34;
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:238997
+  review:
+    summary: &gt;
+      IDA annotation from the landmark 1975 study that first isolated and characterized
+      manganese-containing SOD from yeast. Original biochemical characterization of
+      enzyme activity.
+    action: ACCEPT
+    reason: &gt;
+      This is from the seminal study that first isolated yeast mitochondrial SOD and
+      demonstrated its superoxide dismutase activity in vitro. The study characterized
+      the enzyme&#39;s molecular weight (96,000 Da tetramer), subunit structure, manganese
+      content (1 Mn per subunit), and catalytic activity. This represents foundational
+      experimental evidence for SOD2&#39;s molecular function and remains a critical
+      reference for the enzyme&#39;s properties.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;This enzyme has been isolated in good yield from bakers&#39; yeast...This enzyme contains 1 atom of manganese per subunit...This enzyme has activity comparable to that of other previously reported superoxide dismutases&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:15851472
+  review:
+    summary: &gt;
+      IDA annotation from manganese activation study that demonstrated SOD2&#39;s
+      mitochondrial localization is essential for cofactor insertion and activation.
+    action: ACCEPT
+    reason: &gt;
+      The study directly showed that mitochondrial localization of SOD2 is essential
+      for proper manganese insertion and enzyme activation. Cytosolic versions of SOD2
+      remain largely apo (without manganese) unless cells are exposed to toxic manganese
+      levels. This demonstrates mechanistically that SOD2&#39;s mitochondrial localization
+      is not just coincidental but essential for function. The study provides strong
+      experimental evidence for mitochondrial localization integrated with functional
+      characterization.
+    supported_by:
+      - reference_id: PMID:15851472
+        supporting_text: &#34;We found that a mitochondrial localization is essential...By reversibly blocking mitochondrial import in vivo, we noted that newly synthesized Sod2p can enter mitochondria but not a Sod2p polypeptide that was allowed to accumulate in the cytosol.&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:238997
+  review:
+    summary: &gt;
+      IDA annotation from original characterization study that specifically localized
+      the enzyme to the mitochondrial matrix compartment. Foundational evidence for
+      subcellular compartmentalization.
+    action: ACCEPT
+    reason: &gt;
+      The seminal 1975 study explicitly localized the cyanide-insensitive (manganese)
+      superoxide dismutase to the mitochondrial matrix, the innermost mitochondrial
+      compartment where the electron transport chain generates superoxide and where
+      SOD2 provides essential antioxidant protection. This specific subcellular
+      localization is more informative than broader mitochondrion annotations and
+      accurately reflects the enzyme&#39;s functional compartment. This remains the gold
+      standard evidence for matrix localization.
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;The cyanide-insensitive superoxide dismutase of yeast has been shown to be localized in the mitochondrial matrix.&#34;
+- term:
+    id: GO:0072593
+    label: reactive oxygen species metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:3520557
+  review:
+    summary: &gt;
+      IMP annotation from genetic knockout study demonstrating that SOD2 is essential
+      for cellular protection against oxygen-induced ROS toxicity. Establishes
+      biological role in ROS metabolism.
+    action: ACCEPT
+    reason: &gt;
+      This IMP annotation is from a landmark genetic study that created a SOD2-null
+      mutant and demonstrated its hypersensitivity to oxygen. The mutant lacked
+      cyanide-insensitive SOD activity and exhibited growth inhibition in
+      oxygen-containing atmospheres, providing direct genetic evidence that SOD2
+      contributes to cellular defense against oxygen toxicity through ROS metabolism.
+      This represents the strongest type of biological process evidence showing that
+      loss of protein function impairs the process.
+    supported_by:
+      - reference_id: PMID:3520557
+        supporting_text: &#34;In the absence of oxygen, the mutant grew as rapidly as the wild-type parent. However, increasing concentrations of oxygen led to a progressive inhibition of growth. The properties of this mutant provide direct evidence that MnSOD contributes to the natural protection of cells against oxygen toxicity.&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0004784
+      label: superoxide dismutase activity
+    description: &gt;
+      Superoxide dismutase activity is the core molecular function of SOD2. The enzyme
+      catalyzes the highly specific reaction: 2 O2•− + 2 H+ → H2O2 + O2 (EC 1.15.1.1).
+      Direct biochemical characterization (PMID:238997, PMID:15851472) demonstrates
+      this catalytic activity. The enzyme requires manganese cofactor (1 Mn2+ per
+      subunit) which is specifically inserted during mitochondrial import.
+    directly_involved_in:
+      - id: GO:0072593
+        label: reactive oxygen species metabolic process
+    locations:
+      - id: GO:0005759
+        label: mitochondrial matrix
+    supported_by:
+      - reference_id: PMID:238997
+        supporting_text: &#34;This enzyme has been isolated in good yield from bakers&#39; yeast. This enzyme contains 1 atom of manganese per subunit and its absorption in the visible suggests Mn(III) in the resting enzyme.&#34;
+      - reference_id: PMID:15851472
+        supporting_text: &#34;Manganese-dependent superoxide dismutase 2 (SOD2) in the mitochondria plays a key role in protection against oxidative stress.&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;
+      What role does SOD2 phosphorylation play in regulating its activity or
+      localization?
+  - question: &gt;
+      Are there condition-specific changes in SOD2 expression or activity in response
+      to metabolic state?
+  - question: &gt;
+      Does SOD2 interact with other mitochondrial proteins to form a larger
+      antioxidant defense complex?
+suggested_experiments:
+  - description: &gt;
+      Detailed kinetic analysis of SOD2 with various superoxide concentrations and pH
+      conditions to establish optimal activity parameters in vivo
+  - description: &gt;
+      Investigation of SOD2 regulation by reactive oxygen species or other cellular
+      signals that might modulate its expression
+  - description: &gt;
+      Analysis of the relationship between SOD2 activity and cellular aging or
+      replicative lifespan in yeast
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11914276
+  title: Subcellular localization of the yeast proteome.
+  findings: []
+- id: PMID:14576278
+  title: The proteome of Saccharomyces cerevisiae mitochondria.
+  findings: []
+- id: PMID:15851472
+  title: Manganese activation of superoxide dismutase 2 in the mitochondria of Saccharomyces
+    cerevisiae.
+  findings: []
+- id: PMID:16823961
+  title: &#39;Toward the complete yeast mitochondrial proteome: multidimensional separation
+    techniques for mitochondrial proteomics.&#39;
+  findings: []
+- id: PMID:238997
+  title: Isolation and characterization of a manganese-containing superoxide dismutase
+    from yeast.
+  findings: []
+- id: PMID:24769239
+  title: Quantitative variations of the mitochondrial proteome and phosphoproteome
+    during fermentative and respiratory growth in Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:3520557
+  title: A yeast mutant lacking mitochondrial manganese-superoxide dismutase is hypersensitive
+    to oxygen.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MED13L - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MED13L</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q71F56" target="_blank" class="term-link">
+                        Q71F56
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">KIAA1025</span>
+                    
+                    <span class="badge">PROSIT240</span>
+                    
+                    <span class="badge">THRAP2</span>
+                    
+                    <span class="badge">TRAP240L</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MED13L";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q71F56" data-a="DESCRIPTION: MED13L encodes Mediator of RNA polymerase II trans..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a non-enzymatic subunit of the Mediator complex&#39;s CDK8 kinase module (CKM). The protein functions as a structural tether linking the CKM to core Mediator (cMED), regulating Pol II engagement and transcriptional programs. MED13L contains an Ago-like domain architecture with intrinsically disordered regions (IDRs) that can restrict or allow cMED interaction with Pol II/MED26, thereby modulating promoter-proximal events including initiation and pause-release. The protein localizes primarily to the nucleus and is required for Rb/E2F control of cell growth and neuronal dendritic development. Pathogenic variants cause MED13L syndrome characterized by developmental delay, intellectual disability, speech impairment, and congenital heart defects.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003712" target="_blank" class="term-link">
+                                    GO:0003712
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coregulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0003712" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MED13L is a non-enzymatic subunit of the Mediator complex&#39;s CDK8 kinase module (CKM) that functions as a coregulator of transcription by RNA polymerase II. It modulates transcription through its structural/tethering role in the CKM. Deep research confirms MED13L has an Ago-like domain architecture with intrinsically disordered regions (IDRs) that regulate Pol II access to the core Mediator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function of MED13L. The protein is part of the Mediator complex and directly regulates transcription as a coregulator. PMID:22249253 demonstrates that MED13L is required for Rb/E2F transcriptional control. Deep research provides structural basis for the coregulatory mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth, the complete repression of cell cycle target genes, and cell cycle inhibition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MED13L/MED13L-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a non-enzymatic subunit of the Mediator complex&#39;s cyclin-dependent kinase module (CKM)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MED13L localizes primarily to the nucleus, consistent with its role as a Mediator complex subunit involved in transcription regulation by RNA polymerase II.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is the primary subcellular location for MED13L, consistent with its function in the Mediator complex which operates in the nucleus to regulate transcription. Deep research confirms primarily nuclear localization with additional neuronal synapse localization reported.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MED13L is involved in DNA-templated transcription as a component of the Mediator complex, which is a large multiprotein coactivator required for RNA polymerase II transcription.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process for MED13L. The Mediator complex is central to transcription by RNA polymerase II, and MED13L is an essential subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">components of the Mediator complex, a large multiprotein coactivator required for RNA polymerase II transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0006357" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MED13L regulates transcription by RNA polymerase II through its tethering role in the CDK8 kinase module, which modulates Mediator-Pol II interactions and promoter-proximal events including initiation and pause-release.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process function of MED13L. The protein regulates Pol II transcription by controlling access of Pol II to the core Mediator through its intrinsically disordered regions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth, the complete repression of cell cycle target genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016592" target="_blank" class="term-link">
+                                    GO:0016592
+                                </a>
+                            </span>
+                            <span class="term-label">mediator complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0016592" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MED13L is definitionally a component of the Mediator complex, specifically the CDK8 kinase module (CKM) which associates with the core Mediator. The IEA annotation to the broader mediator complex term is appropriate as a general annotation. More specifically, MED13L resides in the CKM complex (GO:1990508) which reversibly associates with the core Mediator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid cellular component annotation for MED13L. The gene encodes Mediator of RNA polymerase II transcription subunit 13-like, and MED13L is a bona fide subunit of the Mediator complex. Deep research confirms MED13L as a CKM tether that links the CKM to core Mediator. While a more specific annotation to CKM complex (GO:1990508) could be added, this general annotation remains correct.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">components of the Mediator complex, a large multiprotein coactivator required for RNA polymerase II transcription</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MED13L/MED13L-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Member of Mediator CDK8 kinase module (CKM) paralog set MED12/12L, MED13/13L, CDK8/19, cyclin C; MED13L (paralog of MED13) tethers CKM to core Mediator and can modulate Pol II access</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    GO:0003713
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coactivator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22249253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A role for Mediator complex subunit MED13L in Rb/E2F-induced...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0003713" data-r="PMID:22249253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:22249253 demonstrated through a genome-wide shRNA screen that MED13L is required for Rb/E2F-mediated transcriptional control. The study showed that MED13L is essential for both transcriptional activation and repression of cell cycle target genes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is supported by direct experimental evidence from PMID:22249253. While the Mediator complex can function in both activation and repression, the coactivator function is a well-established aspect of Mediator biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">components of the Mediator complex, a large multiprotein coactivator required for RNA polymerase II transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22249253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A role for Mediator complex subunit MED13L in Rb/E2F-induced...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0045944" data-r="PMID:22249253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:22249253 demonstrated that MED13L is required for proper regulation of cell cycle target genes. As a Mediator complex subunit, MED13L contributes to positive regulation of transcription through the coactivator function of Mediator.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by direct experimental evidence. The Mediator complex is required for RNA polymerase II transcription, and MED13L is essential for this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                        PMID:22249253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">components of the Mediator complex, a large multiprotein coactivator required for RNA polymerase II transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9836857
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q71F56" data-a="GO:0005654" data-r="Reactome:R-HSA-9836857" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The nucleoplasm localization is consistent with MED13L&#39;s role in the Mediator complex, which functions in the nucleoplasm to regulate RNA polymerase II transcription.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid subcellular localization annotation. Mediator complex subunits are expected to localize to the nucleoplasm where they function in transcription regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MED13L functions as a structural tether within the Mediator CDK8 kinase module (CKM), linking the CKM to core Mediator and regulating RNA polymerase II engagement at promoters through its intrinsically disordered regions.</h3>
+                <span class="vote-buttons" data-g="Q71F56" data-a="FUNCTION: MED13L functions as a structural tether within the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003712" target="_blank" class="term-link">
+                            transcription coregulator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016592" target="_blank" class="term-link">
+                                mediator complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                nucleoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                                PMID:22249253
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth, the complete repression of cell cycle target genes, and cell cycle inhibition</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22249253" target="_blank" class="term-link">
+                            PMID:22249253
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MED13L is required for Rb/E2F control of cell growth and cell cycle gene regulation</div>
+                        
+                        <div class="finding-text">"the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth, the complete repression of cell cycle target genes, and cell cycle inhibition"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mediator complex is a multiprotein coactivator required for Pol II transcription</div>
+                        
+                        <div class="finding-text">"components of the Mediator complex, a large multiprotein coactivator required for RNA polymerase II transcription"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9836857
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NS1 (1C) binds to Mediator complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/MED13L/MED13L-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of MED13L function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MED13L functions as a CKM tether with Ago-like domain architecture</div>
+                        
+                        <div class="finding-text">"MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a non-enzymatic subunit of the Mediator complex&#39;s cyclin-dependent kinase module (CKM)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MED13L is required for neuronal dendritic development</div>
+                        
+                        <div class="finding-text">"MED13L is required for dendritic development of cortical excitatory neurons; disease-associated variants impact subcellular distribution/stability and reduce dendrite number/length or spine maturation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the specific mechanism by which MED13L IDRs regulate Pol II access to core Mediator?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q71F56" data-a="Q: What is the specific mechanism by which MED13L IDR..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does MED13L contribute to neuronal development at the transcriptional level?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q71F56" data-a="Q: How does MED13L contribute to neuronal development..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there tissue-specific functions of MED13L beyond its general role in transcription?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q71F56" data-a="Q: Are there tissue-specific functions of MED13L beyo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cryo-EM structure of MED13L-containing CKM in complex with core Mediator and Pol II</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Structural analysis could reveal the mechanism of IDR-mediated gating of Pol II access</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q71F56" data-a="EXPERIMENT: Cryo-EM structure of MED13L-containing CKM in comp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq and RNA-seq in MED13L-deficient neurons to identify direct target genes</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: This would reveal the transcriptional programs regulated by MED13L in neurons</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q71F56" data-a="EXPERIMENT: ChIP-seq and RNA-seq in MED13L-deficient neurons t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MED13L-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q71F56" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T14:22:07.249152'<br />
+end_time: '2025-12-27T14:30:02.773825'<br />
+duration_seconds: 475.52<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: MED13L<br />
+  gene_symbol: MED13L<br />
+  uniprot_accession: Q71F56<br />
+  protein_description: 'RecName: Full=Mediator of RNA polymerase II transcription<br />
+    subunit 13-like; AltName: Full=Mediator complex subunit 13-like; AltName: Full=Thyroid<br />
+    hormone receptor-associated protein 2; AltName: Full=Thyroid hormone receptor-associated<br />
+    protein complex 240 kDa component-like;'<br />
+  gene_info: Name=MED13L; Synonyms=KIAA1025, PROSIT240, THRAP2, TRAP240L;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the Mediator complex subunit 13 family.<br />
+  protein_domains: Med13_C. (IPR009401); Mediator_complx_sub13. (IPR051139); Mediator_Med13_N.<br />
+    (IPR021643); MID_MedPIWI. (IPR041285); Med13_C (PF06333)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 22</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q71F56</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mediator of RNA polymerase II transcription subunit 13-like; AltName: Full=Mediator complex subunit 13-like; AltName: Full=Thyroid hormone receptor-associated protein 2; AltName: Full=Thyroid hormone receptor-associated protein complex 240 kDa component-like;</li>
+<li><strong>Gene Information:</strong> Name=MED13L; Synonyms=KIAA1025, PROSIT240, THRAP2, TRAP240L;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the Mediator complex subunit 13 family.</li>
+<li><strong>Key Domains:</strong> Med13_C. (IPR009401); Mediator_complx_sub13. (IPR051139); Mediator_Med13_N. (IPR021643); MID_MedPIWI. (IPR041285); Med13_C (PF06333)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "MED13L" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'MED13L' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>MED13L</strong> (gene ID: MED13L, UniProt: Q71F56) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q71F56</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mediator of RNA polymerase II transcription subunit 13-like; AltName: Full=Mediator complex subunit 13-like; AltName: Full=Thyroid hormone receptor-associated protein 2; AltName: Full=Thyroid hormone receptor-associated protein complex 240 kDa component-like;</li>
+<li><strong>Gene Information:</strong> Name=MED13L; Synonyms=KIAA1025, PROSIT240, THRAP2, TRAP240L;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the Mediator complex subunit 13 family.</li>
+<li><strong>Key Domains:</strong> Med13_C. (IPR009401); Mediator_complx_sub13. (IPR051139); Mediator_Med13_N. (IPR021643); MID_MedPIWI. (IPR041285); Med13_C (PF06333)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "MED13L" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'MED13L' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>MED13L</strong> (gene ID: MED13L, UniProt: Q71F56) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity check: The target is human MED13L, UniProt Q71F56, also known as THRAP2/TRAP240L/KIAA1025, a Mediator complex subunit 13 family member. The organism is Homo sapiens, and MED13L is a paralog of MED13. This matches the user-provided UniProt identity and literature below (siavrienė 2023; Campbell/Bain/Doyle GeneReviews excerpt, 2025) (siavriene2023molecularandfunctional pages 9-10, campbell2025med13lsyndromea pages 12-15).</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key facts</th>
+<th>Evidence/source (DOI/URL, year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / verification</td>
+<td>Gene: MED13L (aliases KIAA1025, THRAP2, TRAP240L); organism: Homo sapiens; UniProt accession Q71F56 confirmed in clinical/genetic studies.</td>
+<td>Siavrienė et al., Medicina 2023; https://doi.org/10.3390/medicina59071225 (siavriene2023molecularandfunctional pages 9-10)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>Contains Ago-like domain architecture (Med13_N, PAZ, MID/MedPIWI, Med13_C), large intrinsically disordered regions (IDRs); MedPIWI/MID core implicated in regulatory conformational switching.</td>
+<td>Chen et al., bioRxiv 2024; https://doi.org/10.1101/2024.07.01.601608 (chen2024structuralbasisof pages 27-34), Siavrienė et al., Medicina 2023 (siavriene2023molecularandfunctional pages 9-10)</td>
+</tr>
+<tr>
+<td>Complex membership &amp; role</td>
+<td>Member of Mediator CDK8 kinase module (CKM) paralog set MED12/12L, MED13/13L, CDK8/19, cyclin C; MED13L (paralog of MED13) tethers CKM to core Mediator and can modulate Pol II access.</td>
+<td>Siavrienė et al., Medicina 2023; Chen et al., bioRxiv 2024 (siavriene2023molecularandfunctional pages 9-10, chen2024structuralbasisof pages 27-34)</td>
+</tr>
+<tr>
+<td>Structural insights (2024 cryo-EM / XL-MS)</td>
+<td>Cryo-EM + XL-MS place CKM docked on cMED Hook; MED13/13L IDRc crosslinks overlap Pol II/MED26-binding sites suggesting IDR occlusion of cMED–Pol II interaction; zinc-binding sites observed in MED13 (structural inference).</td>
+<td>Chen et al., bioRxiv (preprint) Jul 2024; https://doi.org/10.1101/2024.07.01.601608 (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Predominantly nuclear (Mediator function) with reported neuronal synapse localization and roles in cortical neurons.</td>
+<td>Siavrienė et al., Medicina 2023; Hamada et al., J Neurochemistry 2023; https://doi.org/10.1111/jnc.15783 (siavriene2023molecularandfunctional pages 9-10, hamada2023med13landits pages 18-19)</td>
+</tr>
+<tr>
+<td>Pathways</td>
+<td>Influences transcription programs including Wnt/FGF signaling and Rb/E2F cell-cycle networks; links to Notch/Wnt-β-catenin reported in mediator/CKM literature and neurodevelopmental studies.</td>
+<td>Siavrienė et al., Medicina 2023 (Wnt/FGF); Chen et al., bioRxiv 2024 (Mediator/CKM mechanisms) (siavriene2023molecularandfunctional pages 9-10, chen2024structuralbasisof pages 27-34)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>MED13L/CKM dynamics affect cyclin C localization and stress responses (cyclin C nuclear release → mitochondrial effects); MED13-family IDR exposure controls CKM dissociation; proteolytic regulation of Med13 family reported (degron/SCF-type mechanisms in related studies).</td>
+<td>Siavrienė et al., Medicina 2023; Chen et al., bioRxiv 2024; GeneReviews excerpt (siavriene2023molecularandfunctional pages 9-10, chen2024structuralbasisof pages 27-34, campbell2025med13lsyndromea pages 12-15)</td>
+</tr>
+<tr>
+<td>Core functions</td>
+<td>Non-enzymatic adaptor/tether within Mediator CKM that modulates Pol II pre-initiation/pausing/elongation decisions; required for normal cortical neurogenesis and dendritic development (neuronal differentiation/morphology phenotypes).</td>
+<td>Hamada et al., J Neurochemistry 2023; Siavrienė et al., Medicina 2023 (hamada2023med13landits pages 18-19, siavriene2023molecularandfunctional pages 9-10)</td>
+</tr>
+<tr>
+<td>Disease relevance</td>
+<td>Heterozygous loss-of-function (haploinsufficiency) and pathogenic missense MED13L variants cause MED13L syndrome (developmental delay/intellectual disability ± congenital heart defects); de novo variants common; parental germline/somatic mosaicism reported.</td>
+<td>Siavrienė et al., Medicina 2023; Bessenyei et al., Cold Spring Harbor Mol Case Stud 2022; literature compendia (siavriene2023molecularandfunctional pages 9-10, clevenger2025diseaseconceptmodel pages 63-64)</td>
+</tr>
+<tr>
+<td>Phenotype frequencies (2023 data)</td>
+<td>In a 2023 cohort: neurodevelopmental features nearly universal (ID/DD, speech delay); hypotonia and craniofacial/ophthalmologic findings frequent; congenital heart defects reported ~20.8% (cohort-specific).</td>
+<td>Siavrienė et al., Medicina 2023; https://doi.org/10.3390/medicina59071225 (siavriene2023molecularandfunctional pages 9-10)</td>
+</tr>
+<tr>
+<td>Translational landscape</td>
+<td>Active patient-advocacy-driven research roadmap (MED13L Foundation SRP 2024) and recommendations for clinical genetic testing and variant interpretation; preclinical models and natural-history efforts prioritized for trial readiness.</td>
+<td>Heilmann et al., MED13L Foundation SRP / Therapeutic Adv Rare Dis 2024; GeneReviews excerpt and foundation materials (clevenger2025diseaseconceptmodela pages 63-64, campbell2025med13lsyndromea pages 12-15)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact summary table of human MED13L (Q71F56) covering identity, domains, Mediator/CKM role, structural and functional insights, regulation, disease links, phenotype frequencies, and translational resources with primary 2023–2024 sources for rapid reference.</em></p>
+<p>Comprehensive research report</p>
+<p>1) Key concepts and definitions (current understanding)<br />
+- Definition and complex membership: MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a non-enzymatic subunit of the Mediator complex’s cyclin-dependent kinase module (CKM). The vertebrate CKM comprises CDK8/19, cyclin C (CCNC), MED12/MED12L, and MED13/MED13L. MED13L is paralogous to MED13 and functions as a tether that links the CKM to the core Mediator (cMED), modulating Pol II engagement and transcriptional programs (Jun 2023; Jul 2024 preprint) (siavriene2023molecularandfunctional pages 9-10, chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42). URL: https://doi.org/10.3390/medicina59071225 (Jun 2023); https://doi.org/10.1101/2024.07.01.601608 (posted Jul 3, 2024).<br />
+- Domain architecture: MED13/13L exhibits an Argonaute-like fold with N/PAZ/MID(=MedPIWI)/PIWI elements and large intrinsically disordered regions (IDRs). Discrete Med13_N, MID/MedPIWI, and Med13_C modules are recognized; the MedPIWI/MID core is implicated in CKM regulatory switching (Jul 2024 preprint; Jun 2023) (chen2024structuralbasisof pages 27-34, siavriene2023molecularandfunctional pages 9-10). URL: https://doi.org/10.1101/2024.07.01.601608; https://doi.org/10.3390/medicina59071225.<br />
+- Cellular localization and expression: MED13L is broadly expressed across human tissues, with notable expression in brain regions and fibroblasts; it localizes primarily to the nucleus consistent with Mediator function, with additional reports of synaptic localization in neurons (Jun 2023; Feb 2023) (siavriene2023molecularandfunctional pages 9-10, hamada2023med13landits pages 18-19). URL: https://doi.org/10.3390/medicina59071225; https://doi.org/10.1111/jnc.15783.<br />
+- Primary biochemical role: MED13L is an adaptor/tether within the CKM that influences the Mediator–Pol II interface and promoter-proximal events; it does not catalyze enzymatic reactions. Through CKM placement, MED13L helps control access of Pol II and cofactors (e.g., MED26), thereby affecting initiation and pause-release programs (Jul 2024 preprint) (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42). URL: https://doi.org/10.1101/2024.07.01.601608.</p>
+<p>2) Recent developments and latest research (priority 2023–2024)<br />
+- Cryo-EM/XL-MS placement of MED13/MED13L within CKM and on cMED: Human CKM docked onto the cMED Hook was resolved by cryo-EM; crosslinks indicate that MED13/13L C-terminal IDRs contact the cMED Hook and overlap the Pol II/MED26 binding surfaces on cMED. This supports a mechanism where MED13/13L IDRs can occlude cMED–Pol II/ MED26 interactions, gating cMED–PIC assembly; dissociation/repositioning of MED13/13L facilitates Pol II engagement. Additional structural observations include putative zinc-binding features in MED13 and an active CDK8 T-loop conformation within the docked CKM (bioRxiv, posted Jul 3, 2024) (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42). URL: https://doi.org/10.1101/2024.07.01.601608.<br />
+- Neuronal development: In vivo studies show MED13L is required for dendritic development of cortical excitatory neurons; disease-associated variants impact subcellular distribution/stability and reduce dendrite number/length or spine maturation. Knockdown impairs dendritic growth, rescued by RNAi-resistant MED13L (Journal of Neurochemistry, Feb 2023) (hamada2023med13landits pages 18-19). URL: https://doi.org/10.1111/jnc.15783.<br />
+- Human genetics—novel deletions and functional validation: A 2023 study characterized a novel intragenic 12q24.21 deletion (exons 3–10) producing a frameshift and predicted truncation that disrupts Med13_N and removes MedPIWI/Med13_C, consistent with haploinsufficiency. Patient fibroblasts had markedly reduced MED13L protein; CRISPR-Cas9 knockout in control fibroblasts decreased viability, and expression analyses indicated perturbation of Wnt/FGF signaling and Rb/E2F-related programs (Medicina, Jun 2023) (siavriene2023molecularandfunctional pages 9-10, siavriene2023molecularandfunctional pages 13-14). URL: https://doi.org/10.3390/medicina59071225.<br />
+- Translational roadmap: The MED13L Foundation Strategic Research Plan (Therapeutic Advances in Rare Disease, 2024) synthesizes literature and outlines clinical trial readiness tools, natural history efforts, and priorities toward therapies for MED13L syndrome (2024) (clevenger2025diseaseconceptmodela pages 63-64). URL: https://doi.org/10.1177/26330040241290252.</p>
+<p>3) Current applications and real-world implementations<br />
+- Clinical diagnostics: Exome/genome sequencing (including CNV analysis) and RNA studies to detect intragenic deletions, truncating variants, and missense changes are standard approaches for suspected MED13L syndrome. Family testing for mosaicism is recommended due to documented germline mosaicism leading to recurrence risk (case evidence 2022) (campbell2025med13lsyndromea pages 12-15, yi2020reportofa pages 10-10). URL: https://doi.org/10.1101/mcs.a006124 (Oct 2022); https://doi.org/10.1186/s13052-020-00847-y (Jul 2020).<br />
+- Functional cell assays: Western blot quantification of MED13L, CRISPR-mediated knockdown/knockout in patient/control fibroblasts, and transcriptome analyses to confirm haploinsufficiency consequences and pathway dysregulation (Jun 2023) (siavriene2023molecularandfunctional pages 9-10). URL: https://doi.org/10.3390/medicina59071225.<br />
+- Research resources and advocacy: The 2024 MED13L Foundation plan provides a community-facing framework to coordinate natural history, biomarker development, and preclinical models for therapy development (2024) (clevenger2025diseaseconceptmodela pages 63-64). URL: https://doi.org/10.1177/26330040241290252.</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- GeneReviews-style synthesis (Campbell, Bain, Doyle excerpt, 2025): MED13L and MED13 act as the protein tether linking CKM to Mediator. Pathogenic variants cause transcriptional defects and may perturb cyclin C localization; most disease-causing variants are de novo and consistent with haploinsufficiency, though severe missense alleles can produce more pronounced phenotypes. Recommendation: consider parental mosaicism in recurrence risk (2025) (campbell2025med13lsyndromea pages 12-15). <br />
+- Structural analysis (2024 preprint): The CKM–cMED arrangement rationalizes how MED13/13L IDRs regulate cMED’s ability to bind Pol II/MED26 and to reposition CKM to act on pausing factors, aligning molecular placement with control of initiation/pausing/elongation transitions (posted Jul 2024) (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42). URL: https://doi.org/10.1101/2024.07.01.601608.<br />
+- Neurobiology (2023): MED13L is required cell-autonomously in cortical neurons for dendritic growth/spine maturation, providing a mechanistic link to neurodevelopmental phenotypes in patients (Feb 2023) (hamada2023med13landits pages 18-19). URL: https://doi.org/10.1111/jnc.15783.</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Frequency of clinical features (2023 cohort): Near-universal developmental delay/intellectual disability and speech impairment; hypotonia and dysmorphic/ophthalmologic findings frequent; congenital heart defects in about 20.8% (15/72) in the literature summarized within the 2023 report (Jun 2023) (siavriene2023molecularandfunctional pages 9-10). URL: https://doi.org/10.3390/medicina59071225.<br />
+- Variant spectrum: Heterozygous loss-of-function (nonsense, frameshift, canonical splice-site), intragenic deletions, and missense variants; de novo events predominate; documented parental germline mosaicism (2022 case study) (yi2020reportofa pages 10-10). URL: https://doi.org/10.1101/mcs.a006124 (Oct 2022).</p>
+<p>Mechanistic integration<br />
+- Role in transcription and pathways: As a CKM tether, MED13L’s IDRs can restrict or allow cMED interaction with Pol II/MED26, shaping promoter engagement and pause control. Human cellular models indicate MED13L loss alters Wnt and FGF pathways and Rb/E2F cell-cycle modules, consistent with CKM’s broad transcriptional regulatory scope (2023–2024) (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42, siavriene2023molecularandfunctional pages 9-10).<br />
+- Regulation and stress responses: CKM components exhibit stress-responsive dynamics. Prior work implicates SCF-dependent proteolysis of Med13 family members and CKM-driven cyclin C relocalization with mitochondrial effects; patient-focused reviews note cyclin C mislocalization in MED13L pathogenic settings (2018; 2025 excerpt) (campbell2025med13lsyndromea pages 12-15). While specific human E3 ligase targeting of MED13L was not detailed in the provided 2023–2024 evidence, the conserved paradigm supports regulated CKM composition and localization.<br />
+- Neurodevelopment and heart development: Mouse and human cellular data support key roles of MED13L in neuronal differentiation, dendritic arborization, and brain development; human clinical cohorts consistently show neurodevelopmental phenotypes, and congenital heart defects are present in a subset (~20% in one 2023 dataset), in line with Mediator’s roles in developmental transcription programs (Feb 2023; Jun 2023) (hamada2023med13landits pages 18-19, siavriene2023molecularandfunctional pages 9-10).</p>
+<p>Clinical implications and translational directions (2024 focus)<br />
+- Diagnostic recommendations: Employ exome/genome sequencing with CNV detection; consider RNA analysis for splice-impacting variants; test parents for mosaicism to refine recurrence risk (2022–2025) (yi2020reportofa pages 10-10, campbell2025med13lsyndromea pages 12-15).<br />
+- Therapeutic outlook: The 2024 MED13L Foundation plan outlines priorities including natural history studies, standardized outcome measures, and preclinical model development to enable future trials (2024) (clevenger2025diseaseconceptmodela pages 63-64). URL: https://doi.org/10.1177/26330040241290252.</p>
+<p>Conclusions<br />
+MED13L (Q71F56) is a human Mediator CKM tether with Ago-like domain architecture whose IDRs regulate cMED–Pol II engagement and promoter-proximal control. Recent structural work provides a mechanistic basis for MED13/13L gating of Pol II/MED26 access, while 2023 neuronal studies show MED13L’s necessity for dendritogenesis. Human genetics consolidates MED13L haploinsufficiency syndrome with predominantly de novo variants, documented mosaicism, and frequent neurodevelopmental features with variable cardiac involvement. Translational frameworks are being established to advance clinical research and therapeutic readiness (chen2024structuralbasisof pages 27-34, chen2024structuralbasisof pages 39-42, hamada2023med13landits pages 18-19, siavriene2023molecularandfunctional pages 9-10, yi2020reportofa pages 10-10, clevenger2025diseaseconceptmodela pages 63-64, campbell2025med13lsyndromea pages 12-15).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(siavriene2023molecularandfunctional pages 9-10): Evelina Siavrienė, Gunda Petraitytė, Violeta Mikštienė, Živilė Maldžienė, Aušra Sasnauskienė, Vilmantė Žitkutė, Laima Ambrozaitytė, Tautvydas Rančelis, Algirdas Utkus, Vaidutis Kučinskas, and Eglė Preikšaitienė. Molecular and functional characterisation of a novel intragenic 12q24.21 deletion resulting in med13l haploinsufficiency syndrome. Medicina, 59:1225, Jun 2023. URL: https://doi.org/10.3390/medicina59071225, doi:10.3390/medicina59071225. This article has 8 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(campbell2025med13lsyndromea pages 12-15): AN Campbell, J Bain, and SJ Doyle. Med13l syndrome. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(chen2024structuralbasisof pages 27-34): Shin-Fu Chen, Ti-Chun Chao, Hee Jong Kim, Hui-Chi Tang, Subash Khadka, Tao Li, Dung-Fang Lee, Kenji Murakami, Thomas G. Boyer, and Kuang-Lei Tsai. Structural basis of the human transcriptional mediator complex modulated by its dissociable kinase module. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.01.601608, doi:10.1101/2024.07.01.601608. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chen2024structuralbasisof pages 39-42): Shin-Fu Chen, Ti-Chun Chao, Hee Jong Kim, Hui-Chi Tang, Subash Khadka, Tao Li, Dung-Fang Lee, Kenji Murakami, Thomas G. Boyer, and Kuang-Lei Tsai. Structural basis of the human transcriptional mediator complex modulated by its dissociable kinase module. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.01.601608, doi:10.1101/2024.07.01.601608. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(hamada2023med13landits pages 18-19): Nanako Hamada, Ikuko Iwamoto, and Koh‐ichi Nagata. <scp>med13l</scp> and its disease‐associated variants influence the dendritic development of cerebral cortical neurons in the mammalian brain. Journal of Neurochemistry, 165:334-347, Feb 2023. URL: https://doi.org/10.1111/jnc.15783, doi:10.1111/jnc.15783. This article has 12 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(clevenger2025diseaseconceptmodel pages 63-64): KM Clevenger. Disease concept model for med13l syndrome. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(clevenger2025diseaseconceptmodela pages 63-64): KM Clevenger. Disease concept model for med13l syndrome. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(siavriene2023molecularandfunctional pages 13-14): Evelina Siavrienė, Gunda Petraitytė, Violeta Mikštienė, Živilė Maldžienė, Aušra Sasnauskienė, Vilmantė Žitkutė, Laima Ambrozaitytė, Tautvydas Rančelis, Algirdas Utkus, Vaidutis Kučinskas, and Eglė Preikšaitienė. Molecular and functional characterisation of a novel intragenic 12q24.21 deletion resulting in med13l haploinsufficiency syndrome. Medicina, 59:1225, Jun 2023. URL: https://doi.org/10.3390/medicina59071225, doi:10.3390/medicina59071225. This article has 8 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(yi2020reportofa pages 10-10): Zhi Yi, Ying Zhang, Zhenfeng Song, Hong Pan, Chengqing Yang, Fei Li, Jiao Xue, and Zhenghai Qu. Report of a de novo c.2605c &gt; t (p.pro869ser) change in the med13l gene and review of the literature for med13l-related intellectual disability. Italian Journal of Pediatrics, Jul 2020. URL: https://doi.org/10.1186/s13052-020-00847-y, doi:10.1186/s13052-020-00847-y. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>siavriene2023molecularandfunctional pages 9-10</li>
+<li>chen2024structuralbasisof pages 27-34</li>
+<li>clevenger2025diseaseconceptmodela pages 63-64</li>
+<li>yi2020reportofa pages 10-10</li>
+<li>chen2024structuralbasisof pages 39-42</li>
+<li>clevenger2025diseaseconceptmodel pages 63-64</li>
+<li>siavriene2023molecularandfunctional pages 13-14</li>
+<li>https://doi.org/10.3390/medicina59071225</li>
+<li>https://doi.org/10.1101/2024.07.01.601608</li>
+<li>https://doi.org/10.1111/jnc.15783</li>
+<li>https://doi.org/10.1101/2024.07.01.601608;</li>
+<li>https://doi.org/10.3390/medicina59071225.</li>
+<li>https://doi.org/10.3390/medicina59071225;</li>
+<li>https://doi.org/10.1111/jnc.15783.</li>
+<li>https://doi.org/10.1101/2024.07.01.601608.</li>
+<li>https://doi.org/10.1177/26330040241290252.</li>
+<li>https://doi.org/10.1101/mcs.a006124</li>
+<li>https://doi.org/10.1186/s13052-020-00847-y</li>
+<li>https://doi.org/10.3390/medicina59071225,</li>
+<li>https://doi.org/10.1101/2024.07.01.601608,</li>
+<li>https://doi.org/10.1111/jnc.15783,</li>
+<li>https://doi.org/10.1186/s13052-020-00847-y,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MED13L-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q71F56" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2025-12-27T21:59:57.893926'<br />
+end_time: '2025-12-27T22:07:17.790675'<br />
+duration_seconds: 439.9<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: MED13L<br />
+  gene_symbol: MED13L<br />
+  uniprot_accession: Q71F56<br />
+  protein_description: 'RecName: Full=Mediator of RNA polymerase II transcription<br />
+    subunit 13-like; AltName: Full=Mediator complex subunit 13-like; AltName: Full=Thyroid<br />
+    hormone receptor-associated protein 2; AltName: Full=Thyroid hormone receptor-associated<br />
+    protein complex 240 kDa component-like;'<br />
+  gene_info: Name=MED13L; Synonyms=KIAA1025, PROSIT240, THRAP2, TRAP240L;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the Mediator complex subunit 13 family.<br />
+  protein_domains: Med13_C. (IPR009401); Mediator_complx_sub13. (IPR051139); Mediator_Med13_N.<br />
+    (IPR021643); MID_MedPIWI. (IPR041285); Med13_C (PF06333)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 101</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q71F56</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mediator of RNA polymerase II transcription subunit 13-like; AltName: Full=Mediator complex subunit 13-like; AltName: Full=Thyroid hormone receptor-associated protein 2; AltName: Full=Thyroid hormone receptor-associated protein complex 240 kDa component-like;</li>
+<li><strong>Gene Information:</strong> Name=MED13L; Synonyms=KIAA1025, PROSIT240, THRAP2, TRAP240L;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the Mediator complex subunit 13 family.</li>
+<li><strong>Key Domains:</strong> Med13_C. (IPR009401); Mediator_complx_sub13. (IPR051139); Mediator_Med13_N. (IPR021643); MID_MedPIWI. (IPR041285); Med13_C (PF06333)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "MED13L" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'MED13L' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>MED13L</strong> (gene ID: MED13L, UniProt: Q71F56) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="med13l-mediator-complex-subunit-13-like-function-and-significance">MED13L: Mediator Complex Subunit 13-Like – Function and Significance</h1>
+<h2 id="mediator-complex-and-med13l-key-concepts">Mediator Complex and MED13L – Key Concepts</h2>
+<p>MED13L (Mediator complex subunit 13-like) is a protein component of the <strong>Mediator complex</strong>, a large multi-protein coactivator that bridges DNA-binding transcription factors to RNA polymerase II (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56">www.genecards.org</a>). By serving as a molecular bridge, Mediator transmits regulatory signals from transcription factors to the basal transcription machinery, facilitating the assembly of the pre-initiation complex and the initiation of gene transcription (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56">www.genecards.org</a>). MED13L is one of ~26 core subunits of human Mediator, and it specifically forms part of the <strong>CDK8 kinase module</strong> – a four-subunit subcomplex (CDK8 or CDK19 kinase, Cyclin C, MED12 or MED12L, and MED13 or MED13L) that transiently associates with the core Mediator (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=roles%20in%20regulating%20Mediator%20function,is%20limited%20to%20a%20study">genesdev.cshlp.org</a>). MED13L is a paralog of MED13 (the original Mediator subunit 13) arising from a gene duplication in vertebrates (<a href="https://www.longdom.org/open-access/mutual-exclusivity-of-med12med12l-med1313l-and-cdk819paralogs-revealed-within-the-cdkmediator-kinase-module-33208.html#:~:text=larger%20complex%20containing%20the%20CDK8,isolate%20each%20kinase%20module%20member">www.longdom.org</a>). These two proteins are highly similar and mutually exclusive in the Mediator kinase module: a given Mediator complex incorporates either MED13 or MED13L, but not both simultaneously (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the">pmc.ncbi.nlm.nih.gov</a>). Human MED13L is a very large protein (2,217 amino acids, ~240 kDa) and shares conserved domains with MED13, including an N-terminal Mediator-binding region and a C-terminal “Med13” domain (IPR009401) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13%2C%20MED13L%2C%20MED15%2C%20and%20MED23,rationale%20for%20focusing%20on%20these">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the">pmc.ncbi.nlm.nih.gov</a>). It also contains predicted <strong>intrinsically disordered regions (IDRs)</strong>, which, as discussed below, are crucial for its regulatory function. MED13L is predominantly a nuclear protein, localizing to the nucleus as part of the Mediator complex bound to chromatin, consistent with its role in transcriptional regulation. </p>
+<p><strong>Mediator Kinase Module and regulatory role:</strong> The CDK8/Cyclin C module (with MED12–MED13 or MED12L–MED13L) can reversibly attach to or detach from the core Mediator. This modulatory association acts as a switch for transcriptional activity (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=and%20Roeder%202005%20%29,CDK8%20module%20plays%20multiple%20distinct">genesdev.cshlp.org</a>). When the kinase module is attached, it can alter Mediator’s conformation and often <em>inhibit or dampen transcription initiation</em> by preventing efficient recruitment of RNA polymerase II to promoters (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=and%20Roeder%202005%20%29,CDK8%20module%20plays%20multiple%20distinct">genesdev.cshlp.org</a>). Conversely, release of the CDK8 module is generally required for Mediator to fully engage RNA Pol II and activate transcription. <strong>MED13L (or MED13)</strong> plays a pivotal structural role in this switch: it serves as the <strong>anchor that links the kinase module to Mediator</strong>, via direct contacts with the Mediator core (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=roles%20in%20regulating%20Mediator%20function,is%20limited%20to%20a%20study">genesdev.cshlp.org</a>). In essence, MED13/L is the scaffold holding the module in place, and removing MED13/L dissociates the module from Mediator (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and">genesdev.cshlp.org</a>). Consistently, biochemical studies have shown that <strong>SCF–Fbw7 ubiquitin ligase</strong> targets MED13 and MED13L for degradation, leading to eviction of the CDK8 module from Mediator (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and">genesdev.cshlp.org</a>) (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general">genesdev.cshlp.org</a>). Fbw7 (a tumor suppressor E3 ligase) thus <strong>negatively regulates MED13L stability</strong>; loss of Fbw7 causes MED13/13L to accumulate and keep the CDK8 module tethered to Mediator (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and">genesdev.cshlp.org</a>). This dynamic control indicates that MED13L levels can tune transcriptional output: degradation of MED13L frees Mediator to interact with Pol II, whereas stabilized MED13L keeps the repressive kinase module engaged (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and">genesdev.cshlp.org</a>). Indeed, a recent <em>Genes &amp; Development</em> study (2013) demonstrated that Fbw7 deficiency increases CDK8-module association with Mediator by preventing MED13/13L turnover (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general">genesdev.cshlp.org</a>). This discovery highlights MED13L as a key node where cellular signaling (e.g. via Fbw7 or other pathways) can modulate global gene expression programs.</p>
+<h2 id="structural-features-and-mechanisms-in-transcription">Structural Features and Mechanisms in Transcription</h2>
+<p>The structural basis of MED13L’s function is an area of active research. Both MED13 and MED13L are predicted to contain long disordered segments flanked by structured domains (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13%2C%20MED13L%2C%20MED15%2C%20and%20MED23,rationale%20for%20focusing%20on%20these">pmc.ncbi.nlm.nih.gov</a>). Notably, <strong>new findings in 2024</strong> revealed that an <strong>intrinsically disordered region in MED13</strong> acts as a molecular switch to control Mediator’s interactions (<a href="https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off">www.sciencedirect.com</a>). This disordered segment can mutually exclusively bind either to RNA polymerase II or to the CDK8 module, thereby toggling Mediator between an “active” state (engaged with Pol II) and an “off” state (bound by the CDK8 module) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off">www.sciencedirect.com</a>). In other words, when MED13’s IDR permits Pol II engagement, the kinase module must dislodge; when the CDK8 module binds MED13, it sterically occludes Pol II from Mediator (<a href="https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off">www.sciencedirect.com</a>). Given the high similarity between MED13 and MED13L, it is very likely that <strong>MED13L contains a similar IDR-based switch mechanism</strong>, though this has been presumed by homology rather than directly shown. This mechanism elegantly explains how Mediator’s activity is regulated on cue: <strong>MED13/MED13L function as a gatekeeper</strong>, ensuring that Mediator does not activate transcription until appropriate signals prompt module dissociation. This insight came from complementary cryo-EM and biochemical studies in 2024 (Zhao et al. and Chen et al., as summarized in <em>Molecular Cell</em> (<a href="https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off">www.sciencedirect.com</a>)), and it underscores the critical regulatory role that the MED13L subunit (through its disordered region) plays in controlling gene expression timing.</p>
+<p>Beyond its role as a structural tether, MED13L also contributes to <strong>chromatin regulation and transcription elongation</strong> via the kinase module. The CDK8/CycC kinase can phosphorylate transcription factors and chromatin proteins, influencing transcriptional pause-release and enhancer activity (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=reversibly%20associates%20with%20Mediator%20to,CDK8%20module%20plays%20multiple%20distinct">genesdev.cshlp.org</a>). MED13L, by recruiting this module, indirectly affects these processes. For instance, the CDK8 module has been shown to modify histones and interact with elongation factors (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=reversibly%20associates%20with%20Mediator%20to,CDK8%20module%20plays%20multiple%20distinct">genesdev.cshlp.org</a>), meaning MED13L’s presence could impact how genes are turned on not only at initiation, but during transcript elongation as well. It’s also noteworthy that Mediator subunits like MED13L often interact with other co-regulators. Proteomic analyses of MED13L-containing Mediator complexes have identified partners beyond the core Mediator, hinting at broader networks. A recent 2023 proteomics study found that MED13L can associate with proteins such as <strong>FBXL19</strong> (another F-box protein) and <strong>TASP1</strong> (a protease involved in chromatin protein processing), among others (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=In%20addition%20to%20mediator%20components%2C,Complementation">pmc.ncbi.nlm.nih.gov</a>). While the functional consequences of these interactions are still being unraveled, they suggest that MED13L might integrate signals from protein turnover pathways or chromatin-modifying enzymes to fine-tune transcription. In summary, <strong>MED13L’s structure</strong> (modular domains with IDRs) and its ability to recruit regulatory complexes position it as a critical <strong>mediator of Mediator</strong>, controlling when and how efficiently Pol II initiates transcription at target genes.</p>
+<h2 id="biological-functions-and-pathways">Biological Functions and Pathways</h2>
+<h3 id="neurodevelopment-and-brain-function">Neurodevelopment and Brain Function</h3>
+<p>MED13L has a pronounced role in brain development. Genetic analyses first linked <strong>MED13L haploinsufficiency</strong> to neurodevelopmental disorders, and recent experimental evidence has confirmed its importance in the developing brain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=simplified%20neuronal%20morphology%20in%20the,reveal%20that%20MED13L%20orchestrates%20cortical">pmc.ncbi.nlm.nih.gov</a>). In 2023, Li <em>et al.</em> generated a <strong>Med13l-knockout mouse</strong> to model MED13L syndrome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>). Homozygous Med13l knockout was embryonically lethal, with mice dying at birth and exhibiting markedly reduced brain size and cortical thickness (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>). Heterozygous knockout mice (Med13l+/–), which mimic the human syndrome (caused by one nonfunctional allele), survived but showed <strong>impaired motor skills, learning and memory deficits, and anxiety</strong>, paralleling the intellectual disability and developmental delays observed in human patients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>). Closer examination of the developing cortex revealed that MED13L is required for proper <strong>cortical neurogenesis</strong>: embryos lacking one copy of Med13l had <strong>fewer mature neurons and abnormal neural progenitor differentiation</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=simplified%20neuronal%20morphology%20in%20the,reveal%20that%20MED13L%20orchestrates%20cortical">pmc.ncbi.nlm.nih.gov</a>). Single-cell RNA sequencing and proteomic profiling of knockout embryonic brains indicated that <strong>MED13L acts as a “transcriptional priming” factor for neurogenesis genes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=dendrite%20development,in%20the%20developing%20cerebral%20cortex">pmc.ncbi.nlm.nih.gov</a>). In other words, MED13L helps poise key neuronal genes for activation at the right time during cortical development. Many genes governing neuron maturation and dendrite outgrowth were under-expressed or delayed in the absence of MED13L (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=dendrite%20development,in%20the%20developing%20cerebral%20cortex">pmc.ncbi.nlm.nih.gov</a>). Consistently, neurons in Med13l-deficient mice showed <strong>simplified dendritic arbors</strong> and immature morphology (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=exhibit%20neonatal%20lethality%20accompanied%20by,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=match%20at%20L714%20In%20addition,These%20dendritic%20abnormalities%20in">pmc.ncbi.nlm.nih.gov</a>). These findings suggest that MED13L normally orchestrates transcriptional programs that drive progenitors to exit the cell cycle and differentiate into neurons. Without sufficient MED13L, the timing and extent of neuron differentiation are disrupted, leading to microcephaly and cognitive deficits. This mechanistic insight aligns with clinical genetics: children with MED13L mutations often have significant speech and motor delays, reflecting disruption of neural developmental pathways (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits">pubmed.ncbi.nlm.nih.gov</a>). In summary, MED13L is <strong>crucial for brain development</strong>, ensuring that neuronal genes are activated when needed and neural circuits form properly.</p>
+<h3 id="cardiac-development-and-metabolic-regulation">Cardiac Development and Metabolic Regulation</h3>
+<p>MED13L is equally critical in the heart, both during embryogenesis and in adult cardiac physiology. The gene’s importance first came to light when heterozygous MED13L mutations were found in patients with <strong>congenital heart defects</strong>. In particular, MED13L haploinsufficiency can cause <strong>conotruncal heart malformations</strong> such as <em>dextro-transposition of the great arteries (TGA)</em>, where the major arteries are misconnected (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=,provided%20by%20RefSeq%2C%20Jul%202010">www.genecards.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=match%20at%20L466%20MED13L%20has,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). Early case studies of MED13L-disrupted patients noted TGA in some, alongside intellectual disability, suggesting a syndrome affecting heart and brain development (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in">pubmed.ncbi.nlm.nih.gov</a>). However, many MED13L variant carriers have mild or no structural heart defects; instead they present with a syndromic form of developmental delay with or without cardiac anomalies (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits">pubmed.ncbi.nlm.nih.gov</a>). This indicates MED13L’s role in the heart is significant but can be variable – likely depending on the specific mutation and genetic background. Supporting a direct role in cardiogenesis, <strong>animal models</strong> have shown that MED13L (and its paralog MED13) regulate cardiac gene expression. MED13L is highly expressed in the developing heart, and loss of Med13l in model organisms leads to embryonic cardiac abnormalities (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). A 2021 review highlighted MED13L as “crucial for neurocardiac development,” noting that disruptions in MED13L are implicated in a range of congenital heart diseases beyond TGA, including ventricular septal defects and coarctation of the aorta (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). Notably, a duplication of the MED13L gene (leading to <strong>excess MED13L</strong>) has also been associated with heart defects (like aortic coarctation) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>), implying that cardiac development is sensitive to MED13L dosage in both directions (too little or too much can be deleterious). </p>
+<p>In the adult heart, MED13L and MED13 serve partially redundant functions to maintain normal cardiac physiology. <strong>Knockout mouse studies in 2025</strong> by Henry <em>et al.</em> investigated the roles of these two Mediator subunits in the postnatal heart. Mice lacking MED13 specifically in cardiomyocytes develop cardiac dysfunction, but if MED13L is still present, the heart can partially compensate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of">pmc.ncbi.nlm.nih.gov</a>). However, when both Med13 and Med13l were ablated in adult mouse hearts, the result was <strong>fatal dilated cardiomyopathy</strong>: animals exhibited severe heart failure and <em>100% mortality within 10 weeks</em> of gene deletion (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20then%20performed%20a%20survival,This%20indicates">pmc.ncbi.nlm.nih.gov</a>). The combined knockout hearts showed drastic changes in transcription profiles of metabolic and contractile genes, illustrating that <strong>MED13 and MED13L together sustain the baseline gene-expression networks required for cardiac contractility and structure (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=they%20are%20two%20distinct%20model,respective%20subunit%20results%20in%20gene">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of">pmc.ncbi.nlm.nih.gov</a>). Interestingly, only a small subset of genes misregulated by MED13 loss alone overlapped with those misregulated in the double knockout, suggesting that </strong>MED13L can compensate for many of MED13’s functions<strong> in the heart (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=four%20Mediator%20cardiac%20knockouts%20%28Fig,We">pmc.ncbi.nlm.nih.gov</a>). Nonetheless, each protein also has some unique target genes, indicating </strong>both redundancy and specialization** (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of">pmc.ncbi.nlm.nih.gov</a>). Overall, these data from animal models confirm that MED13L is essential for cardiac gene regulation – from embryonic heart patterning to adult metabolic homeostasis.</p>
+<p>Mechanistically, <strong>MED13L influences metabolic signaling in the heart</strong> via its role in transcription. Research has uncovered a link between the Mediator kinase module (which includes MED13L) and <strong>nuclear receptor signaling pathways</strong> that govern cardiac metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>). For example, thyroid hormone and other nuclear hormone receptors rely on coactivators like Mediator to regulate genes involved in energy usage. MED13L (historically named “Thyroid hormone receptor-associated protein 2” or TRAP240-like) was initially identified as part of a thyroid hormone receptor-binding complex, hinting at a role in thyroid hormone–mediated gene expression. Consistent with this, recent studies suggest <strong>MED13/MED13L in cardiomyocytes can modulate systemic metabolism</strong>. Zhou <em>et al.</em> (2021) reported that Mediator subunit 13 influences expression of metabolic genes, and altering MED13 levels in mouse hearts can affect body-wide energy homeostasis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>). In <em>Drosophila</em>, the MED13 ortholog was shown to work with Wingless (Wnt) signaling in muscle to control fat metabolism and obesity phenotypes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4084481/#:~:text=Heart,Duby%20%5E%7B1%7D%2C%20Eric%20N">pmc.ncbi.nlm.nih.gov</a>). In mammals, a striking study found that overexpressing MED13 in mouse hearts caused the animals to become resistant to diet-induced obesity, apparently by increasing cardiac-derived endocrine signals that boost metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>). Conversely, loss of MED13 in heart led to reduced metabolic rate and obesity in mice (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>). Given MED13L’s overlap in function, it likely participates in the same regulatory axis. In line with this, the <strong>Mediator MED13/MED13L subunits are emerging as key regulators of cardiac metabolism</strong> and are being investigated as potential therapeutic targets for metabolic syndrome and heart failure (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h3 id="cell-cycle-control-and-signaling-pathways">Cell Cycle Control and Signaling Pathways</h3>
+<p>Beyond development, MED13L plays an important role in fundamental cellular processes such as the cell cycle and signal-dependent gene regulation. A notable example is the <strong>Retinoblastoma (Rb)/E2F pathway</strong> that governs the G1-to-S phase cell cycle transition. In an oncogenesis context, Angus <em>et al.</em> (Oncogene 2012) discovered that MED13L is a <strong>crucial co-factor for Rb-mediated cell cycle arrest</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition">pmc.ncbi.nlm.nih.gov</a>). Rb protein ordinarily halts cell division by binding E2F transcription factors and repressing E2F-target genes (like cyclins and replication enzymes). Angus and colleagues performed a shRNA screen for factors required for Rb’s growth-suppressive function and found multiple Mediator subunits – prominently MED13L – to be necessary (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=Shading%20indicates%20gene%20products%20identifed,MED27%2C%20MED13L%2C%20DNAJA1%2C%20ZCCHC10%2C%20TARDBP">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=MED13L%20is%20a%20functional%20Rb%2FE2F,factor">pmc.ncbi.nlm.nih.gov</a>). They demonstrated that knocking down MED13L allows cells to <strong>bypass Rb-induced senescence</strong>: even when Rb was activated, cells lacking MED13L failed to fully repress E2F target genes and continued cycling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=requirement%20for%20MED13L%20in%20Rb%2FE2F,selected%20with%20hygromycin%20for%2019">pmc.ncbi.nlm.nih.gov</a>). Specifically, without MED13L, the expression of <strong>cyclin A</strong> and other cell-cycle genes could not be completely silenced by Rb, whereas in normal cells Rb caused cyclin A levels to drop and cells to exit the cell cycle (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=To%20determine%20whether%20MED13L%20played,inhibition%20of%20DNA%20synthesis%20by">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=This%20suggested%20that%20the%20depletion,contrast%2C%20cells%20transfected%20with%20siRNA">pmc.ncbi.nlm.nih.gov</a>). Thus, <strong>MED13L is required for the “total” repression of cell-cycle gene transcription under Rb’s command (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition">pmc.ncbi.nlm.nih.gov</a>). This finding makes sense in light of Mediator’s role: Rb recruits chromatin modifiers and likely Mediator (via MED13L) to shut down E2F-responsive promoters. If MED13L (or the CDK8 module) is absent, Rb cannot assemble the full corepressor complex needed for durable gene silencing. This places MED13L as a potential tumor suppressor partner – indeed, the inability to arrest growth when MED13L is low could contribute to uncontrolled proliferation. While MED13L itself is not frequently mutated in cancers, the Fbw7 pathway that regulates MED13L is commonly disrupted in tumors (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=match%20at%20L35%20up%20to,2007%29%20and%20degrades">genesdev.cshlp.org</a>) (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general">genesdev.cshlp.org</a>). It’s speculated that high MED13L levels (due to Fbw7 loss) might enforce a transcriptionally repressive state that selects for cells to bypass Rb in other ways, or that alterations in Mediator subunits could disturb normal cell-cycle checkpoints (<a href="https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and">genesdev.cshlp.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition">pmc.ncbi.nlm.nih.gov</a>). In any case, the Rb/E2F study underscored MED13L’s role in </strong>signal-dependent transcriptional repression** in addition to its coactivator functions.</p>
+<p>MED13L is also linked to major <strong>developmental signaling pathways</strong>. In particular, it has been implicated in the regulation of <strong>Wnt/β-catenin and Sonic Hedgehog (SHH) pathway target genes</strong> at the transcription level (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=This%20subunit%20may%20specifically%20regulate,MD13L_HUMAN%2CQ71F56">www.genecards.org</a>). The UniProt database notes that MED13L “may specifically regulate transcription of targets of the Wnt and SHH signaling pathways” (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=This%20subunit%20may%20specifically%20regulate,MD13L_HUMAN%2CQ71F56">www.genecards.org</a>). This is supported by genetic studies in model organisms: Mediator kinase module components (MED12-MED13 and by extension MED13L) have been shown to interact with Wnt signaling. For example, in zebrafish and <em>Xenopus</em> embryos, disruption of Mediator subunits causes Wnt pathway phenotypes, and in <em>Drosophila</em> the MED12/MED13 orthologs modulate Wingless (Wnt) target gene expression (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,the%20Wnt%20signaling%20pathway%20and">www.genecards.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4084481/#:~:text=Heart,Duby%20%5E%7B1%7D%2C%20Eric%20N">pmc.ncbi.nlm.nih.gov</a>). Likewise, connections to the Hedgehog pathway were noted – a 2014 study found that certain MED12 mutations (in a related complex) led to dysregulated GLI3 (Hedgehog effector) activity (<a href="https://pubmed.ncbi.nlm.nih.gov/23091001/#:~:text=GLI3,subsequently%20with%20an%20internal%20control">pubmed.ncbi.nlm.nih.gov</a>). MED13L’s role in these pathways is likely context-dependent, but as a part of the CDK8 module, it can act as a transcriptional <em>attenuator</em>: the CDK8 module is known to transiently repress Wnt target genes to prevent inappropriate activation (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56">www.genecards.org</a>). For instance, during embryogenesis, β-catenin-driven genes might require Mediator with CDK8 (and MED13L) to keep them off until a Wnt signal is sufficiently strong to remove the module and allow full transcription. This model is supported by evidence that <strong>Mediator’s kinase module broadly constrains developmental gene activation</strong>, ensuring signaling outputs are properly timed. In summary, <strong>MED13L is a nexus where multiple signaling pathways (cell cycle, Wnt, SHH, nuclear receptors) intersect with the transcription machinery</strong>. By integrating these signals, MED13L helps decide which genes are transcribed in response to developmental cues and growth control signals.</p>
+<h2 id="clinical-significance-and-ongoing-research">Clinical Significance and Ongoing Research</h2>
+<p>Given its fundamental role in transcription, it is not surprising that <strong>MED13L is indispensable for normal human development</strong>. Heterozygous loss-of-function mutations in MED13L cause a distinctive <strong>neurodevelopmental disorder</strong> now known as <strong>MED13L syndrome</strong> (also called MED13L haploinsufficiency syndrome). This condition is inherited in an autosomal dominant manner (often arising de novo) and is characterized by global developmental delay, moderate to severe intellectual disability, <strong>severe speech impairment</strong>, and mild dysmorphic facial features (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits">pubmed.ncbi.nlm.nih.gov</a>). Many patients also have <strong>hypotonia (low muscle tone)</strong> and motor delays; a subset present with congenital heart defects or other anomalies (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift">pmc.ncbi.nlm.nih.gov</a>). As of 2023, over <em>100 diagnosed individuals</em> with pathogenic MED13L variants have been reported in the medical literature (<a href="https://www.ncbi.nlm.nih.gov/books/NBK613517/#:~:text=MED13L%20Syndrome%20,the%20phenotypic%20features%20associated%20with">www.ncbi.nlm.nih.gov</a>). The spectrum of defects can be broad. For example, some individuals have autism spectrum behaviors, others have limb or eye abnormalities, and about 30–40% have structural heart defects (commonly septal defects or TGA) (<a href="https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). Intriguingly, there are also cases of <strong>MED13L duplications</strong> causing clinical issues, emphasizing that precise gene dosage is critical (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with">pmc.ncbi.nlm.nih.gov</a>). At the molecular level, most MED13L syndrome mutations are predicted to result in haploinsufficiency – e.g. frameshift or nonsense mutations that truncate the protein, or splice-site changes that disrupt the mRNA (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift">pmc.ncbi.nlm.nih.gov</a>). A recent report (J Med Genet, 2024) described splice-site variants in MED13L exon 7 that lead to intron retention and a premature stop codon, confirming loss-of-function as the disease mechanism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift">pmc.ncbi.nlm.nih.gov</a>). The clear link between insufficient MED13L and developmental pathology underscores the gene’s importance: as demonstrated in mice, one functional copy is not enough for full neurologic and cardiac development (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>There is growing interest in <strong>translational research</strong> for MED13L-related disorder and in Mediator kinase module targets in general. From a clinical standpoint, genetic testing for <strong>MED13L mutations</strong> is now a part of many developmental delay and congenital heart defect diagnostic panels (<a href="https://www.ncbi.nlm.nih.gov/sites/books/n/gene/med13l/#:~:text=,The">www.ncbi.nlm.nih.gov</a>). Early diagnosis allows for intervention services and cardiac monitoring where needed. Additionally, understanding MED13L’s function has suggested some therapeutic angles. Because MED13L influences metabolic and cardiac gene networks, researchers have speculated about modifying its activity to treat disease. For instance, <strong>small-molecule modulators of the CDK8/Cdk19 kinase</strong> (part of the same module) are being explored in cancer trials, and similar strategies could be considered to adjust Mediator activity in metabolic or cardiac conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification">pmc.ncbi.nlm.nih.gov</a>). A 2023 review noted that <strong>targeting pathways regulated by MED13L – such as nuclear receptor signaling – or developing compounds to compensate for MED13/L mutations could have therapeutic benefit</strong> for dilated cardiomyopathy or heart defects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification">pmc.ncbi.nlm.nih.gov</a>). This is uncharted territory but highlights the potential of MED13L as a drug target. In terms of real-world applications, one immediate area is using MED13L and its network as <strong>biomarkers</strong>. Because MED13L and MED13 are central to cardiac metabolism, they might serve as early indicators of heart failure or cardiomyopathy risk. Schiano <em>et al.</em> (2023) suggest that evaluating MED13L-regulated gene signatures could improve the precision of cardiovascular disease diagnosis and management (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=match%20at%20L494%20In%20addition%2C,homeostasis%20and%20gene%20regulation%2C%20these">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Meanwhile, the <strong>MED13L patient community</strong> and scientists are actively collaborating. A patient-led organization, the MED13L Syndrome Foundation, was established to accelerate research. In 2023, the foundation, together with clinical experts, published a <strong>Strategic Research Plan (SRP)</strong> to map out priorities for understanding and treating MED13L syndrome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=Scientific%20literature%20is%20reviewed%20in,SRP%20becomes%20a%20living%20resource">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=The%20MED13L%20Foundation%20strategic%20research,plan">pmc.ncbi.nlm.nih.gov</a>). This plan reviews known patient data, identifies gaps (for instance, the need for animal models – which has been partly addressed by the new Med13l knockout mouse), and outlines steps toward <strong>preclinical therapy development</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=Scientific%20literature%20is%20reviewed%20in,SRP%20becomes%20a%20living%20resource">pmc.ncbi.nlm.nih.gov</a>). Key goals include developing outcome measures for future clinical trials and exploring gene therapy or RNA-based approaches to restore MED13L function. The SRP is a “living resource” that will guide researchers and drug developers in the coming years (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=responsible%20for%20growing%20the%20understanding,reach%20their%20organizational%20goals%2C%20including">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=The%20MED13L%20Foundation%20strategic%20research,plan">pmc.ncbi.nlm.nih.gov</a>). Although no specific treatment exists yet for MED13L syndrome, this organized effort is paving the way for possible interventions – whether via <strong>gene therapy</strong> (e.g. delivering a functional MED13L gene) or pharmacologically targeting pathways downstream of MED13L. </p>
+<p>In summary, MED13L is a <strong>master regulator of transcription</strong> with broad influence on human development and physiology. It exemplifies how a single transcriptional cofactor can impact multiple organ systems – brain, heart, muscle – by controlling gene expression programs. Cutting-edge research from 2023–2024 has shed light on its molecular mechanics (such as the IDR “switch” for Mediator activity) and its in vivo roles (from neuron formation to heart muscle maintenance). These advances not only deepen our understanding of fundamental biology but also inform clinical strategies. MED13L’s involvement in critical pathways makes it a compelling subject for ongoing research, with the hope that unraveling its function will lead to targeted therapies for the syndromic disorder and perhaps other conditions (like heart failure and metabolic diseases) where Mediator dysfunction plays a part. As one recent review emphasized, <strong>dysregulation of Mediator subunits like MED13L lies at the crossroads of developmental disorders and common diseases</strong> – thus efforts to comprehend and modulate MED13L function could have far-reaching biomedical impacts (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic">pmc.ncbi.nlm.nih.gov</a>).</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=476, start_index=316, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56')</li>
+<li>AnnotationURLCitation(end_index=872, start_index=712, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56')</li>
+<li>AnnotationURLCitation(end_index=1295, start_index=1139, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=roles%20in%20regulating%20Mediator%20function,is%20limited%20to%20a%20study')</li>
+<li>AnnotationURLCitation(end_index=1676, start_index=1408, title='Mutual Exclusivity of MED12/MED12L, MED13/13L, and CDK8/19 Paral', type='url_citation', url='https://www.longdom.org/open-access/mutual-exclusivity-of-med12med12l-med1313l-and-cdk819paralogs-revealed-within-the-cdkmediator-kinase-module-33208.html#:~:text=larger%20complex%20containing%20the%20CDK8,isolate%20each%20kinase%20module%20member')</li>
+<li>AnnotationURLCitation(end_index=1990, start_index=1860, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=2362, start_index=2192, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13%2C%20MED13L%2C%20MED15%2C%20and%20MED23,rationale%20for%20focusing%20on%20these')</li>
+<li>AnnotationURLCitation(end_index=2493, start_index=2363, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=3206, start_index=3056, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=and%20Roeder%202005%20%29,CDK8%20module%20plays%20multiple%20distinct')</li>
+<li>AnnotationURLCitation(end_index=3556, start_index=3406, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=and%20Roeder%202005%20%29,CDK8%20module%20plays%20multiple%20distinct')</li>
+<li>AnnotationURLCitation(end_index=4026, start_index=3870, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=roles%20in%20regulating%20Mediator%20function,is%20limited%20to%20a%20study')</li>
+<li>AnnotationURLCitation(end_index=4335, start_index=4151, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and')</li>
+<li>AnnotationURLCitation(end_index=4696, start_index=4512, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and')</li>
+<li>AnnotationURLCitation(end_index=4858, start_index=4697, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general')</li>
+<li>AnnotationURLCitation(end_index=5218, start_index=5034, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and')</li>
+<li>AnnotationURLCitation(end_index=5618, start_index=5434, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and')</li>
+<li>AnnotationURLCitation(end_index=5948, start_index=5787, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general')</li>
+<li>AnnotationURLCitation(end_index=6505, start_index=6335, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13%2C%20MED13L%2C%20MED15%2C%20and%20MED23,rationale%20for%20focusing%20on%20these')</li>
+<li>AnnotationURLCitation(end_index=6865, start_index=6665, title='An intrinsically disordered region in MED13 turns Mediator on/off on cue - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off')</li>
+<li>AnnotationURLCitation(end_index=7292, start_index=7092, title='An intrinsically disordered region in MED13 turns Mediator on/off on cue - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off')</li>
+<li>AnnotationURLCitation(end_index=7665, start_index=7465, title='An intrinsically disordered region in MED13 turns Mediator on/off on cue - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off')</li>
+<li>AnnotationURLCitation(end_index=8442, start_index=8242, title='An intrinsically disordered region in MED13 turns Mediator on/off on cue - ScienceDirect', type='url_citation', url='https://www.sciencedirect.com/science/article/abs/pii/S1097276524006257#:~:text=Complementary%20studies%20by%20Zhao%20et%C2%A0al.,transcription%20activation%20on%20and%20off')</li>
+<li>AnnotationURLCitation(end_index=9059, start_index=8888, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=reversibly%20associates%20with%20Mediator%20to,CDK8%20module%20plays%20multiple%20distinct')</li>
+<li>AnnotationURLCitation(end_index=9404, start_index=9233, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=reversibly%20associates%20with%20Mediator%20to,CDK8%20module%20plays%20multiple%20distinct')</li>
+<li>AnnotationURLCitation(end_index=10119, start_index=9973, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=In%20addition%20to%20mediator%20components%2C,Complementation')</li>
+<li>AnnotationURLCitation(end_index=11051, start_index=10904, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=11231, start_index=11052, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=simplified%20neuronal%20morphology%20in%20the,reveal%20that%20MED13L%20orchestrates%20cortical')</li>
+<li>AnnotationURLCitation(end_index=11464, start_index=11317, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=11757, start_index=11610, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=12197, start_index=12050, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=12604, start_index=12425, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=simplified%20neuronal%20morphology%20in%20the,reveal%20that%20MED13L%20orchestrates%20cortical')</li>
+<li>AnnotationURLCitation(end_index=12927, start_index=12778, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=dendrite%20development,in%20the%20developing%20cerebral%20cortex')</li>
+<li>AnnotationURLCitation(end_index=13313, start_index=13164, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=dendrite%20development,in%20the%20developing%20cerebral%20cortex')</li>
+<li>AnnotationURLCitation(end_index=13582, start_index=13425, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=exhibit%20neonatal%20lethality%20accompanied%20by,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=13740, start_index=13583, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=match%20at%20L714%20In%20addition,These%20dendritic%20abnormalities%20in')</li>
+<li>AnnotationURLCitation(end_index=14380, start_index=14230, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits')</li>
+<li>AnnotationURLCitation(end_index=15133, start_index=15005, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=,provided%20by%20RefSeq%2C%20Jul%202010')</li>
+<li>AnnotationURLCitation(end_index=15289, start_index=15134, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=match%20at%20L466%20MED13L%20has,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=15594, start_index=15453, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in')</li>
+<li>AnnotationURLCitation(end_index=15926, start_index=15776, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits')</li>
+<li>AnnotationURLCitation(end_index=16437, start_index=16346, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L')</li>
+<li>AnnotationURLCitation(end_index=16598, start_index=16438, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=17003, start_index=16843, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=17308, start_index=17148, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=17961, start_index=17829, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the')</li>
+<li>AnnotationURLCitation(end_index=18131, start_index=17962, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of')</li>
+<li>AnnotationURLCitation(end_index=18485, start_index=18347, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20then%20performed%20a%20survival,This%20indicates')</li>
+<li>AnnotationURLCitation(end_index=18905, start_index=18742, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=they%20are%20two%20distinct%20model,respective%20subunit%20results%20in%20gene')</li>
+<li>AnnotationURLCitation(end_index=19075, start_index=18906, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of')</li>
+<li>AnnotationURLCitation(end_index=19430, start_index=19298, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the')</li>
+<li>AnnotationURLCitation(end_index=19565, start_index=19431, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=four%20Mediator%20cardiac%20knockouts%20%28Fig,We')</li>
+<li>AnnotationURLCitation(end_index=19810, start_index=19678, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=We%20investigated%20the%20overlap%20of,of%20the')</li>
+<li>AnnotationURLCitation(end_index=19980, start_index=19811, title='Med13 and Med13L: Critical redundant players in basal cardiac function and gene expression - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12451381/#:~:text=The%2091%20overlapping%20genes%20between,highlight%20the%20redundant%20function%20of')</li>
+<li>AnnotationURLCitation(end_index=20587, start_index=20416, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=21363, start_index=21261, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=21535, start_index=21364, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=21801, start_index=21680, title='Heart- and muscle-derived signaling system dependent on MED13 and Wingless controls obesity in Drosophila - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4084481/#:~:text=Heart,Duby%20%5E%7B1%7D%2C%20Eric%20N')</li>
+<li>AnnotationURLCitation(end_index=22196, start_index=22025, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=22454, start_index=22283, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=22927, start_index=22756, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=23089, start_index=22928, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification')</li>
+<li>AnnotationURLCitation(end_index=23683, start_index=23543, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition')</li>
+<li>AnnotationURLCitation(end_index=24204, start_index=24016, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=Shading%20indicates%20gene%20products%20identifed,MED27%2C%20MED13L%2C%20DNAJA1%2C%20ZCCHC10%2C%20TARDBP')</li>
+<li>AnnotationURLCitation(end_index=24335, start_index=24205, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=MED13L%20is%20a%20functional%20Rb%2FE2F,factor')</li>
+<li>AnnotationURLCitation(end_index=24683, start_index=24543, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition')</li>
+<li>AnnotationURLCitation(end_index=24850, start_index=24684, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=requirement%20for%20MED13L%20in%20Rb%2FE2F,selected%20with%20hygromycin%20for%2019')</li>
+<li>AnnotationURLCitation(end_index=25236, start_index=25071, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=To%20determine%20whether%20MED13L%20played,inhibition%20of%20DNA%20synthesis%20by')</li>
+<li>AnnotationURLCitation(end_index=25411, start_index=25237, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=This%20suggested%20that%20the%20depletion,contrast%2C%20cells%20transfected%20with%20siRNA')</li>
+<li>AnnotationURLCitation(end_index=25659, start_index=25519, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition')</li>
+<li>AnnotationURLCitation(end_index=26372, start_index=26240, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=match%20at%20L35%20up%20to,2007%29%20and%20degrades')</li>
+<li>AnnotationURLCitation(end_index=26534, start_index=26373, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=Here%2C%20we%20demonstrate%20that%20the,Fbw7%20likely%20represents%20a%20general')</li>
+<li>AnnotationURLCitation(end_index=26966, start_index=26782, title='The SCF–Fbw7 ubiquitin ligase degrades MED13 and MED13L and regulates CDK8 module association with Mediator', type='url_citation', url='https://genesdev.cshlp.org/content/27/2/151.long#:~:text=that%20Fbw7%2C%20a%20tumor%20suppressor,regulating%20CDK8%20module%E2%80%93Mediator%20association%20and')</li>
+<li>AnnotationURLCitation(end_index=27107, start_index=26967, title='A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3707121/#:~:text=transcription,genes%2C%20and%20cell%20cycle%20inhibition')</li>
+<li>AnnotationURLCitation(end_index=27634, start_index=27478, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=This%20subunit%20may%20specifically%20regulate,MD13L_HUMAN%2CQ71F56')</li>
+<li>AnnotationURLCitation(end_index=27922, start_index=27766, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=This%20subunit%20may%20specifically%20regulate,MD13L_HUMAN%2CQ71F56')</li>
+<li>AnnotationURLCitation(end_index=28477, start_index=28306, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,the%20Wnt%20signaling%20pathway%20and')</li>
+<li>AnnotationURLCitation(end_index=28599, start_index=28478, title='Heart- and muscle-derived signaling system dependent on MED13 and Wingless controls obesity in Drosophila - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4084481/#:~:text=Heart,Duby%20%5E%7B1%7D%2C%20Eric%20N')</li>
+<li>AnnotationURLCitation(end_index=28914, start_index=28785, title='MED12 mutations link intellectual disability syndromes with dysregulated GLI3-dependent Sonic Hedgehog signaling - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/23091001/#:~:text=GLI3,subsequently%20with%20an%20internal%20control')</li>
+<li>AnnotationURLCitation(end_index=29318, start_index=29158, title='MED13L Gene - GeneCards | MD13L Protein | MD13L Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=MED13L#:~:text=Component%20of%20the%20Mediator%20complex%2C,%28%20MD13L_HUMAN%2CQ71F56')</li>
+<li>AnnotationURLCitation(end_index=30755, start_index=30605, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=disability%20%28ID%29,in%20combination%20with%20articulatory%20deficits')</li>
+<li>AnnotationURLCitation(end_index=31038, start_index=30897, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in')</li>
+<li>AnnotationURLCitation(end_index=31186, start_index=31039, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift')</li>
+<li>AnnotationURLCitation(end_index=31458, start_index=31310, title='MED13L Syndrome - GeneReviews® - NCBI Bookshelf', type='url_citation', url='https://www.ncbi.nlm.nih.gov/books/NBK613517/#:~:text=MED13L%20Syndrome%20,the%20phenotypic%20features%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=31820, start_index=31679, title='Redefining the MED13L syndrome - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/25758992/#:~:text=through%20DNA,profound%20language%20impairment%2C%20often%20in')</li>
+<li>AnnotationURLCitation(end_index=31981, start_index=31821, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=32279, start_index=32119, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=MED13L%20has%20been%20implicated%20in,gene%20has%20been%20associated%20with')</li>
+<li>AnnotationURLCitation(end_index=32641, start_index=32494, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift')</li>
+<li>AnnotationURLCitation(end_index=32985, start_index=32838, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=aortic%20coarctation,intron%2C%20leading%20to%20a%20frameshift')</li>
+<li>AnnotationURLCitation(end_index=33343, start_index=33196, title='Regulation of cortical neurogenesis by MED13L via transcriptional priming and its implications for MED13L syndrome - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12331956/#:~:text=mechanisms%20remain%20largely%20elusive,cell%20transcriptomics')</li>
+<li>AnnotationURLCitation(end_index=33731, start_index=33637, title='MED13L Syndrome - GeneReviews® - NCBI Bookshelf', type='url_citation', url='https://www.ncbi.nlm.nih.gov/sites/books/n/gene/med13l/#:~:text=,The')</li>
+<li>AnnotationURLCitation(end_index=34451, start_index=34280, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=34613, start_index=34452, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification')</li>
+<li>AnnotationURLCitation(end_index=35028, start_index=34857, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+<li>AnnotationURLCitation(end_index=35190, start_index=35029, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=disorders%20and%20specific%20CVDs,NRs%20signaling%20and%20RNA%20modification')</li>
+<li>AnnotationURLCitation(end_index=35852, start_index=35682, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=match%20at%20L494%20In%20addition%2C,homeostasis%20and%20gene%20regulation%2C%20these')</li>
+<li>AnnotationURLCitation(end_index=36382, start_index=36215, title='The MED13L Foundation strategic research plan: a roadmap to the future - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=Scientific%20literature%20is%20reviewed%20in,SRP%20becomes%20a%20living%20resource')</li>
+<li>AnnotationURLCitation(end_index=36521, start_index=36383, title='The MED13L Foundation strategic research plan: a roadmap to the future - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=The%20MED13L%20Foundation%20strategic%20research,plan')</li>
+<li>AnnotationURLCitation(end_index=36917, start_index=36750, title='The MED13L Foundation strategic research plan: a roadmap to the future - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=Scientific%20literature%20is%20reviewed%20in,SRP%20becomes%20a%20living%20resource')</li>
+<li>AnnotationURLCitation(end_index=37358, start_index=37170, title='The MED13L Foundation strategic research plan: a roadmap to the future - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=responsible%20for%20growing%20the%20understanding,reach%20their%20organizational%20goals%2C%20including')</li>
+<li>AnnotationURLCitation(end_index=37497, start_index=37359, title='The MED13L Foundation strategic research plan: a roadmap to the future - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC11605767/#:~:text=The%20MED13L%20Foundation%20strategic%20research,plan')</li>
+<li>AnnotationURLCitation(end_index=39047, start_index=38917, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=complex,and%20therapeutic%20target%20in%20the')</li>
+<li>AnnotationURLCitation(end_index=39219, start_index=39048, title='Mediator complex: update of key insights into transcriptional regulation of ancestral framework and its role in cardiovascular diseases - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC12183845/#:~:text=The%20role%20of%20cardiac%20MED13L,therapeutic%20target%20for%20addressing%20metabolic')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q71F56
+gene_symbol: MED13L
+aliases:
+  - KIAA1025
+  - PROSIT240
+  - THRAP2
+  - TRAP240L
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a non-enzymatic
+  subunit of the Mediator complex&#39;s CDK8 kinase module (CKM). The protein functions as a
+  structural tether linking the CKM to core Mediator (cMED), regulating Pol II engagement
+  and transcriptional programs. MED13L contains an Ago-like domain architecture with
+  intrinsically disordered regions (IDRs) that can restrict or allow cMED interaction with
+  Pol II/MED26, thereby modulating promoter-proximal events including initiation and
+  pause-release. The protein localizes primarily to the nucleus and is required for Rb/E2F
+  control of cell growth and neuronal dendritic development. Pathogenic variants cause
+  MED13L syndrome characterized by developmental delay, intellectual disability, speech
+  impairment, and congenital heart defects.
+existing_annotations:
+- term:
+    id: GO:0003712
+    label: transcription coregulator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      MED13L is a non-enzymatic subunit of the Mediator complex&#39;s CDK8 kinase module (CKM)
+      that functions as a coregulator of transcription by RNA polymerase II. It modulates
+      transcription through its structural/tethering role in the CKM. Deep research confirms
+      MED13L has an Ago-like domain architecture with intrinsically disordered regions (IDRs)
+      that regulate Pol II access to the core Mediator.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core molecular function of MED13L. The protein is part of the Mediator complex
+      and directly regulates transcription as a coregulator. PMID:22249253 demonstrates that
+      MED13L is required for Rb/E2F transcriptional control. Deep research provides
+      structural basis for the coregulatory mechanism.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth,
+          the complete repression of cell cycle target genes, and cell cycle inhibition
+      - reference_id: file:human/MED13L/MED13L-deep-research-falcon.md
+        supporting_text: &gt;-
+          MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a
+          non-enzymatic subunit of the Mediator complex&#39;s cyclin-dependent kinase module (CKM)
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      MED13L localizes primarily to the nucleus, consistent with its role as a Mediator
+      complex subunit involved in transcription regulation by RNA polymerase II.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is the primary subcellular location for MED13L, consistent with
+      its function in the Mediator complex which operates in the nucleus to regulate
+      transcription. Deep research confirms primarily nuclear localization with additional
+      neuronal synapse localization reported.
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      MED13L is involved in DNA-templated transcription as a component of the Mediator
+      complex, which is a large multiprotein coactivator required for RNA polymerase II
+      transcription.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core biological process for MED13L. The Mediator complex is central to
+      transcription by RNA polymerase II, and MED13L is an essential subunit.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          components of the Mediator complex, a large multiprotein coactivator required for
+          RNA polymerase II transcription
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      MED13L regulates transcription by RNA polymerase II through its tethering role in the
+      CDK8 kinase module, which modulates Mediator-Pol II interactions and promoter-proximal
+      events including initiation and pause-release.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core biological process function of MED13L. The protein regulates Pol II
+      transcription by controlling access of Pol II to the core Mediator through its
+      intrinsically disordered regions.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth,
+          the complete repression of cell cycle target genes
+- term:
+    id: GO:0016592
+    label: mediator complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      MED13L is definitionally a component of the Mediator complex, specifically the CDK8
+      kinase module (CKM) which associates with the core Mediator. The IEA annotation to
+      the broader mediator complex term is appropriate as a general annotation. More
+      specifically, MED13L resides in the CKM complex (GO:1990508) which reversibly
+      associates with the core Mediator.
+    action: ACCEPT
+    reason: &gt;-
+      This is a valid cellular component annotation for MED13L. The gene encodes Mediator
+      of RNA polymerase II transcription subunit 13-like, and MED13L is a bona fide subunit
+      of the Mediator complex. Deep research confirms MED13L as a CKM tether that links
+      the CKM to core Mediator. While a more specific annotation to CKM complex
+      (GO:1990508) could be added, this general annotation remains correct.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          components of the Mediator complex, a large multiprotein coactivator required for
+          RNA polymerase II transcription
+      - reference_id: file:human/MED13L/MED13L-deep-research-falcon.md
+        supporting_text: &gt;-
+          Member of Mediator CDK8 kinase module (CKM) paralog set MED12/12L, MED13/13L,
+          CDK8/19, cyclin C; MED13L (paralog of MED13) tethers CKM to core Mediator and
+          can modulate Pol II access
+- term:
+    id: GO:0003713
+    label: transcription coactivator activity
+  evidence_type: IDA
+  original_reference_id: PMID:22249253
+  review:
+    summary: &gt;-
+      PMID:22249253 demonstrated through a genome-wide shRNA screen that MED13L is required
+      for Rb/E2F-mediated transcriptional control. The study showed that MED13L is essential
+      for both transcriptional activation and repression of cell cycle target genes.
+    action: ACCEPT
+    reason: &gt;-
+      This is supported by direct experimental evidence from PMID:22249253. While the Mediator
+      complex can function in both activation and repression, the coactivator function is a
+      well-established aspect of Mediator biology.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          components of the Mediator complex, a large multiprotein coactivator required for
+          RNA polymerase II transcription
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IDA
+  original_reference_id: PMID:22249253
+  review:
+    summary: &gt;-
+      PMID:22249253 demonstrated that MED13L is required for proper regulation of cell cycle
+      target genes. As a Mediator complex subunit, MED13L contributes to positive regulation
+      of transcription through the coactivator function of Mediator.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by direct experimental evidence. The Mediator complex is required for
+      RNA polymerase II transcription, and MED13L is essential for this function.
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          components of the Mediator complex, a large multiprotein coactivator required for
+          RNA polymerase II transcription
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9836857
+  review:
+    summary: &gt;-
+      The nucleoplasm localization is consistent with MED13L&#39;s role in the Mediator complex,
+      which functions in the nucleoplasm to regulate RNA polymerase II transcription.
+    action: ACCEPT
+    reason: &gt;-
+      This is a valid subcellular localization annotation. Mediator complex subunits are
+      expected to localize to the nucleoplasm where they function in transcription regulation.
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: PMID:22249253
+  title: A role for Mediator complex subunit MED13L in Rb/E2F-induced growth arrest.
+  findings:
+    - statement: MED13L is required for Rb/E2F control of cell growth and cell cycle gene regulation
+      supporting_text: &gt;-
+        the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth,
+        the complete repression of cell cycle target genes, and cell cycle inhibition
+    - statement: Mediator complex is a multiprotein coactivator required for Pol II transcription
+      supporting_text: &gt;-
+        components of the Mediator complex, a large multiprotein coactivator required for
+        RNA polymerase II transcription
+- id: Reactome:R-HSA-9836857
+  title: NS1 (1C) binds to Mediator complex
+  findings: []
+- id: file:human/MED13L/MED13L-deep-research-falcon.md
+  title: Deep research review of MED13L function
+  findings:
+    - statement: MED13L functions as a CKM tether with Ago-like domain architecture
+      supporting_text: &gt;-
+        MED13L encodes Mediator of RNA polymerase II transcription subunit 13-like, a
+        non-enzymatic subunit of the Mediator complex&#39;s cyclin-dependent kinase module (CKM)
+    - statement: MED13L is required for neuronal dendritic development
+      supporting_text: &gt;-
+        MED13L is required for dendritic development of cortical excitatory neurons;
+        disease-associated variants impact subcellular distribution/stability and reduce
+        dendrite number/length or spine maturation
+
+core_functions:
+  - description: &gt;-
+      MED13L functions as a structural tether within the Mediator CDK8 kinase module (CKM),
+      linking the CKM to core Mediator and regulating RNA polymerase II engagement at
+      promoters through its intrinsically disordered regions.
+    molecular_function:
+      id: GO:0003712
+      label: transcription coregulator activity
+    directly_involved_in:
+      - id: GO:0006357
+        label: regulation of transcription by RNA polymerase II
+    locations:
+      - id: GO:0016592
+        label: mediator complex
+      - id: GO:0005654
+        label: nucleoplasm
+    supported_by:
+      - reference_id: PMID:22249253
+        supporting_text: &gt;-
+          the Mediator complex subunit MED13L is required for Rb/E2F control of cell growth,
+          the complete repression of cell cycle target genes, and cell cycle inhibition
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: What is the specific mechanism by which MED13L IDRs regulate Pol II access to core Mediator?
+  - question: How does MED13L contribute to neuronal development at the transcriptional level?
+  - question: Are there tissue-specific functions of MED13L beyond its general role in transcription?
+
+suggested_experiments:
+  - description: Cryo-EM structure of MED13L-containing CKM in complex with core Mediator and Pol II
+    hypothesis: Structural analysis could reveal the mechanism of IDR-mediated gating of Pol II access
+  - description: ChIP-seq and RNA-seq in MED13L-deficient neurons to identify direct target genes
+    hypothesis: This would reveal the transcriptional programs regulated by MED13L in neurons
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

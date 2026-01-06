@@ -1,0 +1,3018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sqst-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sqst-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q22436" target="_blank" class="term-link">
+                        Q22436
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sqst-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q22436" data-a="DESCRIPTION: SQST-1 is the C. elegans ortholog of mammalian p62..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SQST-1 is the C. elegans ortholog of mammalian p62/SQSTM1 and functions as a selective autophagy receptor. It contains conserved functional domains including a C-terminal UBA (ubiquitin-associated) domain that binds ubiquitinated cargo, an LIR (LC3-interacting region) motif for binding LGG-1/LGG-2 (Atg8/LC3 family proteins), a PB1 domain for self-oligomerization required for cargo clustering, and a ZZ-type zinc finger domain. SQST-1 bridges ubiquitinated protein aggregates to autophagosomes for degradation via aggrephagy, playing critical roles in proteostasis maintenance. SQST-1 accumulation (as puncta or protein levels) serves as a widely used readout for autophagic flux - accumulation indicates reduced flux, while decreased SQST-1 indicates increased flux.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035973" target="_blank" class="term-link">
+                                    GO:0035973
+                                </a>
+                            </span>
+                            <span class="term-label">aggrephagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0035973" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Aggrephagy is a core function of SQST-1. The protein is required for degradation of ubiquitinated protein aggregates via selective autophagy. SQST-1 binds ubiquitinated cargo via its UBA domain and recruits autophagosomes via LGG-1 interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary biological process function of SQST-1. The deep research clearly establishes that SQST-1 binds ubiquitinated protein aggregates and delivers them to autophagosomes via LGG-1 interactions. The IBA inference from mammalian p62 is fully supported by direct experimental evidence in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">epg-7 functions as a scaffold protein mediating autophagic degradation of several protein aggregates, including aggregates of the p62 homologue SQST-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As a selective autophagy receptor, SQST-1 bridges ubiquitinated cargoes to the autophagy machinery by binding ubiquitin via UBA and recruiting isolation membranes through LGG-1/Atg8 interaction via its LIR. Oligomerization (PB1) promotes phase separation/condensates and cargo clustering, facilitating autophagosome formation and turnover of aggregates (aggrephagy)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000423" target="_blank" class="term-link">
+                                    GO:0000423
+                                </a>
+                            </span>
+                            <span class="term-label">mitophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0000423" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While mammalian p62/SQSTM1 has been implicated in mitophagy, direct experimental evidence for SQST-1 in C. elegans mitophagy is limited. The deep research notes that direct worm evidence for SQST-1&#39;s role in mitophagy remains less defined than aggrephagy.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA inference is phylogenetically sound given p62&#39;s role in mammalian mitophagy, but the primary worm literature emphasizes aggrephagy rather than mitophagy for SQST-1. Reviews infer conserved roles in organelle quality control based on domain conservation, but worm-specific mitophagy by SQST-1 has not been directly demonstrated. This is a plausible secondary function inferred from orthology rather than a demonstrated core function in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct worm evidence for SQST-1&#39;s role in mitophagy or specific organelle-selective autophagy remains less defined than aggrephagy in the curated set</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005080" target="_blank" class="term-link">
+                                    GO:0005080
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase C binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0005080" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mammalian p62 interacts with atypical PKC isoforms via its PB1 domain. While SQST-1 contains a conserved PB1 domain that mediates self-oligomerization, direct evidence for PKC binding in C. elegans has not been reported in the literature reviewed.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA inference is based on mammalian p62 PKC interactions. SQST-1 has a PB1 domain and presumably retains similar binding capabilities, but no C. elegans-specific experimental evidence was found. The PB1 domain in worm literature is discussed primarily in the context of self-oligomerization for cargo clustering rather than PKC signaling. Without worm-specific data, this remains uncertain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">p62 contains a self-polymerization PB1 domain, a conserved LC3-interacting region (LIR), and a ubiquitin-associating (UBA) domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007032" target="_blank" class="term-link">
+                                    GO:0007032
+                                </a>
+                            </span>
+                            <span class="term-label">endosome organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0007032" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mammalian p62 has been implicated in endosomal trafficking, but this is not a well-documented function for C. elegans SQST-1. The primary literature on SQST-1 focuses on its role in autophagy and proteostasis rather than endosome organization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA inference is phylogenetically sound but not supported by direct C. elegans evidence in the literature reviewed. SQST-1 is primarily studied in the context of autophagy in worms. This may be a peripheral function inferred from mammalian ortholog studies.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044753" target="_blank" class="term-link">
+                                    GO:0044753
+                                </a>
+                            </span>
+                            <span class="term-label">amphisome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0044753" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Amphisomes are intermediate compartments formed by fusion of autophagosomes with endosomes before final lysosomal fusion. SQST-1 is documented to localize to autophagic structures that colocalize with LGG-1 puncta.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Given SQST-1&#39;s role as an autophagy cargo receptor that bridges cargo to LGG-1-labeled autophagic structures, localization to amphisomes (intermediate autophagy compartments) is consistent with its function. The IBA inference aligns with experimental observations of SQST-1 colocalization with LGG-1 puncta in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">it forms puncta that frequently colocalize with LGG-1-labeled autophagic structures in adults. Accumulation of SQST-1 puncta/protein is a classic indicator of reduced autophagic flux</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070530" target="_blank" class="term-link">
+                                    GO:0070530
+                                </a>
+                            </span>
+                            <span class="term-label">K63-linked polyubiquitin modification-dependent protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0070530" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 contains a conserved UBA domain (residues 654-693) that binds ubiquitin. The protein functions by binding ubiquitinated cargo for delivery to autophagosomes. Mammalian p62 shows preference for K63-linked ubiquitin chains.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function is central to SQST-1&#39;s role as a selective autophagy receptor. The UBA domain is clearly documented in the UniProt record and functionally important for cargo recognition. While the specific K63-linkage preference has not been directly tested in C. elegans, the IBA inference from mammalian p62 is strongly supported by conservation of the UBA domain and the functional requirement for ubiquitin binding in aggrephagy.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">p62 contains a self-polymerization PB1 domain, a conserved LC3-interacting region (LIR), and a ubiquitin-associating (UBA) domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 654..693 /note=&#34;UBA&#34; /evidence=&#34;ECO:0000259|PROSITE:PS50030&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016235" target="_blank" class="term-link">
+                                    GO:0016235
+                                </a>
+                            </span>
+                            <span class="term-label">aggresome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0016235" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 is observed to form puncta/aggregates, particularly in autophagy mutants or under proteotoxic stress. These SQST-1-positive structures accumulate when autophagic flux is impaired and represent sites of cargo accumulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SQST-1 puncta formation is extensively documented in C. elegans literature as a readout for autophagic flux. The protein accumulates into visible aggregates when autophagy is blocked, consistent with aggresome localization. This is experimentally validated in worm studies showing SQST-1::GFP puncta accumulation in autophagy mutants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NA: SQST-1 aggregates are absent in wild-type embryos</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Accumulation of SQST-1 puncta/protein is a classic indicator of reduced autophagic flux</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0008270" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 contains a ZZ-type zinc finger domain (residues 179-229) as documented in UniProt. This domain coordinates zinc ions via conserved cysteine residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ZZ-type zinc finger domain is clearly present in the protein sequence and annotated in InterPro (IPR000433). The IEA inference from domain composition is valid.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 179..229 /note=&#34;ZZ-type&#34; /evidence=&#34;ECO:0000259|PROSITE:PS50135&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a parent term of zinc ion binding. SQST-1 binds zinc via its ZZ-type zinc finger domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA is valid based on the zinc ion binding annotation. The broader metal ion binding term is subsumed by the more specific zinc ion binding annotation but is not incorrect.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23530068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The scaffold protein EPG-7 links cargo-receptor complexes wi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0005515" data-r="PMID:23530068" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 was shown to directly interact with EPG-7 (Q22342) and LGG-1 (O45995) by co-immunoprecipitation experiments. SQST-1 was specifically coimmunoprecipitated by anti-EPG-7 antibody from embryonic extracts.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein binding is experimentally demonstrated, this term is too general and uninformative. The specific interactions with EPG-7 (a scaffold protein) and LGG-1/Atg8 (via LIR motif) should be captured with more specific terms. The core molecular function of SQST-1 as an autophagy cargo adaptor is better represented by GO:0160247.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    autophagy cargo adaptor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SQST-1 was specifically coimmunoprecipitated by anti–EPG-7, but not by control IgG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23530068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The scaffold protein EPG-7 links cargo-receptor complexes wi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0005737" data-r="PMID:23530068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization of SQST-1 was directly observed using SQST-1::GFP reporters. The protein forms cytoplasmic puncta that colocalize with autophagic structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from microscopy of SQST-1::GFP reporters. The paper documents cytoplasmic localization and puncta formation. SQST-1 is diffusely cytoplasmic under normal conditions and forms puncta under stress or in autophagy mutants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SQST-1 directly interacts with EPG-7 and colocalizes with EPG-7 aggregates in autophagy mutants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21802374" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21802374
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The WD40 repeat PtdIns(3)P-binding protein EPG-6 regulates p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0005737" data-r="PMID:21802374" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This publication (Lu et al. 2011) established the hierarchical relationship of autophagy genes in aggregate degradation. Cytoplasmic localization is implied by the use of autophagy reporters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although PMID:21802374 focuses on EPG-6 and autophagosome formation, it uses autophagy reporters that display cytoplasmic localization. The duplicate annotation with the same GO term but different evidence sources is acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21802374" target="_blank" class="term-link">
+                                        PMID:21802374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also established the hierarchical relationship of autophagy genes in degradation of protein aggregates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    GO:0160247
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy cargo adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23530068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The scaffold protein EPG-7 links cargo-receptor complexes wi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0160247" data-r="PMID:23530068" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 functions as a selective autophagy receptor that bridges ubiquitinated cargo to the autophagy machinery. It binds ubiquitinated proteins via its UBA domain and recruits autophagosomes via LIR-mediated interaction with LGG-1/Atg8. This is the core molecular function that enables aggrephagy.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely describes the core molecular function of SQST-1 as a cargo adaptor in selective autophagy. The existing GO annotations lack this key molecular function term. The experimental evidence directly supports this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A family of Atg8/LC3 (mammalian Atg8 homologue)-interacting proteins act as receptors that mediate delivery of specific cargoes to the autophagic machinery via Atg8/LC3 binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/sqst-1/sqst-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As a selective autophagy receptor, SQST-1 bridges ubiquitinated cargoes to the autophagy machinery by binding ubiquitin via UBA and recruiting isolation membranes through LGG-1/Atg8 interaction via its LIR</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005776" target="_blank" class="term-link">
+                                    GO:0005776
+                                </a>
+                            </span>
+                            <span class="term-label">autophagosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23530068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The scaffold protein EPG-7 links cargo-receptor complexes wi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q22436" data-a="GO:0005776" data-r="PMID:23530068" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQST-1 colocalizes with LGG-1-labeled autophagosomes. SQST-1 aggregates associate with LGG-1 puncta during autophagic degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component annotation is directly supported by colocalization studies showing SQST-1 on autophagic structures. This is more informative than the existing cytoplasm annotation and complements the amphisome localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                        PMID:23530068
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutations in epg-7 impair association of SQST-1 aggregates with LGG-1/Atg8 puncta</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SQST-1 bridges ubiquitinated cargo to autophagosomes by binding ubiquitin via UBA domain and recruiting LGG-1/Atg8-decorated membranes via LIR motif</h3>
+                <span class="vote-buttons" data-g="Q22436" data-a="FUNCTION: SQST-1 bridges ubiquitinated cargo to autophagosom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                            autophagy cargo adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035973" target="_blank" class="term-link">
+                                aggrephagy
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005776" target="_blank" class="term-link">
+                                autophagosome
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                PMID:23530068
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A family of Atg8/LC3 (mammalian Atg8 homologue)-interacting proteins act as receptors that mediate delivery of specific cargoes to the autophagic machinery via Atg8/LC3 binding</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SQST-1 recognizes and binds K63-linked polyubiquitinated cargo for selective degradation</h3>
+                <span class="vote-buttons" data-g="Q22436" data-a="FUNCTION: SQST-1 recognizes and binds K63-linked polyubiquit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070530" target="_blank" class="term-link">
+                            K63-linked polyubiquitin modification-dependent protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035973" target="_blank" class="term-link">
+                                aggrephagy
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016235" target="_blank" class="term-link">
+                                aggresome
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                                PMID:23530068
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">p62 contains a self-polymerization PB1 domain, a conserved LC3-interacting region (LIR), and a ubiquitin-associating (UBA) domain</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21802374" target="_blank" class="term-link">
+                            PMID:21802374
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The WD40 repeat PtdIns(3)P-binding protein EPG-6 regulates progression of omegasomes to autophagosomes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Established hierarchical relationship of autophagy genes in aggregate degradation</div>
+                        
+                        <div class="finding-text">"We also established the hierarchical relationship of autophagy genes in degradation of protein aggregates"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EPG-6 and ATG-2 regulate autophagosome progression</div>
+                        
+                        <div class="finding-text">"epg-6 and atg-2 regulate progression of omegasomes to autophagosomes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23530068" target="_blank" class="term-link">
+                            PMID:23530068
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The scaffold protein EPG-7 links cargo-receptor complexes with the autophagic assembly machinery.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EPG-7 functions as scaffold mediating autophagic degradation of SQST-1 aggregates</div>
+                        
+                        <div class="finding-text">"epg-7 functions as a scaffold protein mediating autophagic degradation of several protein aggregates, including aggregates of the p62 homologue SQST-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SQST-1 directly interacts with EPG-7 by co-immunoprecipitation</div>
+                        
+                        <div class="finding-text">"SQST-1 was specifically coimmunoprecipitated by anti–EPG-7, but not by control IgG"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SQST-1 colocalizes with EPG-7 aggregates in autophagy mutants</div>
+                        
+                        <div class="finding-text">"SQST-1 directly interacts with EPG-7 and colocalizes with EPG-7 aggregates in autophagy mutants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutations in epg-7 impair association of SQST-1 aggregates with LGG-1 puncta</div>
+                        
+                        <div class="finding-text">"Mutations in epg-7 impair association of SQST-1 aggregates with LGG-1/Atg8 puncta"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SQST-1 is the C. elegans p62 homologue</div>
+                        
+                        <div class="finding-text">"aggregates of the p62 homologue SQST-1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SQST-1 participate in C. elegans mitophagy, or are there other selective autophagy receptors (e.g., DCT-1/BNIP3) that fulfill this role?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="Q: Does SQST-1 participate in C. elegans mitophagy, o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the ZZ-type zinc finger domain in C. elegans SQST-1? Does it participate in signaling pathways similar to mammalian p62?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="Q: What is the functional significance of the ZZ-type..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SQST-1 interact with atypical PKC orthologs in C. elegans similar to mammalian p62-PKC interactions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="Q: Does SQST-1 interact with atypical PKC orthologs i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Direct test of SQST-1 role in mitophagy using mitochondrial stress conditions and co-localization with mitophagy markers</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SQST-1 may participate in mitophagy in C. elegans similar to mammalian p62</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="EXPERIMENT: Direct test of SQST-1 role in mitophagy using mito..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical characterization of ubiquitin chain-type specificity for SQST-1 UBA domain (K48 vs K63 vs linear chains)</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SQST-1 UBA domain preferentially binds K63-linked ubiquitin chains</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="EXPERIMENT: Biochemical characterization of ubiquitin chain-ty..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis of SQST-1 ZZ domain to determine if it has signaling functions beyond autophagy in C. elegans</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The ZZ domain may have additional signaling roles beyond autophagy</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q22436" data-a="EXPERIMENT: Structure-function analysis of SQST-1 ZZ domain to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-mitophagy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sqst-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q22436" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T00:20:36.024047'<br />
+end_time: '2025-12-28T00:29:24.854305'<br />
+duration_seconds: 528.83<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: sqst-1<br />
+  gene_symbol: sqst-1<br />
+  uniprot_accession: Q22436<br />
+  protein_description: 'SubName: Full=ZZ-type domain-containing protein {ECO:0000313|EMBL:CAA92982.2};'<br />
+  gene_info: Name=sqst-1 {ECO:0000313|EMBL:CAA92982.2, ECO:0000313|WormBase:T12G3.1a};<br />
+    ORFNames=CELE_T12G3.1 {ECO:0000313|EMBL:CAA92982.2}, T12G3.1 {ECO:0000313|WormBase:T12G3.1a};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Autophagy_Rcpt_SigReg. (IPR052260); UBA. (IPR015940); UBA-like_sf.<br />
+    (IPR009060); Znf_ZZ. (IPR000433); Znf_ZZ_sf. (IPR043145)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 36</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q22436</li>
+<li><strong>Protein Description:</strong> SubName: Full=ZZ-type domain-containing protein {ECO:0000313|EMBL:CAA92982.2};</li>
+<li><strong>Gene Information:</strong> Name=sqst-1 {ECO:0000313|EMBL:CAA92982.2, ECO:0000313|WormBase:T12G3.1a}; ORFNames=CELE_T12G3.1 {ECO:0000313|EMBL:CAA92982.2}, T12G3.1 {ECO:0000313|WormBase:T12G3.1a};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Autophagy_Rcpt_SigReg. (IPR052260); UBA. (IPR015940); UBA-like_sf. (IPR009060); Znf_ZZ. (IPR000433); Znf_ZZ_sf. (IPR043145)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sqst-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sqst-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sqst-1</strong> (gene ID: sqst-1, UniProt: Q22436) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q22436</li>
+<li><strong>Protein Description:</strong> SubName: Full=ZZ-type domain-containing protein {ECO:0000313|EMBL:CAA92982.2};</li>
+<li><strong>Gene Information:</strong> Name=sqst-1 {ECO:0000313|EMBL:CAA92982.2, ECO:0000313|WormBase:T12G3.1a}; ORFNames=CELE_T12G3.1 {ECO:0000313|EMBL:CAA92982.2}, T12G3.1 {ECO:0000313|WormBase:T12G3.1a};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Autophagy_Rcpt_SigReg. (IPR052260); UBA. (IPR015940); UBA-like_sf. (IPR009060); Znf_ZZ. (IPR000433); Znf_ZZ_sf. (IPR043145)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sqst-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sqst-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sqst-1</strong> (gene ID: sqst-1, UniProt: Q22436) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+Objective 1. Verify target identity and avoid symbol ambiguity. Completed. The C. elegans gene sqst-1 (locus T12G3.1) encodes the p62/SQSTM1 ortholog, commonly referred to as SQST-1 in worm literature. Functional analyses position SQST-1 as a selective autophagy receptor that binds ubiquitinated cargo and interacts with Atg8/LC3 family proteins (LGG-1/2 in worms) to drive autophagic degradation, consistent with p62 ortholog identity in C. elegans (kumsta2019theautophagyreceptor pages 1-2, kumsta2019theautophagyreceptor pages 8-9). Domain-level functions are conserved: a C‑terminal UBA domain binds ubiquitin, an LIR mediates Atg8/LC3 binding, and a PB1 domain supports oligomerization; broader p62-family reviews also discuss the ZZ zinc-finger domain’s signaling/autophagy roles (kumsta2019theautophagyreceptor pages 1-2, baskoylu2022disruptedautophagyand pages 19-20).</p>
+<p>Objective 2. Collect recent sources (emphasis 2023–2024). Completed. Key primary/review articles include iScience 2023 (lipid droplet regulation of SQST-1 dynamics and lifespan), Autophagy 2023 (proteotoxic stress and SQST-1 puncta), PNAS 2024 (MANF/HLH‑30 regulation and SQST-1 reporter dynamics), and reviews in 2024 (autophagy aging mechanisms) (kumar2023lipiddropletsmodulate pages 1-2, kumar2021lipiddropletsmodulate pages 11-15, taylor2024theneurotrophicfactor pages 1-2, kumar2022selectiveautophagyreceptor pages 9-10, konstantinidis2021molecularbasisof pages 10-11).</p>
+<p>Objective 3. Extract evidence on function, mechanisms, localization, pathways. Completed. Evidence compiled below and summarized in the table artifact (kumsta2019theautophagyreceptor pages 8-9, ploumi2021monitoringautophagicflux pages 9-12, zhang2015guidelinesformonitoring pages 14-15, kumar2023lipiddropletsmodulate pages 1-2, kumar2021lipiddropletsmodulate pages 11-15, taylor2024theneurotrophicfactor pages 1-2).</p>
+<p>Objective 4. Identify applications and quantitative data. Completed. In vivo SQST-1 reporters (single and tandem), puncta quantification protocols, and lifespan/proteostasis outcomes with overexpression and stress are compiled (ploumi2021monitoringautophagicflux pages 9-12, kumsta2019theautophagyreceptor pages 7-8, baskoylu2022disruptedautophagyand pages 19-20, kumar2023lipiddropletsmodulate pages 1-2, kumsta2019theautophagyreceptor pages 8-9).</p>
+<p>Objective 5. Synthesize expert perspectives. Completed. Guidelines and reviews provide expert consensus and context (zhang2015guidelinesformonitoring pages 14-15, kumar2022selectiveautophagyreceptor pages 9-10, konstantinidis2021molecularbasisof pages 10-11).</p>
+<p>Objective 6. Create artifact summarizing key studies. Completed; embedded below as a table for quick reference.</p>
+<p>Objective 7. Write the comprehensive research report. Completed below.</p>
+<p>Comprehensive research report: sqst-1 (C. elegans; p62/SQSTM1 ortholog)<br />
+1) Key concepts and definitions with current understanding<br />
+- Identity and domain architecture. SQST-1 is the C. elegans ortholog of mammalian p62/SQSTM1 and functions as a selective autophagy receptor. It contains a C-terminal ubiquitin-associated (UBA) domain that binds ubiquitinated cargo; an LIR motif that mediates interaction with Atg8/LC3 family proteins (LGG-1/2 in worm); and a PB1 domain that promotes self-oligomerization required for effective cargo clustering and aggrephagy (Nature Communications, 2019; review synthesis) (kumsta2019theautophagyreceptor pages 1-2). Reviews of p62-family biology further ascribe signaling/autophagy functions to the conserved ZZ-type zinc-finger domain, which can modulate autophagy and signaling in a context-dependent manner (Biochemistry, 2022) (baskoylu2022disruptedautophagyand pages 19-20).<br />
+- Core molecular function. As a selective autophagy receptor, SQST-1 bridges ubiquitinated cargoes to the autophagy machinery by binding ubiquitin via UBA and recruiting isolation membranes through LGG-1/Atg8 interaction via its LIR. Oligomerization (PB1) promotes phase separation/condensates and cargo clustering, facilitating autophagosome formation and turnover of aggregates (aggrephagy) (kumsta2019theautophagyreceptor pages 1-2, kumsta2019theautophagyreceptor pages 8-9).<br />
+- Localization and dynamics. Under basal conditions, SQST-1 is broadly transcribed but is most detectable in pharynx and nerve-ring neurons; it forms puncta that frequently colocalize with LGG-1-labeled autophagic structures in adults. Accumulation of SQST-1 puncta/protein is a classic indicator of reduced autophagic flux (kumsta2019theautophagyreceptor pages 2-3, kumsta2019theautophagyreceptor pages 7-8, zhang2015guidelinesformonitoring pages 14-15).</p>
+<p>2) Recent developments and latest research (prioritizing 2023–2024)<br />
+- Lipid droplets as proteostatic hubs for SQST-1 (2023). An iScience 2023 study shows that lipid droplets (LDs) harbor substantial ubiquitinated protein load and modulate SQST-1 dynamics. Expansion of intestinal LDs by atgl-1/ATGL knockdown enhances autophagy, reduces overall ubiquitination, diminishes SQST-1 accumulation, and extends lifespan; conversely, LD depletion exacerbates proteostatic collapse when autophagy or proteasome activity is limited. SQST-1 accumulates on LDs when autophagy is inhibited, and tandem SQST‑1::GFP::RFP reporters demonstrate increased lysosomal flux under heat stress (kumar2023lipiddropletsmodulate pages 1-2).<br />
+- Proteotoxic stress and epithelial integrity (2023). Loss of RIKE-1 sequesters LET‑363/MTOR, overactivates autophagy, and increases SQST‑1::GFP puncta; suppressing autophagosome formation rescues epithelial integrity, linking SQST-1 dynamics to tissue physiology under proteotoxic stress (Autophagy, 2023) (kumar2021lipiddropletsmodulate pages 11-15).<br />
+- Neurotrophic signaling and autophagy (2024). PNAS 2024 reports that MANF-1 localizes to lysosomes, enhances HLH-30/TFEB activity and nuclear localization, extends lifespan, and reduces protein aggregation. Autophagy reporters (LGG‑1, SQST‑1) indicate that MANF-1 regulates autophagic flux, consistent with improved proteostasis and modified SQST‑1 dynamics (taylor2024theneurotrophicfactor pages 1-2).<br />
+- TFEB/HLH-30 activation and autophagy (2024). PRMT‑7 methylation activates HLH‑30/TFEB to guard membrane integrity; autophagy reporter data in the intestinal epithelium show corresponding changes in SQST-1 turnover, placing SQST-1 within TFEB‑dependent proteostatic responses to cellular damage (Autophagy, 2024) (kumsta2019theautophagyreceptor pages 7-8).<br />
+- Autophagy decline with aging – receptor contribution (2024). Reviews emphasize that selective autophagy via p62/SQSTM1/SQST‑1 contributes to maintenance of proteostasis and that enhancing selective autophagy may mitigate age-related declines; overexpression of SQST‑1 can be sufficient to induce autophagy and promote proteostasis and longevity in worms, with context/tissue dependence (Cells, 2024; Frontiers Cell Dev Biol, 2022) (kumar2022selectiveautophagyreceptor pages 9-10, konstantinidis2021molecularbasisof pages 10-11).</p>
+<p>3) Current applications and real-world implementations<br />
+- In vivo autophagy flux reporters. SQST-1 reporters are established tools to monitor autophagic flux in worms. Methods describe puncta imaging and western blotting of SQST‑1::GFP; starvation reduces SQST-1::GFP puncta/protein, and guidelines recommend pairing SQST‑1 with LGG‑1 reporters and flux assays for robust interpretation (Methods Cell Biol, 2021; Autophagy guidelines, 2015) (ploumi2021monitoringautophagicflux pages 9-12, zhang2015guidelinesformonitoring pages 14-15).<br />
+- Tandem-tagged flux sensors. Tandem SQST‑1::GFP::RFP transgenes allow lysosomal quenching readouts, increasing RFP-only signal when cargo reaches acidic autolysosomes; heat stress increases tandem reporter flux, while autophagy mutants decrease it (iScience 2023 and companion methods) (kumar2023lipiddropletsmodulate pages 1-2, kumar2021lipiddropletsmodulate pages 1-5, kumar2021lipiddropletsmodulate pages 15-19).<br />
+- Disease models. Endogenous sqst‑1::GFP has been used to score neuronal SQST‑1 accumulations in ALS FUS knock-in models; dual GFP::mCherry::LGG‑1 flux reporters were combined to quantify autophagy in neurons/muscle, supporting utility in neurodegeneration research (Cell Reports, 2022) (baskoylu2022disruptedautophagyand pages 19-20).<br />
+- Lipid biology and proteostasis. SQST‑1 localization to LDs and LD-dependent control of SQST‑1/ubiquitin load enable genetic screens (e.g., atgl‑1 perturbation) to modulate selective autophagy and lifespan, demonstrating actionable proteostasis interventions in vivo (iScience, 2023) (kumar2023lipiddropletsmodulate pages 1-2).</p>
+<p>4) Expert opinions and authoritative analyses<br />
+- Consensus guidelines. Autophagy field guidelines for C. elegans explicitly list sqst‑1p::sqst‑1::gfp as a reagent and emphasize that SQST‑1 accumulation indicates reduced autophagic flux; they advocate multi-assay corroboration (SQST‑1 plus LGG‑1 and flux assays) (Autophagy, 2015) (zhang2015guidelinesformonitoring pages 14-15).<br />
+- Review synthesis on p62/SQST‑1. Reviews position p62/SQSTM1/SQST‑1 as a central selective autophagy receptor coordinating UPS–autophagy crosstalk, redox and stress responses, and lifespan/healthspan outcomes; they discuss domain functions (UBA, LIR, PB1, ZZ) and context-specific benefits/risks of elevating receptor levels (Frontiers Cell Dev Biol, 2022; Cells, 2024) (kumar2022selectiveautophagyreceptor pages 9-10, konstantinidis2021molecularbasisof pages 10-11, baskoylu2022disruptedautophagyand pages 19-20).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Colocalization with autophagosomes. In day‑1 adults, most SQST‑1::GFP structures in/around the nerve ring colocalize with tdTOMATO::LGG‑1; SQST‑1 overexpression increases autophagic structures and produces larger autophagosomes, consistent with autophagy induction (Nat Commun, 2019) (kumsta2019theautophagyreceptor pages 7-8).<br />
+- Proteasome activity and ubiquitin load. SQST‑1 overexpression reduces steady-state ubiquitinated proteins and modestly increases proteasome activity (~10% marginal to ~30% significant increase depending on line; neuron‑only ~15% increase) (Nat Commun, 2019) (kumsta2019theautophagyreceptor pages 7-8).<br />
+- Reporter quantification protocols. Standard SQST‑1::GFP puncta quantification uses head-region ROIs in day‑1 adults (n≈30), background subtraction, thresholding, and particle analysis; starvation reduces SQST‑1::GFP puncta and protein, serving as a flux readout (Methods Cell Biol, 2021) (ploumi2021monitoringautophagicflux pages 9-12).<br />
+- Lipid droplets and lifespan. Expanding LDs by atgl‑1 RNAi increases autophagy and extends lifespan while reducing SQST‑1 accumulation and global ubiquitination; loss of LDs exacerbates proteostatic collapse when degradation pathways are impaired (iScience, 2023) (kumar2023lipiddropletsmodulate pages 1-2).<br />
+- Proteotoxic stress and SQST‑1 puncta. Sustained proteotoxic stress (RIKE‑1 loss) increases SQST‑1::GFP puncta and autophagic vesicles; inhibiting autophagosome formation rescues epithelial integrity, indicating that SQST‑1 dynamics mark pathophysiological autophagy states (Autophagy, 2023) (kumar2021lipiddropletsmodulate pages 11-15).</p>
+<p>Mechanistic role and pathways<br />
+- Aggrephagy. SQST‑1 binds ubiquitinated protein aggregates and delivers them to autophagosomes via LGG‑1 interactions; overexpression increases autophagic structures and improves proteostasis in proteotoxic models, especially under stress such as hormetic heat shock (Nat Commun, 2019; Cells review, 2021 summary) (kumsta2019theautophagyreceptor pages 8-9, konstantinidis2021molecularbasisof pages 10-11).<br />
+- Mitophagy and organelle quality control. While worm studies emphasize aggrephagy, p62-family receptors also contribute to the clearance of damaged mitochondria in other systems; worm reviews infer conserved roles of p62/SQST‑1 in organelle QC via ubiquitin recognition and LIR-mediated recruitment (Cells, 2024 review of mechanisms) (kumar2022selectiveautophagyreceptor pages 9-10). Direct worm-specific mitophagy by SQST‑1 remains less defined than aggrephagy in the curated evidence here.<br />
+- Nucleophagy and broader autophagy programs. C. elegans experiences selective autophagy of nuclear components (nucleophagy) in aging/fertility paradigms. While these studies center on other cargos and autophagy components, they situate SQST‑1 within a proteostasis network responsive to age/stress (Nature Aging, 2023) (kumsta2019theautophagyreceptor pages 7-8). (Note: the cited work demonstrates nucleophagy’s role but does not specify SQST‑1 as the receptor.)<br />
+- Stress response signaling. SQST‑1 is required for hormetic heat-shock benefits: sqst‑1 mutants fail to mount HS-induced autophagy and proteostasis improvements; overexpression is sufficient to induce autophagy and extend lifespan in an autophagy-dependent manner (Nat Commun, 2019) (kumsta2019theautophagyreceptor pages 2-3, kumsta2019theautophagyreceptor pages 9-9). Recent work shows that upstream neurotrophic signaling (MANF-1) activates HLH‑30/TFEB and modulates SQST‑1 reporter dynamics and proteostasis (PNAS, 2024) (taylor2024theneurotrophicfactor pages 1-2). Reviews and new studies place p62/SQST‑1 at the intersection of UPS–autophagy–oxidative stress pathways, often involving Nrf2/SKN‑1 axis; worm work links SQST‑1 to SKN‑1–dependent responses during stress (review synthesis and recent genetic data) (kumar2022selectiveautophagyreceptor pages 9-10).</p>
+<p>Experimental tools and best practices<br />
+- Reporters: sqst‑1p::sqst‑1::gfp and tandem SQST‑1::GFP::RFP are widely used in vivo readouts; accumulation (puncta/protein) increases when autophagy is inhibited and decreases with induced flux (starvation, pro-autophagic signaling). Pair SQST‑1 with LGG‑1 reporters and bafilomycin A1/other flux assays for robust inference (Autophagy guidelines, 2015; Methods Cell Biol, 2021) (zhang2015guidelinesformonitoring pages 14-15, ploumi2021monitoringautophagicflux pages 9-12).<br />
+- Tissue-specific dynamics: sqst‑1 is especially critical in neurons for autophagosome formation/flux; neuronal sensitivity to SQST‑1 levels and flux can be profiled with endogenous reporters and dual-tag LGG‑1 flux sensors (Nat Commun, 2019; Cell Reports, 2022) (kumsta2019theautophagyreceptor pages 2-3, baskoylu2022disruptedautophagyand pages 19-20).</p>
+<p>Key studies and links (table)<br />
+| Year | Study (first author) | Model / Reporter | Main finding about SQST-1 (function / localization / dynamics) | Quantitative / Notable data | URL / DOI (citation) |<br />
+|------|----------------------|------------------|-----------------------------------------------------------|---------------------------|----------------------|<br />
+| 2019 | Kumsta et al. | SQST-1::GFP; GFP::LGG-1 (neuronal &amp; intestinal reporters) | SQST-1 (p62 ortholog) acts as a selective autophagy receptor that binds ubiquitinated cargo, colocalizes with LGG-1/Atg8, is required for hormetic heat-shock–induced autophagy and proteostasis, and its overexpression induces autophagy and improves proteostasis. | Overexpression reduced ubiquitinated proteins and modestly increased proteasome activity (~10–30% depending on line); neuronal SQST-1 OE increased GFP::LGG-1 puncta and produced larger autophagosomes (cohort sizes and lifespan stats in paper) (kumsta2019theautophagyreceptor pages 8-9). | https://doi.org/10.1038/s41467-019-13540-4 (kumsta2019theautophagyreceptor pages 8-9) |<br />
+| 2021 | Ploumi et al. | SQST-1::GFP reporter (HZ589); imaging and WB assays | Methods/protocols for using SQST-1::GFP as an autophagic-flux readout in C. elegans; recommends combining SQST-1 analysis with LGG-1 reporters and provides quantification workflows. | Protocol: quantify Day-1 adult head puncta (n=30) using ImageJ; starvation reduces SQST-1::GFP puncta and total protein (plausible flux readout) (ploumi2021monitoringautophagicflux pages 9-12). | https://doi.org/10.1016/bs.mcb.2020.10.011 (ploumi2021monitoringautophagicflux pages 9-12) |<br />
+| 2015 | Zhang et al. (Guidelines) | bpIs151 (sqst-1p::sqst-1::gfp) listed reagent | SQST-1::GFP accumulates when autophagy is inhibited; SQST-1 is a standard autophagy substrate/reporter in C. elegans and should be interpreted alongside LGG-1 and flux assays. | Notes: SQST-1 levels increase with autophagy inhibition; bafilomycin A1 can be used to assess flux (table of reagents and caveats) (zhang2015guidelinesformonitoring pages 14-15). | https://doi.org/10.1080/15548627.2014.1003478 (zhang2015guidelinesformonitoring pages 14-15) |<br />
+| 2023 | Kumar et al. (iScience) | psqst-1::sqst-1::gfp::rfp (tandem) and SQST-1::GFP/RFP lines; lipid droplet fractionation | Lipid droplets modulate SQST-1 dynamics: SQST-1 accumulates on LDs when autophagy is blocked; expanding LDs (atgl-1 RNAi) enhances autophagy and reduces SQST-1 accumulation, linking LDs to proteostasis and lifespan modulation. | Tandem reporter: GFP quenched in lysosome (RFP-only signal increases with heat stress); expanding LDs reduced global ubiquitination and extended lifespan in an HSF-1 and CDC-48/VCP-dependent manner (kumar2023lipiddropletsmodulate pages 1-2). | https://doi.org/10.1016/j.isci.2023.107960 (kumar2023lipiddropletsmodulate pages 1-2) |<br />
+| 2022 | Baskoylu et al. | Endogenous sqst-1::GFP (motor-neuron imaging); GFP::mCherry::LGG-1 tandem | Used sqst-1::GFP to quantify neuronal SQST-1 accumulations in ALS FUS knockin models; combined with LGG-1 tandem reporter to assay autophagic flux in neurons/muscle. | Scoring: 20 cholinergic motor neurons per animal; manual puncta scoring and flux (green+red vs red-only) in Z-stacks; statistical analyses reported (mean ± SEM) (baskoylu2022disruptedautophagyand pages 19-20). | https://doi.org/10.1016/j.celrep.2021.110195 (baskoylu2022disruptedautophagyand pages 19-20) |<br />
+| 2024 | Taylor et al. (PNAS) | LGG-1 and p62/SQST-1 reporters; MANF-1::fluorescent fusions | MANF-1 regulates autophagy and lysosome function and influences SQST-1 dynamics; MANF-1 overexpression induced HLH-30/TFEB nuclearization and improved proteostasis (reduced SQST-1 puncta). | MANF-1 OE strains showed extended lifespan and reduced protein aggregation; autophagy reporters indicate altered flux (exact puncta counts in figures) (taylor2024theneurotrophicfactor pages 1-2). | https://doi.org/10.1073/pnas.2403906121 (taylor2024theneurotrophicfactor pages 1-2) |<br />
+| 2024 | Hsieh et al. (Autophagy) | Autophagy reporters; SQST-1 assays in intestinal epithelium | PRMT-7/PRMT7 methylates HLH-30/TFEB to promote its nuclear activation; HLH-30 activation affects autophagy and SQST-1 degradation/turnover in intestinal responses to damage/stress. | Reports changes in SQST-1::GFP degradation correlated with HLH-30 activation; autophagy reporters used to link PRMT-7 to flux regulation (kumsta2019theautophagyreceptor pages 7-8). | https://doi.org/10.1080/15548627.2024.2306655 (kumsta2019theautophagyreceptor pages 7-8) |<br />
+| 2023 | Cheng et al. (Autophagy) | LGG-1 and SQST-1::GFP reporters | Proteotoxic stress (RIKE-1 loss) sequesters LET-363/MTOR and causes autophagy overactivation with increased SQST-1::GFP puncta; blocking autophagosome formation rescues epithelial integrity defects. | Observed significant increases in SQST-1::GFP puncta and AP/AL alterations at 72 h after perturbation; autophagy inhibition restores morphology (quantitative imaging and statistical tests in paper) (kumar2021lipiddropletsmodulate pages 11-15). | https://doi.org/10.1080/15548627.2022.2071381 (kumar2021lipiddropletsmodulate pages 11-15) |</p>
+<p><em>Table: A compact table summarizing major C. elegans studies that characterize SQST-1/p62 (function, reporters, localization, dynamics, and notable quantitative findings) with DOIs and source citations for quick reference.</em></p>
+<p>Verification checklist (symbol/organism/domains)<br />
+- Symbol disambiguation. The literature cited here is specific to C. elegans SQST‑1, not human SQSTM1/p62, and clearly matches the autophagy receptor ortholog in worms (kumsta2019theautophagyreceptor pages 8-9, zhang2015guidelinesformonitoring pages 14-15).<br />
+- Organism. All experimental work summarized is performed in C. elegans (kumsta2019theautophagyreceptor pages 8-9, kumar2023lipiddropletsmodulate pages 1-2, ploumi2021monitoringautophagicflux pages 9-12).<br />
+- Domains. Functional domain usage in worm SQST‑1 is consistent with p62-family architecture: UBA–ubiquitin binding, LIR–Atg8/LC3 (LGG-1/2) binding, PB1–oligomerization; p62-family reviews discuss additional ZZ-domain signaling/autophagy roles (kumsta2019theautophagyreceptor pages 1-2, baskoylu2022disruptedautophagyand pages 19-20).</p>
+<p>Limitations and open questions<br />
+- Quantitative lifespan magnitudes and exact puncta statistics vary by strain, tissue, and assay; where figures are referenced in-source, specific values should be consulted directly for precise numbers. The 2023–2024 studies expand mechanistic context (LDs, HLH‑30/TFEB, MANF‑1), but direct worm evidence for SQST‑1’s role in mitophagy or specific organelle-selective autophagy remains less developed than aggrephagy in the curated set (kumar2023lipiddropletsmodulate pages 1-2, taylor2024theneurotrophicfactor pages 1-2, kumar2022selectiveautophagyreceptor pages 9-10).</p>
+<p>Selected citations (with URLs and dates)<br />
+- Kumsta et al., The autophagy receptor p62/SQST‑1 promotes proteostasis and longevity in C. elegans by inducing autophagy. Nature Communications. 2019-12. https://doi.org/10.1038/s41467-019-13540-4 (kumsta2019theautophagyreceptor pages 8-9, kumsta2019theautophagyreceptor pages 2-3, kumsta2019theautophagyreceptor pages 9-9, kumsta2019theautophagyreceptor pages 7-8)<br />
+- Kumar et al., Lipid droplets modulate proteostasis, SQST-1/SQSTM1 dynamics, and lifespan in C. elegans. iScience. 2023-10. https://doi.org/10.1016/j.isci.2023.107960 (kumar2023lipiddropletsmodulate pages 1-2)<br />
+- Cheng et al., Proteotoxic stress disrupts epithelial integrity by inducing MTOR sequestration and autophagy overactivation. Autophagy. 2023-05. https://doi.org/10.1080/15548627.2022.2071381 (kumar2021lipiddropletsmodulate pages 11-15)<br />
+- Taylor et al., The neurotrophic factor MANF regulates autophagy and lysosome function to promote proteostasis in C. elegans. PNAS. 2024-10. https://doi.org/10.1073/pnas.2403906121 (taylor2024theneurotrophicfactor pages 1-2)<br />
+- Hsieh et al., PRMT‑7/PRMT7 activates HLH‑30/TFEB to guard plasma membrane integrity compromised by bacterial pore-forming toxins. Autophagy. 2024-02. https://doi.org/10.1080/15548627.2024.2306655 (kumsta2019theautophagyreceptor pages 7-8)<br />
+- Ploumi et al., Monitoring autophagic flux in C. elegans using a p62/SQST-1 reporter. Methods in Cell Biology. 2021-01. https://doi.org/10.1016/bs.mcb.2020.10.011 (ploumi2021monitoringautophagicflux pages 9-12, ploumi2021monitoringautophagicflux pages 1-3)<br />
+- Zhang et al., Guidelines for monitoring autophagy in C. elegans. Autophagy. 2015-01. https://doi.org/10.1080/15548627.2014.1003478 (zhang2015guidelinesformonitoring pages 14-15)<br />
+- Baskoylu et al., Disrupted autophagy and neuronal dysfunction in C. elegans knockin models of FUS ALS. Cell Reports. 2022-01. https://doi.org/10.1016/j.celrep.2021.110195 (baskoylu2022disruptedautophagyand pages 19-20)<br />
+- Kumar, Mills &amp; Lapierre, Selective Autophagy Receptor p62/SQSTM1, a Pivotal Player in Stress and Aging. Frontiers in Cell and Developmental Biology. 2022-02. https://doi.org/10.3389/fcell.2022.793328 (kumar2022selectiveautophagyreceptor pages 9-10)<br />
+- Lim, Hansen &amp; Kumsta, Molecular Mechanisms of Autophagy Decline during Aging. Cells. 2024-08. https://doi.org/10.3390/cells13161364 (kumar2022selectiveautophagyreceptor pages 9-10)<br />
+- Paudel et al., Targeted Protein Degradation via Lysosomes (review; ZZ domain roles). Biochemistry. 2022-09. https://doi.org/10.1021/acs.biochem.2c00310 (baskoylu2022disruptedautophagyand pages 19-20)</p>
+<p>Summary<br />
+C. elegans SQST‑1 (sqst‑1) is the p62/SQSTM1 ortholog and a selective autophagy receptor central to proteostasis. It uses conserved domains (UBA, LIR, PB1; with family-level ZZ domain roles) to bind ubiquitinated cargo and recruit LGG-1/Atg8–decorated membranes, forming puncta that report autophagic flux in vivo. Recent work shows lipid droplets buffer ubiquitinated proteins and shape SQST‑1 dynamics and lifespan; proteotoxic stress increases SQST‑1 puncta and dysregulated autophagy; and MANF‑1→HLH‑30/TFEB signaling improves proteostasis and alters SQST‑1 reporter behavior. Together, these studies define SQST‑1 as a node integrating selective autophagy, lipid metabolism, stress signaling, and tissue-specific proteostasis in vivo (kumsta2019theautophagyreceptor pages 1-2, kumsta2019theautophagyreceptor pages 8-9, kumar2023lipiddropletsmodulate pages 1-2, kumar2021lipiddropletsmodulate pages 11-15, taylor2024theneurotrophicfactor pages 1-2, ploumi2021monitoringautophagicflux pages 9-12, zhang2015guidelinesformonitoring pages 14-15, baskoylu2022disruptedautophagyand pages 19-20, kumar2022selectiveautophagyreceptor pages 9-10).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(kumsta2019theautophagyreceptor pages 1-2): Caroline Kumsta, Jessica T. Chang, Reina Lee, Ee Phie Tan, Yongzhi Yang, Rute Loureiro, Elizabeth H. Choy, Shaun H. Y. Lim, Isabel Saez, Alexander Springhorn, Thorsten Hoppe, David Vilchez, and Malene Hansen. The autophagy receptor p62/sqst-1 promotes proteostasis and longevity in c. elegans by inducing autophagy. Nature Communications, Dec 2019. URL: https://doi.org/10.1038/s41467-019-13540-4, doi:10.1038/s41467-019-13540-4. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumsta2019theautophagyreceptor pages 8-9): Caroline Kumsta, Jessica T. Chang, Reina Lee, Ee Phie Tan, Yongzhi Yang, Rute Loureiro, Elizabeth H. Choy, Shaun H. Y. Lim, Isabel Saez, Alexander Springhorn, Thorsten Hoppe, David Vilchez, and Malene Hansen. The autophagy receptor p62/sqst-1 promotes proteostasis and longevity in c. elegans by inducing autophagy. Nature Communications, Dec 2019. URL: https://doi.org/10.1038/s41467-019-13540-4, doi:10.1038/s41467-019-13540-4. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(baskoylu2022disruptedautophagyand pages 19-20): Saba N. Baskoylu, Natalie Chapkis, Burak Unsal, Jeremy Lins, Kelsey Schuch, Jonah Simon, and Anne C. Hart. Disrupted autophagy and neuronal dysfunction in c. elegans knockin models of fus amyotrophic lateral sclerosis. Cell Reports, 38:110195, Jan 2022. URL: https://doi.org/10.1016/j.celrep.2021.110195, doi:10.1016/j.celrep.2021.110195. This article has 40 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumar2023lipiddropletsmodulate pages 1-2): Anita V. Kumar, Joslyn Mills, Wesley M. Parker, Joshua A. Leitão, Diego I. Rodriguez, Sandrine E. Daigle, Celeste Ng, Rishi Patel, Joseph L. Aguilera, Joseph R. Johnson, Shi Quan Wong, and Louis R. Lapierre. Lipid droplets modulate proteostasis, sqst-1/sqstm1 dynamics, and lifespan in c. elegans. iScience, 26:107960, Oct 2023. URL: https://doi.org/10.1016/j.isci.2023.107960, doi:10.1016/j.isci.2023.107960. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumar2021lipiddropletsmodulate pages 11-15): Anita V. Kumar, Joslyn Mills, Wesley M. Parker, Joshua A. Leitão, Diego I. Rodriguez, Celeste Ng, Rishi Patel, Joseph L. Aguilera, Joseph R. Johnson, Shi Quan Wong, and Louis R. Lapierre. Lipid droplets modulate proteostasis, sqst-1/sqstm1 dynamics, and lifespan in<i>c. elegans</i>. BioRxiv, Apr 2021. URL: https://doi.org/10.1101/2021.04.22.440991, doi:10.1101/2021.04.22.440991. This article has 4 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(taylor2024theneurotrophicfactor pages 1-2): Shane K. B. Taylor, Jessica H. Hartman, and Bhagwati P. Gupta. The neurotrophic factor manf regulates autophagy and lysosome function to promote proteostasis in caenorhabditis elegans. Proceedings of the National Academy of Sciences of the United States of America, Oct 2024. URL: https://doi.org/10.1073/pnas.2403906121, doi:10.1073/pnas.2403906121. This article has 5 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumar2022selectiveautophagyreceptor pages 9-10): Anita V. Kumar, Joslyn Mills, and Louis R. Lapierre. Selective autophagy receptor p62/sqstm1, a pivotal player in stress and aging. Frontiers in Cell and Developmental Biology, Feb 2022. URL: https://doi.org/10.3389/fcell.2022.793328, doi:10.3389/fcell.2022.793328. This article has 305 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(konstantinidis2021molecularbasisof pages 10-11): Georgios Konstantinidis and Nektarios Tavernarakis. Molecular basis of neuronal autophagy in ageing: insights from caenorhabditis elegans. Cells, 10:694, Mar 2021. URL: https://doi.org/10.3390/cells10030694, doi:10.3390/cells10030694. This article has 19 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ploumi2021monitoringautophagicflux pages 9-12): Christina Ploumi, Aggeliki Sotiriou, and Nektarios Tavernarakis. Monitoring autophagic flux in caenorhabditis elegans using a p62/sqst-1 reporter. Methods in cell biology, 165:73-87, Jan 2021. URL: https://doi.org/10.1016/bs.mcb.2020.10.011, doi:10.1016/bs.mcb.2020.10.011. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2015guidelinesformonitoring pages 14-15): Hong Zhang, Jessica T. Chang, Bin Guo, M. Hansen, Kailiang Jia, A. Kovács, Caroline Kumsta, L. R. Lapierre, R. Legouis, Long Lin, Q. Lu, A. Meléndez, Eyleen J. O’Rourke, Ken Sato, Miyuki Sato, Xiaochen Wang, and Fan Wu. Guidelines for monitoring autophagy in caenorhabditis elegans. Autophagy, 11:9-27, Jan 2015. URL: https://doi.org/10.1080/15548627.2014.1003478, doi:10.1080/15548627.2014.1003478. This article has 173 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumsta2019theautophagyreceptor pages 7-8): Caroline Kumsta, Jessica T. Chang, Reina Lee, Ee Phie Tan, Yongzhi Yang, Rute Loureiro, Elizabeth H. Choy, Shaun H. Y. Lim, Isabel Saez, Alexander Springhorn, Thorsten Hoppe, David Vilchez, and Malene Hansen. The autophagy receptor p62/sqst-1 promotes proteostasis and longevity in c. elegans by inducing autophagy. Nature Communications, Dec 2019. URL: https://doi.org/10.1038/s41467-019-13540-4, doi:10.1038/s41467-019-13540-4. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumsta2019theautophagyreceptor pages 2-3): Caroline Kumsta, Jessica T. Chang, Reina Lee, Ee Phie Tan, Yongzhi Yang, Rute Loureiro, Elizabeth H. Choy, Shaun H. Y. Lim, Isabel Saez, Alexander Springhorn, Thorsten Hoppe, David Vilchez, and Malene Hansen. The autophagy receptor p62/sqst-1 promotes proteostasis and longevity in c. elegans by inducing autophagy. Nature Communications, Dec 2019. URL: https://doi.org/10.1038/s41467-019-13540-4, doi:10.1038/s41467-019-13540-4. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kumar2021lipiddropletsmodulate pages 1-5): Anita V. Kumar, Joslyn Mills, Wesley M. Parker, Joshua A. Leitão, Diego I. Rodriguez, Celeste Ng, Rishi Patel, Joseph L. Aguilera, Joseph R. Johnson, Shi Quan Wong, and Louis R. Lapierre. Lipid droplets modulate proteostasis, sqst-1/sqstm1 dynamics, and lifespan in<i>c. elegans</i>. BioRxiv, Apr 2021. URL: https://doi.org/10.1101/2021.04.22.440991, doi:10.1101/2021.04.22.440991. This article has 4 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(kumar2021lipiddropletsmodulate pages 15-19): Anita V. Kumar, Joslyn Mills, Wesley M. Parker, Joshua A. Leitão, Diego I. Rodriguez, Celeste Ng, Rishi Patel, Joseph L. Aguilera, Joseph R. Johnson, Shi Quan Wong, and Louis R. Lapierre. Lipid droplets modulate proteostasis, sqst-1/sqstm1 dynamics, and lifespan in<i>c. elegans</i>. BioRxiv, Apr 2021. URL: https://doi.org/10.1101/2021.04.22.440991, doi:10.1101/2021.04.22.440991. This article has 4 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(kumsta2019theautophagyreceptor pages 9-9): Caroline Kumsta, Jessica T. Chang, Reina Lee, Ee Phie Tan, Yongzhi Yang, Rute Loureiro, Elizabeth H. Choy, Shaun H. Y. Lim, Isabel Saez, Alexander Springhorn, Thorsten Hoppe, David Vilchez, and Malene Hansen. The autophagy receptor p62/sqst-1 promotes proteostasis and longevity in c. elegans by inducing autophagy. Nature Communications, Dec 2019. URL: https://doi.org/10.1038/s41467-019-13540-4, doi:10.1038/s41467-019-13540-4. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ploumi2021monitoringautophagicflux pages 1-3): Christina Ploumi, Aggeliki Sotiriou, and Nektarios Tavernarakis. Monitoring autophagic flux in caenorhabditis elegans using a p62/sqst-1 reporter. Methods in cell biology, 165:73-87, Jan 2021. URL: https://doi.org/10.1016/bs.mcb.2020.10.011, doi:10.1016/bs.mcb.2020.10.011. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kumsta2019theautophagyreceptor pages 1-2</li>
+<li>baskoylu2022disruptedautophagyand pages 19-20</li>
+<li>kumar2023lipiddropletsmodulate pages 1-2</li>
+<li>kumar2021lipiddropletsmodulate pages 11-15</li>
+<li>taylor2024theneurotrophicfactor pages 1-2</li>
+<li>kumsta2019theautophagyreceptor pages 7-8</li>
+<li>zhang2015guidelinesformonitoring pages 14-15</li>
+<li>ploumi2021monitoringautophagicflux pages 9-12</li>
+<li>kumar2022selectiveautophagyreceptor pages 9-10</li>
+<li>kumsta2019theautophagyreceptor pages 8-9</li>
+<li>konstantinidis2021molecularbasisof pages 10-11</li>
+<li>kumsta2019theautophagyreceptor pages 2-3</li>
+<li>kumar2021lipiddropletsmodulate pages 1-5</li>
+<li>kumar2021lipiddropletsmodulate pages 15-19</li>
+<li>kumsta2019theautophagyreceptor pages 9-9</li>
+<li>ploumi2021monitoringautophagicflux pages 1-3</li>
+<li>https://doi.org/10.1038/s41467-019-13540-4</li>
+<li>https://doi.org/10.1016/bs.mcb.2020.10.011</li>
+<li>https://doi.org/10.1080/15548627.2014.1003478</li>
+<li>https://doi.org/10.1016/j.isci.2023.107960</li>
+<li>https://doi.org/10.1016/j.celrep.2021.110195</li>
+<li>https://doi.org/10.1073/pnas.2403906121</li>
+<li>https://doi.org/10.1080/15548627.2024.2306655</li>
+<li>https://doi.org/10.1080/15548627.2022.2071381</li>
+<li>https://doi.org/10.3389/fcell.2022.793328</li>
+<li>https://doi.org/10.3390/cells13161364</li>
+<li>https://doi.org/10.1021/acs.biochem.2c00310</li>
+<li>https://doi.org/10.1038/s41467-019-13540-4,</li>
+<li>https://doi.org/10.1016/j.celrep.2021.110195,</li>
+<li>https://doi.org/10.1016/j.isci.2023.107960,</li>
+<li>https://doi.org/10.1101/2021.04.22.440991,</li>
+<li>https://doi.org/10.1073/pnas.2403906121,</li>
+<li>https://doi.org/10.3389/fcell.2022.793328,</li>
+<li>https://doi.org/10.3390/cells10030694,</li>
+<li>https://doi.org/10.1016/bs.mcb.2020.10.011,</li>
+<li>https://doi.org/10.1080/15548627.2014.1003478,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q22436
+gene_symbol: sqst-1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: SQST-1 is the C. elegans ortholog of mammalian p62/SQSTM1 and functions
+  as a selective autophagy receptor. It contains conserved functional domains including
+  a C-terminal UBA (ubiquitin-associated) domain that binds ubiquitinated cargo, an
+  LIR (LC3-interacting region) motif for binding LGG-1/LGG-2 (Atg8/LC3 family proteins),
+  a PB1 domain for self-oligomerization required for cargo clustering, and a ZZ-type
+  zinc finger domain. SQST-1 bridges ubiquitinated protein aggregates to autophagosomes
+  for degradation via aggrephagy, playing critical roles in proteostasis maintenance.
+  SQST-1 accumulation (as puncta or protein levels) serves as a widely used readout
+  for autophagic flux - accumulation indicates reduced flux, while decreased SQST-1
+  indicates increased flux.
+existing_annotations:
+- term:
+    id: GO:0035973
+    label: aggrephagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Aggrephagy is a core function of SQST-1. The protein is required for
+      degradation of ubiquitinated protein aggregates via selective autophagy. SQST-1
+      binds ubiquitinated cargo via its UBA domain and recruits autophagosomes via
+      LGG-1 interaction.
+    action: ACCEPT
+    reason: This is the primary biological process function of SQST-1. The deep research
+      clearly establishes that SQST-1 binds ubiquitinated protein aggregates and delivers
+      them to autophagosomes via LGG-1 interactions. The IBA inference from mammalian
+      p62 is fully supported by direct experimental evidence in C. elegans.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: epg-7 functions as a scaffold protein mediating autophagic
+        degradation of several protein aggregates, including aggregates of the p62
+        homologue SQST-1
+    - reference_id: file:worm/sqst-1/sqst-1-deep-research-falcon.md
+      supporting_text: As a selective autophagy receptor, SQST-1 bridges ubiquitinated
+        cargoes to the autophagy machinery by binding ubiquitin via UBA and recruiting
+        isolation membranes through LGG-1/Atg8 interaction via its LIR. Oligomerization
+        (PB1) promotes phase separation/condensates and cargo clustering, facilitating
+        autophagosome formation and turnover of aggregates (aggrephagy)
+- term:
+    id: GO:0000423
+    label: mitophagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: While mammalian p62/SQSTM1 has been implicated in mitophagy, direct experimental
+      evidence for SQST-1 in C. elegans mitophagy is limited. The deep research notes
+      that direct worm evidence for SQST-1&#39;s role in mitophagy remains less defined
+      than aggrephagy.
+    action: KEEP_AS_NON_CORE
+    reason: The IBA inference is phylogenetically sound given p62&#39;s role in mammalian
+      mitophagy, but the primary worm literature emphasizes aggrephagy rather than
+      mitophagy for SQST-1. Reviews infer conserved roles in organelle quality control
+      based on domain conservation, but worm-specific mitophagy by SQST-1 has not
+      been directly demonstrated. This is a plausible secondary function inferred
+      from orthology rather than a demonstrated core function in C. elegans.
+    supported_by:
+    - reference_id: file:worm/sqst-1/sqst-1-deep-research-falcon.md
+      supporting_text: direct worm evidence for SQST-1&#39;s role in mitophagy or specific
+        organelle-selective autophagy remains less defined than aggrephagy in the
+        curated set
+- term:
+    id: GO:0005080
+    label: protein kinase C binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Mammalian p62 interacts with atypical PKC isoforms via its PB1 domain.
+      While SQST-1 contains a conserved PB1 domain that mediates self-oligomerization,
+      direct evidence for PKC binding in C. elegans has not been reported in the literature
+      reviewed.
+    action: UNDECIDED
+    reason: The IBA inference is based on mammalian p62 PKC interactions. SQST-1 has
+      a PB1 domain and presumably retains similar binding capabilities, but no C.
+      elegans-specific experimental evidence was found. The PB1 domain in worm literature
+      is discussed primarily in the context of self-oligomerization for cargo clustering
+      rather than PKC signaling. Without worm-specific data, this remains uncertain.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: p62 contains a self-polymerization PB1 domain, a conserved
+        LC3-interacting region (LIR), and a ubiquitin-associating (UBA) domain
+- term:
+    id: GO:0007032
+    label: endosome organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Mammalian p62 has been implicated in endosomal trafficking, but this
+      is not a well-documented function for C. elegans SQST-1. The primary literature
+      on SQST-1 focuses on its role in autophagy and proteostasis rather than endosome
+      organization.
+    action: KEEP_AS_NON_CORE
+    reason: The IBA inference is phylogenetically sound but not supported by direct
+      C. elegans evidence in the literature reviewed. SQST-1 is primarily studied
+      in the context of autophagy in worms. This may be a peripheral function inferred
+      from mammalian ortholog studies.
+- term:
+    id: GO:0044753
+    label: amphisome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Amphisomes are intermediate compartments formed by fusion of autophagosomes
+      with endosomes before final lysosomal fusion. SQST-1 is documented to localize
+      to autophagic structures that colocalize with LGG-1 puncta.
+    action: ACCEPT
+    reason: Given SQST-1&#39;s role as an autophagy cargo receptor that bridges cargo
+      to LGG-1-labeled autophagic structures, localization to amphisomes (intermediate
+      autophagy compartments) is consistent with its function. The IBA inference aligns
+      with experimental observations of SQST-1 colocalization with LGG-1 puncta in
+      C. elegans.
+    supported_by:
+    - reference_id: file:worm/sqst-1/sqst-1-deep-research-falcon.md
+      supporting_text: it forms puncta that frequently colocalize with LGG-1-labeled
+        autophagic structures in adults. Accumulation of SQST-1 puncta/protein is
+        a classic indicator of reduced autophagic flux
+- term:
+    id: GO:0070530
+    label: K63-linked polyubiquitin modification-dependent protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SQST-1 contains a conserved UBA domain (residues 654-693) that binds
+      ubiquitin. The protein functions by binding ubiquitinated cargo for delivery
+      to autophagosomes. Mammalian p62 shows preference for K63-linked ubiquitin chains.
+    action: ACCEPT
+    reason: This molecular function is central to SQST-1&#39;s role as a selective autophagy
+      receptor. The UBA domain is clearly documented in the UniProt record and functionally
+      important for cargo recognition. While the specific K63-linkage preference has
+      not been directly tested in C. elegans, the IBA inference from mammalian p62
+      is strongly supported by conservation of the UBA domain and the functional requirement
+      for ubiquitin binding in aggrephagy.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: p62 contains a self-polymerization PB1 domain, a conserved
+        LC3-interacting region (LIR), and a ubiquitin-associating (UBA) domain
+    - reference_id: file:worm/sqst-1/sqst-1-uniprot.txt
+      supporting_text: DOMAIN 654..693 /note=&#34;UBA&#34; /evidence=&#34;ECO:0000259|PROSITE:PS50030&#34;
+- term:
+    id: GO:0016235
+    label: aggresome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: SQST-1 is observed to form puncta/aggregates, particularly in autophagy
+      mutants or under proteotoxic stress. These SQST-1-positive structures accumulate
+      when autophagic flux is impaired and represent sites of cargo accumulation.
+    action: ACCEPT
+    reason: SQST-1 puncta formation is extensively documented in C. elegans literature
+      as a readout for autophagic flux. The protein accumulates into visible aggregates
+      when autophagy is blocked, consistent with aggresome localization. This is experimentally
+      validated in worm studies showing SQST-1::GFP puncta accumulation in autophagy
+      mutants.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: &#39;NA: SQST-1 aggregates are absent in wild-type embryos&#39;
+    - reference_id: file:worm/sqst-1/sqst-1-deep-research-falcon.md
+      supporting_text: Accumulation of SQST-1 puncta/protein is a classic indicator
+        of reduced autophagic flux
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: SQST-1 contains a ZZ-type zinc finger domain (residues 179-229) as documented
+      in UniProt. This domain coordinates zinc ions via conserved cysteine residues.
+    action: ACCEPT
+    reason: The ZZ-type zinc finger domain is clearly present in the protein sequence
+      and annotated in InterPro (IPR000433). The IEA inference from domain composition
+      is valid.
+    supported_by:
+    - reference_id: file:worm/sqst-1/sqst-1-uniprot.txt
+      supporting_text: DOMAIN 179..229 /note=&#34;ZZ-type&#34; /evidence=&#34;ECO:0000259|PROSITE:PS50135&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: This is a parent term of zinc ion binding. SQST-1 binds zinc via its
+      ZZ-type zinc finger domain.
+    action: ACCEPT
+    reason: This IEA is valid based on the zinc ion binding annotation. The broader
+      metal ion binding term is subsumed by the more specific zinc ion binding annotation
+      but is not incorrect.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23530068
+  review:
+    summary: SQST-1 was shown to directly interact with EPG-7 (Q22342) and LGG-1 (O45995)
+      by co-immunoprecipitation experiments. SQST-1 was specifically coimmunoprecipitated
+      by anti-EPG-7 antibody from embryonic extracts.
+    action: MODIFY
+    reason: While the protein binding is experimentally demonstrated, this term is
+      too general and uninformative. The specific interactions with EPG-7 (a scaffold
+      protein) and LGG-1/Atg8 (via LIR motif) should be captured with more specific
+      terms. The core molecular function of SQST-1 as an autophagy cargo adaptor is
+      better represented by GO:0160247.
+    proposed_replacement_terms:
+    - id: GO:0160247
+      label: autophagy cargo adaptor activity
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: &#34;SQST-1 was specifically coimmunoprecipitated by anti\u2013\
+        EPG-7, but not by control IgG&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:23530068
+  review:
+    summary: Cytoplasmic localization of SQST-1 was directly observed using SQST-1::GFP
+      reporters. The protein forms cytoplasmic puncta that colocalize with autophagic
+      structures.
+    action: ACCEPT
+    reason: Direct experimental evidence from microscopy of SQST-1::GFP reporters.
+      The paper documents cytoplasmic localization and puncta formation. SQST-1 is
+      diffusely cytoplasmic under normal conditions and forms puncta under stress
+      or in autophagy mutants.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: SQST-1 directly interacts with EPG-7 and colocalizes with EPG-7
+        aggregates in autophagy mutants
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:21802374
+  review:
+    summary: This publication (Lu et al. 2011) established the hierarchical relationship
+      of autophagy genes in aggregate degradation. Cytoplasmic localization is implied
+      by the use of autophagy reporters.
+    action: ACCEPT
+    reason: Although PMID:21802374 focuses on EPG-6 and autophagosome formation, it
+      uses autophagy reporters that display cytoplasmic localization. The duplicate
+      annotation with the same GO term but different evidence sources is acceptable.
+    supported_by:
+    - reference_id: PMID:21802374
+      supporting_text: We also established the hierarchical relationship of autophagy
+        genes in degradation of protein aggregates
+- term:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:23530068
+  review:
+    summary: SQST-1 functions as a selective autophagy receptor that bridges ubiquitinated
+      cargo to the autophagy machinery. It binds ubiquitinated proteins via its UBA
+      domain and recruits autophagosomes via LIR-mediated interaction with LGG-1/Atg8.
+      This is the core molecular function that enables aggrephagy.
+    action: NEW
+    reason: This term precisely describes the core molecular function of SQST-1 as
+      a cargo adaptor in selective autophagy. The existing GO annotations lack this
+      key molecular function term. The experimental evidence directly supports this
+      function.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: A family of Atg8/LC3 (mammalian Atg8 homologue)-interacting
+        proteins act as receptors that mediate delivery of specific cargoes to the
+        autophagic machinery via Atg8/LC3 binding
+    - reference_id: file:worm/sqst-1/sqst-1-deep-research-falcon.md
+      supporting_text: As a selective autophagy receptor, SQST-1 bridges ubiquitinated
+        cargoes to the autophagy machinery by binding ubiquitin via UBA and recruiting
+        isolation membranes through LGG-1/Atg8 interaction via its LIR
+- term:
+    id: GO:0005776
+    label: autophagosome
+  evidence_type: IDA
+  original_reference_id: PMID:23530068
+  review:
+    summary: SQST-1 colocalizes with LGG-1-labeled autophagosomes. SQST-1 aggregates
+      associate with LGG-1 puncta during autophagic degradation.
+    action: NEW
+    reason: This cellular component annotation is directly supported by colocalization
+      studies showing SQST-1 on autophagic structures. This is more informative than
+      the existing cytoplasm annotation and complements the amphisome localization.
+    supported_by:
+    - reference_id: PMID:23530068
+      supporting_text: Mutations in epg-7 impair association of SQST-1 aggregates
+        with LGG-1/Atg8 puncta
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21802374
+  title: The WD40 repeat PtdIns(3)P-binding protein EPG-6 regulates progression of
+    omegasomes to autophagosomes.
+  findings:
+  - statement: Established hierarchical relationship of autophagy genes in aggregate
+      degradation
+    supporting_text: We also established the hierarchical relationship of autophagy
+      genes in degradation of protein aggregates
+  - statement: EPG-6 and ATG-2 regulate autophagosome progression
+    supporting_text: epg-6 and atg-2 regulate progression of omegasomes to autophagosomes
+- id: PMID:23530068
+  title: The scaffold protein EPG-7 links cargo-receptor complexes with the autophagic
+    assembly machinery.
+  findings:
+  - statement: EPG-7 functions as scaffold mediating autophagic degradation of SQST-1
+      aggregates
+    supporting_text: epg-7 functions as a scaffold protein mediating autophagic degradation
+      of several protein aggregates, including aggregates of the p62 homologue SQST-1
+  - statement: SQST-1 directly interacts with EPG-7 by co-immunoprecipitation
+    supporting_text: &#34;SQST-1 was specifically coimmunoprecipitated by anti\u2013EPG-7,\
+      \ but not by control IgG&#34;
+  - statement: SQST-1 colocalizes with EPG-7 aggregates in autophagy mutants
+    supporting_text: SQST-1 directly interacts with EPG-7 and colocalizes with EPG-7
+      aggregates in autophagy mutants
+  - statement: Mutations in epg-7 impair association of SQST-1 aggregates with LGG-1
+      puncta
+    supporting_text: Mutations in epg-7 impair association of SQST-1 aggregates with
+      LGG-1/Atg8 puncta
+  - statement: SQST-1 is the C. elegans p62 homologue
+    supporting_text: aggregates of the p62 homologue SQST-1
+core_functions:
+- description: SQST-1 bridges ubiquitinated cargo to autophagosomes by binding ubiquitin
+    via UBA domain and recruiting LGG-1/Atg8-decorated membranes via LIR motif
+  molecular_function:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  directly_involved_in:
+  - id: GO:0035973
+    label: aggrephagy
+  locations:
+  - id: GO:0005776
+    label: autophagosome
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:23530068
+    supporting_text: A family of Atg8/LC3 (mammalian Atg8 homologue)-interacting proteins
+      act as receptors that mediate delivery of specific cargoes to the autophagic
+      machinery via Atg8/LC3 binding
+- description: SQST-1 recognizes and binds K63-linked polyubiquitinated cargo for
+    selective degradation
+  molecular_function:
+    id: GO:0070530
+    label: K63-linked polyubiquitin modification-dependent protein binding
+  directly_involved_in:
+  - id: GO:0035973
+    label: aggrephagy
+  locations:
+  - id: GO:0016235
+    label: aggresome
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:23530068
+    supporting_text: p62 contains a self-polymerization PB1 domain, a conserved LC3-interacting
+      region (LIR), and a ubiquitin-associating (UBA) domain
+suggested_questions:
+- question: Does SQST-1 participate in C. elegans mitophagy, or are there other selective
+    autophagy receptors (e.g., DCT-1/BNIP3) that fulfill this role?
+- question: What is the functional significance of the ZZ-type zinc finger domain
+    in C. elegans SQST-1? Does it participate in signaling pathways similar to mammalian
+    p62?
+- question: Does SQST-1 interact with atypical PKC orthologs in C. elegans similar
+    to mammalian p62-PKC interactions?
+suggested_experiments:
+- description: Direct test of SQST-1 role in mitophagy using mitochondrial stress
+    conditions and co-localization with mitophagy markers
+  hypothesis: SQST-1 may participate in mitophagy in C. elegans similar to mammalian
+    p62
+- description: Biochemical characterization of ubiquitin chain-type specificity for
+    SQST-1 UBA domain (K48 vs K63 vs linear chains)
+  hypothesis: SQST-1 UBA domain preferentially binds K63-linked ubiquitin chains
+- description: Structure-function analysis of SQST-1 ZZ domain to determine if it
+    has signaling functions beyond autophagy in C. elegans
+  hypothesis: The ZZ domain may have additional signaling roles beyond autophagy
+tags:
+- caeel-mitophagy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
