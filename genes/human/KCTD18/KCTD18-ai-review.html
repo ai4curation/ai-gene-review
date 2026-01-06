@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCTD18 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KCTD18</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6PI47" target="_blank" class="term-link">
+                        Q6PI47
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "KCTD18";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6PI47" data-a="DESCRIPTION: KCTD18 is a poorly characterized BTB/POZ domain-co..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KCTD18 is a poorly characterized BTB/POZ domain-containing protein of the KCTD family. It contains an N-terminal T1-type BTB domain (aa 12-80) and a KCTD18-specific C-terminal domain. AlphaFold2 structural modeling predicts a stable 1:1 BTB-Cullin 3 interaction, suggesting KCTD18 may function as a CRL3 (Cullin-RING ligase 3) substrate adaptor. Unlike many KCTD family members that form pentamers, KCTD18 is predicted to be monomeric. No substrates, cellular localization, or enzymatic activities have been experimentally validated for KCTD18. The protein&#39;s function remains to be determined through direct experimental investigation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PI47" data-a="GO:0042802" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred by the ARBA machine learning model, likely based on the presence of the BTB/POZ domain. BTB domains are known to mediate protein-protein interactions, including self-association. However, per curation guidelines, &#39;protein binding&#39; and related generic terms like &#39;identical protein binding&#39; are discouraged as they do not convey informative molecular function. For KCTD family proteins, a more informative annotation would be cullin binding if experimentally validated. AlphaFold2 modeling predicts KCTD18 BTB can bind CUL3 in a 1:1 complex [Balasco et al., 2024], but this remains unvalidated experimentally. Given the lack of specificity of this term and absence of experimental validation, this annotation should be removed.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic &#39;protein binding&#39; terms are uninformative per GO curation guidelines. While BTB domains do mediate protein interactions, the specific interactors for KCTD18 are not experimentally established. Structural predictions suggest CUL3 binding [Balasco et al., 2024], but this requires experimental validation before annotation. The term should be replaced with a more specific function term once experimental evidence is available.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/KCTD18/KCTD18-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The 2024 modeling suggests KCTD18 is presumptively monomeric, but KCTD family precedent includes pentamers and other oligomers; thus, KCTD18&#39;s oligomeric state is currently unverified and should be established experimentally.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051260" target="_blank" class="term-link">
+                                    GO:0051260
+                                </a>
+                            </span>
+                            <span class="term-label">protein homooligomerization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PI47" data-a="GO:0051260" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is electronically inferred from the T1-type BTB domain (InterPro:IPR003131). While many BTB domain proteins do form homo-oligomers, recent structural prediction analysis suggests KCTD18 may be an exception. Balasco et al. (2024) report that AlphaFold2 models predict KCTD18 to be monomeric, in contrast to other KCTD family members that form pentamers (e.g., KCTD5). This automated annotation appears to be incorrect based on current structural predictions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Recent AlphaFold2-based structural analysis predicts KCTD18 is monomeric rather than oligomeric [Balasco et al., 2024]. While the T1-type BTB domain in many proteins does mediate oligomerization, KCTD18 appears to be an outlier in the KCTD family. The InterPro-based inference is too broad and does not account for protein-specific structural features. This annotation should be removed until experimental evidence (e.g., SEC-MALS, native MS) confirms the oligomeric state.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/KCTD18/KCTD18-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">KCTD18 predicted to be monomeric (family shows diversity; many KCTDs form pentamers). Family-level data show pentameric assemblies (e.g., KCTD5); KCTD18 may be an outlier (monomeric) per AF prediction.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/KCTD18/KCTD18-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on KCTD18 including Balasco et al. 2024 comprehensive analysis of KCTD-Cullin 3 structural recognition</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD18 BTB domain is predicted to form a stable 1:1 complex with CUL3</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD18 is predicted to be monomeric, unlike pentameric KCTD family members</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No experimentally validated substrates for KCTD18 have been reported</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KCTD18 physically interact with CUL3 as predicted by structural modeling?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="Q: Does KCTD18 physically interact with CUL3 as predi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the actual oligomeric state of KCTD18 in solution?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="Q: What is the actual oligomeric state of KCTD18 in s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the cellular substrates ubiquitinated by a KCTD18-CUL3 complex, if any?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="Q: What are the cellular substrates ubiquitinated by ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where is KCTD18 localized within the cell?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="Q: Where is KCTD18 localized within the cell?..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation and in vitro binding assays to validate KCTD18-CUL3 interaction</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KCTD18 BTB domain binds CUL3 as predicted by AlphaFold2 modeling</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="EXPERIMENT: Co-immunoprecipitation and in vitro binding assays..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> SEC-MALS and native mass spectrometry to determine oligomeric state</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KCTD18 is monomeric in solution, unlike pentameric KCTD family members</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="EXPERIMENT: SEC-MALS and native mass spectrometry to determine..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> BioID/APEX proximity labeling to identify interacting proteins and potential substrates</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KCTD18 functions as a CRL3 adaptor with specific substrates</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="EXPERIMENT: BioID/APEX proximity labeling to identify interact..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Subcellular fractionation and immunofluorescence to determine localization</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KCTD18 localizes to a specific cellular compartment where it exerts its function</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PI47" data-a="EXPERIMENT: Subcellular fractionation and immunofluorescence t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KCTD18-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6PI47" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T10:39:14.978247'<br />
+end_time: '2025-12-27T10:45:13.630313'<br />
+duration_seconds: 358.65<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: KCTD18<br />
+  gene_symbol: KCTD18<br />
+  uniprot_accession: Q6PI47<br />
+  protein_description: 'RecName: Full=BTB/POZ domain-containing protein KCTD18;'<br />
+  gene_info: Name=KCTD18;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: KCTD18_C. (IPR045704); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB.<br />
+    (IPR003131); BTB_2 (PF02214); KCTD18_C (PF19321)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 10</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q6PI47</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD18;</li>
+<li><strong>Gene Information:</strong> Name=KCTD18;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> KCTD18_C. (IPR045704); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214); KCTD18_C (PF19321)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD18" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD18' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD18</strong> (gene ID: KCTD18, UniProt: Q6PI47) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q6PI47</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD18;</li>
+<li><strong>Gene Information:</strong> Name=KCTD18;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> KCTD18_C. (IPR045704); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214); KCTD18_C (PF19321)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD18" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD18' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD18</strong> (gene ID: KCTD18, UniProt: Q6PI47) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview: We verified the target identity and domains (Objective 1), searched for recent family-level and KCTD18-specific sources prioritizing 2023–2024 (Objective 2), gathered and synthesized evidence on function, interactions, structural predictions, and localization (Objective 3), and prepared a concise artifact summarizing KCTD18-specific facts and caveats (Objective 5). Direct experimental literature on human KCTD18 remains sparse; therefore, we report confirmed and predicted properties with clear attribution and limitations.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Finding for KCTD18</th>
+<th>Evidence type (experiment/model/inference/family-level)</th>
+<th>Source (short citation with year)</th>
+<th>URL/DOI</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>Homo sapiens KCTD18; UniProt accession Q6PI47 (human)</td>
+<td>Database / family-level corroboration</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 1-2)</td>
+<td>https://doi.org/10.3390/ijms25031881</td>
+<td>Matches user-provided UniProt identity and family assignment</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>Contains N-terminal BTB/POZ (T1-type_BTB) and a KCTD18_C C-terminal region</td>
+<td>Domain annotation / family-level inference</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 1-2)</td>
+<td>https://doi.org/10.3390/ijms25031881</td>
+<td>Domain architecture aligns with UniProt-supplied domains</td>
+</tr>
+<tr>
+<td>Predicted Cul3 interaction</td>
+<td>AlphaFold2-based models predict a stable 1:1 BTB–Cul3 interaction for the KCTD18 BTB fragment</td>
+<td>Structural model / prediction</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 2-4)</td>
+<td>https://doi.org/10.3390/ijms25031881</td>
+<td>Prediction only; no experimental validation for full-length KCTD18 reported in sources</td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>KCTD18 predicted to be monomeric (family shows diversity; many KCTDs form pentamers)</td>
+<td>Model/inference and family-level evidence</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 8-9), Ramdass, 2025 (ramdass2025structuralmechanismsofa pages 22-31)</td>
+<td>https://doi.org/10.3390/ijms25031881 (Balasco)</td>
+<td>Family-level data show pentameric assemblies (e.g., KCTD5); KCTD18 may be an outlier (monomeric) per AF prediction</td>
+</tr>
+<tr>
+<td>Substrates</td>
+<td>No experimentally validated substrates reported for KCTD18 to date</td>
+<td>Absence of experimental evidence / inference</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 18-18), Ramdass, 2025 (ramdass2025structuralmechanismsofa pages 22-31)</td>
+<td>https://doi.org/10.3390/ijms25031881</td>
+<td>Several other KCTDs have validated substrates (e.g., KCTD5, KCTD11), but none identified for KCTD18 in these sources</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>Not established experimentally for KCTD18 in the gathered literature</td>
+<td>Lack of direct experimental data / family-level inference</td>
+<td>Reyes, 2016 (reyes2016thesubcellularlocalization pages 15-19)</td>
+<td>(no DOI available in source)</td>
+<td>Family members localize variably (cytosol, nucleus, mitochondria); KCTD18 localization remains to be determined</td>
+</tr>
+<tr>
+<td>Family functional paradigm</td>
+<td>KCTDs often act as substrate adaptors for CRL3 (BTB recruits Cul3; CTD binds substrates). Example: KCTD5–Cul3 ubiquitinates Gβγ (2023 cryo-EM + functional work)</td>
+<td>Experimental (cryo-EM + functional) and family-level generalization</td>
+<td>Jiang et al., 2023 (cited in Balasco et al., 2024) (balasco2024acomprehensiveanalysis pages 18-18)</td>
+<td>Jiang et al. DOI: 10.1126/sciadv.adg8369 (balasco2024acomprehensiveanalysis pages 18-18)</td>
+<td>Demonstrates mechanism for family (pentameric assembly and substrate ubiquitination); provides functional model applicable to other KCTDs</td>
+</tr>
+<tr>
+<td>CRL3 / KCTD general properties</td>
+<td>BTB domain mediates Cul3 recruitment; C-terminal regions (CTDs) determine substrate specificity; KCTDs form CRL3 adaptor complexes</td>
+<td>Family-level experimental and modeling evidence</td>
+<td>Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 16-18)</td>
+<td>https://doi.org/10.3390/ijms25031881</td>
+<td>Repeatedly observed across multiple KCTD members; supports hypothesis that KCTD18 could function as a CRL3 adaptor if Cul3 binding is validated</td>
+</tr>
+<tr>
+<td>Structural confidence caveat</td>
+<td>Some AF/structure models for KCTD18 (and KCTD19) were judged low-confidence/unreliable in a family-wide survey; experimental structures needed</td>
+<td>Model evaluation / caveat</td>
+<td>Ramdass, 2025 (ramdass2025structuralmechanismsofa pages 22-31), Balasco et al., 2024 (balasco2024acomprehensiveanalysis pages 2-4)</td>
+<td>(Ramdass 2025: no DOI available in source), https://doi.org/10.3390/ijms25031881 (Balasco)</td>
+<td>Emphasizes need for biochemical or cryo-EM/ crystallography validation for KCTD18-specific claims</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Concise summary of KCTD18 identity, domains, predicted interactions, oligomeric state, localization status, family paradigm, and confidence caveats with evidence type and sources (2023–2025), useful as a quick reference for further experimental planning.</em></p>
+<p>Executive summary<br />
+KCTD18 (UniProt Q6PI47) is a human BTB/POZ domain-containing KCTD-family protein. Recent structural-prediction work (2024) supports a BTB-mediated interaction with CUL3, suggesting a role as a CRL3 substrate adaptor. However, there are no experimentally confirmed substrates, oligomeric state, or cellular localization data specific to human KCTD18 as of the latest accessible literature. The broader KCTD family provides mechanistic context: BTB domains recruit CUL3 while variable C-terminal domains confer substrate recognition; several KCTDs form pentameric adaptors and mediate substrate ubiquitination (e.g., KCTD5 targeting Gβγ in 2023 structural work), informing plausible functions for KCTD18 that require direct validation (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 18-18, ramdass2025structuralmechanismsofa pages 22-31).</p>
+<p>1) Key concepts and definitions<br />
+- Identity and domains: KCTD18 is a Homo sapiens protein of the KCTD family defined by an N-terminal BTB/POZ (T1-type) domain and a distinct KCTD18_C C-terminal region. The BTB domain underlies oligomerization and interactions, particularly with CUL3; CTDs generally mediate substrate binding (balasco2024acomprehensiveanalysis pages 1-2, ramdass2025structuralmechanismsofa pages 22-31). URL: https://doi.org/10.3390/ijms25031881 (published Feb 2024).<br />
+- Functional paradigm (family): Many KCTDs serve as substrate adaptors in CRL3 E3 ubiquitin ligases, where the BTB contacts CUL3 and the CTD binds substrates for ubiquitination and proteasomal degradation. Oligomeric assemblies vary across the family, with several members forming pentamers (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 16-18, ramdass2025structuralmechanismsofa pages 22-31). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- Predicted KCTD18–CUL3 recognition: A 2024 structural-prediction analysis across all KCTDs reports reliable models only for KCTDs known to bind CUL3; within this, the KCTD18 BTB fragment is predicted to form a stable 1:1 complex with CUL3, suggesting KCTD18 is a CUL3 interactor. The same study notes KCTD18 is phylogenetically close to cluster 4 and is presumptively monomeric in their models, though this requires experimental confirmation (balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 8-9). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).<br />
+- Family-level structural and mechanistic insights: High-resolution 2023 work on KCTD5/CRL3 defined a pentameric adaptor that binds and ubiquitinates five copies of Gβγ, providing a detailed mechanism for KCTD-mediated substrate recognition and coordinated ubiquitin transfer. This study underscores diversity in KCTD oligomeric states and highlights KCTDs as emerging regulators of GPCR signaling (Jiang 2023; referenced within 2024 review) (balasco2024acomprehensiveanalysis pages 18-18). URL: https://doi.org/10.1126/sciadv.adg8369 (Jul 2023).<br />
+- Model-confidence caveat for KCTD18: A 2025 family-focused review cautions that AlphaFold models for KCTD18 (and KCTD19) were judged too unreliable for detailed interpretation, emphasizing the need for experimental validation specific to KCTD18 (ramdass2025structuralmechanismsofa pages 22-31). (No URL available in the provided excerpt.)</p>
+<p>3) Current applications and real-world implementations<br />
+- Application of family paradigms to infer KCTD18 function: Based on family precedence, if KCTD18 engages CUL3 via its BTB, it could function as a CRL3 adaptor targeting specific substrates via its CTD. Real-world mechanistic templates include KCTD5-mediated ubiquitination of Gβγ (impacting GPCR/cAMP signaling). These implementations guide experimental design for KCTD18 (e.g., testing CUL3 binding, oligomerization, and substrate capture) (balasco2024acomprehensiveanalysis pages 18-18, balasco2024acomprehensiveanalysis pages 1-2).<br />
+- Drug-targeting strategies (family-level): Prior work has explored disrupting the CUL3–BTB interface and peptide-based modulation of KCTD–CUL3 recognition; while not KCTD18-specific, these approaches suggest potential routes to modulate KCTD18–CRL3 activity if its interaction is validated (balasco2024acomprehensiveanalysis pages 18-18). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).</p>
+<p>4) Expert opinions and analysis<br />
+- Structural recognition consensus: The 2024 comprehensive analysis argues that modern structure prediction discriminates CUL3-binding vs non-binding KCTDs, reporting consistent recognition modes for most CUL3-binding KCTDs. The paper groups KCTDs into clusters and describes KCTD18 as an isolated protein near cluster 4, likely monomeric but CUL3-binding by BTB predictions, emphasizing structural variability and the need for empirical validation (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 8-9). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).<br />
+- Family-wide mechanism: Reviews and comparative analyses concur that KCTD BTB domains recruit CUL3 and that CTDs determine substrates, with diverse oligomers often forming pentamers. This consensus frames KCTD18 as a probable CRL3 adaptor candidate pending biochemical confirmation (balasco2024acomprehensiveanalysis pages 16-18, ramdass2025structuralmechanismsofa pages 22-31). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- CUL3-binding prevalence and modeling: The 2024 analysis reports that reliable KCTD–CUL3 models were produced only for KCTDs known to interact with CUL3 (15 members), and KCTD18’s BTB fragment modeled as a 1:1 complex with CUL3, consistent with a CUL3-adaptor role (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 2-4). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).<br />
+- Oligomeric diversity (family): Structural work indicates multiple oligomeric states across KCTDs, with several adopting pentameric assemblies (e.g., KCTD5), while others may behave as monomers or dimers; the BTB fold is homologous to the Kv channel T1 tetramerization domain, suggesting quaternary flexibility (ramdass2025structuralmechanismsofa pages 22-31, balasco2024acomprehensiveanalysis pages 1-2). URL: https://doi.org/10.3390/ijms25031881 (Feb 2024).</p>
+<p>Functional annotation for human KCTD18 (Q6PI47)<br />
+- Molecular function: Predicted CUL3 adaptor activity mediated by an N-terminal BTB domain, by analogy with other KCTDs and supported by an AlphaFold-predicted KCTD18BTB–CUL3 1:1 complex. No direct enzymatic activity or confirmed substrates for KCTD18 have been reported in the retrieved literature (balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 1-2, ramdass2025structuralmechanismsofa pages 22-31).<br />
+- Interactions: Predicted BTB–CUL3 recognition (1:1) for KCTD18; numerous KCTDs use BTB to bind CUL3 while CTDs bind substrates. Specific KCTD18 interactors and substrates remain unidentified (balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 16-18).<br />
+- Oligomeric state: The 2024 modeling suggests KCTD18 is presumptively monomeric, but KCTD family precedent includes pentamers and other oligomers; thus, KCTD18’s oligomeric state is currently unverified and should be established experimentally (balasco2024acomprehensiveanalysis pages 8-9, ramdass2025structuralmechanismsofa pages 22-31).<br />
+- Substrate specificity: Unknown for KCTD18; by family analogy, the CTD is expected to confer substrate recognition if KCTD18 functions as a CRL3 adaptor (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 16-18).<br />
+- Cellular localization: Not established experimentally for KCTD18. KCTD family members localize to cytosol, nucleus, and, in some cases, associate with organelles; KCTD13 mitochondrial co-localization is an example of family diversity but should not be generalized to KCTD18 (reyes2016thesubcellularlocalization pages 15-19).</p>
+<p>Limitations and confidence<br />
+- The gene symbol KCTD18 is unambiguous for human and matches UniProt Q6PI47 and BTB/KCTD family annotations provided. Direct KCTD18-specific experimental evidence is limited; most claims are supported by family-level data and a 2024 structural-prediction study. A 2025 review flags low-confidence models for KCTD18, underscoring the need for experimental validation of CUL3 binding, oligomerization, localization, and substrates (ramdass2025structuralmechanismsofa pages 22-31, balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 1-2).</p>
+<p>Actionable experimental suggestions (informed by family mechanisms)<br />
+- Validate KCTD18–CUL3 interaction via co-immunoprecipitation and in vitro binding using BTB truncations; assess the predicted 1:1 binding mode (balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 1-2).<br />
+- Determine oligomeric state by SEC-MALS and native MS; test for monomeric versus oligomeric BTB assemblies (ramdass2025structuralmechanismsofa pages 22-31, balasco2024acomprehensiveanalysis pages 1-2).<br />
+- Map cellular localization using tagged constructs and fractionation; compare among cytosolic, nuclear, and organelle-associated pools (reyes2016thesubcellularlocalization pages 15-19).<br />
+- Identify substrates by proximity labeling (BioID/APEX) and proteomics in KCTD18 gain- and loss-of-function contexts; test CRL3 dependency via CUL3/RBX1 perturbation (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 16-18).</p>
+<p>References with URLs and dates<br />
+- Balasco N, Esposito L, Smaldone G, Salvatore M, Vitagliano L. A comprehensive analysis of the structural recognition between KCTD proteins and Cullin 3. International Journal of Molecular Sciences. Published Feb 2024. URL: https://doi.org/10.3390/ijms25031881 (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 18-18, balasco2024acomprehensiveanalysis pages 16-18, balasco2024acomprehensiveanalysis pages 8-9).<br />
+- Jiang W, Wang W, Kong Y, Zheng S. Structural basis for the ubiquitination of G protein βγ subunits by KCTD5/Cullin3 E3 ligase. Science Advances. Published Jul 5, 2023. URL: https://doi.org/10.1126/sciadv.adg8369 (balasco2024acomprehensiveanalysis pages 18-18).<br />
+- Ramdass AE. Structural mechanisms of multimeric BTB E3 ligases and interactors. 2025. (Review cited for family-level mechanisms and model confidence notes for KCTD18; no URL provided in the excerpt) (ramdass2025structuralmechanismsofa pages 22-31).<br />
+- Reyes AAA. The Subcellular Localization of the Uncharacterized Human Disease-Associated Protein KCTD13. 2016. (Family context for localization diversity; no URL provided in the excerpt) (reyes2016thesubcellularlocalization pages 15-19).</p>
+<p>Conclusion<br />
+Human KCTD18 (Q6PI47) is a BTB/POZ-containing KCTD-family protein with predicted BTB–CUL3 recognition consistent with a CRL3 adaptor role. Nonetheless, its oligomeric state, cellular localization, and substrates have not been experimentally defined. Recent 2023–2024 advances in KCTD structural biology support mechanistic hypotheses for KCTD18 but also highlight the necessity of targeted biochemical and structural validation for this specific protein (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 2-4, balasco2024acomprehensiveanalysis pages 18-18, ramdass2025structuralmechanismsofa pages 22-31).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 1-2): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 2-4): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 8-9): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ramdass2025structuralmechanismsofa pages 22-31): AE Ramdass. Structural mechanisms of multimeric btb e3 ligases and interactors. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 18-18): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(reyes2016thesubcellularlocalization pages 15-19): AAA Reyes. The subcellular localization of the uncharacterized human disease-associated protein potassium channel tetramerization domain 13 (kctd13). Unknown journal, 2016.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 16-18): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>balasco2024acomprehensiveanalysis pages 1-2</li>
+<li>balasco2024acomprehensiveanalysis pages 2-4</li>
+<li>balasco2024acomprehensiveanalysis pages 8-9</li>
+<li>ramdass2025structuralmechanismsofa pages 22-31</li>
+<li>balasco2024acomprehensiveanalysis pages 18-18</li>
+<li>reyes2016thesubcellularlocalization pages 15-19</li>
+<li>balasco2024acomprehensiveanalysis pages 16-18</li>
+<li>https://doi.org/10.3390/ijms25031881</li>
+<li>https://doi.org/10.1126/sciadv.adg8369</li>
+<li>https://doi.org/10.3390/ijms25031881,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KCTD18-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6PI47" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2025-12-27T17:04:35.321173'<br />
+end_time: '2025-12-27T17:28:38.779833'<br />
+duration_seconds: 1443.46<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: KCTD18<br />
+  gene_symbol: KCTD18<br />
+  uniprot_accession: Q6PI47<br />
+  protein_description: 'RecName: Full=BTB/POZ domain-containing protein KCTD18;'<br />
+  gene_info: Name=KCTD18;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: KCTD18_C. (IPR045704); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB.<br />
+    (IPR003131); BTB_2 (PF02214); KCTD18_C (PF19321)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 105</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q6PI47</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD18;</li>
+<li><strong>Gene Information:</strong> Name=KCTD18;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> KCTD18_C. (IPR045704); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214); KCTD18_C (PF19321)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD18" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD18' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD18</strong> (gene ID: KCTD18, UniProt: Q6PI47) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="functional-annotation-of-human-kctd18-btbpoz-domain-containing-protein-kctd18">Functional Annotation of Human <strong>KCTD18</strong> (BTB/POZ Domain-Containing Protein KCTD18)</h1>
+<h2 id="gene-and-protein-overview">Gene and Protein Overview</h2>
+<p><strong>KCTD18</strong> (Potassium Channel Tetramerization Domain containing 18) is a human protein-coding gene that belongs to the KCTD family of proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=The%20human%20family%20of%20Potassium,between%20family%20members%2C%20capability%20to">pmc.ncbi.nlm.nih.gov</a>). The KCTD family comprises about 25 members in humans, many of which remain only partially characterized (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=The%20human%20family%20of%20Potassium,between%20family%20members%2C%20capability%20to">pmc.ncbi.nlm.nih.gov</a>). KCTD proteins are named for a conserved <strong>potassium channel tetramerization (T1)</strong> motif, but most are not ion channel subunits themselves. Instead, they share a signature <strong>BTB/POZ domain</strong> at the N-terminus that defines the family and mediates protein-protein interactions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD%20%28%28K%29potassium%20Channel%20Tetramerization%20Domain,demonstrate%20the%20impressive%20ability%20of">pmc.ncbi.nlm.nih.gov</a>). In KCTD18, this BTB domain spans approximately amino acids 12–118 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected">pmc.ncbi.nlm.nih.gov</a>). The BTB domain (also known as a <strong>BTB/POZ domain</strong>) is a ~95-amino-acid motif known to facilitate protein oligomerization and to serve as an interface for binding other proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD%20%28%28K%29potassium%20Channel%20Tetramerization%20Domain,demonstrate%20the%20impressive%20ability%20of">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<p>UniProt describes KCTD18 as <em>“BTB/POZ domain-containing protein KCTD18”</em>, reflecting this key domain. The protein has an experimentally confirmed length of 426 amino acids (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=KCTD18%20%20%7C%20AF,E107">pmc.ncbi.nlm.nih.gov</a>). In addition to the BTB region, KCTD18 contains a C-terminal segment (InterPro: <strong>KCTD18_C</strong>, Pfam PF19321) that is unique to this protein. <strong>AlphaFold</strong> structure predictions indicate KCTD18 likely has two structured domains – the BTB domain at the N-terminus and a second folded region in the mid-section (roughly amino acids 140–242) – while the remaining C-terminus (after residue 242) may be intrinsically disordered (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=KCTD18%20%20%7C%20AF,E107">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=portion%20of%20the%20diagram%20is,whereas%20cluster%206">pmc.ncbi.nlm.nih.gov</a>). This suggests that KCTD18’s C-terminal tail could provide a flexible platform for binding specific targets, as is often the case for substrate adaptor proteins.  </p>
+<p>KCTD18 does not cluster closely with other KCTD proteins in phylogenetic analyses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=Notably%2C%20with%20the%20exception%20of,classified%20in%20clusters%20and%20sub">pmc.ncbi.nlm.nih.gov</a>). In earlier classifications based on BTB sequence homology, KCTD18 was one of a few “orphan” KCTDs that did not fit into the major subfamilies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that">pmc.ncbi.nlm.nih.gov</a>). Its closest paralog by sequence is reported to be <strong>KCTD8</strong>, a KCTD family member involved in neuronal signaling (<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=KCTD18#:~:text=GeneCards%20Summary%20for%20KCTD18%20Gene">www.genecards.org</a>). However, KCTD18 is phylogenetically distinct and stands alone outside the seven main KCTD clades identified in prior studies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that">pmc.ncbi.nlm.nih.gov</a>). This unique position hints that KCTD18 may have a divergent function relative to better-known KCTD proteins.</p>
+<h2 id="expression-and-localization">Expression and Localization</h2>
+<p><strong>Transcript and Protein Evidence:</strong> KCTD18 is expressed as at least two transcript variants (according to Ensembl), and there is evidence at the protein level for its existence (<a href="https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i">www.proteinatlas.org</a>). mRNA expression of KCTD18 appears <strong>broad and ubiquitous</strong>. According to the Human Protein Atlas, KCTD18 RNA is detected in all surveyed human tissues and shows <em>low tissue specificity</em>, meaning it is expressed at moderate levels across many tissue types rather than being highly enriched in one particular tissue (<a href="https://www.proteinatlas.org/ENSG00000155729-KCTD18/cancer#:~:text=Number%20of%20transcripts,tissue%20specificity%20Detected%20in%20all">www.proteinatlas.org</a>). This broad expression pattern suggests KCTD18 serves a general cellular role. Some analyses have noted a slight clustering of KCTD18 expression with specific physiological contexts – for example, one transcriptional cluster analysis associated KCTD18 with genes active in the lactating mammary gland (breast tissue) (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=KCTD4%20has%20not%20been%20characterized,associated%20to%20Restless%20Legs%20Syndrome">biosignaling.biomedcentral.com</a>). In the brain, KCTD18 mRNA is not region-specific (categorized as low regional specificity) and is expressed in various cell types (with some presence in astrocytes) (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=The%20emerging%20role%20of%20the,associated%20to%20Restless%20Legs%20Syndrome">biosignaling.biomedcentral.com</a>). Overall, these data indicate KCTD18 is a widely expressed intracellular protein, rather than a tissue-restricted factor.</p>
+<p><strong>Subcellular Localization:</strong> KCTD18 is predicted to be an <strong>intracellular</strong> protein, consistent with the absence of any secretion signal or transmembrane domain (<a href="https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i">www.proteinatlas.org</a>). High-throughput immunocytochemistry studies have not yet provided a definitive subcellular localization, but by analogy to other BTB-domain adaptors, KCTD18 likely resides in the cytosol and/or nucleus where it can interact with its protein partners. Many BTB domain proteins shuttle between cytoplasm and nucleus or concentrate at specific complexes inside the cell (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=variety%20of%20functions%20have%20been,will%20summarize%20the%20homology%20between">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=The%20human%20genome%20includes%20approximately,like%20domain">pmc.ncbi.nlm.nih.gov</a>). Without direct experimental data, one can infer from KCTD18’s role (discussed below) that it would localize to the cytosolic compartments where ubiquitin–proteasome machinery is active. Indeed, related KCTD family members functioning as ubiquitin ligase adapters (e.g. KCTD5, KCTD11) are cytosolic but can associate with organelles or the nucleus depending on their targets (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). Thus, KCTD18 is most likely a soluble intracellular protein, poised to bind other proteins rather than membrane structures. This prediction aligns with its <strong>“Intracellular”</strong> annotation in protein atlases (<a href="https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i">www.proteinatlas.org</a>).</p>
+<h2 id="molecular-function-and-interactions">Molecular Function and Interactions</h2>
+<p><strong>Cullin3 E3 Ubiquitin Ligase Adaptor:</strong> A growing body of evidence indicates that KCTD18 functions as a <strong>substrate adaptor in a cullin-RING ubiquitin ligase complex</strong>, specifically partnering with <strong>Cullin-3 (CUL3)</strong>. Cullin-3 is a scaffold protein in E3 ubiquitin ligases that uses BTB-domain adapters to recruit substrates for ubiquitination and subsequent proteasomal degradation (<a href="https://pubmed.ncbi.nlm.nih.gov/28060381/#:~:text=Skip%20to%20main%20page%20content,BTB%29%20domain%20proteins">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). Like many KCTD family members, KCTD18 has the hallmarks of a CUL3 adapter: an N-terminal BTB domain (for binding CUL3) and a unique C-terminal region (presumably for binding substrate proteins) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). Recent structural analyses support this role. A 2024 computational study by Balasco <em>et al.</em> systematically modeled all human KCTDs with CUL3, using AlphaFold2, and found that <strong>KCTD18 can form a stable complex with Cullin-3 in a 1:1 ratio</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). In these predictions, the BTB domain of KCTD18 directly interfaces with the N-terminal region of CUL3, analogous to known Cul3-BTB interactions. Notably, KCTD18 was one of 15 KCTD family proteins for which a <strong>reliable CUL3-binding model</strong> was obtained, whereas other KCTDs showed no stable interaction in the same analysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=methodologies%20for%20protein%20structure%20prediction%2C,between%20KCTDs%20that%20bind%20or">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected">pmc.ncbi.nlm.nih.gov</a>). This aligns with earlier experimental knowledge that many – but not all – KCTDs serve as Cul3 adaptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). In KCTD18’s case, although a crystal structure is not yet solved, the predicted binding and the presence of key BTB residues suggest it indeed <strong>binds CUL3</strong> and forms an E3 ubiquitin ligase complex (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Being a Cul3 adapter means KCTD18’s primary molecular function is likely to <strong>recruit specific substrate proteins for ubiquitination</strong>. The BTB/POZ domain of KCTD18 would anchor to Cullin-3, while another region of KCTD18 (likely within its unique C-terminus) recognizes a target protein, bringing it into proximity of the ubiquitin-conjugating enzyme (via the CUL3–RBX1 complex) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). This mechanism has been demonstrated for other KCTDs and BTB-domain proteins – for example, KCTD2 targets the oncoprotein c-Myc for degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5384019/#:~:text=by%20destabilizing%20c,5%7D%2C%20Hyunggee">pmc.ncbi.nlm.nih.gov</a>), and KCTD10 targets the small GTPase RhoB in certain signaling contexts (<a href="https://pubmed.ncbi.nlm.nih.gov/30515933/#:~:text=Cullin,induced%2Fhuman%20epidermal%20growth">pubmed.ncbi.nlm.nih.gov</a>). For KCTD18, <strong>its specific substrates remain unknown</strong> as of the latest research. No substrate protein has been definitively linked to KCTD18-mediated ubiquitination in literature yet. Identifying what KCTD18 targets for degradation is an open question; it could be a regulator of neuronal signaling, a cell-cycle protein, or another factor, given KCTD18’s broad expression and some neurological associations (discussed in the next section). </p>
+<p><strong>Oligomerization State:</strong> One distinctive feature of KCTD18 is that it is predicted to function <strong>as a monomer</strong>, rather than forming large oligomeric complexes by itself. Many BTB-domain adaptors naturally homo-oligomerize – classic BTB proteins often form homodimers or higher-order oligomers that can multivalently bind Cullin3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=proteins%20to%20promote%20oligomerization%20,group">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=An%20integral%20feature%20of%20most,further%20shapes%20the%20kinetics%20of">pmc.ncbi.nlm.nih.gov</a>). In the KCTD family, several members form pentamers or decamers (e.g. KCTD12 is a pentameric complex at GABA_B receptors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric">pmc.ncbi.nlm.nih.gov</a>), and the crystal structure of KCTD5 revealed a pentameric assembly (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=between%20KCTD%20proteins%20to%20allow,group%20contains%20KCTD9%2C%20KCTD17%2C%20KCTD">pmc.ncbi.nlm.nih.gov</a>)). However, <strong>KCTD18 is unusual</strong> in that it appears to lack strong self-oligomerization. The AlphaFold-based clustering study noted KCTD18 as “presumably monomeric” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). In that analysis, KCTD18 grouped near KCTD4 and KCTD19 – of those, KCTD4 is a pentameric protein but does <em>not</em> bind Cul3, whereas KCTD19 has multiple BTB domains but is monomeric (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=Cluster%204%20includes%20the%20pentameric,severe%20steric%20clashes%20with%20the">pmc.ncbi.nlm.nih.gov</a>). KCTD18, despite being phylogenetically close to that cluster, <strong>does bind Cul3</strong> (unlike KCTD4/19) but does so as a single subunit (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). This 1:1 stoichiometry (one KCTD18 per one CUL3) predicted for the KCTD18–CUL3 complex contrasts with adaptors like KCTD7 that recruit Cul3 as a pentameric assembly (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,KCTD7%2C%20and%20KCTD14">pmc.ncbi.nlm.nih.gov</a>). The functional implication is that KCTD18 might have a different regulatory mechanism – perhaps it interacts with substrates without needing cooperative oligomeric binding, or it might form transient or hetero-oligomeric complexes instead of stable homo-oligomers.</p>
+<p><strong>Protein-Protein Interactions:</strong> Beyond Cullin-3, KCTD18 has been found to interact with other proteins in cell-based assays and high-throughput studies. A recent 2023 study by Liao <em>et al.</em> examined interactions between <strong>KCTD5</strong> and various other KCTD family members (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=enables%20participation%20in%20an%20array,regions%20on%20KCTD5%20required%20for">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). In co-immunoprecipitation (co-IP) experiments from HEK293 cells, <strong>KCTD18 co-precipitated with KCTD5</strong>, indicating that these two KCTD proteins can form a complex in cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this">pmc.ncbi.nlm.nih.gov</a>). The interaction with KCTD5 was relatively <strong>weak</strong> compared to KCTD5’s interactions with some other family members (such as KCTD20 or BTBD10, which were much stronger) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=with%20KCTD5%20in%20IP%20and,cell%20lysates%20and%20live%20cells">pmc.ncbi.nlm.nih.gov</a>). Nevertheless, a bioluminescence resonance energy transfer (BRET) assay confirmed that KCTD18 and KCTD5 interact above background levels in live cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=with%20KCTD5%20in%20IP%20and,cell%20lysates%20and%20live%20cells">pmc.ncbi.nlm.nih.gov</a>). This suggests that KCTD18 may form <strong>hetero-oligomeric complexes</strong> with KCTD5 (and potentially other KCTDs) to modulate each other’s function. KCTD5 is a known Cul3 adaptor that can form hetero-oligomers and even influence the Cul3-binding ability of its partners (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=subunits%20proximal%20to%20the%20GIRK,coupled%20receptors%20%28GPCRs%29%20%5B%2012%2C8">pmc.ncbi.nlm.nih.gov</a>). The weak KCTD5–KCTD18 interaction hints that KCTD18 might occasionally associate with KCTD5-containing ubiquitin ligase complexes or share substrates, but this needs further investigation. Indeed, hetero-assembly among KCTDs is emerging as an important layer of regulation in this protein family (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=advanced%20tumor%20stage%20,the%20entire%20KCTD%20protein%20family">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>In large-scale interaction databases, a few additional partners for KCTD18 are noted. For instance, the Reactome/IntAct database lists <strong>LRP1 (Low-density lipoprotein receptor-related protein 1)</strong> as a protein that has been experimentally observed to bind KCTD18, with moderate confidence (<a href="https://www.reactome.org/content/detail/interactor/Q6PI47#:~:text=Accession%20%20%7C%20,1">www.reactome.org</a>). LRP1 is a cell-surface endocytic receptor, but the context of its interaction with KCTD18 is not yet known (this could have been detected in a proteomic pulldown or Y2H screen). If real, such an interaction raises the possibility that KCTD18 might influence receptor trafficking or signaling, potentially by targeting components of that pathway for degradation. However, it must be emphasized that <strong>no direct functional link between KCTD18 and LRP1 (or any specific pathway protein) has been confirmed in the literature</strong>. Most interactions beyond CUL3 remain preliminary. </p>
+<p>In summary, KCTD18’s known molecular function is as a <strong>protein-binding adaptor</strong>. It self-associates weakly (if at all), but it binds to CUL3 and likely to selected substrate proteins, thereby facilitating their ubiquitination. It also can engage with certain other KCTD family members, hinting at a network of KCTD interactions modulating each other’s activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this">pmc.ncbi.nlm.nih.gov</a>). This adaptor role places KCTD18 in the context of <strong>protein homeostasis and signaling</strong> – by controlling the stability of other proteins, it may influence various cellular pathways depending on its substrates.</p>
+<h2 id="biological-processes-and-pathway-involvement">Biological Processes and Pathway Involvement</h2>
+<p><strong>Protein Degradation Pathways:</strong> Given its putative role in a Cullin-3 E3 ligase, KCTD18 is directly involved in the <strong>ubiquitin-proteasome system</strong>. Adaptors like KCTD18 confer substrate specificity to the ubiquitination process (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase">pmc.ncbi.nlm.nih.gov</a>). Thus, KCTD18 likely contributes to the regulated degradation of one or more proteins that are important for certain cellular functions. For example, if KCTD18 targets a signaling protein for degradation, it could modulate that signaling pathway’s activity. While the identities of KCTD18’s substrates are not yet known, we can infer some possibilities from patterns seen with other KCTDs: Many KCTDs influence key signaling pathways such as <strong>neuronal signaling, cell cycle control, and development</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=association%20with%20a%20GIRK%20channel%2C,a%20major%20role%20in%20regulating">pmc.ncbi.nlm.nih.gov</a>). Indeed, various KCTD family members regulate critical processes – e.g., KCTD11/21 (also called KCASH proteins) regulate Hedgehog signaling by degrading a histone demethylase, KCTD10 regulates <strong>Rac1/RhoB</strong> GTPase signaling in growth factor pathways (<a href="https://pubmed.ncbi.nlm.nih.gov/30515933/#:~:text=Cullin,induced%2Fhuman%20epidermal%20growth">pubmed.ncbi.nlm.nih.gov</a>), and KCTD12/16/8 modulate GABA<sub>B</sub> receptor signaling in neurons (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>For KCTD18, one clue comes from its <strong>broad expression</strong> and evolutionary conservation (there are orthologs in other mammals, and even a mouse gene “4932411A20Rik” corresponds to Kctd18). This suggests it may partake in fundamental cellular activities rather than a very specialized pathway. <strong>Gene ontology (GO) annotations</strong> (predicted by automated analyses) have proposed that KCTD18 could be involved in processes like <em>“monoatomic ion transmembrane transport”</em> (<a href="https://www.ncbi.nlm.nih.gov/gtr/genes/130535#:~:text=Predicted%20to%20enable%20identical%20protein,of%20Genome%20Resources%2C%20Jul%202025">www.ncbi.nlm.nih.gov</a>), but this likely stems from its nominal association with potassium channel tetramerization domains and has no experimental support. There is no evidence that KCTD18 directly regulates ion channels or transporters. The GO annotation also predicts <em>“identical protein binding”</em> and <em>“protein homooligomerization”</em> for KCTD18 (<a href="https://www.ncbi.nlm.nih.gov/gtr/genes/130535#:~:text=Predicted%20to%20enable%20identical%20protein,of%20Genome%20Resources%2C%20Jul%202025">www.ncbi.nlm.nih.gov</a>), which is a generic way of saying it might bind itself or similar proteins (consistent with the possibility of homo- or hetero-oligomerization within the KCTD family). These predictions must be interpreted cautiously; current <strong>experimental data do not confirm any specific ion transport or channel-related role for KCTD18</strong>. Instead, the more substantiated view is that KCTD18’s biology is tied to protein turnover.</p>
+<p><strong>Cell Cycle and Development:</strong> Some KCTD adaptors are known to regulate cell cycle checkpoints or developmental patterning by targeting key regulators for degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=partially%20characterized,played%20in%20the%20main%20signalling">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). While KCTD18 has not been linked to cell cycle proteins directly, its gene is located on chromosome 2q33.1, a region that has come up in genetic studies of developmental disorders (see below). If KCTD18’s substrate were a developmental regulator, loss or gain of KCTD18 function could have phenotypic consequences. It is noteworthy that <em>in vitro</em> studies have not yet assigned KCTD18 a role in specific signaling pathways (such as Wnt, Notch, etc.), but ongoing research may test these pathways given the involvement of other KCTDs. </p>
+<p><strong>Neuronal and Neurological Context:</strong> Intriguingly, KCTD18 has surfaced in a neurological context through genetic association studies. It has been <strong>implicated in Restless Legs Syndrome (RLS)</strong>, a sensorimotor neurological disorder. In a genome fine-mapping study of an RLS susceptibility locus (termed <strong>RLS4</strong>), researchers identified a risk haplotype that spans the SPATS2L and KCTD18 genes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=MF%2C%20et%20al.%20Fine,5.%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar">pmc.ncbi.nlm.nih.gov</a>). This suggests that genetic variation near or within KCTD18 might influence RLS risk. A 2021 review notes that KCTD18 was “only potentially associated” with Restless Legs Syndrome and otherwise has not been linked to disease, highlighting how little is known about its function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). The RLS association, while not yet explaining mechanism, raises the possibility that KCTD18 could play a role in neural circuits or neurotransmitter pathways that underlie motor restlessness. Supporting this notion, some other KCTDs (e.g., KCTD12, KCTD16, KCTD8) directly modulate neurotransmitter receptor signaling in the brain (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric">pmc.ncbi.nlm.nih.gov</a>). It is conceivable that KCTD18 might also influence neural signaling proteins – possibly via ubiquitination of synaptic or ion-channel regulators – though this remains speculative until functional experiments are done.</p>
+<p>There is also a report connecting KCTD18 to <strong>neurodevelopmental disorders</strong>: A case study described a patient with epilepsy, developmental delay, and autistic behaviors who carried an <strong>interstitial duplication of chromosome 2q32.1–q33.3</strong> – a region that includes the entire KCTD18 gene (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). In that 2013 report (Usui <em>et al.</em>, <em>Am. J. Med. Genet.</em>), the duplication of 2q32.1-q33.3 was hypothesized to contribute to the patient’s neurological phenotype, and KCTD18 was one of the duplicated genes of interest. While it’s difficult to single out KCTD18’s role (because many genes were duplicated in that region), the authors noted KCTD18 as a potential candidate related to the patient’s epilepsy and developmental issues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>). This single case does not prove causation, but it aligns with the idea that disrupting KCTD18 dosage or function could affect brain development or function. Together with the RLS genetic link, these clues point toward a role for KCTD18 in the nervous system – possibly regulating proteins involved in neuronal excitability or movement control. Further neurobiological studies (for instance, KCTD18 knockout models or cell-based assays) will be needed to confirm any such role.</p>
+<p><strong>Other Pathways:</strong> Outside the nervous system, KCTD18 has so far evaded clear connections to specific pathways. It has not been implicated in major cancer-related signaling pathways either (unlike some KCTDs such as KCTD11 in Hedgehog signaling or KCTD5 in GPCR signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors">pmc.ncbi.nlm.nih.gov</a>)). A comprehensive 2021 review of KCTDs found <strong>no significant link between KCTD18 and cancer</strong> – KCTD18 showed no notable mutations or expression changes across tumor databases, and “no information is available that links KCTD18 to tumor development” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). Data mining in that study did not yield any consistent correlation of KCTD18 with particular cancer types (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). This suggests KCTD18 is likely not a major oncogenic driver or tumor suppressor, at least not one recognized so far. In contrast, several other KCTDs (KCTD11, KCTD21, KCTD5, etc.) have been associated with cancer pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=partially%20characterized,played%20in%20the%20main%20signalling">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=with%20cancer%20hallmarks%20or%20involved,In%20this%20review%20we">pmc.ncbi.nlm.nih.gov</a>), again underscoring that KCTD18 remains one of the less functionally characterized members. </p>
+<p>In summary, <strong>the precise biological role of KCTD18 is still being uncovered</strong>. Current understanding places it in the context of the ubiquitin-mediated proteolysis system – it likely helps regulate the abundance of specific proteins, thereby indirectly influencing whatever processes those proteins control. Preliminary genetic evidence hints at involvement in neurological processes (movement disorders and neurodevelopment), but <strong>no specific biochemical pathway has been definitively tied to KCTD18</strong> yet. Ongoing research using modern techniques (protein interaction mapping, CRISPR knockout phenotyping, etc.) is expected to shed light on which substrates and pathways KCTD18 regulates.</p>
+<h2 id="recent-research-and-emerging-insights-20232024">Recent Research and Emerging Insights (2023–2024)</h2>
+<p>Although KCTD18 was little-studied for many years, very recent advances have started to illuminate its potential functions:</p>
+<ul>
+<li>
+<p><strong>Structural Modeling (2023–2024):</strong> The application of AlphaFold2 and other structure prediction tools has given new insight into KCTD18’s interaction with CUL3. <strong>Balasco <em>et al</em>. (Feb 2024)</strong> demonstrated in <em>Int. J. Mol. Sci.</em> that in silico models of the <strong>KCTD18–CUL3 complex</strong> form a stable interface, supporting the hypothesis that KCTD18 is a bona fide Cullin-3 adaptor (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). This study was part of a comprehensive analysis of all KCTD family proteins; it highlighted how KCTD18, despite being monomeric, neatly binds to CUL3 in a 1:1 fashion, whereas some oligomeric KCTDs failed to bind CUL3 in the modeling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>). The structural determinants identified (e.g. specific BTB-domain residues of KCTD18 contacting CUL3) provide testable predictions for future experiments (such as mutagenesis of the BTB interface to disrupt Cul3 binding). This kind of computational work fills a gap noted by earlier experts – in 2021, Angrisani <em>et al</em>. remarked that <strong>lack of structural data</strong> made it difficult to infer KCTD18’s function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). Now, with high-confidence structural models, researchers have a clearer picture of KCTD18’s shape and how it may recruit Cul3 and substrates.</p>
+</li>
+<li>
+<p><strong>KCTD Family Interaction Mapping (2023):</strong> In September 2023, <strong>Liao <em>et al<em>. published a study in </em>Int. J. Mol. Sci.</em></strong> examining hetero-oligomerization across the KCTD family (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=Potassium%20Channel%20Tetramerization%20Domain%205,immunoprecipitation%20in%20lysed%20cells.%20We">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). This work, which included KCTD18 in its screen, revealed that <strong>KCTD18 can interact with KCTD5</strong> and possibly other family members in cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this">pmc.ncbi.nlm.nih.gov</a>). The discovery of even a weak KCTD5–KCTD18 interaction is important because it suggests a new layer of regulation: KCTD proteins might not work in isolation but form combinatorial complexes. KCTD5 is known to be involved in GPCR signaling and Cullin-3 ubiquitin ligase activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=subunits%20proximal%20to%20the%20GIRK,coupled%20receptors%20%28GPCRs%29%20%5B%2012%2C8">pmc.ncbi.nlm.nih.gov</a>); thus, if KCTD18 associates with KCTD5, KCTD18 could be drawn into similar functional contexts (for example, modulating G-protein signaling or sharing ubiquitination targets). The 2023 study also mapped which regions of KCTD5 mediate its interactions with other KCTDs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=reinforced%20this%20dataset%20by%20examining,occur%20throughout%20the%20KCTD%20family">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors">pmc.ncbi.nlm.nih.gov</a>). It found that different surfaces on KCTD5 bind different partners – a finding that might extend to KCTD18 as well, i.e., distinct parts of the KCTD18 protein might engage Cullin3 versus other KCTDs. Overall, this family-wide analysis underscores that <strong>KCTD18 is part of a broader protein interaction network</strong>, and studying it in the context of other KCTDs will likely be fruitful.</p>
+</li>
+<li>
+<p><strong>Functional Genomics and Disease Links:</strong> While no new functional study of KCTD18 alone was reported in 2023, there is increasing interest in KCTD genes in various diseases. For example, KCTD18 appears in some large genomics datasets (such as the Cancer Dependency Map and neurodevelopmental disorder exome studies), but as of 2023 there haven’t been standout findings naming KCTD18 as a top hit. The <em>DepMap</em> data (from cancer cell line CRISPR screens) list KCTD18, but it is not classified as an essential gene for cell viability in most lines (consistent with it not being a core component of proliferation pathways) (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=The%20emerging%20role%20of%20the,associated%20to%20Restless%20Legs%20Syndrome">biosignaling.biomedcentral.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). In neurological genomics, KCTD18’s mention in contexts like RLS and the 2q33.1 duplication has prompted researchers to keep an eye on it when analyzing patient genomes for movement disorders or autism, though no recurrent pathogenic mutations in KCTD18 have been reported so far (unlike some other BTB proteins, which do have known disease mutations). </p>
+</li>
+<li>
+<p><strong>Expert Opinion:</strong> Authoritative reviews continue to cite KCTD18 as <em>uncharacterized</em>. For instance, a 2021 review on KCTDs in cancer explicitly stated that for KCTD18 “<strong>no inference can be done on its function</strong>” due to lack of data and that it has only a tentative link to restless legs syndrome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). This reflects the consensus that KCTD18 is one of the last “black boxes” of the KCTD family. Experts propose that understanding KCTD18 will require identifying its <strong>protein partners</strong> and <strong>degradative targets</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Most%20KCTD%20proteins%20act%20therefore,4%2C%207%E2%80%9313">pmc.ncbi.nlm.nih.gov</a>). They stress examining KCTD18 in the context of known pathways – for example, if KCTD18 interacts with an ion channel or synaptic protein, that could immediately pinpoint a pathway. Another point raised in reviews is that <strong>homologous KCTD members often share functional roles</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,protein%20coupled%20receptors">pmc.ncbi.nlm.nih.gov</a>). Since KCTD18 doesn’t have a close subgroup, analogies are harder to draw, but its BTB-domain relatives in other families (like BTB-Kelch proteins) frequently act in ubiquitin-mediated processes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as">pmc.ncbi.nlm.nih.gov</a>). Therefore, experts hypothesize KCTD18’s role will likewise conform to this paradigm. As structural and proteomic data accumulate (such as the studies above), the community is poised to test these hypotheses.</p>
+</li>
+</ul>
+<p>In conclusion, <strong>recent research (2023–2024)</strong> has reinforced the idea that KCTD18 is a Cullin3-based ubiquitin ligase adapter and has begun to map its interaction landscape. What remains as the next step is to connect these molecular interactions to a concrete biological outcome – for example, determining <strong>what proteins are destabilized or regulated by KCTD18</strong> and <strong>what phenotypic effect</strong> that has in cells or organisms. The newest tools in structural biology and systems biology are finally enabling researchers to tackle these questions for KCTD18, meaning we may soon progress from predictive and correlational knowledge to direct functional insights.</p>
+<h2 id="current-applications-and-future-directions">Current Applications and Future Directions</h2>
+<p>At present, <strong>KCTD18 has no known direct applications in medicine or biotechnology</strong>. It is not (yet) a diagnostic marker, drug target, or therapeutic protein, primarily because its biological function is still unclear. No diseases have been definitively attributed to mutations in KCTD18, and no small molecules are known to modulate its activity. This stands in contrast to some other KCTD family proteins that have been studied in disease contexts (for example, KCTD17 mutations cause a form of myoclonic epilepsy, and KCTD11 is being explored as a tumor suppressor in cancer) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,BTBD10">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=KCTD19%2C%20so%20far%20observed%20mutated,and%20skin%20%284.2">pmc.ncbi.nlm.nih.gov</a>). For KCTD18, the lack of characterized function means it has not been on the radar for targeted interventions.</p>
+<p>However, the situation could change as knowledge grows. If future research links KCTD18 to specific pathways (such as neuronal signaling or metabolism), it might become relevant as a <strong>biomarker</strong> or <strong>therapeutic target</strong> in those contexts. For example, should KCTD18 be found to regulate a neurotransmitter receptor or a neurodevelopmental process, one could imagine monitoring its expression in neurological disorders or even modulating its activity pharmacologically to influence that pathway. Additionally, if KCTD18’s interaction with Cullin-3 and substrates turns out to be important in a disease (say, a cancer cell dependency or a neurodegenerative protein clearance mechanism), then drugs that affect the Cul3-KCTD18 E3 ligase complex might have therapeutic potential. The general ubiquitin system has garnered interest for drug discovery (e.g., PROTACs utilize ubiquitin ligases to degrade targets), so understanding KCTD18’s target might enable <strong>hijacking this E3 adaptor for targeted protein degradation</strong> of disease-causing proteins. These ideas remain speculative until more basic research is done.</p>
+<p>In the research domain, KCTD18 is of interest as one of the few human BTB domain proteins with an unknown function, making it a candidate for exploratory studies. Techniques like CRISPR knockout in cell lines or model organisms could reveal phenotypes that hint at its role. Moreover, protein interaction profiling (e.g., immunoprecipitation-mass spectrometry) focused on KCTD18 could identify its binding partners. If such studies are performed (perhaps inspired by the recent hints of KCTD18’s interactions), they will lay the groundwork for any downstream application.</p>
+<p><strong>In summary</strong>, KCTD18 is a protein on the frontier of functional genomics – <em>currently</em> it is more of a curiosity than an applied target, but it holds the promise of new biology. The consensus from recent expert analyses is that more research is needed, and KCTD18 should not be overlooked simply because it was previously uncharacterized (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=considered%20in%20the%20search%20for,bigger%20than%20so%20far%20demonstrated">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=indications%20or%20correlations%20with%20tumor,types">pmc.ncbi.nlm.nih.gov</a>). As one 2021 review argued, the number of KCTDs involved in important processes is likely “bigger than so far demonstrated” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=ability%20to%20heterodimerize%20between%20members%2C,bigger%20than%20so%20far%20demonstrated">pmc.ncbi.nlm.nih.gov</a>), implying that proteins like KCTD18 could emerge as key players once their roles are discovered. </p>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>KCTD18</strong> is a <strong>BTB/POZ-domain adapter protein</strong> in humans, distinguished by its ability to bind the Cul3 ubiquitin ligase and presumably target specific proteins for degradation. It is broadly expressed and intracellular, suggesting a housekeeping or regulatory function across multiple cell types. Despite being part of a well-studied protein family, KCTD18 itself has <strong>eluded full characterization</strong>, and thus its primary biological role remains an open question. The current understanding, supported by the latest structural modeling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>) and interaction data (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this">pmc.ncbi.nlm.nih.gov</a>), is that KCTD18 serves as a <strong>monomeric Cullin-3 adaptor</strong> that can interface with other KCTD proteins. This places KCTD18 squarely in the ubiquitin-proteasome pathway, potentially controlling the stability of yet-to-be-identified substrate proteins.</p>
+<p>There are intriguing hints linking KCTD18 to <strong>neurological processes</strong> – from genetic associations with restless legs syndrome (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>) to rare genomic duplications in autism and epilepsy patients (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar">pmc.ncbi.nlm.nih.gov</a>) – but no causal mechanisms have been established. Unlike several of its KCTD siblings, KCTD18 has not been implicated in cancer or other well-defined pathways, underscoring its status as one of the least understood KCTD family members (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>).</p>
+<p>The <strong>consensus of expert opinion</strong> is that functional inference for KCTD18 will require more data (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>). Encouragingly, the groundwork is being laid by recent advances: high-confidence structural predictions are guiding hypotheses about how KCTD18 binds Cul3 and substrates, and system-wide interaction studies have put KCTD18 on the map of KCTD protein networks. The next steps will involve identifying KCTD18’s specific substrates and the physiological context in which it operates. Does it regulate a neuronal receptor, a signaling enzyme, or a transcription factor? Is it active in the brain, muscle, or broadly in all tissues? These questions are at the forefront of ongoing research.</p>
+<p>In conclusion, <strong>KCTD18 can be defined as a probable Cullin-3 E3 ligase adapter with a unique, currently enigmatic role in the cell</strong>. It exemplifies how even conserved proteins can fly under the radar and how new technologies are now uncovering their functions. As of 2024, KCTD18 represents both a challenge and an opportunity for researchers: the challenge of elucidating its function after years of ambiguity, and the opportunity to discover novel biology that could link protein degradation to human neurological health or other processes. Continued study of KCTD18 – leveraging structural biology, proteomics, and functional assays – will eventually answer these questions and could reveal whether KCTD18 has any specialized applications in health and disease. For now, KCTD18 remains a fascinating puzzle piece in the complex puzzle of cellular regulation, one that scientists are only beginning to fit into the larger picture. </p>
+<p><strong>References:</strong> <em>(Key sources are cited in-text above with inline citations. For further reading, see the following)</em>:</p>
+<ul>
+<li>Angrisani A. <em>et al.</em> (2021). <strong>“The emerging role of the KCTD proteins in cancer.”</strong> <em>Cell Commun. Signal.</em> 19:56. (Provides an overview of the human KCTD family and notes the lack of functional data on KCTD18) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Balasco N. <em>et al.</em> (2024). <strong>“A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3.”</strong> <em>Int J Mol Sci.</em> 25(3):1881. (Uses AlphaFold to predict KCTD–CUL3 complexes; reports stable Cul3 binding for KCTD18) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Liao Y. <em>et al.</em> (2023). <strong>“KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family.”</strong> <em>Int J Mol Sci.</em> 24(18):14317. (Demonstrates interactions between KCTD5 and other KCTDs, including a weak interaction with KCTD18) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Skoblov M. <em>et al.</em> (2013). <strong>“Protein partners of KCTD proteins provide insights about their functional roles in cell differentiation and development.”</strong> <em>BioEssays</em> 35(7):586-596. (One of the first reviews to discuss KCTD family groupings and suggest functions; KCTD18 is mentioned as an outlier in family phylogeny) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Reference [130] in Angrisani <em>et al.</em> 2021: <strong>“Fine-mapping of restless legs locus 4 (RLS4) identifies a haplotype over the SPATS2L and KCTD18 genes.”</strong> <em>J. Mol. Neurosci.</em> (2013) 49(3):600-605. (Genetic study pointing to KCTD18 in RLS) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=MF%2C%20et%20al.%20Fine,5.%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar">pmc.ncbi.nlm.nih.gov</a>).  </li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=431, start_index=262, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=The%20human%20family%20of%20Potassium,between%20family%20members%2C%20capability%20to')</li>
+<li>AnnotationURLCitation(end_index=706, start_index=537, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=The%20human%20family%20of%20Potassium,between%20family%20members%2C%20capability%20to')</li>
+<li>AnnotationURLCitation(end_index=1177, start_index=983, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD%20%28%28K%29potassium%20Channel%20Tetramerization%20Domain,demonstrate%20the%20impressive%20ability%20of')</li>
+<li>AnnotationURLCitation(end_index=1363, start_index=1245, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected')</li>
+<li>AnnotationURLCitation(end_index=1737, start_index=1543, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD%20%28%28K%29potassium%20Channel%20Tetramerization%20Domain,demonstrate%20the%20impressive%20ability%20of')</li>
+<li>AnnotationURLCitation(end_index=2023, start_index=1914, title='AlphaFold-Predicted Structures of KCTD Proteins Unravel Previously Undetected Relationships among the Members of the Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=KCTD18%20%20%7C%20AF,E107')</li>
+<li>AnnotationURLCitation(end_index=2555, start_index=2446, title='AlphaFold-Predicted Structures of KCTD Proteins Unravel Previously Undetected Relationships among the Members of the Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=KCTD18%20%20%7C%20AF,E107')</li>
+<li>AnnotationURLCitation(end_index=2695, start_index=2556, title='AlphaFold-Predicted Structures of KCTD Proteins Unravel Previously Undetected Relationships among the Members of the Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=portion%20of%20the%20diagram%20is,whereas%20cluster%206')</li>
+<li>AnnotationURLCitation(end_index=3106, start_index=2943, title='AlphaFold-Predicted Structures of KCTD Proteins Unravel Previously Undetected Relationships among the Members of the Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8699099/#:~:text=Notably%2C%20with%20the%20exception%20of,classified%20in%20clusters%20and%20sub')</li>
+<li>AnnotationURLCitation(end_index=3382, start_index=3250, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that')</li>
+<li>AnnotationURLCitation(end_index=3627, start_index=3497, title='KCTD18 Gene - GeneCards | KCD18 Protein | KCD18 Antibody', type='url_citation', url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=KCTD18#:~:text=GeneCards%20Summary%20for%20KCTD18%20Gene')</li>
+<li>AnnotationURLCitation(end_index=3886, start_index=3754, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that')</li>
+<li>AnnotationURLCitation(end_index=4369, start_index=4209, title='KCTD18 gene information - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i')</li>
+<li>AnnotationURLCitation(end_index=4846, start_index=4685, title='Expression of KCTD18 in cancer - Summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000155729-KCTD18/cancer#:~:text=Number%20of%20transcripts,tissue%20specificity%20Detected%20in%20all')</li>
+<li>AnnotationURLCitation(end_index=5368, start_index=5164, title='The emerging role of the KCTD proteins in cancer | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=KCTD4%20has%20not%20been%20characterized,associated%20to%20Restless%20Legs%20Syndrome')</li>
+<li>AnnotationURLCitation(end_index=5731, start_index=5535, title='The emerging role of the KCTD proteins in cancer | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=The%20emerging%20role%20of%20the,associated%20to%20Restless%20Legs%20Syndrome')</li>
+<li>AnnotationURLCitation(end_index=6177, start_index=6017, title='KCTD18 gene information - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i')</li>
+<li>AnnotationURLCitation(end_index=6712, start_index=6546, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=variety%20of%20functions%20have%20been,will%20summarize%20the%20homology%20between')</li>
+<li>AnnotationURLCitation(end_index=6858, start_index=6713, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=The%20human%20genome%20includes%20approximately,like%20domain')</li>
+<li>AnnotationURLCitation(end_index=7363, start_index=7234, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as')</li>
+<li>AnnotationURLCitation(end_index=7507, start_index=7364, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=7875, start_index=7715, title='KCTD18 gene information - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000155729-KCTD18/summary/gene#:~:text=Synonyms%206530404F10Rik%2C%20FLJ31322%2C%20FLJ37818%20Gene,i')</li>
+<li>AnnotationURLCitation(end_index=8443, start_index=8304, title='KCTD2, an adaptor of Cullin3 E3 ubiquitin ligase, suppresses gliomagenesis by destabilizing c-Myc - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/28060381/#:~:text=Skip%20to%20main%20page%20content,BTB%29%20domain%20proteins')</li>
+<li>AnnotationURLCitation(end_index=8587, start_index=8444, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=8926, start_index=8783, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=9319, start_index=9170, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=9822, start_index=9645, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=methodologies%20for%20protein%20structure%20prediction%2C,between%20KCTDs%20that%20bind%20or')</li>
+<li>AnnotationURLCitation(end_index=9941, start_index=9823, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected')</li>
+<li>AnnotationURLCitation(end_index=10189, start_index=10046, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=10539, start_index=10390, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=11066, start_index=10923, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=11337, start_index=11212, title='KCTD2, an adaptor of Cullin3 E3 ubiquitin ligase, suppresses gliomagenesis by destabilizing c-Myc - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC5384019/#:~:text=by%20destabilizing%20c,5%7D%2C%20Hyunggee')</li>
+<li>AnnotationURLCitation(end_index=11532, start_index=11410, title='Cullin-3/KCTD10 E3 complex is essential for Rac1 activation through RhoB degradation in human epidermal growth factor receptor 2-positive breast cancer cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30515933/#:~:text=Cullin,induced%2Fhuman%20epidermal%20growth')</li>
+<li>AnnotationURLCitation(end_index=12444, start_index=12310, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=proteins%20to%20promote%20oligomerization%20,group')</li>
+<li>AnnotationURLCitation(end_index=12604, start_index=12445, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=An%20integral%20feature%20of%20most,further%20shapes%20the%20kinetics%20of')</li>
+<li>AnnotationURLCitation(end_index=12841, start_index=12726, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric')</li>
+<li>AnnotationURLCitation(end_index=13078, start_index=12909, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=between%20KCTD%20proteins%20to%20allow,group%20contains%20KCTD9%2C%20KCTD17%2C%20KCTD')</li>
+<li>AnnotationURLCitation(end_index=13393, start_index=13244, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=13740, start_index=13575, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=Cluster%204%20includes%20the%20pentameric,severe%20steric%20clashes%20with%20the')</li>
+<li>AnnotationURLCitation(end_index=14022, start_index=13873, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=14298, start_index=14189, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,KCTD7%2C%20and%20KCTD14')</li>
+<li>AnnotationURLCitation(end_index=15000, start_index=14836, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=enables%20participation%20in%20an%20array,regions%20on%20KCTD5%20required%20for')</li>
+<li>AnnotationURLCitation(end_index=15153, start_index=15001, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=15474, start_index=15327, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this')</li>
+<li>AnnotationURLCitation(end_index=15793, start_index=15644, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=with%20KCTD5%20in%20IP%20and,cell%20lysates%20and%20live%20cells')</li>
+<li>AnnotationURLCitation(end_index=16094, start_index=15945, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=with%20KCTD5%20in%20IP%20and,cell%20lysates%20and%20live%20cells')</li>
+<li>AnnotationURLCitation(end_index=16531, start_index=16360, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=subunits%20proximal%20to%20the%20GIRK,coupled%20receptors%20%28GPCRs%29%20%5B%2012%2C8')</li>
+<li>AnnotationURLCitation(end_index=17001, start_index=16829, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors')</li>
+<li>AnnotationURLCitation(end_index=17153, start_index=17002, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=advanced%20tumor%20stage%20,the%20entire%20KCTD%20protein%20family')</li>
+<li>AnnotationURLCitation(end_index=17556, start_index=17445, title='Reactome | UniProt:Q6PI47 KCD18', type='url_citation', url='https://www.reactome.org/content/detail/interactor/Q6PI47#:~:text=Accession%20%20%7C%20,1')</li>
+<li>AnnotationURLCitation(end_index=18669, start_index=18497, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors')</li>
+<li>AnnotationURLCitation(end_index=18817, start_index=18670, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this')</li>
+<li>AnnotationURLCitation(end_index=19454, start_index=19311, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=BTB%20domain%2C%20and%20thus%20participate,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=20109, start_index=19957, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=20272, start_index=20110, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=association%20with%20a%20GIRK%20channel%2C,a%20major%20role%20in%20regulating')</li>
+<li>AnnotationURLCitation(end_index=20645, start_index=20523, title='Cullin-3/KCTD10 E3 complex is essential for Rac1 activation through RhoB degradation in human epidermal growth factor receptor 2-positive breast cancer cells - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/30515933/#:~:text=Cullin,induced%2Fhuman%20epidermal%20growth')</li>
+<li>AnnotationURLCitation(end_index=20834, start_index=20719, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric')</li>
+<li>AnnotationURLCitation(end_index=21469, start_index=21304, title='KCTD18 potassium channel tetramerization domain containing 18 - NIH Genetic Testing Registry (GTR) - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gtr/genes/130535#:~:text=Predicted%20to%20enable%20identical%20protein,of%20Genome%20Resources%2C%20Jul%202025')</li>
+<li>AnnotationURLCitation(end_index=21958, start_index=21793, title='KCTD18 potassium channel tetramerization domain containing 18 - NIH Genetic Testing Registry (GTR) - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gtr/genes/130535#:~:text=Predicted%20to%20enable%20identical%20protein,of%20Genome%20Resources%2C%20Jul%202025')</li>
+<li>AnnotationURLCitation(end_index=22692, start_index=22545, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=partially%20characterized,played%20in%20the%20main%20signalling')</li>
+<li>AnnotationURLCitation(end_index=22845, start_index=22693, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=23937, start_index=23778, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=MF%2C%20et%20al.%20Fine,5.%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=24380, start_index=24216, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=24827, start_index=24712, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric')</li>
+<li>AnnotationURLCitation(end_index=25439, start_index=25337, title='KCTD10 regulates brain development by destabilizing brain disorder–associated protein KCTD13 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=25973, start_index=25871, title='KCTD10 regulates brain development by destabilizing brain disorder–associated protein KCTD13 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=26841, start_index=26726, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=multiple%20proteins,oligomeric')</li>
+<li>AnnotationURLCitation(end_index=27014, start_index=26842, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors')</li>
+<li>AnnotationURLCitation(end_index=27430, start_index=27266, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=27702, start_index=27538, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=28073, start_index=27926, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=partially%20characterized,played%20in%20the%20main%20signalling')</li>
+<li>AnnotationURLCitation(end_index=28223, start_index=28074, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=with%20cancer%20hallmarks%20or%20involved,In%20this%20review%20we')</li>
+<li>AnnotationURLCitation(end_index=29722, start_index=29573, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=30076, start_index=29958, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,No%20stable%20complex%20detected')</li>
+<li>AnnotationURLCitation(end_index=30226, start_index=30077, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=30799, start_index=30635, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=31306, start_index=31124, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=Potassium%20Channel%20Tetramerization%20Domain%205,immunoprecipitation%20in%20lysed%20cells.%20We')</li>
+<li>AnnotationURLCitation(end_index=31459, start_index=31307, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=31748, start_index=31601, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this')</li>
+<li>AnnotationURLCitation(end_index=32198, start_index=32027, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=subunits%20proximal%20to%20the%20GIRK,coupled%20receptors%20%28GPCRs%29%20%5B%2012%2C8')</li>
+<li>AnnotationURLCitation(end_index=32637, start_index=32467, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=reinforced%20this%20dataset%20by%20examining,occur%20throughout%20the%20KCTD%20family')</li>
+<li>AnnotationURLCitation(end_index=32810, start_index=32638, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,in%20some%20lung%20adenocarcinoma%20tumors')</li>
+<li>AnnotationURLCitation(end_index=34015, start_index=33819, title='The emerging role of the KCTD proteins in cancer | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=The%20emerging%20role%20of%20the,associated%20to%20Restless%20Legs%20Syndrome')</li>
+<li>AnnotationURLCitation(end_index=34180, start_index=34016, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=35002, start_index=34838, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=35346, start_index=35217, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as')</li>
+<li>AnnotationURLCitation(end_index=35491, start_index=35347, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Most%20KCTD%20proteins%20act%20therefore,4%2C%207%E2%80%9313')</li>
+<li>AnnotationURLCitation(end_index=35906, start_index=35771, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,protein%20coupled%20receptors')</li>
+<li>AnnotationURLCitation(end_index=36231, start_index=36102, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=diagnostic%2Fprognostic%20markers,either%20as')</li>
+<li>AnnotationURLCitation(end_index=37826, start_index=37734, title='KCTD10 regulates brain development by destabilizing brain disorder–associated protein KCTD13 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,BTBD10')</li>
+<li>AnnotationURLCitation(end_index=37972, start_index=37827, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=KCTD19%2C%20so%20far%20observed%20mutated,and%20skin%20%284.2')</li>
+<li>AnnotationURLCitation(end_index=40274, start_index=40114, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=considered%20in%20the%20search%20for,bigger%20than%20so%20far%20demonstrated')</li>
+<li>AnnotationURLCitation(end_index=40411, start_index=40275, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=indications%20or%20correlations%20with%20tumor,types')</li>
+<li>AnnotationURLCitation(end_index=40712, start_index=40536, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=ability%20to%20heterodimerize%20between%20members%2C,bigger%20than%20so%20far%20demonstrated')</li>
+<li>AnnotationURLCitation(end_index=41518, start_index=41369, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=41687, start_index=41540, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this')</li>
+<li>AnnotationURLCitation(end_index=42232, start_index=42068, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=42396, start_index=42294, title='KCTD10 regulates brain development by destabilizing brain disorder–associated protein KCTD13 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10963008/#:~:text=,Google%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=42796, start_index=42632, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=43062, start_index=42898, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=45085, start_index=44921, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=Finally%2C%20KCTD18%20has%20been%20only,or%20correlations%20with%20tumor%20types')</li>
+<li>AnnotationURLCitation(end_index=45482, start_index=45333, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD18%2C%20which%20is%20an%20isolated,Figures%20S9D%20and%20S10')</li>
+<li>AnnotationURLCitation(end_index=45886, start_index=45739, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=assays%2C%20whereas%20KCTD11%20had%20no,Collectively%2C%20this')</li>
+<li>AnnotationURLCitation(end_index=46343, start_index=46211, title='The KCTD family of proteins: structure, function, disease relevance - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3882106/#:~:text=5%2C%20and%20KCTD%202,We%20also%20suggest%20that')</li>
+<li>AnnotationURLCitation(end_index=46745, start_index=46586, title='The emerging role of the KCTD proteins in cancer - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8127222/#:~:text=MF%2C%20et%20al.%20Fine,5.%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6PI47
+gene_symbol: KCTD18
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  KCTD18 is a poorly characterized BTB/POZ domain-containing protein of the KCTD family.
+  It contains an N-terminal T1-type BTB domain (aa 12-80) and a KCTD18-specific C-terminal
+  domain. AlphaFold2 structural modeling predicts a stable 1:1 BTB-Cullin 3 interaction,
+  suggesting KCTD18 may function as a CRL3 (Cullin-RING ligase 3) substrate adaptor.
+  Unlike many KCTD family members that form pentamers, KCTD18 is predicted to be monomeric.
+  No substrates, cellular localization, or enzymatic activities have been experimentally
+  validated for KCTD18. The protein&#39;s function remains to be determined through direct
+  experimental investigation.
+existing_annotations:
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      This annotation is inferred by the ARBA machine learning model, likely based on
+      the presence of the BTB/POZ domain. BTB domains are known to mediate protein-protein
+      interactions, including self-association. However, per curation guidelines, &#39;protein
+      binding&#39; and related generic terms like &#39;identical protein binding&#39; are discouraged
+      as they do not convey informative molecular function. For KCTD family proteins,
+      a more informative annotation would be cullin binding if experimentally validated.
+      AlphaFold2 modeling predicts KCTD18 BTB can bind CUL3 in a 1:1 complex [Balasco et al., 2024],
+      but this remains unvalidated experimentally. Given the lack of specificity of this
+      term and absence of experimental validation, this annotation should be removed.
+    action: REMOVE
+    reason: &gt;-
+      Generic &#39;protein binding&#39; terms are uninformative per GO curation guidelines.
+      While BTB domains do mediate protein interactions, the specific interactors for
+      KCTD18 are not experimentally established. Structural predictions suggest CUL3
+      binding [Balasco et al., 2024], but this requires experimental validation before
+      annotation. The term should be replaced with a more specific function term once
+      experimental evidence is available.
+    supported_by:
+      - reference_id: file:human/KCTD18/KCTD18-deep-research-falcon.md
+        supporting_text: &gt;-
+          The 2024 modeling suggests KCTD18 is presumptively monomeric, but KCTD family
+          precedent includes pentamers and other oligomers; thus, KCTD18&#39;s oligomeric
+          state is currently unverified and should be established experimentally.
+- term:
+    id: GO:0051260
+    label: protein homooligomerization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is electronically inferred from the T1-type BTB domain (InterPro:IPR003131).
+      While many BTB domain proteins do form homo-oligomers, recent structural prediction
+      analysis suggests KCTD18 may be an exception. Balasco et al. (2024) report that
+      AlphaFold2 models predict KCTD18 to be monomeric, in contrast to other KCTD family
+      members that form pentamers (e.g., KCTD5). This automated annotation appears to
+      be incorrect based on current structural predictions.
+    action: REMOVE
+    reason: &gt;-
+      Recent AlphaFold2-based structural analysis predicts KCTD18 is monomeric rather
+      than oligomeric [Balasco et al., 2024]. While the T1-type BTB domain in many
+      proteins does mediate oligomerization, KCTD18 appears to be an outlier in the
+      KCTD family. The InterPro-based inference is too broad and does not account for
+      protein-specific structural features. This annotation should be removed until
+      experimental evidence (e.g., SEC-MALS, native MS) confirms the oligomeric state.
+    supported_by:
+      - reference_id: file:human/KCTD18/KCTD18-deep-research-falcon.md
+        supporting_text: &gt;-
+          KCTD18 predicted to be monomeric (family shows diversity; many KCTDs form
+          pentamers). Family-level data show pentameric assemblies (e.g., KCTD5);
+          KCTD18 may be an outlier (monomeric) per AF prediction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:human/KCTD18/KCTD18-deep-research-falcon.md
+  title: &gt;-
+    Deep research on KCTD18 including Balasco et al. 2024 comprehensive analysis of
+    KCTD-Cullin 3 structural recognition
+  findings:
+    - statement: KCTD18 BTB domain is predicted to form a stable 1:1 complex with CUL3
+    - statement: KCTD18 is predicted to be monomeric, unlike pentameric KCTD family members
+    - statement: No experimentally validated substrates for KCTD18 have been reported
+core_functions: []
+suggested_questions:
+  - question: Does KCTD18 physically interact with CUL3 as predicted by structural modeling?
+  - question: What is the actual oligomeric state of KCTD18 in solution?
+  - question: What are the cellular substrates ubiquitinated by a KCTD18-CUL3 complex, if any?
+  - question: Where is KCTD18 localized within the cell?
+suggested_experiments:
+  - description: Co-immunoprecipitation and in vitro binding assays to validate KCTD18-CUL3 interaction
+    hypothesis: KCTD18 BTB domain binds CUL3 as predicted by AlphaFold2 modeling
+  - description: SEC-MALS and native mass spectrometry to determine oligomeric state
+    hypothesis: KCTD18 is monomeric in solution, unlike pentameric KCTD family members
+  - description: BioID/APEX proximity labeling to identify interacting proteins and potential substrates
+    hypothesis: KCTD18 functions as a CRL3 adaptor with specific substrates
+  - description: Subcellular fractionation and immunofluorescence to determine localization
+    hypothesis: KCTD18 localizes to a specific cellular compartment where it exerts its function
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

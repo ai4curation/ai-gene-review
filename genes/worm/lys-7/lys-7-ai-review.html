@@ -1,0 +1,3334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lys-7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lys-7</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O16202" target="_blank" class="term-link">
+                        O16202
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lys-7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O16202" data-a="DESCRIPTION: Lysozyme-like protein 7 (LYS-7) is a protist-type ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Lysozyme-like protein 7 (LYS-7) is a protist-type (Entamoeba-type) lysozyme that functions as a key antimicrobial effector in C. elegans innate immunity. Despite belonging to the glycosyl hydrolase family 25 and containing a Ch-type lysozyme domain, the protein lacks conserved catalytic residues and may not have enzymatic activity. LYS-7 is expressed in the intestine, rectal gland cells, and head neurons, and is strongly induced by various bacterial pathogens including S. marcescens, M. nematophilum, and S. typhimurium. Functional studies demonstrate that LYS-7 provides resistance against the Gram-positive bacterium B. thuringiensis and M. nematophilum, and the fungal pathogen C. neoformans. Intriguingly, lys-7 knockout animals show increased tolerance to S. typhimurium infection, revealing a complex immunological trade-off. LYS-7 expression is regulated by the p38 MAPK pathway and the DAF-2/DAF-16 insulin-like signaling pathway, with P. aeruginosa actively suppressing lys-7 expression as a virulence strategy.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0007165" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation from phylogenetic analysis (PANTHER) is questionable for lys-7. LYS-7 is a lysozyme-like protein that functions as an antimicrobial effector molecule. While lys-7 expression is regulated by signal transduction pathways (p38 MAPK, DAF-2/DAF-16 insulin signaling), the protein itself is not directly involved in signal transduction. LYS-7 is a downstream effector of these signaling pathways, not a component of the signaling cascade.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LYS-7 is an antimicrobial effector molecule whose expression is regulated by signaling pathways, but it does not itself participate in signal transduction. The annotation likely results from phylogenetic inference that does not distinguish between regulators and effectors of signaling pathways.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link">
+                                        PMID:18927620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We hypothesized that repression of immune effector expression, such as thn-2, spp-1, and lys-7, may represent a virulence mechanism used by P. aeruginosa to suppress host defenses.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link">
+                                        PMID:19023415
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deficiencies in GLA and SDA result in increased susceptibility to bacterial infection, which is associated with reduced basal expression of a number of immune-specific genes--including spp-1, lys-7, and lys-2--that encode antimicrobial peptides.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0045087" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation supported by extensive experimental evidence. LYS-7 is one of the most studied lysozymes in C. elegans immunity. Multiple publications demonstrate its role in defense against bacterial and fungal pathogens including M. nematophilum, B. thuringiensis, and C. neoformans (PMID:16809667, PMID:21931778, PMID:21399680). The protein is induced by pathogen exposure and required for optimal host survival.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support from multiple independent studies. LYS-7 is a core innate immune effector in C. elegans, with knockout mutants showing increased susceptibility to multiple pathogens.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis, thus highlighting the particular role of lysozymes in the nematode&#39;s defence against pathogens.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                        PMID:21399680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The lysozyme LYS-7 has been well-described in C. elegans as an essential antimicrobial molecule</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt keyword-based annotation. This is a broad parent term of innate immune response (GO:0045087). The annotation is correct but more specific terms are available and annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While a broad term, it is correct. The more specific child term GO:0045087 (innate immune response) is also annotated with stronger evidence, so this IEA annotation provides redundant coverage that is acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis, thus highlighting the particular role of lysozymes in the nematode&#39;s defence against pathogens.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0003796" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation assigning lysozyme activity based on the presence of the glycosyl hydrolase 25 domain (IPR002053). However, the UniProt record explicitly notes that LYS-7 &#34;Lacks conserved active site residues, suggesting it has no catalytic activity.&#34; While the protein belongs to the lysozyme family, it may not have functional lysozyme enzymatic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein contains a lysozyme domain but UniProt cautions that &#34;Lacks conserved active site residues, suggesting it has no catalytic activity.&#34; No experimental evidence demonstrates that LYS-7 has lysozyme catalytic activity. The protein may function through a non-enzymatic mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O16202
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lacks conserved active site residues, suggesting it has no catalytic activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006950" target="_blank" class="term-link">
+                                    GO:0006950
+                                </a>
+                            </span>
+                            <span class="term-label">response to stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0006950" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine learning annotation. This is a very broad term. While lys-7 is induced by pathogen stress, the more specific defense response terms (GO:0050829, GO:0050830, GO:0050832) are more appropriate and are already annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While broad, this annotation is not incorrect. LYS-7 is indeed induced as part of the stress response to pathogen infection. More specific terms are also annotated, so this provides appropriate ontological coverage.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lysozymes are small enzymes, which can cleave peptidoglycan, an essential component of bacterial cell walls. They are found in almost all groups of organisms and play important roles in both immunity and digestion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation derived from the glycosyl hydrolase 25 domain. Lysozymes typically cleave peptidoglycan in bacterial cell walls. However, since LYS-7 lacks conserved catalytic residues, this function may not apply.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While typical lysozymes degrade peptidoglycan, the UniProt record notes that LYS-7 &#34;Lacks conserved active site residues, suggesting it has no catalytic activity.&#34; Without experimental evidence of peptidoglycan degradation activity, this annotation is likely an over-annotation based on family membership rather than demonstrated function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O16202
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lacks conserved active site residues, suggesting it has no catalytic activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016998" target="_blank" class="term-link">
+                                    GO:0016998
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall macromolecule catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0016998" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation, parent term of peptidoglycan catabolic process. Same concerns apply as for GO:0009253 - LYS-7 may lack enzymatic activity needed for this process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As LYS-7 lacks conserved catalytic residues and may not have enzymatic activity, assigning cell wall degradation activity is likely an over-annotation based on domain homology rather than demonstrated function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O16202
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lacks conserved active site residues, suggesting it has no catalytic activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0045087" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt keyword-based annotation. Duplicates the IBA annotation above but with weaker evidence. The annotation is correct and supported by experimental evidence from other annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation, though redundant with the IBA annotation. LYS-7 is a well-established innate immune effector.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16809667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16809667
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic clusters, putative pathogen recognition molecules, a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050830" data-r="PMID:16809667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from O&#39;Rourke et al. 2006 studying M. nematophilum infection. lys-7 was induced by M. nematophilum infection and mutants showed enhanced susceptibility. M. nematophilum is a Gram-positive bacterium that infects the C. elegans rectum.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence. The paper demonstrates that lys-7 is induced by M. nematophilum infection and is required for defense, with mutants showing more severe infection phenotypes (increased constipation, tail swelling, growth arrest).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16809667" target="_blank" class="term-link">
+                                        PMID:16809667
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We tested 41 of the induced genes for involvement in immunity using mutants or RNAi, finding that six of these are required for the swelling response and five are required more generally for defense.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O16202
+                                    
+                                </span>
+                                
+                                <div class="support-text">Compared to wild-type, mutants grown in presence of bacterium M.nematophilum are more constipated, the tail swelling is increased, growth is slower and they are arrested at the L3 larval stage</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22841995" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22841995
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Studies on Shigella boydii infection in Caenorhabditis elega...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050830" data-r="PMID:22841995" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Kesika and Balamurugan 2012 studying Shigella infection. Shigella species are actually Gram-negative bacteria, not Gram-positive, making this specific annotation taxonomically incorrect. However, lys-7 does provide defense against genuine Gram-positive bacteria (M. nematophilum, B. thuringiensis), so the overall term is appropriate for this gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the specific reference (PMID:22841995) incorrectly applies this term to Shigella (which are Gram-negative), the annotation to GO:0050830 is nonetheless correct for lys-7 based on strong evidence from other studies with true Gram-positive bacteria (M. nematophilum, B. thuringiensis). The underlying annotation is correct; only this particular evidence line is taxonomically misapplied.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22841995" target="_blank" class="term-link">
+                                        PMID:22841995
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Increased mortality of mutant RB1285 by S. boydii and Shigella flexneri indicated the role of lys-7 during Shigella infection.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis, thus highlighting the particular role of lysozymes in the nematode&#39;s defence against pathogens.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21399680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A two-gene balance regulates Salmonella typhimurium toleranc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050832" data-r="PMID:21399680" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Marsh et al. 2011. The study demonstrates that lys-7 knockout animals (ok1384) show severely reduced survival following exposure to the fungal pathogen Cryptococcus neoformans compared to wild-type.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence. lys-7 knockout mutants are hypersusceptible to C. neoformans, demonstrating a protective role against fungal infection. The authors suggest this may be due to secondary chitinase activity exhibited by lysozymes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                        PMID:21399680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In line with this prediction, a lys-7 knockout strain (ok1384) showed wild type brood size and longevity under non-infectious conditions</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                        PMID:21399680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we show that LYS-7 protects animals against C. neoformans-mediated killing, a function that is presumably attributable to the secondary chitinase (anti-fungal) activity exhibited by most lysozymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18927620
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pseudomonas aeruginosa suppresses host immunity by activatin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050829" data-r="PMID:18927620" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Evans et al. 2008. The study shows that lys-7 expression is repressed by P. aeruginosa (a Gram-negative bacterium) as a virulence strategy, and that knockdown of lys-7 by RNAi enhances susceptibility to P. aeruginosa infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study demonstrates that lys-7 is required for defense against P. aeruginosa. RNAi knockdown of lys-7 enhances susceptibility to infection, and P. aeruginosa actively suppresses lys-7 expression as a virulence mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link">
+                                        PMID:18927620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We hypothesized that repression of immune effector expression, such as thn-2, spp-1, and lys-7, may represent a virulence mechanism used by P. aeruginosa to suppress host defenses.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link">
+                                        PMID:18927620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of thn-2, lys-7, and spp-1 by RNAi enhances the susceptibility of C. elegans to P. aeruginosa infection.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21931778
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protist-type lysozymes of the nematode Caenorhabditis elegan...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050830" data-r="PMID:21931778" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Boehnisch et al. 2011 studying B. thuringiensis infection. The study demonstrates that lys-7 knockout mutants show decreased survival on pathogenic B. thuringiensis, and overexpression of lys-7 increases resistance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence from knockout and overexpression studies. lys-7(ok1384) knockout animals showed significantly decreased survival on B. thuringiensis B-18247, and transgenic overexpression of lys-7 increased survival, demonstrating a direct protective role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Their knock-out led to decreased pathogen resistance in all three cases, while an increase in resistance was observed when two out of three tested genes were overexpressed in transgenic lines (lys-5, lys-7, but not lys-2).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis, thus highlighting the particular role of lysozymes in the nematode&#39;s defence against pathogens.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19023415
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Gamma-linolenic and stearidonic acids are required for basal...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0045087" data-r="PMID:19023415" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Nandakumar and Tan 2008. The study shows that lys-7 is one of the immune-specific genes whose basal expression requires GLA and SDA fatty acids and p38 MAPK pathway activity. Reduced lys-7 expression correlates with increased susceptibility to P. aeruginosa.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study demonstrates that lys-7 is a key immune effector gene required for basal innate immunity in C. elegans. Its expression is regulated by the p38 MAPK pathway and is essential for defense against bacterial infection.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link">
+                                        PMID:19023415
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deficiencies in GLA and SDA result in increased susceptibility to bacterial infection, which is associated with reduced basal expression of a number of immune-specific genes--including spp-1, lys-7, and lys-2--that encode antimicrobial peptides.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link">
+                                        PMID:19023415
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GLA and SDA are required to maintain basal activity of the p38 MAP kinase pathway, which plays important roles in protecting metazoan animals from infections and oxidative stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19023415
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Gamma-linolenic and stearidonic acids are required for basal...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050829" data-r="PMID:19023415" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Nandakumar and Tan 2008. The study demonstrates that lys-7 is required for defense against P. aeruginosa (Gram-negative), with reduced expression leading to increased susceptibility.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study shows that reduced lys-7 expression in fat-3 mutants correlates with increased susceptibility to P. aeruginosa. This supports the role of lys-7 in defense against Gram-negative bacteria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link">
+                                        PMID:19023415
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deficiencies in GLA and SDA result in increased susceptibility to bacterial infection, which is associated with reduced basal expression of a number of immune-specific genes--including spp-1, lys-7, and lys-2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21399680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A two-gene balance regulates Salmonella typhimurium toleranc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0050829" data-r="PMID:21399680" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic interaction annotation from Marsh et al. 2011. The study reveals a complex genetic interaction between lys-7 and abl-1 in regulating immunity to S. typhimurium. Interestingly, lys-7 knockout animals are MORE resistant to S. typhimurium (a Gram-negative bacterium), not less. However, lys-7 does provide defense against other Gram-negative bacteria (P. aeruginosa), so the overall annotation is appropriate for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this specific reference shows lys-7 acts as a susceptibility factor for S. typhimurium (an immunological trade-off), the overall annotation to GO:0050829 is correct for lys-7 based on strong evidence of defense against P. aeruginosa from other studies (PMID:18927620, PMID:19023415). The S. typhimurium phenotype represents a pathogen-specific exception within an otherwise defensive role against Gram-negative bacteria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                        PMID:21399680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Remarkably, however, lys-7 acts as a susceptibility factor for S. Typhimurium killing, as the loss of lys-7 more than doubles the median survival of Salmonella-challenged animals.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link">
+                                        PMID:18927620
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Knockdown of thn-2, lys-7, and spp-1 by RNAi enhances the susceptibility of C. elegans to P. aeruginosa infection.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            UniProt:O16202
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O16202" data-a="GO:0030246" data-r="UniProt:O16202" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation based on structural inference. LYS-7 contains a Ch-type lysozyme domain (amino acids 53-273) which is a carbohydrate-binding domain. While catalytic activity may be absent due to missing active site residues, the domain structure suggests retention of carbohydrate binding capability. This may explain the antimicrobial function through non-enzymatic binding to bacterial or fungal cell wall components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LYS-7 has a Ch-type lysozyme domain that typically binds carbohydrates. Even without catalytic activity, binding to peptidoglycan or chitin components could provide antimicrobial function. This annotation captures the likely molecular function when enzymatic activity is uncertain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O16202
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the glycosyl hydrolase 25 family.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                        PMID:21399680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a function that is presumably attributable to the secondary chitinase (anti-fungal) activity exhibited by most lysozymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LYS-7 functions as an antimicrobial effector in innate immunity. Knockout mutants show increased susceptibility to B. thuringiensis (PMID:21931778), M. nematophilum (PMID:16809667), and C. neoformans (PMID:21399680). Overexpression increases resistance to pathogens (PMID:21931778). Despite having a lysozyme domain, LYS-7 lacks conserved catalytic residues, suggesting it may function through carbohydrate binding rather than enzymatic activity.</h3>
+                <span class="vote-buttons" data-g="O16202" data-a="FUNCTION: LYS-7 functions as an antimicrobial effector in in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                            carbohydrate binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                defense response to Gram-positive bacterium
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                defense response to fungus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                PMID:21931778
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We conclude that the lysozyme genes lys-5, lys-7, and possibly lys-2 contribute to resistance against B. thuringiensis, thus highlighting the particular role of lysozymes in the nematode&#39;s defence against pathogens.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                                PMID:21399680
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The lysozyme LYS-7 has been well-described in C. elegans as an essential antimicrobial molecule</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:O16202
+                            
+                        </span>
+                        
+                        <div class="finding-text">Belongs to the glycosyl hydrolase 25 family.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16809667" target="_blank" class="term-link">
+                            PMID:16809667
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genomic clusters, putative pathogen recognition molecules, and antimicrobial genes are induced by infection of C. elegans with M. nematophilum.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18927620" target="_blank" class="term-link">
+                            PMID:18927620
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas aeruginosa suppresses host immunity by activating the DAF-2 insulin-like signaling pathway in Caenorhabditis elegans.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19023415" target="_blank" class="term-link">
+                            PMID:19023415
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gamma-linolenic and stearidonic acids are required for basal immunity in Caenorhabditis elegans through their effects on p38 MAP kinase activity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21399680" target="_blank" class="term-link">
+                            PMID:21399680
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A two-gene balance regulates Salmonella typhimurium tolerance in the nematode Caenorhabditis elegans.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                            PMID:21931778
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Protist-type lysozymes of the nematode Caenorhabditis elegans contribute to resistance against pathogenic Bacillus thuringiensis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22841995" target="_blank" class="term-link">
+                            PMID:22841995
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Studies on Shigella boydii infection in Caenorhabditis elegans and bioinformatics analysis of immune regulatory protein interactions.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:O16202
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for LYS-7 C. elegans</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LYS-7 have enzymatic activity given that it lacks conserved active site residues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16202" data-a="Q: Does LYS-7 have enzymatic activity given that it l..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical assay for lysozyme activity - Directly test whether purified LYS-7 protein has peptidoglycan-degrading or chitinase activity, given the absence of conserved catalytic residues.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16202" data-a="EXPERIMENT: Biochemical assay for lysozyme activity - Directly..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis - Determine which domains/residues of LYS-7 are required for antimicrobial function to understand if it acts enzymatically or via binding/signaling.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16202" data-a="EXPERIMENT: Structure-function analysis - Determine which doma..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-surveillance-immunity</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lys-7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16202" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T11:46:20.313039'<br />
+end_time: '2025-12-29T11:54:10.669125'<br />
+duration_seconds: 470.36<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: lys-7<br />
+  gene_symbol: lys-7<br />
+  uniprot_accession: O16202<br />
+  protein_description: 'RecName: Full=Lysozyme-like protein 7 {ECO:0000305}; Flags:<br />
+    Precursor;'<br />
+  gene_info: Name=lys-7 {ECO:0000312|WormBase:C02A12.4}; ORFNames=C02A12.4 {ECO:0000312|WormBase:C02A12.4};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the glycosyl hydrolase 25 family.<br />
+  protein_domains: GH25_Enzymes. (IPR051595); Glyco_hydro_25. (IPR002053); Glycoside_hydrolase_SF.<br />
+    (IPR017853)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O16202</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysozyme-like protein 7 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=lys-7 {ECO:0000312|WormBase:C02A12.4}; ORFNames=C02A12.4 {ECO:0000312|WormBase:C02A12.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 25 family.</li>
+<li><strong>Key Domains:</strong> GH25_Enzymes. (IPR051595); Glyco_hydro_25. (IPR002053); Glycoside_hydrolase_SF. (IPR017853)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lys-7" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lys-7' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lys-7</strong> (gene ID: lys-7, UniProt: O16202) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O16202</li>
+<li><strong>Protein Description:</strong> RecName: Full=Lysozyme-like protein 7 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=lys-7 {ECO:0000312|WormBase:C02A12.4}; ORFNames=C02A12.4 {ECO:0000312|WormBase:C02A12.4};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 25 family.</li>
+<li><strong>Key Domains:</strong> GH25_Enzymes. (IPR051595); Glyco_hydro_25. (IPR002053); Glycoside_hydrolase_SF. (IPR017853)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "lys-7" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'lys-7' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>lys-7</strong> (gene ID: lys-7, UniProt: O16202) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Title: Functional annotation of C. elegans lys-7 (UniProt O16202): a GH25/protist-type lysozyme in epithelial innate immunity</p>
+<p>Verification of identity and domains<br />
+The target corresponds to lys-7 (gene: C02A12.4) from Caenorhabditis elegans, encoding a lysozyme-like secreted precursor that belongs to the protist/Entamoeba-type lysozyme family within glycosyl hydrolase family 25 (GH25; Chalaropsis-type fold). Early infection-transcriptomics in C. elegans identified lys-7 (clone yk361g12) as an intestine-expressed, infection-inducible lysozyme, consistent with UniProt O16202 annotations and the GH25/protist-type assignment (Mallo et al., Current Biology, 2002; published Jul 22, 2002; https://doi.org/10.1016/S0960-9822(02)00928-4) (mallo2002inducibleantibacterialdefense pages 2-3). A systematic analysis of protist-type lysozymes confirmed lys-7 as a member of the C. elegans lysozyme repertoire contributing to pathogen resistance (Boehnisch et al., PLoS ONE, Sep 7, 2011; https://doi.org/10.1371/journal.pone.0024619) (boehnisch2011protisttypelysozymesof pages 1-2).</p>
+<p>Catalytic function, substrates, and atypical features<br />
+Lysozymes hydrolyze β-1,4 linkages in peptidoglycan (PG), classically acting as muramidases. Homology modeling places LYS-7 in the Chalaropsis/GH25 transglycosidase superfamily with predicted 1,4-β-N-acetylmuraminidase activity and a Ch-type α/β fold. Notably, LYS-7 appears to lack the canonical DXE motif used by GH25 lysozymes for the two-step hydrolysis, implying an atypical catalytic mechanism; one conserved Asp (D59) may support a single-step reaction or act on cyclic PG fragments such as tracheal cytotoxin (TCT). Functionally, LYS-7 activity against Salmonella is inferred to be bacteriostatic rather than bactericidal, potentially modulating bacterial stress regulons (PhoP/Q, RpoS) rather than reducing burden (Marsh, thesis/monograph, 2010; sections on GH25 modeling and tolerance; context URL not available) (marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151, marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108, marsh2010hostpathogeninteractionsina pages 130-134). These data support GH25 membership and suggest nuanced substrate handling distinct from canonical DXE-dependent lysozymes.</p>
+<p>Expression pattern and subcellular localization<br />
+Expression is prominent in the intestinal epithelium and the pharyngeal/valve region, and lys-7 is secretion-competent (precursor with signal peptide). Mallo et al. mapped lys-7 expression to intestine and intestinal valve/terminal bulb and showed robust induction during bacterial infection (Serratia marcescens), with Northern and array measurements rising markedly by 48 h post-exposure (Current Biology, 2002; https://doi.org/10.1016/S0960-9822(02)00928-4) (mallo2002inducibleantibacterialdefense pages 2-3). Broad profiling indicates digestive tract expression (intestine and/or pharynx) for lysozymes including lys-7 (Alper et al., MCB, Aug 2007; https://doi.org/10.1128/MCB.02070-06) (marsh2010hostpathogeninteractionsina pages 130-134). Proteomics during infection also detected induction of lysozymes and showed that RNAi knockdown of lys-7 increased susceptibility, consistent with secreted effector function in the intestine (Simonsen et al., Virulence, Mar 2011; https://doi.org/10.4161/viru.2.2.15270) ( in tool context; see summary) (boehnisch2011protisttypelysozymesof pages 1-2).</p>
+<p>Regulation and signaling pathways<br />
+Transcriptional induction of lys-7 integrates conserved epithelial immune signaling:<br />
+- p38 MAPK pathway (TIR-1 → NSY-1 → SEK-1 → PMK-1) and ATF-7: Small-molecule immune stimulation upregulates lys-7 via a pathway partially dependent on PMK-1 and ATF-7 (Pukkila-Worley et al., PLoS Genetics, Jun 2012; https://doi.org/10.1371/journal.pgen.1002733) (marsh2010hostpathogeninteractionsina pages 130-134). Multiple infection and probiotic studies show lys-7 induction requires functional NSY-1/SEK-1/PMK-1 signaling (e.g., ETEC/Salmonella models) (Zhou et al., Frontiers in Immunology, Sep 2018; https://doi.org/10.3389/fimmu.2018.01745) and (Zhou et al., Frontiers in Immunology, Mar 2021; https://doi.org/10.3389/fimmu.2021.653205) (sun2015intracellularinfectiologycell pages 3-4, marsh2010hostpathogeninteractionsina pages 147-151).<br />
+- Insulin/IGF-1-DAF-16: DAF-16 influences lys-7 expression; long-lived daf-2 mutants upregulate lys-7, and genetic interactions (lys-7;daf-16 double mutants) abolish Salmonella tolerance phenotypes (Marsh, 2010) (marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108, marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151).</p>
+<p>Roles in immunity and pathogen-specific phenotypes<br />
+- Salmonella enterica serovar Typhimurium: Paradoxically, lys-7 deletion enhances survival without lowering pathogen load (tolerance). The effect depends on bacterial stress regulators (RpoS) and host pathways (DAF-16), consistent with a bacteriostatic/immune-modulatory role (Marsh, 2010) (marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108, marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151).<br />
+- Cryptococcus neoformans (fungus): lys-7 mutants are hypersusceptible (reduced survival), indicating antifungal protective function, possibly via chitin-related activity (Marsh, 2010) (marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108).<br />
+- Bacillus thuringiensis: lys-7 knockout decreases resistance; overexpression increases resistance, demonstrating a direct contribution to defense against Gram-positive Bt (Boehnisch et al., PLoS ONE, 2011; https://doi.org/10.1371/journal.pone.0024619) (boehnisch2011protisttypelysozymesof pages 1-2).<br />
+- Pseudomonas aeruginosa and pathogenic E. coli: lys-7 is part of the inducible antibacterial effector repertoire; immune-stimulatory compound RPW-24 induces lys-7 expression and protects against P. aeruginosa via PMK-1/ATF-7 (Pukkila-Worley et al., 2012; https://doi.org/10.1371/journal.pgen.1002733) (marsh2010hostpathogeninteractionsina pages 130-134). Reviews and genetic studies have implicated lys-7 in responses to P. aeruginosa and E. coli LF82 (Boehnisch et al., 2011) (boehnisch2011protisttypelysozymesof pages 1-2).<br />
+- Klebsiella pneumoniae: Infection models modulating immune and barrier function track lys-7 among effectors; lys-7 is included in panels altered by Klebsiella infection (Yang et al., Current Research in Microbial Sciences, Jan 2023; https://doi.org/10.1016/j.crmicr.2023.100181) (context tool summary) (marsh2010hostpathogeninteractionsina pages 101-108).</p>
+<p>Recent developments (2023–2024) and quantitative data<br />
+- Microbiota/diet modulation: A glucose-altered microbiota suppressed lys-7 expression by RT-qPCR (n ≈ 400/group; significant by unpaired t-test), while increasing pathogen susceptibility and epithelial dysfunction (Kingsley et al., Scientific Reports, Jun 2024; https://doi.org/10.1038/s41598-024-63514-w) (kingsley2024glucosefedmicrobiotaalters pages 6-7).<br />
+- Probiotic immunity: Feeding the probiotic Lacticaseibacillus rhamnosus IDCC 3201 induced &gt;2-fold upregulation of innate immune genes, including lysozymes such as lys-7, and enhanced longevity and resistance to pathogens (Lee et al., Journal of Microbiology and Biotechnology, Apr 2024; https://doi.org/10.4014/jmb.2402.02025) (lee2024metabolicregulationof pages 6-8). Earlier studies showed that protective microbes (e.g., Enterococcus faecalis) can exploit lys-7-mediated immunity; lys-7 knockout alters protective microbe–pathogen competition (Ford et al., Heredity, Nov 2022; https://doi.org/10.1038/s41437-022-00569-3) (context summary) (kingsley2024glucosefedmicrobiotaalters pages 6-7).<br />
+- Stress crosstalk: HSF-1 deficiency induced innate immunity genes including lys-7 in young adults, consistent with compensatory activation of immunity and UPR pathways (Kovács et al., Aging Cell, Jun 2024; https://doi.org/10.1111/acel.14246) (kingsley2024glucosefedmicrobiotaalters pages 6-7).</p>
+<p>Applications and real-world implementations<br />
+- Reporters: lys-7::GFP transgenics are widely used to visualize immune activation in vivo and to screen immunomodulatory small molecules and microbial metabolites; induction by protective Streptomyces extracts or RPW-24 has been demonstrated in infection rescue assays (Fatin et al., Frontiers in Microbiology, Nov 2017; https://doi.org/10.3389/fmicb.2017.02267; Pukkila-Worley et al., 2012; https://doi.org/10.1371/journal.pgen.1002733) (marsh2010hostpathogeninteractionsina pages 130-134).<br />
+- Probiotics/biocontrol: Lactobacillus/Lacticaseibacillus strains upregulate lys-7 and require p38 MAPK and DAF-16 pathways for protection against enteric pathogens, supporting host-directed anti-infective strategies (Zhou et al., 2018 and 2021 Frontiers in Immunology; https://doi.org/10.3389/fimmu.2018.01745; https://doi.org/10.3389/fimmu.2021.653205) (sun2015intracellularinfectiologycell pages 3-4, marsh2010hostpathogeninteractionsina pages 147-151). 2024 probiotic study independently confirms lys-7 upregulation (Lee et al., 2024) (lee2024metabolicregulationof pages 6-8).</p>
+<p>Expert opinions and synthesis<br />
+Authoritative reviews emphasize that C. elegans lysozymes, including protist-type members such as lys-7, are core epithelial effectors under p38 MAPK control, with pathogen- and context-specific roles that can extend beyond direct bacteriolysis to tolerance and immunomodulation (Dierking et al., Philos Trans R Soc B, May 2016; https://doi.org/10.1098/rstb.2015.0299; Alper et al., MCB, 2007; https://doi.org/10.1128/MCB.02070-06) (marsh2010hostpathogeninteractionsina pages 130-134, boehnisch2011protisttypelysozymesof pages 1-2). The Salmonella-tolerance tradeoff and the missing DXE motif in LYS-7 suggest a non-canonical enzymology and/or targets (e.g., cyclic PG fragments), aligning with expert views that C. elegans antimicrobials can shape pathogen physiology rather than simply kill (Marsh, 2010) (marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151, marsh2010hostpathogeninteractionsina pages 101-108).</p>
+<p>Key statistics and data points<br />
+- Infection induction: lys-7 expression rises substantially by 48 h after Serratia exposure (array/northern increases in Mallo et al., 2002) (mallo2002inducibleantibacterialdefense pages 2-3).<br />
+- Bt defense: lys-7 overexpression increases, and knockout decreases survival to pathogenic Bacillus thuringiensis (Boehnisch et al., 2011) (boehnisch2011protisttypelysozymesof pages 1-2).<br />
+- Salmonella tolerance: loss of lys-7 more than doubles median survival during S. Typhimurium infection without consistent pathogen load reduction (Marsh, 2010) (marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108).<br />
+- 2024 microbiota: lys-7 significantly downregulated under glucose-fed microbiota (n ≈ 400 per group, p &lt; 0.05) (Kingsley et al., 2024) (kingsley2024glucosefedmicrobiotaalters pages 6-7).<br />
+- 2024 probiotic: &gt;2-fold upregulation of lysozyme genes including lys-7 by L. rhamnosus IDCC 3201 with improved pathogen resistance and longevity (Lee et al., 2024) (lee2024metabolicregulationof pages 6-8).</p>
+<p>Conclusions (with verification notes)<br />
+- Identity and organism: lys-7 in C. elegans encodes a secreted protist-type GH25 lysozyme-like protein consistent with UniProt O16202, with expression in intestine/pharynx and robust infection inducibility (Mallo 2002; Boehnisch 2011) (mallo2002inducibleantibacterialdefense pages 2-3, boehnisch2011protisttypelysozymesof pages 1-2).<br />
+- Function: Predicted muramidase activity with atypical catalytic motif; evidence supports roles in epithelial defense, including antifungal action and complex bacteriostatic effects shaping pathogen tolerance (Marsh 2010) (marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151, marsh2010hostpathogeninteractionsina pages 101-108, marsh2010hostpathogeninteractionsin pages 101-108).<br />
+- Regulation: Controlled by p38 MAPK (NSY-1/SEK-1/PMK-1) and ATF-7, and influenced by insulin/IGF-1-DAF-16 signaling; induced by infections and host-directed small molecules/probiotics (Pukkila-Worley 2012; Zhou 2018/2021) (marsh2010hostpathogeninteractionsina pages 130-134, sun2015intracellularinfectiologycell pages 3-4).<br />
+- Recent advances: 2024 studies link diet-altered microbiota to lys-7 suppression and probiotics to lys-7 upregulation with improved host outcomes, underscoring lys-7 as a sensitive readout and effector of epithelial immunity (Kingsley 2024; Lee 2024) (kingsley2024glucosefedmicrobiotaalters pages 6-7, lee2024metabolicregulationof pages 6-8).</p>
+<p>Limitations and open questions<br />
+Direct biochemical demonstration of LYS-7 catalytic activity and substrate specificity in vitro remains limited in the literature; structural and enzymatic validation of the proposed atypical mechanism (lack of DXE) would refine functional inference (Marsh, 2010) (marsh2010hostpathogeninteractionsin pages 147-151, marsh2010hostpathogeninteractionsina pages 147-151, marsh2010hostpathogeninteractionsina pages 130-134). Furthermore, while lys-7 reporters and transcript assays are widely used, disentangling direct antimicrobial versus immunomodulatory roles requires additional mechanistic dissection.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(mallo2002inducibleantibacterialdefense pages 2-3): Gustavo V. Mallo, C.Léopold Kurz, Carole Couillault, Nathalie Pujol, Samuel Granjeaud, Yuji Kohara, and Jonathan J. Ewbank. Inducible antibacterial defense system in c. elegans. Current Biology, 12:1209-1214, Jul 2002. URL: https://doi.org/10.1016/s0960-9822(02)00928-4, doi:10.1016/s0960-9822(02)00928-4. This article has 605 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(boehnisch2011protisttypelysozymesof pages 1-2): Claudia Boehnisch, Daniel Wong, Michael Habig, Kerstin Isermann, Nicolaas K. Michiels, Thomas Roeder, Robin C. May, and Hinrich Schulenburg. Protist-type lysozymes of the nematode caenorhabditis elegans contribute to resistance against pathogenic bacillus thuringiensis. PLoS ONE, 6:e24619, Sep 2011. URL: https://doi.org/10.1371/journal.pone.0024619, doi:10.1371/journal.pone.0024619. This article has 74 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(marsh2010hostpathogeninteractionsin pages 147-151): EK Marsh. Host-pathogen interactions in the innate immune response of the nematode caenorhabditis elegans. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(marsh2010hostpathogeninteractionsina pages 147-151): EK Marsh. Host-pathogen interactions in the innate immune response of the nematode caenorhabditis elegans. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(marsh2010hostpathogeninteractionsina pages 101-108): EK Marsh. Host-pathogen interactions in the innate immune response of the nematode caenorhabditis elegans. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(marsh2010hostpathogeninteractionsin pages 101-108): EK Marsh. Host-pathogen interactions in the innate immune response of the nematode caenorhabditis elegans. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(marsh2010hostpathogeninteractionsina pages 130-134): EK Marsh. Host-pathogen interactions in the innate immune response of the nematode caenorhabditis elegans. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(sun2015intracellularinfectiologycell pages 3-4): J Sun, A Aballay, and V Singh. Intracellular infectiology: cell processes. Unknown journal, 2015.</p>
+</li>
+<li>
+<p>(kingsley2024glucosefedmicrobiotaalters pages 6-7): Samuel F. Kingsley, Yonghak Seo, Alicia Wood, Khursheed A. Wani, Xavier Gonzalez, Javier Irazoqui, Steven E. Finkel, and Heidi A. Tissenbaum. Glucose-fed microbiota alters c. elegans intestinal epithelium and increases susceptibility to multiple bacterial pathogens. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-63514-w, doi:10.1038/s41598-024-63514-w. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2024metabolicregulationof pages 6-8): Daniel Junpyo Lee, J. Eor, Min-Jin Kwak, Junbeom Lee, A. Kang, Daye Mun, Hyejin Choi, Minho Song, Jong Nam Kim, Jun-Mo Kim, Jungwoo Yang, Hyung Wook Kim, S. Oh, and Younghoon Kim. Metabolic regulation of longevity and immune response in caenorhabditis elegans by ingestion of lacticaseibacillus rhamnosus idcc 3201 using multi-omics analysis. Journal of Microbiology and Biotechnology, 34:1109-1118, Apr 2024. URL: https://doi.org/10.4014/jmb.2402.02025, doi:10.4014/jmb.2402.02025. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mallo2002inducibleantibacterialdefense pages 2-3</li>
+<li>boehnisch2011protisttypelysozymesof pages 1-2</li>
+<li>marsh2010hostpathogeninteractionsina pages 130-134</li>
+<li>marsh2010hostpathogeninteractionsina pages 101-108</li>
+<li>kingsley2024glucosefedmicrobiotaalters pages 6-7</li>
+<li>lee2024metabolicregulationof pages 6-8</li>
+<li>marsh2010hostpathogeninteractionsin pages 147-151</li>
+<li>marsh2010hostpathogeninteractionsina pages 147-151</li>
+<li>marsh2010hostpathogeninteractionsin pages 101-108</li>
+<li>sun2015intracellularinfectiologycell pages 3-4</li>
+<li>https://doi.org/10.1016/S0960-9822(02</li>
+<li>https://doi.org/10.1371/journal.pone.0024619</li>
+<li>https://doi.org/10.1128/MCB.02070-06</li>
+<li>https://doi.org/10.4161/viru.2.2.15270</li>
+<li>https://doi.org/10.1371/journal.pgen.1002733</li>
+<li>https://doi.org/10.3389/fimmu.2018.01745</li>
+<li>https://doi.org/10.3389/fimmu.2021.653205</li>
+<li>https://doi.org/10.1016/j.crmicr.2023.100181</li>
+<li>https://doi.org/10.1038/s41598-024-63514-w</li>
+<li>https://doi.org/10.4014/jmb.2402.02025</li>
+<li>https://doi.org/10.1038/s41437-022-00569-3</li>
+<li>https://doi.org/10.1111/acel.14246</li>
+<li>https://doi.org/10.3389/fmicb.2017.02267;</li>
+<li>https://doi.org/10.3389/fimmu.2018.01745;</li>
+<li>https://doi.org/10.1098/rstb.2015.0299;</li>
+<li>https://doi.org/10.1016/s0960-9822(02</li>
+<li>https://doi.org/10.1371/journal.pone.0024619,</li>
+<li>https://doi.org/10.1038/s41598-024-63514-w,</li>
+<li>https://doi.org/10.4014/jmb.2402.02025,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O16202
+gene_symbol: lys-7
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: Lysozyme-like protein 7 (LYS-7) is a protist-type (Entamoeba-type) lysozyme
+  that functions as a key antimicrobial effector in C. elegans innate immunity. Despite
+  belonging to the glycosyl hydrolase family 25 and containing a Ch-type lysozyme
+  domain, the protein lacks conserved catalytic residues and may not have enzymatic
+  activity. LYS-7 is expressed in the intestine, rectal gland cells, and head neurons,
+  and is strongly induced by various bacterial pathogens including S. marcescens,
+  M. nematophilum, and S. typhimurium. Functional studies demonstrate that LYS-7 provides
+  resistance against the Gram-positive bacterium B. thuringiensis and M. nematophilum,
+  and the fungal pathogen C. neoformans. Intriguingly, lys-7 knockout animals show
+  increased tolerance to S. typhimurium infection, revealing a complex immunological
+  trade-off. LYS-7 expression is regulated by the p38 MAPK pathway and the DAF-2/DAF-16
+  insulin-like signaling pathway, with P. aeruginosa actively suppressing lys-7 expression
+  as a virulence strategy.
+existing_annotations:
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This annotation from phylogenetic analysis (PANTHER) is questionable
+      for lys-7. LYS-7 is a lysozyme-like protein that functions as an antimicrobial
+      effector molecule. While lys-7 expression is regulated by signal transduction
+      pathways (p38 MAPK, DAF-2/DAF-16 insulin signaling), the protein itself is not
+      directly involved in signal transduction. LYS-7 is a downstream effector of
+      these signaling pathways, not a component of the signaling cascade.
+    action: REMOVE
+    reason: LYS-7 is an antimicrobial effector molecule whose expression is regulated
+      by signaling pathways, but it does not itself participate in signal transduction.
+      The annotation likely results from phylogenetic inference that does not distinguish
+      between regulators and effectors of signaling pathways.
+    additional_reference_ids:
+    - PMID:19023415
+    - PMID:18927620
+    supported_by:
+    - reference_id: PMID:18927620
+      supporting_text: We hypothesized that repression of immune effector expression,
+        such as thn-2, spp-1, and lys-7, may represent a virulence mechanism used
+        by P. aeruginosa to suppress host defenses.
+    - reference_id: PMID:19023415
+      supporting_text: Deficiencies in GLA and SDA result in increased susceptibility
+        to bacterial infection, which is associated with reduced basal expression
+        of a number of immune-specific genes--including spp-1, lys-7, and lys-2--that
+        encode antimicrobial peptides.
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Phylogenetic annotation supported by extensive experimental evidence.
+      LYS-7 is one of the most studied lysozymes in C. elegans immunity. Multiple
+      publications demonstrate its role in defense against bacterial and fungal pathogens
+      including M. nematophilum, B. thuringiensis, and C. neoformans (PMID:16809667,
+      PMID:21931778, PMID:21399680). The protein is induced by pathogen exposure and
+      required for optimal host survival.
+    action: ACCEPT
+    reason: Strong experimental support from multiple independent studies. LYS-7 is
+      a core innate immune effector in C. elegans, with knockout mutants showing increased
+      susceptibility to multiple pathogens.
+    additional_reference_ids:
+    - PMID:16809667
+    - PMID:21931778
+    - PMID:21399680
+    supported_by:
+    - reference_id: PMID:21931778
+      supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+        lys-2 contribute to resistance against B. thuringiensis, thus highlighting
+        the particular role of lysozymes in the nematode&#39;s defence against pathogens.
+    - reference_id: PMID:21399680
+      supporting_text: The lysozyme LYS-7 has been well-described in C. elegans as
+        an essential antimicrobial molecule
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: UniProt keyword-based annotation. This is a broad parent term of innate
+      immune response (GO:0045087). The annotation is correct but more specific terms
+      are available and annotated with experimental evidence.
+    action: ACCEPT
+    reason: While a broad term, it is correct. The more specific child term GO:0045087
+      (innate immune response) is also annotated with stronger evidence, so this IEA
+      annotation provides redundant coverage that is acceptable.
+    supported_by:
+    - reference_id: PMID:21931778
+      supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+        lys-2 contribute to resistance against B. thuringiensis, thus highlighting
+        the particular role of lysozymes in the nematode&#39;s defence against pathogens.
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro-based annotation assigning lysozyme activity based on the presence
+      of the glycosyl hydrolase 25 domain (IPR002053). However, the UniProt record
+      explicitly notes that LYS-7 &#34;Lacks conserved active site residues, suggesting
+      it has no catalytic activity.&#34; While the protein belongs to the lysozyme family,
+      it may not have functional lysozyme enzymatic activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The protein contains a lysozyme domain but UniProt cautions that &#34;Lacks
+      conserved active site residues, suggesting it has no catalytic activity.&#34; No
+      experimental evidence demonstrates that LYS-7 has lysozyme catalytic activity.
+      The protein may function through a non-enzymatic mechanism.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: UniProt:O16202
+      supporting_text: Lacks conserved active site residues, suggesting it has no
+        catalytic activity.
+- term:
+    id: GO:0006950
+    label: response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: ARBA machine learning annotation. This is a very broad term. While lys-7
+      is induced by pathogen stress, the more specific defense response terms (GO:0050829,
+      GO:0050830, GO:0050832) are more appropriate and are already annotated with
+      experimental evidence.
+    action: ACCEPT
+    reason: While broad, this annotation is not incorrect. LYS-7 is indeed induced
+      as part of the stress response to pathogen infection. More specific terms are
+      also annotated, so this provides appropriate ontological coverage.
+    supported_by:
+    - reference_id: PMID:21931778
+      supporting_text: Lysozymes are small enzymes, which can cleave peptidoglycan,
+        an essential component of bacterial cell walls. They are found in almost all
+        groups of organisms and play important roles in both immunity and digestion
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro-based annotation derived from the glycosyl hydrolase 25 domain.
+      Lysozymes typically cleave peptidoglycan in bacterial cell walls. However, since
+      LYS-7 lacks conserved catalytic residues, this function may not apply.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While typical lysozymes degrade peptidoglycan, the UniProt record notes
+      that LYS-7 &#34;Lacks conserved active site residues, suggesting it has no catalytic
+      activity.&#34; Without experimental evidence of peptidoglycan degradation activity,
+      this annotation is likely an over-annotation based on family membership rather
+      than demonstrated function.
+    supported_by:
+    - reference_id: UniProt:O16202
+      supporting_text: Lacks conserved active site residues, suggesting it has no
+        catalytic activity.
+- term:
+    id: GO:0016998
+    label: cell wall macromolecule catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: InterPro-based annotation, parent term of peptidoglycan catabolic process.
+      Same concerns apply as for GO:0009253 - LYS-7 may lack enzymatic activity needed
+      for this process.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: As LYS-7 lacks conserved catalytic residues and may not have enzymatic
+      activity, assigning cell wall degradation activity is likely an over-annotation
+      based on domain homology rather than demonstrated function.
+    supported_by:
+    - reference_id: UniProt:O16202
+      supporting_text: Lacks conserved active site residues, suggesting it has no
+        catalytic activity.
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: UniProt keyword-based annotation. Duplicates the IBA annotation above
+      but with weaker evidence. The annotation is correct and supported by experimental
+      evidence from other annotations.
+    action: ACCEPT
+    reason: Correct annotation, though redundant with the IBA annotation. LYS-7 is
+      a well-established innate immune effector.
+    supported_by:
+    - reference_id: PMID:21931778
+      supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+        lys-2 contribute to resistance against B. thuringiensis
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:16809667
+  review:
+    summary: Experimental annotation from O&#39;Rourke et al. 2006 studying M. nematophilum
+      infection. lys-7 was induced by M. nematophilum infection and mutants showed
+      enhanced susceptibility. M. nematophilum is a Gram-positive bacterium that infects
+      the C. elegans rectum.
+    action: ACCEPT
+    reason: Strong experimental evidence. The paper demonstrates that lys-7 is induced
+      by M. nematophilum infection and is required for defense, with mutants showing
+      more severe infection phenotypes (increased constipation, tail swelling, growth
+      arrest).
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:16809667
+      supporting_text: We tested 41 of the induced genes for involvement in immunity
+        using mutants or RNAi, finding that six of these are required for the swelling
+        response and five are required more generally for defense.
+    - reference_id: UniProt:O16202
+      supporting_text: Compared to wild-type, mutants grown in presence of bacterium
+        M.nematophilum are more constipated, the tail swelling is increased, growth
+        is slower and they are arrested at the L3 larval stage
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:22841995
+  review:
+    summary: Experimental annotation from Kesika and Balamurugan 2012 studying Shigella
+      infection. Shigella species are actually Gram-negative bacteria, not Gram-positive,
+      making this specific annotation taxonomically incorrect. However, lys-7 does
+      provide defense against genuine Gram-positive bacteria (M. nematophilum, B.
+      thuringiensis), so the overall term is appropriate for this gene.
+    action: ACCEPT
+    reason: While the specific reference (PMID:22841995) incorrectly applies this
+      term to Shigella (which are Gram-negative), the annotation to GO:0050830 is
+      nonetheless correct for lys-7 based on strong evidence from other studies with
+      true Gram-positive bacteria (M. nematophilum, B. thuringiensis). The underlying
+      annotation is correct; only this particular evidence line is taxonomically misapplied.
+    additional_reference_ids:
+    - PMID:16809667
+    - PMID:21931778
+    supported_by:
+    - reference_id: PMID:22841995
+      supporting_text: Increased mortality of mutant RB1285 by S. boydii and Shigella
+        flexneri indicated the role of lys-7 during Shigella infection.
+    - reference_id: PMID:21931778
+      supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+        lys-2 contribute to resistance against B. thuringiensis, thus highlighting
+        the particular role of lysozymes in the nematode&#39;s defence against pathogens.
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IMP
+  original_reference_id: PMID:21399680
+  review:
+    summary: Experimental annotation from Marsh et al. 2011. The study demonstrates
+      that lys-7 knockout animals (ok1384) show severely reduced survival following
+      exposure to the fungal pathogen Cryptococcus neoformans compared to wild-type.
+    action: ACCEPT
+    reason: Strong experimental evidence. lys-7 knockout mutants are hypersusceptible
+      to C. neoformans, demonstrating a protective role against fungal infection.
+      The authors suggest this may be due to secondary chitinase activity exhibited
+      by lysozymes.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:21399680
+      supporting_text: In line with this prediction, a lys-7 knockout strain (ok1384)
+        showed wild type brood size and longevity under non-infectious conditions
+    - reference_id: PMID:21399680
+      supporting_text: Here we show that LYS-7 protects animals against C. neoformans-mediated
+        killing, a function that is presumably attributable to the secondary chitinase
+        (anti-fungal) activity exhibited by most lysozymes
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:18927620
+  review:
+    summary: Experimental annotation from Evans et al. 2008. The study shows that
+      lys-7 expression is repressed by P. aeruginosa (a Gram-negative bacterium) as
+      a virulence strategy, and that knockdown of lys-7 by RNAi enhances susceptibility
+      to P. aeruginosa infection.
+    action: ACCEPT
+    reason: The study demonstrates that lys-7 is required for defense against P. aeruginosa.
+      RNAi knockdown of lys-7 enhances susceptibility to infection, and P. aeruginosa
+      actively suppresses lys-7 expression as a virulence mechanism.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:18927620
+      supporting_text: We hypothesized that repression of immune effector expression,
+        such as thn-2, spp-1, and lys-7, may represent a virulence mechanism used
+        by P. aeruginosa to suppress host defenses.
+    - reference_id: PMID:18927620
+      supporting_text: Knockdown of thn-2, lys-7, and spp-1 by RNAi enhances the susceptibility
+        of C. elegans to P. aeruginosa infection.
+- term:
+    id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:21931778
+  review:
+    summary: Experimental annotation from Boehnisch et al. 2011 studying B. thuringiensis
+      infection. The study demonstrates that lys-7 knockout mutants show decreased
+      survival on pathogenic B. thuringiensis, and overexpression of lys-7 increases
+      resistance.
+    action: ACCEPT
+    reason: Strong experimental evidence from knockout and overexpression studies.
+      lys-7(ok1384) knockout animals showed significantly decreased survival on B.
+      thuringiensis B-18247, and transgenic overexpression of lys-7 increased survival,
+      demonstrating a direct protective role.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:21931778
+      supporting_text: Their knock-out led to decreased pathogen resistance in all
+        three cases, while an increase in resistance was observed when two out of
+        three tested genes were overexpressed in transgenic lines (lys-5, lys-7, but
+        not lys-2).
+    - reference_id: PMID:21931778
+      supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+        lys-2 contribute to resistance against B. thuringiensis, thus highlighting
+        the particular role of lysozymes in the nematode&#39;s defence against pathogens.
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IMP
+  original_reference_id: PMID:19023415
+  review:
+    summary: Experimental annotation from Nandakumar and Tan 2008. The study shows
+      that lys-7 is one of the immune-specific genes whose basal expression requires
+      GLA and SDA fatty acids and p38 MAPK pathway activity. Reduced lys-7 expression
+      correlates with increased susceptibility to P. aeruginosa.
+    action: ACCEPT
+    reason: The study demonstrates that lys-7 is a key immune effector gene required
+      for basal innate immunity in C. elegans. Its expression is regulated by the
+      p38 MAPK pathway and is essential for defense against bacterial infection.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:19023415
+      supporting_text: Deficiencies in GLA and SDA result in increased susceptibility
+        to bacterial infection, which is associated with reduced basal expression
+        of a number of immune-specific genes--including spp-1, lys-7, and lys-2--that
+        encode antimicrobial peptides.
+    - reference_id: PMID:19023415
+      supporting_text: GLA and SDA are required to maintain basal activity of the
+        p38 MAP kinase pathway, which plays important roles in protecting metazoan
+        animals from infections and oxidative stress.
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:19023415
+  review:
+    summary: Experimental annotation from Nandakumar and Tan 2008. The study demonstrates
+      that lys-7 is required for defense against P. aeruginosa (Gram-negative), with
+      reduced expression leading to increased susceptibility.
+    action: ACCEPT
+    reason: The study shows that reduced lys-7 expression in fat-3 mutants correlates
+      with increased susceptibility to P. aeruginosa. This supports the role of lys-7
+      in defense against Gram-negative bacteria.
+    additional_reference_ids: []
+    supported_by:
+    - reference_id: PMID:19023415
+      supporting_text: Deficiencies in GLA and SDA result in increased susceptibility
+        to bacterial infection, which is associated with reduced basal expression
+        of a number of immune-specific genes--including spp-1, lys-7, and lys-2
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IGI
+  original_reference_id: PMID:21399680
+  review:
+    summary: Genetic interaction annotation from Marsh et al. 2011. The study reveals
+      a complex genetic interaction between lys-7 and abl-1 in regulating immunity
+      to S. typhimurium. Interestingly, lys-7 knockout animals are MORE resistant
+      to S. typhimurium (a Gram-negative bacterium), not less. However, lys-7 does
+      provide defense against other Gram-negative bacteria (P. aeruginosa), so the
+      overall annotation is appropriate for the gene.
+    action: ACCEPT
+    reason: While this specific reference shows lys-7 acts as a susceptibility factor
+      for S. typhimurium (an immunological trade-off), the overall annotation to GO:0050829
+      is correct for lys-7 based on strong evidence of defense against P. aeruginosa
+      from other studies (PMID:18927620, PMID:19023415). The S. typhimurium phenotype
+      represents a pathogen-specific exception within an otherwise defensive role
+      against Gram-negative bacteria.
+    additional_reference_ids:
+    - PMID:18927620
+    - PMID:19023415
+    supported_by:
+    - reference_id: PMID:21399680
+      supporting_text: Remarkably, however, lys-7 acts as a susceptibility factor
+        for S. Typhimurium killing, as the loss of lys-7 more than doubles the median
+        survival of Salmonella-challenged animals.
+    - reference_id: PMID:18927620
+      supporting_text: Knockdown of thn-2, lys-7, and spp-1 by RNAi enhances the susceptibility
+        of C. elegans to P. aeruginosa infection.
+- term:
+    id: GO:0030246
+    label: carbohydrate binding
+  evidence_type: ISS
+  original_reference_id: UniProt:O16202
+  review:
+    summary: Proposed new annotation based on structural inference. LYS-7 contains
+      a Ch-type lysozyme domain (amino acids 53-273) which is a carbohydrate-binding
+      domain. While catalytic activity may be absent due to missing active site residues,
+      the domain structure suggests retention of carbohydrate binding capability.
+      This may explain the antimicrobial function through non-enzymatic binding to
+      bacterial or fungal cell wall components.
+    action: NEW
+    reason: LYS-7 has a Ch-type lysozyme domain that typically binds carbohydrates.
+      Even without catalytic activity, binding to peptidoglycan or chitin components
+      could provide antimicrobial function. This annotation captures the likely molecular
+      function when enzymatic activity is uncertain.
+    supported_by:
+    - reference_id: UniProt:O16202
+      supporting_text: Belongs to the glycosyl hydrolase 25 family.
+    - reference_id: PMID:21399680
+      supporting_text: a function that is presumably attributable to the secondary
+        chitinase (anti-fungal) activity exhibited by most lysozymes
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16809667
+  title: Genomic clusters, putative pathogen recognition molecules, and antimicrobial
+    genes are induced by infection of C. elegans with M. nematophilum.
+  findings: []
+- id: PMID:18927620
+  title: Pseudomonas aeruginosa suppresses host immunity by activating the DAF-2 insulin-like
+    signaling pathway in Caenorhabditis elegans.
+  findings: []
+- id: PMID:19023415
+  title: Gamma-linolenic and stearidonic acids are required for basal immunity in
+    Caenorhabditis elegans through their effects on p38 MAP kinase activity.
+  findings: []
+- id: PMID:21399680
+  title: A two-gene balance regulates Salmonella typhimurium tolerance in the nematode
+    Caenorhabditis elegans.
+  findings: []
+- id: PMID:21931778
+  title: Protist-type lysozymes of the nematode Caenorhabditis elegans contribute
+    to resistance against pathogenic Bacillus thuringiensis.
+  findings: []
+- id: PMID:22841995
+  title: Studies on Shigella boydii infection in Caenorhabditis elegans and bioinformatics
+    analysis of immune regulatory protein interactions.
+  findings: []
+- id: UniProt:O16202
+  title: UniProt entry for LYS-7 C. elegans
+  findings: []
+core_functions:
+- description: LYS-7 functions as an antimicrobial effector in innate immunity. Knockout
+    mutants show increased susceptibility to B. thuringiensis (PMID:21931778), M.
+    nematophilum (PMID:16809667), and C. neoformans (PMID:21399680). Overexpression
+    increases resistance to pathogens (PMID:21931778). Despite having a lysozyme domain,
+    LYS-7 lacks conserved catalytic residues, suggesting it may function through carbohydrate
+    binding rather than enzymatic activity.
+  molecular_function:
+    id: GO:0030246
+    label: carbohydrate binding
+  directly_involved_in:
+  - id: GO:0045087
+    label: innate immune response
+  - id: GO:0050830
+    label: defense response to Gram-positive bacterium
+  - id: GO:0050832
+    label: defense response to fungus
+  - id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  supported_by:
+  - reference_id: PMID:21931778
+    supporting_text: We conclude that the lysozyme genes lys-5, lys-7, and possibly
+      lys-2 contribute to resistance against B. thuringiensis, thus highlighting the
+      particular role of lysozymes in the nematode&#39;s defence against pathogens.
+  - reference_id: PMID:21399680
+    supporting_text: The lysozyme LYS-7 has been well-described in C. elegans as an
+      essential antimicrobial molecule
+  - reference_id: UniProt:O16202
+    supporting_text: Belongs to the glycosyl hydrolase 25 family.
+proposed_new_terms: []
+suggested_questions:
+- question: Does LYS-7 have enzymatic activity given that it lacks conserved active
+    site residues?
+suggested_experiments:
+- description: Biochemical assay for lysozyme activity - Directly test whether purified
+    LYS-7 protein has peptidoglycan-degrading or chitinase activity, given the absence
+    of conserved catalytic residues.
+- description: Structure-function analysis - Determine which domains/residues of LYS-7
+    are required for antimicrobial function to understand if it acts enzymatically
+    or via binding/signaling.
+tags:
+- caeel-surveillance-immunity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cipB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cipB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q01866" target="_blank" class="term-link">
+                        Q01866
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Acetivibrio thermocellus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">CipB</span>
+                    
+                    <span class="badge">Cellulose-integrating protein B</span>
+                    
+                    <span class="badge">Cellulosomal glycoprotein S1/SL</span>
+                    
+                    <span class="badge">S1 subunit</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cipB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q01866" data-a="DESCRIPTION: CipB (Cellulosomal-scaffolding protein B) is a sec..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CipB (Cellulosomal-scaffolding protein B) is a secondary scaffoldin protein in the Acetivibrio thermocellum cellulosome complex. Unlike the primary scaffoldin CipA, CipB is NOT catalytically active and does not possess hydrolase activity. It functions as a structural/organizing protein containing three cohesin domains that bind dockerin domains of catalytic enzymes, one CBM3 (carbohydrate-binding module family 3) domain that binds cellulose, and a C-terminal type II dockerin domain that binds to type II cohesins on anchoring scaffoldins for cell-surface attachment. CipB contributes to higher-order cellulosome assembly and organization, connecting catalytic components to the cell surface anchoring network. It is secreted and functions extracellularly as part of the cell-attached polycellulosome complex.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0000272" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB is a non-catalytic scaffoldin protein that does not directly participate in polysaccharide catabolism. While the cellulosome complex as a whole degrades polysaccharides, CipB itself lacks any catalytic domains and functions purely as a structural organizing protein. The annotation appears to be inferred from the presence of cohesin and dockerin domains, which are associated with the cellulosome but do not confer catalytic activity. According to the deep research, CipB has &#34;a large secreted scaffold-like component that contributes to higher-order assembly via its type II dockerin rather than functioning as a catalytic enzyme&#34; (Bras 2012).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB does not directly catalyze polysaccharide breakdown. It is a non-catalytic scaffoldin that organizes catalytic enzymes within the cellulosome complex. The annotation incorrectly attributes a catalytic process to a purely structural protein. UniProt explicitly states CipB &#34;Acts as a scaffolding protein in the cellulosome&#34; with no mention of catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/Q01866/Q01866-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CipB is a second large, non-catalytic, scaffold-like component that contributes to higher-order assembly via its type II dockerin rather than functioning as a catalytic enzyme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is incorrect. CipB does NOT have hydrolase activity. The annotation was propagated via InterPro from the dockerin domain (IPR002105), but dockerin domains are protein-protein interaction modules, not catalytic domains. CipB is explicitly described in UniProt as a scaffolding protein that &#34;promotes binding of cellulose to the catalytic domains of the cellulolytic enzymes&#34; - meaning it organizes enzymes that have hydrolase activity, but CipB itself lacks catalytic function. The deep research confirms CipB &#34;is a large secreted scaffold-like component that contributes to higher-order assembly via its type II dockerin rather than functioning as a catalytic enzyme&#34; (Bras 2012).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB is a non-catalytic scaffoldin protein. The IEA annotation from InterPro IPR002105 (Dockerin_1_rpt) incorrectly associates dockerin domains with hydrolase activity. Dockerin domains are protein-protein interaction modules that bind cohesin domains, enabling assembly of the cellulosome complex. CipB contains no glycosyl hydrolase catalytic domains. This is a clear case of over-annotation from automated pipelines that conflate domain presence with catalytic function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. CipB is secreted and functions extracellularly. UniProt subcellular location explicitly states &#34;Secreted. Note=Remains at cell surface.&#34; The protein contains an N-terminal signal peptide consistent with secretion (Bras 2012). CipB becomes part of cell-attached polycellulosomes by binding cell-surface anchoring scaffoldins via its type II dockerin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB is clearly documented as a secreted, extracellular protein that functions at the cell surface as part of the cellulosome complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted. Note=Remains at cell surface.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an overly broad annotation. While CipB is a component of the cellulosome which functions in carbohydrate metabolism, CipB itself does not directly participate in metabolic reactions. It is a structural scaffoldin that organizes catalytic enzymes. The annotation is derived from InterPro domains IPR001956 (CBM3) and IPR036966 (CBM3_sf). The CBM3 domain enables cellulose binding, not metabolic activity. A more appropriate BP annotation would be cellulosome assembly (GO:0044575).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is too broad and implies direct metabolic activity. CipB&#39;s role is structural/organizational - it assembles and organizes catalytic enzymes that perform carbohydrate metabolism. The protein&#39;s function is better captured by cellulosome assembly.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                    cellulosome assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030245" target="_blank" class="term-link">
+                                    GO:0030245
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0030245" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Similar to the polysaccharide catabolic process annotation, this incorrectly attributes a catalytic process to a non-catalytic scaffoldin protein. CipB does not directly catabolize cellulose - it organizes the catalytic enzymes that do. The annotation was derived from UniProt keyword KW-0136 (Cellulose degradation), which may have been applied broadly to cellulosome components without distinguishing catalytic from structural subunits.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB does not catalyze cellulose breakdown. It is a scaffoldin protein that organizes cellulolytic enzymes within the cellulosome. The &#34;involved_in&#34; relationship to a catabolic process is inappropriate for a non-catalytic structural protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0030246" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is broadly correct but could be more specific. CipB contains a CBM3 (carbohydrate-binding module family 3) domain that specifically binds cellulose. The more specific term GO:0030248 (cellulose binding) is already annotated and is more informative. This general carbohydrate binding annotation adds little value given the more specific annotation exists.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct due to the CBM3 domain, this is redundant with the more specific cellulose binding annotation (GO:0030248). The CBM3 domain specifically binds cellulose, not carbohydrates in general. Keeping as non-core since it is not incorrect but is less informative than the specific term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030248" target="_blank" class="term-link">
+                                    GO:0030248
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0030248" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct. CipB contains a well-characterized CBM3 (carbohydrate-binding module family 3) domain at positions 277-435 that specifically binds cellulose. This domain enables CipB to anchor the cellulosome complex to its cellulose substrate. UniProt explicitly annotates this CBM3 domain, and the deep research confirms &#34;InterPro/CBM3-superfamily annotations are consistent with scaffoldin-related architecture&#34; (Bras 2012).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB unambiguously contains a CBM3 domain that confers cellulose binding activity. This is a core molecular function of the scaffoldin protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN 277..435 /note=&#34;CBM3&#34; /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00513&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is problematic. CipB functions in cellulose degradation of PLANT cell walls (the substrate), not in organization of the bacterium&#39;s own cell wall. The annotation was derived from UniProt keyword KW-0961 (Cell wall biogenesis/degradation), but this keyword conflates degradation of external substrates with biogenesis of the organism&#39;s own cell wall. CipB is not involved in A. thermocellus cell wall organization - it is part of an extracellular complex that degrades plant biomass.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB is a cellulosome component that degrades external plant cell wall material, not a protein involved in organizing the bacterium&#39;s own cell wall. This annotation confuses substrate degradation with self-organization. The GO term &#34;cell wall organization&#34; refers to organization of the organism&#39;s own cell wall, not degradation of external cell wall substrates.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                                    GO:0043263
+                                </a>
+                            </span>
+                            <span class="term-label">cellulosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1490597" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1490597
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the cellulose-binding domain of the cellul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0043263" data-r="PMID:1490597" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB is a documented component of the cellulosome complex. The cellulosome is defined as &#34;An extracellular multi-enzyme complex containing up to 11 different enzymes aligned on a non-catalytic scaffolding glycoprotein.&#34; CipB is one such non-catalytic scaffolding protein. UniProt describes CipB as &#34;Cellulosomal-scaffolding protein B&#34; and states it &#34;Acts as a scaffolding protein in the cellulosome.&#34;
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CipB is a core structural component of the cellulosome. This CC annotation accurately captures its location within this multienzyme complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Cellulosomal-scaffolding protein B</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1490597" target="_blank" class="term-link">
+                                        PMID:1490597
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the cellulose-binding domain of the cellulosome subunit S1 from Clostridium thermocellum YS</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                    GO:0044575
+                                </a>
+                            </span>
+                            <span class="term-label">cellulosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1490597" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1490597
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the cellulose-binding domain of the cellul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0044575" data-r="PMID:1490597" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB plays a direct role in cellulosome assembly through its cohesin-dockerin interactions. Its three cohesin domains bind dockerin domains of catalytic enzymes, and its C-terminal type II dockerin binds type II cohesins on anchoring scaffoldins. The deep research states CipB &#34;contributes to higher-order assembly via its type II dockerin&#34; (Bras 2012). The term definition &#34;The assembly of a cellulosome, a macromolecular multi-enzyme complex in bacteria that facilitates the breakdown of cellulase, hemicellulase and pectin in the plant cell wall&#34; precisely describes CipB&#39;s biological role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most appropriate BP annotation for CipB. As a scaffoldin protein, its primary biological process function is assembling and organizing the cellulosome complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts as a scaffolding protein in the cellulosome. It promotes binding of cellulose to the catalytic domains of the cellulolytic enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990308" target="_blank" class="term-link">
+                                    GO:1990308
+                                </a>
+                            </span>
+                            <span class="term-label">type-I dockerin domain binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            UniProt:Q01866
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:1990308" data-r="UniProt:Q01866" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB contains three cohesin domains (positions 1-80, 94-240, 462-607) that bind type-I dockerin domains present on catalytic cellulosome enzymes. UniProt states the cohesin domains &#34;bind to the dockerin domain born by the catalytic components of the cellulosome.&#34; This molecular function enables CipB to organize cellulolytic enzymes within the cellulosome complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cohesin domains of CipB specifically bind type-I dockerin domains on catalytic enzymes. This is a core molecular function that enables CipB&#39;s scaffolding role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990312" target="_blank" class="term-link">
+                                    GO:1990312
+                                </a>
+                            </span>
+                            <span class="term-label">type-II cohesin domain binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            PDB:2VT9
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:1990312" data-r="PDB:2VT9" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB contains a C-terminal type II dockerin domain (positions 704-771) that binds type II cohesins on anchoring scaffoldins (ScaC, ScaD, ScaE). The deep research describes structural evidence: &#34;a 1.98 A crystal structure of ScaC2 cohesin bound to CipB X-Doc (PDB 2VT9) identifies key specificity residues and Ca2+ ions in the complex&#34; (Bras 2012). This interaction anchors CipB-containing cellulosome subcomplexes to the cell surface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The type II dockerin domain of CipB binds type II cohesin domains on anchoring scaffoldins. This is a well-characterized molecular function with structural evidence from crystallography.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    PDB:2VT9
+                                    
+                                </span>
+                                
+                                <div class="support-text">ScaC2-CipB X-Doc complex solved to 1.98 A; structure contains Ca2+ ions; ITC and mutagenesis support high-affinity, Ca2+-dependent type II binding</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            UniProt:Q01866
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q01866" data-a="GO:0005198" data-r="UniProt:Q01866" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CipB functions as a structural molecule that contributes to the integrity of the cellulosome complex. It does not have catalytic activity but instead provides a scaffold that organizes catalytic enzymes. The GO definition &#34;The action of a molecule that contributes to the structural integrity of a complex&#34; precisely describes CipB&#39;s molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As a non-catalytic scaffoldin, CipB&#39;s primary molecular function is structural - it provides a scaffold for cellulosome assembly and organization. This is an appropriate parent term for the more specific cohesin/dockerin binding activities.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q01866
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts as a scaffolding protein in the cellulosome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CBM3 domain at positions 277-435 confers cellulose binding, enabling anchoring of cellulosome to cellulose substrate</h3>
+                <span class="vote-buttons" data-g="Q01866" data-a="FUNCTION: CBM3 domain at positions 277-435 confers cellulose..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030248" target="_blank" class="term-link">
+                            cellulose binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                cellulosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                            cellulosome
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Three cohesin domains bind type-I dockerin domains of catalytic cellulosome enzymes</h3>
+                <span class="vote-buttons" data-g="Q01866" data-a="FUNCTION: Three cohesin domains bind type-I dockerin domains..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990308" target="_blank" class="term-link">
+                            type-I dockerin domain binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                cellulosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                            cellulosome
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>C-terminal type II dockerin binds anchoring scaffoldin cohesins (structural evidence from PDB 2VT9)</h3>
+                <span class="vote-buttons" data-g="Q01866" data-a="FUNCTION: C-terminal type II dockerin binds anchoring scaffo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990312" target="_blank" class="term-link">
+                            type-II cohesin domain binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                cellulosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                            cellulosome
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a non-catalytic scaffold contributing to cellulosome structural integrity</h3>
+                <span class="vote-buttons" data-g="Q01866" data-a="FUNCTION: Acts as a non-catalytic scaffold contributing to c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                cellulosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                            cellulosome
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations for hydrolase activity, carbohydrate binding, cellulose binding, and carbohydrate metabolic process</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations for cellulose catabolic process and cell wall organization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotation for extracellular region</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotation for polysaccharide catabolic process</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1490597" target="_blank" class="term-link">
+                            PMID:1490597
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of the cellulose-binding domain of the cellulosome subunit S1 from Clostridium thermocellum YS</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original characterization of CipB (S1/SL) including identification of CBM domain</div>
+                        
+                        <div class="finding-text">"The cellulose-binding domain in this polypeptide consisted of a C-terminal proximal 167 residue sequence which showed complete identity with residues 337-503 of mature SL from C. thermocellum strain ATCC 27405"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes CipB as a cellulosome subunit</div>
+                        
+                        <div class="finding-text">"The 3&#39; region of a gene designated cipB, which shows strong homology with cipA that encodes the cellulosome SL subunit of Clostridium thermocellum ATCC 27405, was isolated from a gene library of C. thermocellum strain YS"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        PDB:2VT9
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of ScaC2 cohesin bound to CipB X-Doc complex</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">1.98 A resolution structure showing type II cohesin-dockerin interaction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates Ca2+-dependent binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies key specificity residues</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q01866
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for CipB/CIPB_ACETH</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CipB is a secreted scaffolding protein</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Secreted. Note=Remains at cell surface"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains cohesin domains, CBM3 domain, and dockerin domain</div>
+                        
+                        <div class="finding-text">"DOMAIN: The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cohesin domains bind dockerin domains of catalytic enzymes</div>
+                        
+                        <div class="finding-text">"The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions in cellulosome organization</div>
+                        
+                        <div class="finding-text">"FUNCTION: Acts as a scaffolding protein in the cellulosome. It promotes binding of cellulose to the catalytic domains of the cellulolytic enzymes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative abundance and stoichiometry of CipB vs CipA in the native cellulosome under different growth conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="Q: What is the relative abundance and stoichiometry o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CipB have specific enzyme recruitment preferences compared to CipA, or are the cohesin domains functionally equivalent?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="Q: Does CipB have specific enzyme recruitment prefere..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the internal repeat region with ~19 copies of a ~41 aa cysteine-containing motif?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="Q: What is the functional significance of the interna..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative proteomics of cellulosome composition under different carbon sources to understand CipB&#39;s regulatory role</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CipB abundance varies with substrate complexity, with higher levels on mixed cellulose/hemicellulose substrates</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="EXPERIMENT: Quantitative proteomics of cellulosome composition..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural studies of CipB cohesin domains bound to various dockerin-containing enzymes to assess specificity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CipB cohesin domains may have distinct binding preferences compared to CipA cohesins</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="EXPERIMENT: Structural studies of CipB cohesin domains bound t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Deletion/complementation studies to assess CipB&#39;s contribution to cellulose degradation efficiency</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of CipB reduces cellulosome efficiency on complex substrates but may be partially compensated by CipA</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01866" data-a="EXPERIMENT: Deletion/complementation studies to assess CipB&#39;s ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q01866-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q01866" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T17:02:57.651870'<br />
+end_time: '2025-12-26T17:10:06.757381'<br />
+duration_seconds: 429.11<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ACET2<br />
+  gene_id: Q01866<br />
+  gene_symbol: cipB<br />
+  uniprot_accession: Q01866<br />
+  protein_description: 'RecName: Full=Cellulosomal-scaffolding protein B; AltName:<br />
+    Full=Cellulose-integrating protein B; AltName: Full=Cellulosomal glycoprotein<br />
+    S1/SL; Flags: Fragment;'<br />
+  gene_info: Name=cipB;<br />
+  organism_full: Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium<br />
+    thermocellum).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: CarboxyPept-like_regulatory. (IPR008969); CBM2/CBM3_carb-bd_dom_sf.<br />
+    (IPR008965); CBM3. (IPR001956); CBM3_sf. (IPR036966); Cohesin_dom. (IPR002102)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 13</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q01866</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cellulosomal-scaffolding protein B; AltName: Full=Cellulose-integrating protein B; AltName: Full=Cellulosomal glycoprotein S1/SL; Flags: Fragment;</li>
+<li><strong>Gene Information:</strong> Name=cipB;</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CarboxyPept-like_regulatory. (IPR008969); CBM2/CBM3_carb-bd_dom_sf. (IPR008965); CBM3. (IPR001956); CBM3_sf. (IPR036966); Cohesin_dom. (IPR002102)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cipB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cipB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cipB</strong> (gene ID: Q01866, UniProt: Q01866) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q01866</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cellulosomal-scaffolding protein B; AltName: Full=Cellulose-integrating protein B; AltName: Full=Cellulosomal glycoprotein S1/SL; Flags: Fragment;</li>
+<li><strong>Gene Information:</strong> Name=cipB;</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CarboxyPept-like_regulatory. (IPR008969); CBM2/CBM3_carb-bd_dom_sf. (IPR008965); CBM3. (IPR001956); CBM3_sf. (IPR036966); Cohesin_dom. (IPR002102)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cipB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cipB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cipB</strong> (gene ID: Q01866, UniProt: Q01866) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan summary<br />
+- We verified target identity, organism, aliases, and domain architecture to ensure correct gene/protein disambiguation. We then gathered primary and review literature on C. (Acetivibrio) thermocellum cellulosomes with specific attention to CipB (Cthe_1806; UniProt Q01866). We extracted functional, structural, localization, interaction, and regulation evidence; searched for 2023–2024 developments and biotechnological applications; consolidated expert analysis; and created an evidence-linked summary table. Due to sparse CipB-specific publications in 2023–2024 in the retrieved corpus, we rely on authoritative structural/biochemical work (2012) and a recent review (2025) for contemporary context.</p>
+<p>Comprehensive research report: cipB (UniProt Q01866), Acetivibrio thermocellus</p>
+<p>1) Key concepts and definitions<br />
+- Identity and aliases. cipB encodes Cellulosomal-scaffolding protein B (also known as scaffoldin B; cellulosomal glycoprotein S1/SL) in Clostridium (Acetivibrio) thermocellum. In genome annotations, CipB corresponds to Cthe_1806 and is a large secreted cellulosome-associated protein. This aligns with UniProt Q01866 and literature nomenclature (S1/SL, scaffoldin B) (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 112-115). URL: UniProt Q01866, https://www.uniprot.org/uniprot/Q01866 (accessed 2025).<br />
+- Role in cellulosome hierarchy. C. thermocellum cellulosomes comprise non-catalytic scaffoldins containing cohesins that bind dockerin-tagged enzymes, and anchoring scaffoldins that tether complexes to the cell surface. CipA (primary scaffoldin) bears multiple type I cohesins for enzyme integration and a C‑terminal type II dockerin for cell-surface tethering; anchoring scaffoldins display type II cohesins and often SLH repeats. CipB is a second large, non-catalytic, scaffold‑like component that contributes to higher-order assembly via its type II dockerin rather than functioning as a catalytic enzyme (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 35-38, bras2012structureandfunction pages 112-115).</p>
+<p>2) Molecular features: domains, structure, and specificity<br />
+- Length and signal peptide. CipB is approximately 2177 amino acids and is secreted via an N-terminal signal peptide, consistent with extracellular function (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120).<br />
+- Domain architecture. CipB carries a C-terminal X-module immediately preceding a type II dockerin (X–Doc) and an internal region with a 41-residue motif repeated ~19 times containing conserved cysteines; multiple internal modules remain of unknown function (bras2012structureandfunction pages 120-125). InterPro/CBM3-superfamily annotations are consistent with scaffoldin-related architecture, while SLH repeats are characteristic of anchoring scaffoldins rather than CipB itself (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 35-38, bras2012structureandfunction pages 120-125).<br />
+- Cohesin–dockerin specificity and binding mode. CipB’s dockerin is type II and specifically binds type II cohesins on anchoring scaffoldins (e.g., ScaC, ScaD, ScaE; ScaA in the renaming scheme for surface complexes), and does not bind type I cohesins that mediate enzyme incorporation. Structural and biochemical assays show calcium dependence and ultra‑high affinity for type II interactions; a 1.98 Å crystal structure of ScaC2 cohesin bound to CipB X–Doc (PDB 2VT9) identifies key specificity residues and Ca2+ ions in the complex (bras2012structureandfunction pages 117-120, bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 53-56). PDB: 2VT9, https://www.rcsb.org/structure/2VT9 (deposited prior to 2012; accessed 2025).<br />
+- Distinction from CipA. While CipA contains nine type I cohesins plus a CBM3 and a type II dockerin, CipB lacks type I cohesins and functions through its type II dockerin to connect into cell-surface anchoring networks. Structural comparisons of X–Doc modules show substitutions (e.g., Asn122→Gly; Phe124, Leu147, Phe148 in CipB) that tune type II cohesin recognition relative to CipA (bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 117-120).</p>
+<p>3) Localization, interaction partners, and assembly hierarchy<br />
+- Localization. CipB is secreted/extracellular and becomes part of cell-attached polycellulosomes by binding cell-surface anchoring scaffoldins via its type II dockerin. Anchoring scaffoldins often have SLH motifs to tether to the cell envelope, enabling the CipB-containing assemblies to localize at the cell surface while engaging insoluble substrates (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 112-115).<br />
+- Interaction partners and assembly. CipB’s type II dockerin binds type II cohesins of anchoring scaffoldins, including ScaC and other surface/extracellular type II cohesin-bearing proteins (e.g., ScaD, ScaE). No cross-reactivity with type I cohesins is observed, consistent with the strict division of labor in cellulosome assembly (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 117-120). The ScaC2–CipB complex exemplifies high affinity and Ca2+-dependent binding (bras2012structureandfunction pages 117-120). </p>
+<p>4) Regulation and expression<br />
+- Condition-dependent abundance. Transcriptomic/proteomic observations indicate CipB expression decreases with increasing growth rate on cellobiose but is upregulated when cells are grown on cellulose mixed with hemicelluloses (xylan/pectin). Quantitatively, CipB abundance in cellulosomes is approximately 5% of CipA on pure cellulose, increasing to about 11–13% when mixed substrates are present (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120).</p>
+<p>5) Recent developments and latest research (priority 2023–2024; context to 2025)<br />
+- The retrieved corpus contains limited CipB‑specific publications from 2023–2024. Contemporary reviews emphasize evolving understanding of cohesin–dockerin diversity, binding modes, calcium dependence, and mechanical stability in cellulosome architecture and engineering. These insights underscore the industrial relevance of tailoring cohesin–dockerin interactions (including type II pairs akin to CipB’s X–Doc) for multienzyme assemblies and biomass valorization (lindic2025structuralandfunctional pages 7-8). Review URL: Frontiers in Microbiology (2025), https://doi.org/10.3389/fmicb.2025.1638551 (published Sep 2025).</p>
+<p>6) Current applications and implementations<br />
+- Synthetic cellulosomes and multienzyme assemblies. The ultra‑high affinity, Ca2+‑dependent cohesin–dockerin interactions, especially type II pairs that mediate robust tethering and assembly on anchoring scaffoldins, are exploited to build synthetic or hybrid multienzyme scaffolds for biomass deconstruction. CipB’s type II X–Doc module and its high-affinity binding to type II cohesins exemplify modules suited to robust assembly under industrially relevant conditions (bras2012structureandfunction pages 53-56, bras2012structureandfunction pages 117-120, bras2012structureandfunction pages 38-41). <br />
+- Cell-surface display and polycellulosome formation. Anchoring scaffoldins with multiple type II cohesins can recruit multiple primary scaffoldins to produce large polycellulosomes, concentrating enzymes on insoluble substrates; the CipB module set participates in this network and informs design of cell-surface or material‑anchored enzyme arrays (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 112-115).<br />
+- Quantitative parameters informing design. The ScaC2–CipB X–Doc complex is 1:1 and beyond ITC affinity detection in standard conditions, with explicit Ca2+ coordination in the crystal structure; these features support stability and specificity in engineered constructs (bras2012structureandfunction pages 53-56, bras2012structureandfunction pages 117-120). Proteomic abundances (≈5% vs 11–13% of CipA depending on substrate) guide expectations for native stoichiometry and regulation in process-relevant cultures (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120).</p>
+<p>7) Expert opinions and analysis<br />
+- Mechanistic partitioning between type I (enzyme integration) and type II (cell anchoring/scaffold connectivity) remains a central design principle. CipB contributes connectivity through a divergent type II dockerin that shows tuned specificity relative to CipA, reinforcing modular control of assembly. The demonstrated Ca2+-dependent, ultra‑tight type II interactions and structural determinants at the CipB dockerin interface are directly applicable when designing modular, responsive cellulose-degrading systems. Recent syntheses stress the importance of mechanical stability and flexible linker architecture for activity, consistent with long, flexible scaffoldin segments that position enzymes at solid substrates (bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 53-56, lindic2025structuralandfunctional pages 7-8).</p>
+<p>8) Statistics and data highlights<br />
+- Protein length and secretion: CipB ~2177 aa with signal peptide (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120).<br />
+- Internal repeats: ~19 copies of a ~41 aa cysteine-containing motif (bras2012structureandfunction pages 120-125).<br />
+- Binding/structure: ScaC2–CipB X–Doc 1.98 Å; Ca2+ present; ITC indicates sub‑nanomolar or stronger affinity beyond standard detection; 1:1 stoichiometry (bras2012structureandfunction pages 117-120, bras2012structureandfunction pages 53-56). URL: PDB 2VT9, https://www.rcsb.org/structure/2VT9.<br />
+- Expression/abundance: ≈5% of CipA on cellulose; ≈11–13% on mixed cellulose/hemicellulose substrates; downregulated with faster growth on cellobiose (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120).</p>
+<p>Verification of identity and ambiguity assessment<br />
+- The gene symbol “cipB” can be used in multiple clostridial species for scaffoldin-like proteins. Here, evidence ties CipB explicitly to C. (A.) thermocellum (Cthe_1806), a large secreted scaffold-like protein with a C-terminal type II dockerin and X-module, aligning with UniProt Q01866 and the provided domain annotations. We found no conflicting gene with the same symbol in a different organism within the gathered evidence; thus, the identity is verified for the requested organism (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 112-115).</p>
+<p>Embedded evidence summary table<br />
+| Feature | Description / Details | Evidence (citation ID[s] and year) | URL / Accession |<br />
+|---|---|---:|---|<br />
+| Aliases | CipB; Cthe_1806; Cellulosomal-scaffolding protein B; S1 / SL | (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 112-115) 2012 | UniProt Q01866: https://www.uniprot.org/uniprot/Q01866 |<br />
+| Organism verification | Acetivibrio thermocellus (Hungateiclostridium thermocellum / Clostridium thermocellum) | (bras2012structureandfunction pages 120-125) 2012 | NCBI / taxonomy via UniProt Q01866 |<br />
+| Length &amp; signal peptide | ~2177 amino acids; N-terminal signal peptide consistent with secretion | (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120) 2012 | UniProt Q01866: https://www.uniprot.org/uniprot/Q01866 |<br />
+| Domain architecture | C-terminal X-module immediately N‑terminal to a type II dockerin; InterPro/CBM3-superfamily and cohesin-related annotations consistent with scaffoldin features | (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 35-38) 2012 | UniProt Q01866 / InterPro entries (see UniProt) |<br />
+| Internal repeat region | Internal ~41-residue motif repeated ~19× with conserved cysteines (4 internal domains of unknown function noted) | (bras2012structureandfunction pages 120-125) 2012 | — |<br />
+| CBM3 presence (context) | CBM3 is canonical for primary scaffoldins (e.g., CipA); CipB annotations indicate CBM3-superfamily features in related analyses / InterPro inference | (bras2012structureandfunction pages 35-38, bras2012structureandfunction pages 120-125) 2012 | UniProt Q01866: https://www.uniprot.org/uniprot/Q01866 |<br />
+| SLH motifs (presence/absence) | CipB lacks reported SLH anchoring repeats; anchoring scaffoldins (ScaB/ScaC/ScaF etc.) typically carry SLH or cell‑surface tags to attach polycellulosomes to cell envelope | (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 112-115) 2012 | — |<br />
+| Cohesin–dockerin specificity | CipB carries a divergent type II dockerin that binds type II cohesins on anchoring proteins (ScaA, ScaC, ScaD, ScaE); does not bind type I cohesins (type I mediates enzyme incorporation) | (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120) 2012 | — |<br />
+| Structural data | ScaC2–CipB X‑Doc complex solved to 1.98 Å (PDB 2VT9); structure contains Ca2+ ions; ITC and mutagenesis support high‑affinity, Ca2+‑dependent type II binding and specificity determinants | (bras2012structureandfunction pages 117-120) 2012 | PDB 2VT9: https://www.rcsb.org/structure/2VT9 |<br />
+| Interaction / assembly role | Acts as an extracellular scaffold-like connector integrating into cell-surface anchoring networks via type II Coh‑Doc; relates to primary scaffoldin CipA (which contains nine type I cohesins + CBM3 + C‑terminal type II dockerin) | (bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 38-41) 2012 | — |<br />
+| Localization | Secreted/extracellular; incorporated into cell-attached polycellulosomes by binding cell-surface anchoring scaffoldins (forming larger assemblies) | (bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 38-41) 2012 | — |<br />
+| Regulation (expression / abundance) | Transcript/proteomic patterns: expression decreases with faster growth on cellobiose; upregulated on cellulose mixed with xylan/pectin; abundance ≈5% of CipA on pure cellulose and ≈11–13% when mixed substrates present | (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 117-120) 2012 | — |<br />
+| Recent insights (2023–2025 context) | Recent reviews and structural studies emphasize diverse Coh‑Doc binding modes, strong Ca2+ dependence, and engineering potential for multienzyme scaffolds; limited CipB‑specific literature for 2023–2024 but 2025 reviews highlight continued interest in cellulosome architecture and engineering | (lindic2025structuralandfunctional pages 7-8) 2025 | Frontiers review DOI: https://doi.org/10.3389/fmicb.2025.1638551 |</p>
+<p><em>Table: A concise, evidence-linked reference table summarizing key properties, domains, interactions, structural data, localization, and regulation of CipB (UniProt Q01866) in A. thermocellus, with context citations for each fact.</em></p>
+<p>References (with URLs and dates when available)<br />
+- Brás JLA. Structure and function relationships in novel cellulosomal enzymes and cohesin–dockerin complexes. 2012. Key excerpts on CipB identity (Cthe_1806), X–Doc architecture, binding specificity, regulation, and ScaC2–CipB structure (PDB 2VT9). PDB URL: https://www.rcsb.org/structure/2VT9 (accessed 2025) (bras2012structureandfunction pages 120-125, bras2012structureandfunction pages 112-115, bras2012structureandfunction pages 117-120, bras2012structureandfunction pages 53-56).<br />
+- Lindič N, Vodovnik M. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. Frontiers in Microbiology, Sep 2025. DOI: https://doi.org/10.3389/fmicb.2025.1638551 (lindic2025structuralandfunctional pages 7-8).<br />
+- General cellulosome architecture and anchoring scaffoldins, SLH motifs, and division of type I vs type II interactions: synthesized from collected excerpts (bras2012structureandfunction pages 38-41, bras2012structureandfunction pages 35-38).</p>
+<p>Notes on the evidence base (2023–2024)<br />
+- Within the retrieved evidence set, we did not identify CipB‑specific primary publications from 2023–2024. The conclusions above therefore rest on authoritative structural/biochemical work (2012) for CipB and a recent review (2025) for current conceptual developments. Where we make design/engineering inferences, they are grounded in the documented properties of CipB’s type II X–Doc and in general principles of C. thermocellum cellulosome organization (bras2012structureandfunction pages 117-120, bras2012structureandfunction pages 38-41, lindic2025structuralandfunctional pages 7-8).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bras2012structureandfunction pages 120-125): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 112-115): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 38-41): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 35-38): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 117-120): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 53-56): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(lindic2025structuralandfunctional pages 7-8): Nataša Lindič and Maša Vodovnik. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. Frontiers in Microbiology, Sep 2025. URL: https://doi.org/10.3389/fmicb.2025.1638551, doi:10.3389/fmicb.2025.1638551. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bras2012structureandfunction pages 120-125</li>
+<li>bras2012structureandfunction pages 117-120</li>
+<li>lindic2025structuralandfunctional pages 7-8</li>
+<li>bras2012structureandfunction pages 112-115</li>
+<li>bras2012structureandfunction pages 38-41</li>
+<li>bras2012structureandfunction pages 35-38</li>
+<li>bras2012structureandfunction pages 53-56</li>
+<li>s</li>
+<li>https://www.uniprot.org/uniprot/Q01866</li>
+<li>https://www.rcsb.org/structure/2VT9</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551</li>
+<li>https://www.rcsb.org/structure/2VT9.</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q01866
+gene_symbol: cipB
+aliases:
+  - CipB
+  - Cellulose-integrating protein B
+  - Cellulosomal glycoprotein S1/SL
+  - S1 subunit
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1515
+  label: Acetivibrio thermocellus
+description: &gt;-
+  CipB (Cellulosomal-scaffolding protein B) is a secondary scaffoldin protein in the
+  Acetivibrio thermocellum cellulosome complex. Unlike the primary scaffoldin CipA,
+  CipB is NOT catalytically active and does not possess hydrolase activity. It functions
+  as a structural/organizing protein containing three cohesin domains that bind dockerin
+  domains of catalytic enzymes, one CBM3 (carbohydrate-binding module family 3) domain
+  that binds cellulose, and a C-terminal type II dockerin domain that binds to type II
+  cohesins on anchoring scaffoldins for cell-surface attachment. CipB contributes to
+  higher-order cellulosome assembly and organization, connecting catalytic components
+  to the cell surface anchoring network. It is secreted and functions extracellularly
+  as part of the cell-attached polycellulosome complex.
+existing_annotations:
+- term:
+    id: GO:0000272
+    label: polysaccharide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      CipB is a non-catalytic scaffoldin protein that does not directly participate in
+      polysaccharide catabolism. While the cellulosome complex as a whole degrades
+      polysaccharides, CipB itself lacks any catalytic domains and functions purely
+      as a structural organizing protein. The annotation appears to be inferred from
+      the presence of cohesin and dockerin domains, which are associated with the
+      cellulosome but do not confer catalytic activity. According to the deep research,
+      CipB has &#34;a large secreted scaffold-like component that contributes to higher-order
+      assembly via its type II dockerin rather than functioning as a catalytic enzyme&#34;
+      (Bras 2012).
+    action: REMOVE
+    reason: &gt;-
+      CipB does not directly catalyze polysaccharide breakdown. It is a non-catalytic
+      scaffoldin that organizes catalytic enzymes within the cellulosome complex. The
+      annotation incorrectly attributes a catalytic process to a purely structural protein.
+      UniProt explicitly states CipB &#34;Acts as a scaffolding protein in the cellulosome&#34;
+      with no mention of catalytic activity.
+    supported_by:
+      - reference_id: file:ACET2/Q01866/Q01866-deep-research-falcon.md
+        supporting_text: &#34;CipB is a second large, non-catalytic, scaffold-like component that contributes to higher-order assembly via its type II dockerin rather than functioning as a catalytic enzyme&#34;
+
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is incorrect. CipB does NOT have hydrolase activity. The annotation
+      was propagated via InterPro from the dockerin domain (IPR002105), but dockerin
+      domains are protein-protein interaction modules, not catalytic domains. CipB is
+      explicitly described in UniProt as a scaffolding protein that &#34;promotes binding
+      of cellulose to the catalytic domains of the cellulolytic enzymes&#34; - meaning it
+      organizes enzymes that have hydrolase activity, but CipB itself lacks catalytic
+      function. The deep research confirms CipB &#34;is a large secreted scaffold-like
+      component that contributes to higher-order assembly via its type II dockerin
+      rather than functioning as a catalytic enzyme&#34; (Bras 2012).
+    action: REMOVE
+    reason: &gt;-
+      CipB is a non-catalytic scaffoldin protein. The IEA annotation from InterPro
+      IPR002105 (Dockerin_1_rpt) incorrectly associates dockerin domains with hydrolase
+      activity. Dockerin domains are protein-protein interaction modules that bind
+      cohesin domains, enabling assembly of the cellulosome complex. CipB contains
+      no glycosyl hydrolase catalytic domains. This is a clear case of over-annotation
+      from automated pipelines that conflate domain presence with catalytic function.
+
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This annotation is correct. CipB is secreted and functions extracellularly.
+      UniProt subcellular location explicitly states &#34;Secreted. Note=Remains at cell
+      surface.&#34; The protein contains an N-terminal signal peptide consistent with
+      secretion (Bras 2012). CipB becomes part of cell-attached polycellulosomes by
+      binding cell-surface anchoring scaffoldins via its type II dockerin.
+    action: ACCEPT
+    reason: &gt;-
+      CipB is clearly documented as a secreted, extracellular protein that functions
+      at the cell surface as part of the cellulosome complex.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;SUBCELLULAR LOCATION: Secreted. Note=Remains at cell surface.&#34;
+
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This is an overly broad annotation. While CipB is a component of the cellulosome
+      which functions in carbohydrate metabolism, CipB itself does not directly participate
+      in metabolic reactions. It is a structural scaffoldin that organizes catalytic
+      enzymes. The annotation is derived from InterPro domains IPR001956 (CBM3) and
+      IPR036966 (CBM3_sf). The CBM3 domain enables cellulose binding, not metabolic
+      activity. A more appropriate BP annotation would be cellulosome assembly
+      (GO:0044575).
+    action: MODIFY
+    reason: &gt;-
+      The annotation is too broad and implies direct metabolic activity. CipB&#39;s role
+      is structural/organizational - it assembles and organizes catalytic enzymes that
+      perform carbohydrate metabolism. The protein&#39;s function is better captured by
+      cellulosome assembly.
+    proposed_replacement_terms:
+      - id: GO:0044575
+        label: cellulosome assembly
+
+- term:
+    id: GO:0030245
+    label: cellulose catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Similar to the polysaccharide catabolic process annotation, this incorrectly
+      attributes a catalytic process to a non-catalytic scaffoldin protein. CipB does
+      not directly catabolize cellulose - it organizes the catalytic enzymes that do.
+      The annotation was derived from UniProt keyword KW-0136 (Cellulose degradation),
+      which may have been applied broadly to cellulosome components without distinguishing
+      catalytic from structural subunits.
+    action: REMOVE
+    reason: &gt;-
+      CipB does not catalyze cellulose breakdown. It is a scaffoldin protein that
+      organizes cellulolytic enzymes within the cellulosome. The &#34;involved_in&#34;
+      relationship to a catabolic process is inappropriate for a non-catalytic
+      structural protein.
+
+- term:
+    id: GO:0030246
+    label: carbohydrate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is broadly correct but could be more specific. CipB contains a
+      CBM3 (carbohydrate-binding module family 3) domain that specifically binds
+      cellulose. The more specific term GO:0030248 (cellulose binding) is already
+      annotated and is more informative. This general carbohydrate binding annotation
+      adds little value given the more specific annotation exists.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While technically correct due to the CBM3 domain, this is redundant with the
+      more specific cellulose binding annotation (GO:0030248). The CBM3 domain
+      specifically binds cellulose, not carbohydrates in general. Keeping as non-core
+      since it is not incorrect but is less informative than the specific term.
+
+- term:
+    id: GO:0030248
+    label: cellulose binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is correct. CipB contains a well-characterized CBM3
+      (carbohydrate-binding module family 3) domain at positions 277-435 that
+      specifically binds cellulose. This domain enables CipB to anchor the
+      cellulosome complex to its cellulose substrate. UniProt explicitly annotates
+      this CBM3 domain, and the deep research confirms &#34;InterPro/CBM3-superfamily
+      annotations are consistent with scaffoldin-related architecture&#34; (Bras 2012).
+    action: ACCEPT
+    reason: &gt;-
+      CipB unambiguously contains a CBM3 domain that confers cellulose binding
+      activity. This is a core molecular function of the scaffoldin protein.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;DOMAIN 277..435 /note=\&#34;CBM3\&#34; /evidence=\&#34;ECO:0000255|PROSITE-ProRule:PRU00513\&#34;&#34;
+
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is problematic. CipB functions in cellulose degradation of
+      PLANT cell walls (the substrate), not in organization of the bacterium&#39;s own
+      cell wall. The annotation was derived from UniProt keyword KW-0961 (Cell wall
+      biogenesis/degradation), but this keyword conflates degradation of external
+      substrates with biogenesis of the organism&#39;s own cell wall. CipB is not involved
+      in A. thermocellus cell wall organization - it is part of an extracellular
+      complex that degrades plant biomass.
+    action: REMOVE
+    reason: &gt;-
+      CipB is a cellulosome component that degrades external plant cell wall material,
+      not a protein involved in organizing the bacterium&#39;s own cell wall. This
+      annotation confuses substrate degradation with self-organization. The GO term
+      &#34;cell wall organization&#34; refers to organization of the organism&#39;s own cell wall,
+      not degradation of external cell wall substrates.
+
+# New annotations that should be added based on the evidence
+- term:
+    id: GO:0043263
+    label: cellulosome
+  evidence_type: IDA
+  original_reference_id: PMID:1490597
+  review:
+    summary: &gt;-
+      CipB is a documented component of the cellulosome complex. The cellulosome is
+      defined as &#34;An extracellular multi-enzyme complex containing up to 11 different
+      enzymes aligned on a non-catalytic scaffolding glycoprotein.&#34; CipB is one such
+      non-catalytic scaffolding protein. UniProt describes CipB as &#34;Cellulosomal-scaffolding
+      protein B&#34; and states it &#34;Acts as a scaffolding protein in the cellulosome.&#34;
+    action: NEW
+    reason: &gt;-
+      CipB is a core structural component of the cellulosome. This CC annotation
+      accurately captures its location within this multienzyme complex.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;RecName: Full=Cellulosomal-scaffolding protein B&#34;
+      - reference_id: PMID:1490597
+        supporting_text: &#34;Identification of the cellulose-binding domain of the cellulosome subunit S1 from Clostridium thermocellum YS&#34;
+
+- term:
+    id: GO:0044575
+    label: cellulosome assembly
+  evidence_type: IDA
+  original_reference_id: PMID:1490597
+  review:
+    summary: &gt;-
+      CipB plays a direct role in cellulosome assembly through its cohesin-dockerin
+      interactions. Its three cohesin domains bind dockerin domains of catalytic enzymes,
+      and its C-terminal type II dockerin binds type II cohesins on anchoring scaffoldins.
+      The deep research states CipB &#34;contributes to higher-order assembly via its type II
+      dockerin&#34; (Bras 2012). The term definition &#34;The assembly of a cellulosome, a
+      macromolecular multi-enzyme complex in bacteria that facilitates the breakdown of
+      cellulase, hemicellulase and pectin in the plant cell wall&#34; precisely describes
+      CipB&#39;s biological role.
+    action: NEW
+    reason: &gt;-
+      This is the most appropriate BP annotation for CipB. As a scaffoldin protein,
+      its primary biological process function is assembling and organizing the cellulosome
+      complex.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;Acts as a scaffolding protein in the cellulosome. It promotes binding of cellulose to the catalytic domains of the cellulolytic enzymes&#34;
+
+- term:
+    id: GO:1990308
+    label: type-I dockerin domain binding
+  evidence_type: ISS
+  original_reference_id: UniProt:Q01866
+  review:
+    summary: &gt;-
+      CipB contains three cohesin domains (positions 1-80, 94-240, 462-607) that bind
+      type-I dockerin domains present on catalytic cellulosome enzymes. UniProt states
+      the cohesin domains &#34;bind to the dockerin domain born by the catalytic components
+      of the cellulosome.&#34; This molecular function enables CipB to organize cellulolytic
+      enzymes within the cellulosome complex.
+    action: NEW
+    reason: &gt;-
+      The cohesin domains of CipB specifically bind type-I dockerin domains on
+      catalytic enzymes. This is a core molecular function that enables CipB&#39;s
+      scaffolding role.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome.&#34;
+
+- term:
+    id: GO:1990312
+    label: type-II cohesin domain binding
+  evidence_type: IDA
+  original_reference_id: PDB:2VT9
+  review:
+    summary: &gt;-
+      CipB contains a C-terminal type II dockerin domain (positions 704-771) that binds
+      type II cohesins on anchoring scaffoldins (ScaC, ScaD, ScaE). The deep research
+      describes structural evidence: &#34;a 1.98 A crystal structure of ScaC2 cohesin bound
+      to CipB X-Doc (PDB 2VT9) identifies key specificity residues and Ca2+ ions in the
+      complex&#34; (Bras 2012). This interaction anchors CipB-containing cellulosome subcomplexes
+      to the cell surface.
+    action: NEW
+    reason: &gt;-
+      The type II dockerin domain of CipB binds type II cohesin domains on anchoring
+      scaffoldins. This is a well-characterized molecular function with structural
+      evidence from crystallography.
+    supported_by:
+      - reference_id: PDB:2VT9
+        supporting_text: &#34;ScaC2-CipB X-Doc complex solved to 1.98 A; structure contains Ca2+ ions; ITC and mutagenesis support high-affinity, Ca2+-dependent type II binding&#34;
+
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: ISS
+  original_reference_id: UniProt:Q01866
+  review:
+    summary: &gt;-
+      CipB functions as a structural molecule that contributes to the integrity of the
+      cellulosome complex. It does not have catalytic activity but instead provides a
+      scaffold that organizes catalytic enzymes. The GO definition &#34;The action of a
+      molecule that contributes to the structural integrity of a complex&#34; precisely
+      describes CipB&#39;s molecular function.
+    action: NEW
+    reason: &gt;-
+      As a non-catalytic scaffoldin, CipB&#39;s primary molecular function is structural -
+      it provides a scaffold for cellulosome assembly and organization. This is an
+      appropriate parent term for the more specific cohesin/dockerin binding activities.
+    supported_by:
+      - reference_id: UniProt:Q01866
+        supporting_text: &#34;Acts as a scaffolding protein in the cellulosome.&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Source of IEA annotations for hydrolase activity, carbohydrate binding, cellulose binding, and carbohydrate metabolic process
+
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Source of IEA annotations for cellulose catabolic process and cell wall organization
+
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: Source of IEA annotation for extracellular region
+
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Source of IEA annotation for polysaccharide catabolic process
+
+- id: PMID:1490597
+  title: Identification of the cellulose-binding domain of the cellulosome subunit S1 from Clostridium thermocellum YS
+  findings:
+    - statement: Original characterization of CipB (S1/SL) including identification of CBM domain
+      supporting_text: &#34;The cellulose-binding domain in this polypeptide consisted of a C-terminal proximal 167 residue sequence which showed complete identity with residues 337-503 of mature SL from C. thermocellum strain ATCC 27405&#34;
+    - statement: Establishes CipB as a cellulosome subunit
+      supporting_text: &#34;The 3&#39; region of a gene designated cipB, which shows strong homology with cipA that encodes the cellulosome SL subunit of Clostridium thermocellum ATCC 27405, was isolated from a gene library of C. thermocellum strain YS&#34;
+
+- id: PDB:2VT9
+  title: Crystal structure of ScaC2 cohesin bound to CipB X-Doc complex
+  findings:
+    - statement: 1.98 A resolution structure showing type II cohesin-dockerin interaction
+    - statement: Demonstrates Ca2+-dependent binding
+    - statement: Identifies key specificity residues
+
+- id: UniProt:Q01866
+  title: UniProt entry for CipB/CIPB_ACETH
+  findings:
+    - statement: CipB is a secreted scaffolding protein
+      supporting_text: &#34;SUBCELLULAR LOCATION: Secreted. Note=Remains at cell surface&#34;
+    - statement: Contains cohesin domains, CBM3 domain, and dockerin domain
+      supporting_text: &#34;DOMAIN: The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome&#34;
+    - statement: Cohesin domains bind dockerin domains of catalytic enzymes
+      supporting_text: &#34;The cohesin domains bind to the dockerin domain born by the catalytic components of the cellulosome&#34;
+    - statement: Functions in cellulosome organization
+      supporting_text: &#34;FUNCTION: Acts as a scaffolding protein in the cellulosome. It promotes binding of cellulose to the catalytic domains of the cellulolytic enzymes&#34;
+
+core_functions:
+- molecular_function:
+    id: GO:0030248
+    label: cellulose binding
+  description: CBM3 domain at positions 277-435 confers cellulose binding, enabling anchoring of cellulosome to cellulose substrate
+  directly_involved_in:
+    - id: GO:0044575
+      label: cellulosome assembly
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  in_complex:
+    id: GO:0043263
+    label: cellulosome
+
+- molecular_function:
+    id: GO:1990308
+    label: type-I dockerin domain binding
+  description: Three cohesin domains bind type-I dockerin domains of catalytic cellulosome enzymes
+  directly_involved_in:
+    - id: GO:0044575
+      label: cellulosome assembly
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  in_complex:
+    id: GO:0043263
+    label: cellulosome
+
+- molecular_function:
+    id: GO:1990312
+    label: type-II cohesin domain binding
+  description: C-terminal type II dockerin binds anchoring scaffoldin cohesins (structural evidence from PDB 2VT9)
+  directly_involved_in:
+    - id: GO:0044575
+      label: cellulosome assembly
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  in_complex:
+    id: GO:0043263
+    label: cellulosome
+
+- molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  description: Acts as a non-catalytic scaffold contributing to cellulosome structural integrity
+  directly_involved_in:
+    - id: GO:0044575
+      label: cellulosome assembly
+  locations:
+    - id: GO:0005576
+      label: extracellular region
+  in_complex:
+    id: GO:0043263
+    label: cellulosome
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: What is the relative abundance and stoichiometry of CipB vs CipA in the native cellulosome under different growth conditions?
+- question: Does CipB have specific enzyme recruitment preferences compared to CipA, or are the cohesin domains functionally equivalent?
+- question: What is the functional significance of the internal repeat region with ~19 copies of a ~41 aa cysteine-containing motif?
+
+suggested_experiments:
+- description: Quantitative proteomics of cellulosome composition under different carbon sources to understand CipB&#39;s regulatory role
+  hypothesis: CipB abundance varies with substrate complexity, with higher levels on mixed cellulose/hemicellulose substrates
+- description: Structural studies of CipB cohesin domains bound to various dockerin-containing enzymes to assess specificity
+  hypothesis: CipB cohesin domains may have distinct binding preferences compared to CipA cohesins
+- description: Deletion/complementation studies to assess CipB&#39;s contribution to cellulose degradation efficiency
+  hypothesis: Loss of CipB reduces cellulosome efficiency on complex substrates but may be partially compensated by CipA
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

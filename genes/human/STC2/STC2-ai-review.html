@@ -1,0 +1,3713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STC2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>STC2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O76061" target="_blank" class="term-link">
+                        O76061
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "STC2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O76061" data-a="DESCRIPTION: STC2 (Stanniocalcin-2) is a secreted glycoprotein ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>STC2 (Stanniocalcin-2) is a secreted glycoprotein hormone belonging to the stanniocalcin family, functioning as an autocrine/paracrine regulator. It localizes to the ER and Golgi apparatus and is secreted to the extracellular space, with secretion enhanced during ER stress. STC2 is robustly induced by the unfolded protein response (UPR) via the PERK-ATF4 pathway and provides cytoprotective effects under cellular stress. Mechanistically, STC2 acts as (1) a negative modulator of store-operated calcium entry (SOCE) through physical interaction with the ER calcium sensor STIM1, (2) an inhibitor of pappalysin metalloproteinases (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local IGF bioavailability, and (3) a regulator of calcium and phosphate homeostasis with anti-hypocalcemic properties. STC2 also forms complexes with heme oxygenase-1 (HO-1), binds heme, and functions as a heat shock protein. The protein forms disulfide-linked homodimers and is N-glycosylated.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006874" target="_blank" class="term-link">
+                                    GO:0006874
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular calcium ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0006874" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 regulates intracellular calcium ion homeostasis, consistent with the stanniocalcin family&#39;s ancestral role in fish as calcium-regulating hormones. In mammals, STC2 is described as having anti-hypocalcemic action on calcium and phosphate homeostasis (UniProt). Deep research indicates STC2 is a negative modulator of store-operated calcium entry (SOCE) through physical interaction with STIM1, thereby modulating calcium homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation is consistent with the conserved role of stanniocalcins in calcium/phosphate regulation and with experimental evidence showing STC2 modulates calcium signaling via SOCE/STIM1. This represents a core function of STC2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link">
+                                        PMID:9753616
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles of Stannius in bony fishes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">STC2 is a negative modulator of store-operated calcium entry (SOCE). STC2 deficiency increases Ca2+ influx after ER store depletion, while overexpression attenuates SOCE. STC2 physically interacts with the ER Ca2+ sensor STIM1, linking it to ER-plasma membrane Ca2+ signaling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 is a secreted glycoprotein hormone that localizes to the extracellular space. UniProt annotates STC2 as secreted. STC2 has an N-terminal signal peptide for ER import and is N-glycosylated. Secretion is enhanced during ER stress. STC2 was detected in human colostrum by proteomics (PMID:16502470) confirming its presence in extracellular fluids.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core localization annotation supported by multiple lines of evidence including signal peptide, secretion assays, and proteomics detection in human colostrum.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                                        PMID:16502470
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One hundred and fifty-one proteins were identified, 83 of which have not been previously reported in human colostrum</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal signal peptide for ER import; N-linked glycosylation; localizes to ER/Golgi; secreted into media, secretion increases during ER stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005179" target="_blank" class="term-link">
+                                    GO:0005179
+                                </a>
+                            </span>
+                            <span class="term-label">hormone activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005179" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 is classified as a glycoprotein hormone belonging to the stanniocalcin family, which originated as calcium-regulating hormones in fish. UniProt annotates STC2 with the Hormone keyword. STC2 functions as a paracrine/autocrine regulator in mammals rather than as a classical circulating hormone. It regulates calcium/phosphate homeostasis and has hormone-like activity in modulating steroidogenesis in the ovary (PMID:15486227).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The hormone activity annotation is appropriate based on STC2&#39;s classification as a stanniocalcin family hormone, its signaling function, and its paracrine effects on target cells including suppression of steroidogenesis in granulosa cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stanniocalcin is a glycoprotein hormone important in the maintenance of calcium and phosphate homeostasis in fish. Two related mammalian stanniocalcin genes, STC1 and STC2, were found to be expressed in various tissues as paracrine regulators</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link">
+                                        PMID:9753616
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles of Stannius in bony fishes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005576" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 is a secreted protein that localizes to the extracellular region. This is a broader parent term of extracellular space (GO:0005615), which is also annotated with IBA evidence. The annotation is redundant with the more specific extracellular space term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation to the broader term is consistent with the evidence that STC2 is a secreted protein. While more specific extracellular space annotation exists, this broader term is not incorrect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                                        PMID:16502470
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One hundred and fifty-one proteins were identified, 83 of which have not been previously reported in human colostrum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0007165" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from the hormone activity annotation via GO logical inference. STC2, as a hormone, would be expected to participate in signal transduction. However, the term is overly broad and does not capture the specific signaling mechanisms of STC2, which include SOCE modulation via STIM1 and PAPP-A inhibition affecting IGF bioavailability.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While STC2 does participate in signaling pathways, this broad term does not provide informative annotation. The specific mechanisms (calcium signaling via STIM1, IGF axis modulation via PAPP-A inhibition) are more meaningful. This is a logical inference from hormone activity that is too general.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">STC2 physically interacts with the ER Ca2+ sensor STIM1, linking it to ER-plasma membrane Ca2+ signaling... acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local IGF bioavailability</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 localizes to the endoplasmic reticulum as part of the secretory pathway. It contains an N-terminal signal peptide for ER import and is N-glycosylated. Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in the ER and Golgi. STC2 interacts with STIM1, an ER calcium sensor, further supporting ER localization. This IEA annotation is also supported by IDA evidence from PMID:22503972.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER localization is well-supported by the presence of a signal peptide, N-glycosylation, immunofluorescence data, and the functional interaction with ER-resident STIM1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in the ER and Golgi</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005794" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 transits through the Golgi apparatus as part of the secretory pathway. As a secreted glycoprotein with N-glycosylation, STC2 would be processed in the Golgi. Subcellular fractionation and immunofluorescence studies place STC2 in both ER and Golgi compartments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Golgi localization is expected for a secreted N-glycosylated protein and is supported by subcellular fractionation data from the literature.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in the ER and Golgi</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007566" target="_blank" class="term-link">
+                                    GO:0007566
+                                </a>
+                            </span>
+                            <span class="term-label">embryo implantation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0007566" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is transferred from rat ortholog (ensembl:ENSRNOP00000028146). STC2 is expressed in reproductive tissues and may play a role in embryo implantation based on expression patterns. However, direct functional evidence for STC2 involvement in embryo implantation in humans is limited. The annotation may reflect expression correlation rather than direct functional role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While STC2 may be expressed during implantation, this is not a core function of the protein. The annotation is based on ortholog transfer from rat and likely reflects expression during decidualization rather than a direct mechanistic role in implantation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">STC2 is expressed mainly in thecal layers... thecal cell-derived STC2 could play a paracrine role during follicular development</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033280" target="_blank" class="term-link">
+                                    GO:0033280
+                                </a>
+                            </span>
+                            <span class="term-label">response to vitamin D</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0033280" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is transferred from rat ortholog. Given that stanniocalcins are involved in calcium/phosphate homeostasis and vitamin D is a key regulator of this system, STC2 expression may be modulated by vitamin D. However, direct evidence for STC2 responding to vitamin D in humans is not provided in the available literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is likely a peripheral response rather than a core function. STC2&#39;s role in calcium homeostasis makes vitamin D responsiveness plausible, but this represents a regulatory input rather than a core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link">
+                                        PMID:9753616
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles of Stannius in bony fishes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043434" target="_blank" class="term-link">
+                                    GO:0043434
+                                </a>
+                            </span>
+                            <span class="term-label">response to peptide hormone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0043434" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is transferred from rat ortholog. STC2 expression is regulated by gonadotropins (FSH/LH) in the ovary - pregnant mare serum gonadotropin increases STC2 expression while human chorionic gonadotropin suppresses it (PMID:15486227). This represents regulation of STC2 expression by peptide hormones.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation captures a regulatory response to gonadotropins that modulates STC2 expression, particularly in reproductive tissues. This is a peripheral function reflecting tissue-specific regulation rather than a core molecular function of STC2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Treatment of immature rats with pregnant mare serum gonadotropin increased STC2 transcripts, whereas subsequent treatment with human chorionic gonadotropin suppressed STC2 expression</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046697" target="_blank" class="term-link">
+                                    GO:0046697
+                                </a>
+                            </span>
+                            <span class="term-label">decidualization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0046697" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is transferred from rat ortholog. STC2 is expressed in reproductive tissues and may be involved in decidualization based on expression patterns. This is consistent with STC2&#39;s role as a paracrine factor in ovarian tissues. However, direct mechanistic evidence for STC2 function in decidualization is limited.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Decidualization is a tissue-specific process where STC2 may be expressed but is not the core function of the protein. This annotation likely reflects expression correlation in reproductive tissues rather than a direct functional role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">thecal cell-derived STC2 could play a paracrine role during follicular development</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071456" target="_blank" class="term-link">
+                                    GO:0071456
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to hypoxia</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0071456" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 is induced by various cellular stresses including hypoxia. This is consistent with STC2 being a UPR target gene induced via the PERK-ATF4 pathway, as hypoxia causes ER stress. STC2 provides cytoprotective effects under stress conditions including hypoxia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hypoxia response is part of STC2&#39;s broader stress response function. STC2 is robustly induced by ER stressors and provides cytoprotection, making this annotation consistent with its characterized function as a stress-responsive protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">STC2 has been demonstrated to be induced by different kinds of stress and display cytoprotective activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">UPR-inducible via PERK-ATF4 (and CHOP context); upregulated by tunicamycin, thapsigargin, hypoxia and oxidative stress</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8952289
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005788" data-r="Reactome:R-HSA-8952289" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 localizes to the ER lumen as part of the secretory pathway. This annotation from Reactome reflects STC2 being a substrate of FAM20C, an extracellular/Golgi kinase that phosphorylates secreted proteins. STC2 is phosphorylated at Ser-250, Ser-251, and Thr-254 by FAM20C (UniProt). The ER lumen localization is consistent with STC2 having a signal peptide and transiting through the ER-Golgi secretory pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER lumen localization is appropriate for a secreted glycoprotein with a signal peptide. STC2 is processed in the ER lumen before Golgi transit and secretion.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-8952289
+                                    
+                                </span>
+                                
+                                <div class="support-text">FAM20C phosphorylates FAM20C substrates... extracellular kinase that can phosphorylate a broad range of secreted protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">STC2 contains an N-terminal signal peptide for ER import, is N-glycosylated, and forms part of the secretory pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019899" target="_blank" class="term-link">
+                                    GO:0019899
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22503972
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Stanniocalcin 2, forms a complex with heme oxygenase 1, bind...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0019899" data-r="PMID:22503972" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 binds to heme oxygenase-1 (HO-1), which is an enzyme that degrades heme. The interaction was discovered by yeast two-hybrid screening and validated by co-immunoprecipitation and immunofluorescence. The binding site was mapped to amino acids 181-200 of STC2. The complex may function as a eukaryotic stressosome involved in heme degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The enzyme binding annotation is correct as STC2 binds HO-1, an enzyme. This represents a validated protein-protein interaction with functional significance in the stress response. A more specific term such as heme oxygenase binding does not exist in GO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Using yeast two-hybrid screening we identified HO1 as a binding partner of STC2. The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence. The binding site for HO1 was located to amino acids 181-200 of STC2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22503972
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Stanniocalcin 2, forms a complex with heme oxygenase 1, bind...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0020037" data-r="PMID:22503972" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 binds hemin via a consensus heme regulatory motif. This was demonstrated experimentally and suggests STC2 may function in heme metabolism as part of a stressosome complex with HO-1 that degrades heme. This is a newly characterized function of STC2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence demonstrates STC2 binds hemin through a heme regulatory motif. This is a validated molecular function of STC2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also found that STC2 binds hemin via a consensus heme regulatory motif</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22503972
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Stanniocalcin 2, forms a complex with heme oxygenase 1, bind...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005783" data-r="PMID:22503972" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 localizes to the endoplasmic reticulum as demonstrated by immunofluorescence in PMID:22503972. This is consistent with STC2 having a signal peptide for ER import and being a secreted glycoprotein that transits through the ER. This annotation duplicates the IEA annotation for the same term but with stronger experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from immunofluorescence confirms ER localization of STC2. This is a core localization for this secreted protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9753616
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of a second human stanniocalcin homologue ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0010629" data-r="PMID:9753616" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 inhibits the promoter activity of the Na-phosphate cotransporter (NaPi-3) gene. Culture medium from STC2-transfected CHO cells inhibited NaPi-3 promoter activity. This demonstrates STC2 can negatively regulate gene expression, likely through its effects on phosphate homeostasis signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence shows STC2 inhibits NaPi-3 promoter activity, demonstrating negative regulation of gene expression. This is mechanistically linked to STC2&#39;s role in phosphate homeostasis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link">
+                                        PMID:9753616
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The culture medium of STC2-transfected CHO cells inhibited the promoter activity of Na-phosphate cotransporter (NaPi-3)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15486227
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a stanniocalcin paralog, stanniocalcin-2, ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0042803" data-r="PMID:15486227" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 forms homodimers. Recombinant human and fish STC2 proteins were found to be N-glycosylated homodimers. UniProt also annotates STC2 as a disulfide-linked homodimer. This is a core structural property of stanniocalcins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is a well-established property of STC2 supported by biochemical characterization of recombinant protein. The disulfide-linked homodimer is the functional form of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recombinant human and fish STC2 proteins were generated and found to be N-glycosylated homodimers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046885" target="_blank" class="term-link">
+                                    GO:0046885
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of hormone biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9753616
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of a second human stanniocalcin homologue ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0046885" data-r="PMID:9753616" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 regulates hormone biosynthesis in the ovary. Treatment of granulosa cells with STC2 suppressed FSH-induced progesterone production by inhibiting CYP11A and 3beta-hydroxysteroid dehydrogenase expression (PMID:15486227). This represents a paracrine regulatory function of STC2 in steroidogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> STC2 regulates steroid hormone biosynthesis by suppressing progesterone production in granulosa cells through inhibition of steroidogenic enzyme expression. This is a validated paracrine function of STC2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                                        PMID:15486227
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">treatment with human or fish STC2 suppressed FSH-induced progesterone, but not estradiol or cAMP, production. The STC2 suppression of progesterone production was associated with the inhibition of FSH-induced CYP11A and 3beta-hydroxysteroid dehydrogenase expression</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                    GO:0048471
+                                </a>
+                            </span>
+                            <span class="term-label">perinuclear region of cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22503972
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Stanniocalcin 2, forms a complex with heme oxygenase 1, bind...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0048471" data-r="PMID:22503972" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 localizes to the perinuclear region of the cytoplasm as shown by immunofluorescence. This is consistent with ER/Golgi localization since these organelles are concentrated in the perinuclear region. The localization was validated by immunofluorescence studies of STC2 and its interaction partner HO-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Immunofluorescence evidence supports perinuclear localization, which is consistent with the ER/Golgi localization expected for a secreted protein with a signal peptide.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                                        PMID:22503972
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                    GO:0005615
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16502470
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human colostrum: identification of minor proteins in the aqu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0005615" data-r="PMID:16502470" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 was detected in the extracellular space (human colostrum) by proteomics analysis. This high-throughput study identified STC2 among 151 proteins in the aqueous phase of human colostrum, confirming its secreted nature and presence in biological fluids.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Proteomic detection of STC2 in human colostrum provides direct evidence for its presence in the extracellular space. This is consistent with STC2 being a secreted glycoprotein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                                        PMID:16502470
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One hundred and fifty-one proteins were identified, 83 of which have not been previously reported in human colostrum, or milk</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                                    GO:0008191
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:human/STC2/STC2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O76061" data-a="GO:0008191" data-r="file:human/STC2/STC2-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A and PAPP-A2). By inhibiting these metalloendopeptidases, STC2 reduces IGFBP proteolysis and thereby modulates local IGF bioavailability. This represents a well-established mechanism of STC2 action supported by biochemical and genetic studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function is not currently annotated in GO for STC2 but is well-supported by deep research literature. PAPP-A and PAPP-A2 are metalloendopeptidases, and STC2 inhibition of their activity is a core function linking STC2 to growth regulation via the IGF axis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/STC2/STC2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mammalian STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local insulin-like growth factor (IGF) bioavailability</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>STC2 is a secreted glycoprotein hormone belonging to the stanniocalcin family. It functions as an autocrine/paracrine regulator with anti-hypocalcemic action on calcium and phosphate homeostasis. STC2 regulates target cell function including suppression of steroidogenesis in granulosa cells.</h3>
+                <span class="vote-buttons" data-g="O76061" data-a="FUNCTION: STC2 is a secreted glycoprotein hormone belonging ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005179" target="_blank" class="term-link">
+                            hormone activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006874" target="_blank" class="term-link">
+                                intracellular calcium ion homeostasis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A and PAPP-A2), thereby reducing IGFBP proteolysis and modulating local insulin-like growth factor (IGF) bioavailability. This is a key mechanism linking STC2 to growth regulation.</h3>
+                <span class="vote-buttons" data-g="O76061" data-a="FUNCTION: STC2 acts as an endogenous inhibitor of pappalysin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008191" target="_blank" class="term-link">
+                            metalloendopeptidase inhibitor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005615" target="_blank" class="term-link">
+                                extracellular space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/STC2/STC2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Mammalian STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local insulin-like growth factor (IGF) bioavailability</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>STC2 binds hemin via a consensus heme regulatory motif. This was demonstrated experimentally and suggests STC2 may function in heme metabolism as part of a stressosome complex with HO-1.</h3>
+                <span class="vote-buttons" data-g="O76061" data-a="FUNCTION: STC2 binds hemin via a consensus heme regulatory m..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                            heme binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>STC2 forms disulfide-linked homodimers. This is the functional form of the protein required for its hormone activity.</h3>
+                <span class="vote-buttons" data-g="O76061" data-a="FUNCTION: STC2 forms disulfide-linked homodimers. This is th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                            protein homodimerization activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/STC2/STC2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of STC2 function</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15486227" target="_blank" class="term-link">
+                            PMID:15486227
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a stanniocalcin paralog, stanniocalcin-2, in fish and the paracrine actions of stanniocalcin-2 in the mammalian ovary.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16502470" target="_blank" class="term-link">
+                            PMID:16502470
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human colostrum: identification of minor proteins in the aqueous phase by proteomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22503972" target="_blank" class="term-link">
+                            PMID:22503972
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Stanniocalcin 2, forms a complex with heme oxygenase 1, binds hemin and is a heat shock protein.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9753616" target="_blank" class="term-link">
+                            PMID:9753616
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular cloning of a second human stanniocalcin homologue (STC2).</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8952289
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">FAM20C phosphorylates FAM20C substrates</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(STC2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O76061" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T23:49:34.349874'<br />
+end_time: '2025-12-27T23:55:08.931993'<br />
+duration_seconds: 334.58<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: STC2<br />
+  gene_symbol: STC2<br />
+  uniprot_accession: O76061<br />
+  protein_description: 'RecName: Full=Stanniocalcin-2; Short=STC-2; AltName: Full=Stanniocalcin-related<br />
+    protein; Short=STC-related protein; Short=STCRP; Flags: Precursor;'<br />
+  gene_info: Name=STC2;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the stanniocalcin family. .<br />
+  protein_domains: Stanniocalcin. (IPR004978); Stanniocalcin (PF03298)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O76061</li>
+<li><strong>Protein Description:</strong> RecName: Full=Stanniocalcin-2; Short=STC-2; AltName: Full=Stanniocalcin-related protein; Short=STC-related protein; Short=STCRP; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=STC2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the stanniocalcin family. .</li>
+<li><strong>Key Domains:</strong> Stanniocalcin. (IPR004978); Stanniocalcin (PF03298)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "STC2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'STC2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>STC2</strong> (gene ID: STC2, UniProt: O76061) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O76061</li>
+<li><strong>Protein Description:</strong> RecName: Full=Stanniocalcin-2; Short=STC-2; AltName: Full=Stanniocalcin-related protein; Short=STC-related protein; Short=STCRP; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=STC2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the stanniocalcin family. .</li>
+<li><strong>Key Domains:</strong> Stanniocalcin. (IPR004978); Stanniocalcin (PF03298)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "STC2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'STC2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>STC2</strong> (gene ID: STC2, UniProt: O76061) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status: In-progress objectives 2–6. We verified target identity (Objective 1: completed) and gathered peer‑reviewed evidence spanning mechanism, localization, and 2023–2024 translational studies for human STC2 (UniProt O76061). Below is a comprehensive research report. An at‑a‑glance artifact table is embedded.</p>
+<p>Gene/protein identification and definitions<br />
+- Identity and family: STC2 (stanniocalcin‑2) is a human secreted glycoprotein hormone in the stanniocalcin family (paralog of STC1), originally related to fish stanniocalcins that regulate mineral balance. Mammalian STC2 is widely expressed and functions primarily in autocrine/paracrine modes rather than as a high‑abundance circulating hormone (Molecular and Cellular Biology, 2004; Molecular and Cellular Biology, 2011; Frontiers in Endocrinology, 2020) (ito2004characterizationofstanniocalcin pages 4-6, zeiger2011stanniocalcin2is pages 1-2, joshi2020newinsightsinto pages 1-2). URL (Ito 2004): https://doi.org/10.1128/mcb.24.21.9456-9469.2004; URL (Zeiger 2011): https://doi.org/10.1128/mcb.05140-11; URL (Joshi 2020): https://doi.org/10.3389/fendo.2020.00172. Published: Nov 2004; Sep 2011; Mar 2020, respectively.<br />
+- Domain features and processing: STC2 contains an N‑terminal signal peptide for ER import, is N‑glycosylated, and forms part of the secretory pathway. Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in the ER and Golgi, and it is secreted into conditioned media—particularly during ER stress (Molecular and Cellular Biology, 2004) (ito2004characterizationofstanniocalcin pages 4-6). URL: https://doi.org/10.1128/mcb.24.21.9456-9469.2004. Published: Nov 2004.</p>
+<p>Primary functions, pathways, and localization<br />
+- ER stress/UPR regulation and cytoprotection: STC2 is a robust unfolded protein response (UPR) target induced by ER stressors (tunicamycin, thapsigargin) via the PERK→ATF4 arm and contributes to cytoprotection under stress. In primary astrocytes, Stc2 transcripts are upregulated hundreds‑fold by ER stress; protein is strongly induced and secreted. Localization remains ER/Golgi with increased secretion upon stress (Molecular and Cellular Biology, 2004; Molecular and Cellular Biology, 2011; Frontiers in Endocrinology, 2020) (ito2004characterizationofstanniocalcin pages 4-6, zeiger2011stanniocalcin2is pages 1-2, joshi2020newinsightsinto pages 3-5). URL (Ito 2004): https://doi.org/10.1128/mcb.24.21.9456-9469.2004; URL (Zeiger 2011): https://doi.org/10.1128/mcb.05140-11; URL (Joshi 2020): https://doi.org/10.3389/fendo.2020.00172.<br />
+- Calcium handling: STC2 is a negative modulator of store‑operated calcium entry (SOCE). STC2 deficiency increases Ca2+ influx after ER store depletion, while overexpression attenuates SOCE. STC2 physically interacts with the ER Ca2+ sensor STIM1, linking it to ER→plasma membrane Ca2+ signaling (Molecular and Cellular Biology, 2011) (zeiger2011stanniocalcin2is pages 1-2). URL: https://doi.org/10.1128/mcb.05140-11. Published: Sep 2011.<br />
+- IGF axis modulation (biochemical mechanism): Mammalian STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP‑A/PAPP‑A2), thereby reducing IGFBP proteolysis and modulating local insulin‑like growth factor (IGF) bioavailability. Human genetic observations and experimental work link impaired STC2‑mediated inhibition to altered IGF signaling. While receptor identity for STC2 remains undefined, the PAPP‑A/IGFBP/IGF axis provides a well‑supported biochemical pathway of action (Frontiers in Endocrinology, 2020) (joshi2020newinsightsinto pages 3-5). URL: https://doi.org/10.3389/fendo.2020.00172. Published: Mar 2020.</p>
+<p>Recent developments (2023–2024 emphasis)<br />
+- Population/heritability statistics: In a 2023 elderly twin cohort (n=596; age 73–94), median serum STC2 ≈ 29.3 ng/mL; males had ≈18% higher concentrations than females (all sex differences P&lt;0.001). Broad‑sense heritability for circulating STC2 was substantial (~66%), indicating a strong genetic contribution to interindividual variation (Frontiers in Endocrinology, 2023) (hjortebjerg2023heritabilityandcirculating pages 3-5). URL: https://doi.org/10.3389/fendo.2023.1193742. Published: Jun 2023.<br />
+- ER stress and cancer prognosis: Multi‑omics and clinical IHC studies in osteosarcoma (2024) implicated STC2 as an ER stress‑related risk indicator for disease progression. STC2 was higher in tumors than adjacent tissues and integrated into ER stress–based prognostic models (Frontiers in Oncology, 2024) (yu2024endoplasmicreticulumstressrelated pages 7-10). URL: https://doi.org/10.3389/fonc.2024.1453173. Published: Jul 2024.<br />
+- Tumor immune microenvironment and antigen presentation: In osteosarcoma models and clinical samples, high STC2 was linked to immune evasion: STC2 knockdown increased MHC‑I component expression (HLA‑A, HLA‑B, B2M) and enhanced CD8+ T‑cell effector markers; STC2 protein inversely correlated with CD8+ T‑cell infiltration (p&lt;0.0001, R≈−0.35; n=62). Pan‑cancer bioinformatics showed STC2 upregulation across multiple tumor types and association with immune checkpoint pathways (Journal of Translational Medicine, 2024) (chen2024constructionofan pages 7-11). URL: https://doi.org/10.1186/s12967-023-04794-0. Published: Jan 2024.</p>
+<p>Cellular/subcellular site of action and secretion<br />
+- Localization: Predominantly ER and Golgi compartments under basal and stress conditions; secreted to the extracellular milieu, especially during ER stress (Molecular and Cellular Biology, 2004) (ito2004characterizationofstanniocalcin pages 4-6). URL: https://doi.org/10.1128/mcb.24.21.9456-9469.2004.<br />
+- Mode of action: Autocrine/paracrine secreted factor with intracellular roles in ER Ca2+ handling (via STIM1 interaction) and extracellular modulation of IGF bioavailability via PAPP‑A/PAPP‑A2 inhibition (Molecular and Cellular Biology, 2011; Frontiers in Endocrinology, 2020) (zeiger2011stanniocalcin2is pages 1-2, joshi2020newinsightsinto pages 3-5). URLs: https://doi.org/10.1128/mcb.05140-11; https://doi.org/10.3389/fendo.2020.00172.</p>
+<p>Current applications and real‑world implementations<br />
+- Biomarker and prognostic utility in cancer: Multiple studies link higher STC2 to aggressive features and worse outcomes across cancers; in osteosarcoma, ER stress–based models and tissue IHC established STC2 as a prognostic risk indicator and an immune‑evasion mediator (Frontiers in Oncology, 2024; Journal of Translational Medicine, 2024) (yu2024endoplasmicreticulumstressrelated pages 7-10, chen2024constructionofan pages 7-11). URLs: https://doi.org/10.3389/fonc.2024.1453173; https://doi.org/10.1186/s12967-023-04794-0.<br />
+- Population biomarker characteristics: Circulating STC2 is measurable in older adults (median ~29.3 ng/mL), shows sex differences (≈18% higher in men), and substantial heritability (~66%), all relevant to clinical biomarker development and interpretation (Frontiers in Endocrinology, 2023) (hjortebjerg2023heritabilityandcirculating pages 3-5). URL: https://doi.org/10.3389/fendo.2023.1193742.</p>
+<p>Expert opinions and analysis<br />
+- Mechanistic consensus: The most consistent, experimentally grounded roles for human STC2 are (i) a UPR‑inducible secreted glycoprotein that promotes cytoprotection under stress; (ii) a negative regulator of SOCE through interaction with STIM1, thereby modulating Ca2+ signaling; and (iii) an inhibitor of PAPP‑A/A2 that shapes local IGF bioavailability. These mechanisms are supported by rigorous cell biology and biochemistry (Molecular and Cellular Biology, 2004; Molecular and Cellular Biology, 2011; Frontiers in Endocrinology, 2020) (ito2004characterizationofstanniocalcin pages 4-6, zeiger2011stanniocalcin2is pages 1-2, joshi2020newinsightsinto pages 3-5). URLS above.<br />
+- Translational implications (2023–2024): Recent oncology studies suggest STC2 contributes to ER stress adaptation and immune escape in tumors. Its consistent induction by cellular stress and its capacity to dampen antigen presentation and CD8+ infiltration in osteosarcoma position STC2 as a candidate biomarker and potential therapeutic target to enhance antitumor immunity. However, a bona fide cell‑surface receptor remains unidentified, and the precise extracellular signaling pathway beyond PAPP‑A/A2 inhibition is incomplete, indicating a need for receptor discovery and careful target validation before drug development (Frontiers in Oncology, 2024; Journal of Translational Medicine, 2024) (yu2024endoplasmicreticulumstressrelated pages 7-10, chen2024constructionofan pages 7-11).</p>
+<p>Relevant statistics and data<br />
+- ER stress induction of STC2: Up to ~400–900‑fold mRNA induction by thapsigargin or tunicamycin in primary astrocytes; secreted protein robustly increases with ER stress in cultured cells (Molecular and Cellular Biology, 2004) (ito2004characterizationofstanniocalcin pages 4-6). URL: https://doi.org/10.1128/mcb.24.21.9456-9469.2004.<br />
+- Serum/population metrics: Elderly twins (n=596) — median STC2 ≈ 29.3 ng/mL; males 18% higher than females; broad‑sense heritability ~66% (Frontiers in Endocrinology, 2023) (hjortebjerg2023heritabilityandcirculating pages 3-5). URL: https://doi.org/10.3389/fendo.2023.1193742.<br />
+- Tumor immune contexture: In osteosarcoma samples, STC2 inversely correlated with CD8+ T‑cell infiltration (p&lt;0.0001, R≈−0.35, n=62) and STC2 knockdown increased MHC‑I gene expression and CD8+ effector markers in co‑culture assays (Journal of Translational Medicine, 2024) (chen2024constructionofan pages 7-11). URL: https://doi.org/10.1186/s12967-023-04794-0.</p>
+<p>Open questions and limitations<br />
+- Receptor identification: No definitive STC2 cognate receptor has been described in humans; many actions likely reflect a combination of intracellular ER/Golgi processes (e.g., SOCE modulation) and extracellular modulation of protease activity in the IGF axis (Frontiers in Endocrinology, 2020; Molecular and Cellular Biology, 2011) (joshi2020newinsightsinto pages 3-5, zeiger2011stanniocalcin2is pages 1-2). URLS: https://doi.org/10.3389/fendo.2020.00172; https://doi.org/10.1128/mcb.05140-11.<br />
+- Context specificity in cancer: While many datasets link higher STC2 to aggressive biology, exceptions exist (e.g., context‑dependent effects in some breast cancer models), emphasizing the need to resolve lineage‑specific and microenvironmental determinants (Frontiers in Endocrinology, 2020) (joshi2020newinsightsinto pages 5-6). URL: https://doi.org/10.3389/fendo.2020.00172. Published: Mar 2020.</p>
+<p>Embedded summary artifact<br />
+| Category | Key facts | Primary support (first author, year) | URL |<br />
+|---|---|---:|---|<br />
+| Identity / family | Human STC2 (UniProt O76061) is a mammalian stanniocalcin paralog; secreted/paracrine glycoprotein hormone with conserved stanniocalcin domain. | Joshi, 2020 (joshi2020newinsightsinto pages 3-5) | https://doi.org/10.3389/fendo.2020.00172 |<br />
+| Domain / processing | N-terminal signal peptide; N‑linked glycosylation; localizes to ER/Golgi; secreted into media—secretion increases during ER stress. | Ito, 2004 (ito2004characterizationofstanniocalcin pages 4-6) | https://doi.org/10.1128/mcb.24.21.9456-9469.2004 |<br />
+| Regulation (stress) | UPR-inducible via PERK→ATF4 (and CHOP context); upregulated by tunicamycin, thapsigargin, hypoxia and oxidative stress. | Ito, 2004 (ito2004characterizationofstanniocalcin pages 4-6) | https://doi.org/10.1128/mcb.24.21.9456-9469.2004 |<br />
+| Calcium handling | Negative modulator of store‑operated Ca2+ entry (SOCE); physically interacts with STIM1 and attenuates ER→PM Ca2+ influx after ER store depletion. | Zeiger, 2011 (zeiger2011stanniocalcin2is pages 1-2) | https://doi.org/10.1128/mcb.05140-11 |<br />
+| IGF‑axis mechanism | Acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP‑A/PAPP‑A2), reducing IGFBP proteolysis and thereby modulating local IGF bioavailability. | Joshi, 2020 (joshi2020newinsightsinto pages 3-5) | https://doi.org/10.3389/fendo.2020.00172 |<br />
+| Human fluids / tissue data | STC2 detectable in human biofluids/tumor fluids; associated with altered local IGF activity and reported enrichment in tumor ascites/serum linked to prognosis in cancer cohorts. | Hjortebjerg, 2023; Chen, 2024 (hjortebjerg2023heritabilityandcirculating pages 3-5, chen2024constructionofan pages 7-11) | https://doi.org/10.3389/fendo.2023.1193742 ; https://doi.org/10.1186/s12967-023-04794-0 |<br />
+| Population / heritability | Elderly twin cohort: median serum STC2 ≈29.3 ng/mL; males ≈18% higher; broad‑sense heritability estimate ≈66% (substantial genetic contribution). | Hjortebjerg, 2023 (hjortebjerg2023heritabilityandcirculating pages 3-5) | https://doi.org/10.3389/fendo.2023.1193742 |<br />
+| Adult population associations | STC2 shows measurable associations with IGF system components in population studies; circulating STC2 is related to IGF network parameters in adults (study-level direction/strength varies by cohort). | Hjortebjerg, 2023 (hjortebjerg2023heritabilityandcirculating pages 3-5) | https://doi.org/10.3389/fendo.2023.1193742 |<br />
+| Cancer biology — nutrient stress | Stress (ER / nutrient deprivation) induces STC2 expression and secretion; STC2 promotes cancer cell survival under metabolic stress and cytoprotective responses (UPR/cytoprotection). | Yu, 2024; Joshi, 2020 (yu2024endoplasmicreticulumstressrelated pages 7-10, joshi2020newinsightsinto pages 3-5) | https://doi.org/10.3389/fonc.2024.1453173 ; https://doi.org/10.3389/fendo.2020.00172 |<br />
+| Cancer biology — immune evasion | In tumor models, high STC2 associates with reduced antigen presentation (↓MHC‑I) and lower CD8+ T cell infiltration/function; linked to poorer prognosis in multiple cancers. | Chen, 2024 (chen2024constructionofan pages 7-11) | https://doi.org/10.1186/s12967-023-04794-0 |</p>
+<p><em>Table: Concise summary table of human STC2 (UniProt O76061) covering identity, processing, localization, mechanistic roles (Ca2+ handling, IGF‑axis modulation, stress regulation), and 2023–2024 translational/population evidence with primary sources cited.</em></p>
+<p>Conclusion<br />
+STC2 (UniProt O76061) is a human stanniocalcin family glycoprotein that is ER/Golgi‑localized and secreted, potently induced by ER stress through PERK→ATF4, and acts as a negative regulator of SOCE via STIM1 as well as an extracellular inhibitor of PAPP‑A/PAPP‑A2, thereby tuning local IGF bioavailability. Recent 2023–2024 studies strengthen its relevance in oncology—linking STC2 to ER stress–based prognosis and tumor immune evasion—while population data establish measurable, heritable circulating STC2 levels. The absence of a defined receptor remains a key knowledge gap; nonetheless, STC2’s convergence on Ca2+ signaling, stress adaptation, and the IGF axis make it a plausible biomarker and potential therapeutic node in stress‑adapted and immune‑evasive tumors (ito2004characterizationofstanniocalcin pages 4-6, zeiger2011stanniocalcin2is pages 1-2, joshi2020newinsightsinto pages 3-5, yu2024endoplasmicreticulumstressrelated pages 7-10, chen2024constructionofan pages 7-11, hjortebjerg2023heritabilityandcirculating pages 3-5).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ito2004characterizationofstanniocalcin pages 4-6): Daisuke Ito, John R. Walker, Charlie S. Thompson, Isabella Moroz, William Lin, Margaret L. Veselits, Antoine M. Hakim, Allen A. Fienberg, and Gopal Thinakaran. Characterization of stanniocalcin 2, a novel target of the mammalian unfolded protein response with cytoprotective properties. Molecular and Cellular Biology, 24:9456-9469, Nov 2004. URL: https://doi.org/10.1128/mcb.24.21.9456-9469.2004, doi:10.1128/mcb.24.21.9456-9469.2004. This article has 207 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zeiger2011stanniocalcin2is pages 1-2): William Zeiger, Daisuke Ito, Carol Swetlik, Masatsugu Oh-hora, Mitchel L. Villereal, and Gopal Thinakaran. Stanniocalcin 2 is a negative modulator of store-operated calcium entry. Molecular and Cellular Biology, 31:3710-3722, Sep 2011. URL: https://doi.org/10.1128/mcb.05140-11, doi:10.1128/mcb.05140-11. This article has 93 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(joshi2020newinsightsinto pages 1-2): Aditya D. Joshi. New insights into physiological and pathophysiological functions of stanniocalcin 2. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00172, doi:10.3389/fendo.2020.00172. This article has 75 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(joshi2020newinsightsinto pages 3-5): Aditya D. Joshi. New insights into physiological and pathophysiological functions of stanniocalcin 2. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00172, doi:10.3389/fendo.2020.00172. This article has 75 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(hjortebjerg2023heritabilityandcirculating pages 3-5): Rikke Hjortebjerg, Dorthe Almind Pedersen, Jonas Mengel-From, Louise Helskov Jørgensen, Kaare Christensen, and Jan Frystyk. Heritability and circulating concentrations of pregnancy-associated plasma protein-a and stanniocalcin-2 in elderly monozygotic and dizygotic twins. Frontiers in Endocrinology, Jun 2023. URL: https://doi.org/10.3389/fendo.2023.1193742, doi:10.3389/fendo.2023.1193742. This article has 4 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(yu2024endoplasmicreticulumstressrelated pages 7-10): Yongle Yu, Jiadong Yu, and Zhenyu Pan. Endoplasmic reticulum stress-related features predict the prognosis of osteosarcoma and reveal stc2 as a novel risk indicator for disease progression. Frontiers in Oncology, Jul 2024. URL: https://doi.org/10.3389/fonc.2024.1453173, doi:10.3389/fonc.2024.1453173. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chen2024constructionofan pages 7-11): Weidong Chen, Yan Liao, Pengxiao Sun, Jian Tu, Yutong Zou, Ji Fang, Ziyun Chen, Hongbo Li, Junkai Chen, Yuzhong Peng, Lili Wen, and Xianbiao Xie. Construction of an er stress-related prognostic signature for predicting prognosis and screening the effective anti-tumor drug in osteosarcoma. Journal of Translational Medicine, Jan 2024. URL: https://doi.org/10.1186/s12967-023-04794-0, doi:10.1186/s12967-023-04794-0. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(joshi2020newinsightsinto pages 5-6): Aditya D. Joshi. New insights into physiological and pathophysiological functions of stanniocalcin 2. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00172, doi:10.3389/fendo.2020.00172. This article has 75 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ito2004characterizationofstanniocalcin pages 4-6</li>
+<li>joshi2020newinsightsinto pages 3-5</li>
+<li>hjortebjerg2023heritabilityandcirculating pages 3-5</li>
+<li>yu2024endoplasmicreticulumstressrelated pages 7-10</li>
+<li>chen2024constructionofan pages 7-11</li>
+<li>joshi2020newinsightsinto pages 5-6</li>
+<li>joshi2020newinsightsinto pages 1-2</li>
+<li>https://doi.org/10.1128/mcb.24.21.9456-9469.2004;</li>
+<li>https://doi.org/10.1128/mcb.05140-11;</li>
+<li>https://doi.org/10.3389/fendo.2020.00172.</li>
+<li>https://doi.org/10.1128/mcb.24.21.9456-9469.2004.</li>
+<li>https://doi.org/10.1128/mcb.05140-11.</li>
+<li>https://doi.org/10.3389/fendo.2023.1193742.</li>
+<li>https://doi.org/10.3389/fonc.2024.1453173.</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0.</li>
+<li>https://doi.org/10.3389/fonc.2024.1453173;</li>
+<li>https://doi.org/10.3389/fendo.2020.00172;</li>
+<li>https://doi.org/10.3389/fendo.2020.00172</li>
+<li>https://doi.org/10.1128/mcb.24.21.9456-9469.2004</li>
+<li>https://doi.org/10.1128/mcb.05140-11</li>
+<li>https://doi.org/10.3389/fendo.2023.1193742</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0</li>
+<li>https://doi.org/10.3389/fonc.2024.1453173</li>
+<li>https://doi.org/10.1128/mcb.24.21.9456-9469.2004,</li>
+<li>https://doi.org/10.1128/mcb.05140-11,</li>
+<li>https://doi.org/10.3389/fendo.2020.00172,</li>
+<li>https://doi.org/10.3389/fendo.2023.1193742,</li>
+<li>https://doi.org/10.3389/fonc.2024.1453173,</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O76061
+gene_symbol: STC2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  STC2 (Stanniocalcin-2) is a secreted glycoprotein hormone belonging to the stanniocalcin family,
+  functioning as an autocrine/paracrine regulator. It localizes to the ER and Golgi apparatus
+  and is secreted to the extracellular space, with secretion enhanced during ER stress. STC2 is
+  robustly induced by the unfolded protein response (UPR) via the PERK-ATF4 pathway and provides
+  cytoprotective effects under cellular stress. Mechanistically, STC2 acts as (1) a negative
+  modulator of store-operated calcium entry (SOCE) through physical interaction with the ER
+  calcium sensor STIM1, (2) an inhibitor of pappalysin metalloproteinases (PAPP-A/PAPP-A2),
+  thereby reducing IGFBP proteolysis and modulating local IGF bioavailability, and (3) a
+  regulator of calcium and phosphate homeostasis with anti-hypocalcemic properties. STC2 also
+  forms complexes with heme oxygenase-1 (HO-1), binds heme, and functions as a heat shock
+  protein. The protein forms disulfide-linked homodimers and is N-glycosylated.
+existing_annotations:
+- term:
+    id: GO:0006874
+    label: intracellular calcium ion homeostasis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      STC2 regulates intracellular calcium ion homeostasis, consistent with the stanniocalcin family&#39;s
+      ancestral role in fish as calcium-regulating hormones. In mammals, STC2 is described as having
+      anti-hypocalcemic action on calcium and phosphate homeostasis (UniProt). Deep research indicates
+      STC2 is a negative modulator of store-operated calcium entry (SOCE) through physical interaction
+      with STIM1, thereby modulating calcium homeostasis.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA annotation is consistent with the conserved role of stanniocalcins in calcium/phosphate
+      regulation and with experimental evidence showing STC2 modulates calcium signaling via SOCE/STIM1.
+      This represents a core function of STC2.
+    supported_by:
+      - reference_id: PMID:9753616
+        supporting_text: &gt;-
+          Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles of
+          Stannius in bony fishes
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          STC2 is a negative modulator of store-operated calcium entry (SOCE). STC2 deficiency
+          increases Ca2+ influx after ER store depletion, while overexpression attenuates SOCE. STC2
+          physically interacts with the ER Ca2+ sensor STIM1, linking it to ER-plasma membrane Ca2+
+          signaling
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      STC2 is a secreted glycoprotein hormone that localizes to the extracellular space. UniProt
+      annotates STC2 as secreted. STC2 has an N-terminal signal peptide for ER import and is
+      N-glycosylated. Secretion is enhanced during ER stress. STC2 was detected in human colostrum
+      by proteomics (PMID:16502470) confirming its presence in extracellular fluids.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core localization annotation supported by multiple lines of evidence including
+      signal peptide, secretion assays, and proteomics detection in human colostrum.
+    supported_by:
+      - reference_id: PMID:16502470
+        supporting_text: &gt;-
+          One hundred and fifty-one proteins were identified, 83 of which have not been previously
+          reported in human colostrum
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          N-terminal signal peptide for ER import; N-linked glycosylation; localizes to ER/Golgi;
+          secreted into media, secretion increases during ER stress
+- term:
+    id: GO:0005179
+    label: hormone activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      STC2 is classified as a glycoprotein hormone belonging to the stanniocalcin family, which
+      originated as calcium-regulating hormones in fish. UniProt annotates STC2 with the Hormone
+      keyword. STC2 functions as a paracrine/autocrine regulator in mammals rather than as a
+      classical circulating hormone. It regulates calcium/phosphate homeostasis and has hormone-like
+      activity in modulating steroidogenesis in the ovary (PMID:15486227).
+    action: ACCEPT
+    reason: &gt;-
+      The hormone activity annotation is appropriate based on STC2&#39;s classification as a stanniocalcin
+      family hormone, its signaling function, and its paracrine effects on target cells including
+      suppression of steroidogenesis in granulosa cells.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          Stanniocalcin is a glycoprotein hormone important in the maintenance of calcium and phosphate
+          homeostasis in fish. Two related mammalian stanniocalcin genes, STC1 and STC2, were found to
+          be expressed in various tissues as paracrine regulators
+      - reference_id: PMID:9753616
+        supporting_text: &gt;-
+          Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles of
+          Stannius in bony fishes
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      STC2 is a secreted protein that localizes to the extracellular region. This is a broader
+      parent term of extracellular space (GO:0005615), which is also annotated with IBA evidence.
+      The annotation is redundant with the more specific extracellular space term.
+    action: ACCEPT
+    reason: &gt;-
+      This IEA annotation to the broader term is consistent with the evidence that STC2 is a
+      secreted protein. While more specific extracellular space annotation exists, this broader
+      term is not incorrect.
+    supported_by:
+      - reference_id: PMID:16502470
+        supporting_text: &gt;-
+          One hundred and fifty-one proteins were identified, 83 of which have not been previously
+          reported in human colostrum
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      This annotation is inferred from the hormone activity annotation via GO logical inference.
+      STC2, as a hormone, would be expected to participate in signal transduction. However, the
+      term is overly broad and does not capture the specific signaling mechanisms of STC2, which
+      include SOCE modulation via STIM1 and PAPP-A inhibition affecting IGF bioavailability.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While STC2 does participate in signaling pathways, this broad term does not provide
+      informative annotation. The specific mechanisms (calcium signaling via STIM1, IGF axis
+      modulation via PAPP-A inhibition) are more meaningful. This is a logical inference from
+      hormone activity that is too general.
+    supported_by:
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          STC2 physically interacts with the ER Ca2+ sensor STIM1, linking it to ER-plasma membrane
+          Ca2+ signaling... acts as an endogenous inhibitor of pappalysin metalloproteinases
+          (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local IGF bioavailability
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      STC2 localizes to the endoplasmic reticulum as part of the secretory pathway. It contains an
+      N-terminal signal peptide for ER import and is N-glycosylated. Immunofluorescence and subcellular
+      fractionation place endogenous STC2 predominantly in the ER and Golgi. STC2 interacts with STIM1,
+      an ER calcium sensor, further supporting ER localization. This IEA annotation is also supported
+      by IDA evidence from PMID:22503972.
+    action: ACCEPT
+    reason: &gt;-
+      ER localization is well-supported by the presence of a signal peptide, N-glycosylation,
+      immunofluorescence data, and the functional interaction with ER-resident STIM1.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in
+          the ER and Golgi
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      STC2 transits through the Golgi apparatus as part of the secretory pathway. As a secreted
+      glycoprotein with N-glycosylation, STC2 would be processed in the Golgi. Subcellular
+      fractionation and immunofluorescence studies place STC2 in both ER and Golgi compartments.
+    action: ACCEPT
+    reason: &gt;-
+      Golgi localization is expected for a secreted N-glycosylated protein and is supported by
+      subcellular fractionation data from the literature.
+    supported_by:
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          Immunofluorescence and subcellular fractionation place endogenous STC2 predominantly in
+          the ER and Golgi
+- term:
+    id: GO:0007566
+    label: embryo implantation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      This annotation is transferred from rat ortholog (ensembl:ENSRNOP00000028146). STC2 is expressed
+      in reproductive tissues and may play a role in embryo implantation based on expression patterns.
+      However, direct functional evidence for STC2 involvement in embryo implantation in humans is
+      limited. The annotation may reflect expression correlation rather than direct functional role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While STC2 may be expressed during implantation, this is not a core function of the protein.
+      The annotation is based on ortholog transfer from rat and likely reflects expression during
+      decidualization rather than a direct mechanistic role in implantation.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          STC2 is expressed mainly in thecal layers... thecal cell-derived STC2 could play a
+          paracrine role during follicular development
+- term:
+    id: GO:0033280
+    label: response to vitamin D
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      This annotation is transferred from rat ortholog. Given that stanniocalcins are involved in
+      calcium/phosphate homeostasis and vitamin D is a key regulator of this system, STC2 expression
+      may be modulated by vitamin D. However, direct evidence for STC2 responding to vitamin D in
+      humans is not provided in the available literature.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is likely a peripheral response rather than a core function. STC2&#39;s role in calcium
+      homeostasis makes vitamin D responsiveness plausible, but this represents a regulatory input
+      rather than a core molecular function of the protein.
+    supported_by:
+      - reference_id: PMID:9753616
+        supporting_text: &gt;-
+          Stanniocalcin (STC) is a Ca- and phosphate-regulating hormone produced by the corpuscles
+          of Stannius in bony fishes
+- term:
+    id: GO:0043434
+    label: response to peptide hormone
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      This annotation is transferred from rat ortholog. STC2 expression is regulated by gonadotropins
+      (FSH/LH) in the ovary - pregnant mare serum gonadotropin increases STC2 expression while human
+      chorionic gonadotropin suppresses it (PMID:15486227). This represents regulation of STC2
+      expression by peptide hormones.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation captures a regulatory response to gonadotropins that modulates STC2 expression,
+      particularly in reproductive tissues. This is a peripheral function reflecting tissue-specific
+      regulation rather than a core molecular function of STC2.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          Treatment of immature rats with pregnant mare serum gonadotropin increased STC2 transcripts,
+          whereas subsequent treatment with human chorionic gonadotropin suppressed STC2 expression
+- term:
+    id: GO:0046697
+    label: decidualization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      This annotation is transferred from rat ortholog. STC2 is expressed in reproductive tissues
+      and may be involved in decidualization based on expression patterns. This is consistent with
+      STC2&#39;s role as a paracrine factor in ovarian tissues. However, direct mechanistic evidence for
+      STC2 function in decidualization is limited.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Decidualization is a tissue-specific process where STC2 may be expressed but is not the core
+      function of the protein. This annotation likely reflects expression correlation in reproductive
+      tissues rather than a direct functional role.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          thecal cell-derived STC2 could play a paracrine role during follicular development
+- term:
+    id: GO:0071456
+    label: cellular response to hypoxia
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      STC2 is induced by various cellular stresses including hypoxia. This is consistent with STC2
+      being a UPR target gene induced via the PERK-ATF4 pathway, as hypoxia causes ER stress. STC2
+      provides cytoprotective effects under stress conditions including hypoxia.
+    action: ACCEPT
+    reason: &gt;-
+      Hypoxia response is part of STC2&#39;s broader stress response function. STC2 is robustly induced
+      by ER stressors and provides cytoprotection, making this annotation consistent with its
+      characterized function as a stress-responsive protein.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          STC2 has been demonstrated to be induced by different kinds of stress and display
+          cytoprotective activity
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          UPR-inducible via PERK-ATF4 (and CHOP context); upregulated by tunicamycin, thapsigargin,
+          hypoxia and oxidative stress
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8952289
+  review:
+    summary: &gt;-
+      STC2 localizes to the ER lumen as part of the secretory pathway. This annotation from Reactome
+      reflects STC2 being a substrate of FAM20C, an extracellular/Golgi kinase that phosphorylates
+      secreted proteins. STC2 is phosphorylated at Ser-250, Ser-251, and Thr-254 by FAM20C (UniProt).
+      The ER lumen localization is consistent with STC2 having a signal peptide and transiting
+      through the ER-Golgi secretory pathway.
+    action: ACCEPT
+    reason: &gt;-
+      ER lumen localization is appropriate for a secreted glycoprotein with a signal peptide. STC2
+      is processed in the ER lumen before Golgi transit and secretion.
+    supported_by:
+      - reference_id: Reactome:R-HSA-8952289
+        supporting_text: &gt;-
+          FAM20C phosphorylates FAM20C substrates... extracellular kinase that can phosphorylate a
+          broad range of secreted protein
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          STC2 contains an N-terminal signal peptide for ER import, is N-glycosylated, and forms
+          part of the secretory pathway
+- term:
+    id: GO:0019899
+    label: enzyme binding
+  evidence_type: IDA
+  original_reference_id: PMID:22503972
+  review:
+    summary: &gt;-
+      STC2 binds to heme oxygenase-1 (HO-1), which is an enzyme that degrades heme. The interaction
+      was discovered by yeast two-hybrid screening and validated by co-immunoprecipitation and
+      immunofluorescence. The binding site was mapped to amino acids 181-200 of STC2. The complex
+      may function as a eukaryotic stressosome involved in heme degradation.
+    action: ACCEPT
+    reason: &gt;-
+      The enzyme binding annotation is correct as STC2 binds HO-1, an enzyme. This represents a
+      validated protein-protein interaction with functional significance in the stress response.
+      A more specific term such as heme oxygenase binding does not exist in GO.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          Using yeast two-hybrid screening we identified HO1 as a binding partner of STC2. The
+          interaction was validated by in vivo co-immunoprecipitation and immunofluorescence. The
+          binding site for HO1 was located to amino acids 181-200 of STC2
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IDA
+  original_reference_id: PMID:22503972
+  review:
+    summary: &gt;-
+      STC2 binds hemin via a consensus heme regulatory motif. This was demonstrated experimentally
+      and suggests STC2 may function in heme metabolism as part of a stressosome complex with HO-1
+      that degrades heme. This is a newly characterized function of STC2.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence demonstrates STC2 binds hemin through a heme regulatory motif.
+      This is a validated molecular function of STC2.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          We also found that STC2 binds hemin via a consensus heme regulatory motif
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:22503972
+  review:
+    summary: &gt;-
+      STC2 localizes to the endoplasmic reticulum as demonstrated by immunofluorescence in
+      PMID:22503972. This is consistent with STC2 having a signal peptide for ER import and
+      being a secreted glycoprotein that transits through the ER. This annotation duplicates
+      the IEA annotation for the same term but with stronger experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence from immunofluorescence confirms ER localization of STC2.
+      This is a core localization for this secreted protein.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IDA
+  original_reference_id: PMID:9753616
+  review:
+    summary: &gt;-
+      STC2 inhibits the promoter activity of the Na-phosphate cotransporter (NaPi-3) gene. Culture
+      medium from STC2-transfected CHO cells inhibited NaPi-3 promoter activity. This demonstrates
+      STC2 can negatively regulate gene expression, likely through its effects on phosphate
+      homeostasis signaling.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence shows STC2 inhibits NaPi-3 promoter activity, demonstrating
+      negative regulation of gene expression. This is mechanistically linked to STC2&#39;s role in
+      phosphate homeostasis.
+    supported_by:
+      - reference_id: PMID:9753616
+        supporting_text: &gt;-
+          The culture medium of STC2-transfected CHO cells inhibited the promoter activity of
+          Na-phosphate cotransporter (NaPi-3)
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:15486227
+  review:
+    summary: &gt;-
+      STC2 forms homodimers. Recombinant human and fish STC2 proteins were found to be
+      N-glycosylated homodimers. UniProt also annotates STC2 as a disulfide-linked homodimer.
+      This is a core structural property of stanniocalcins.
+    action: ACCEPT
+    reason: &gt;-
+      Homodimerization is a well-established property of STC2 supported by biochemical
+      characterization of recombinant protein. The disulfide-linked homodimer is the
+      functional form of the protein.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          recombinant human and fish STC2 proteins were generated and found to be N-glycosylated
+          homodimers
+- term:
+    id: GO:0046885
+    label: regulation of hormone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9753616
+  review:
+    summary: &gt;-
+      STC2 regulates hormone biosynthesis in the ovary. Treatment of granulosa cells with STC2
+      suppressed FSH-induced progesterone production by inhibiting CYP11A and 3beta-hydroxysteroid
+      dehydrogenase expression (PMID:15486227). This represents a paracrine regulatory function
+      of STC2 in steroidogenesis.
+    action: ACCEPT
+    reason: &gt;-
+      STC2 regulates steroid hormone biosynthesis by suppressing progesterone production in
+      granulosa cells through inhibition of steroidogenic enzyme expression. This is a validated
+      paracrine function of STC2.
+    supported_by:
+      - reference_id: PMID:15486227
+        supporting_text: &gt;-
+          treatment with human or fish STC2 suppressed FSH-induced progesterone, but not estradiol
+          or cAMP, production. The STC2 suppression of progesterone production was associated with
+          the inhibition of FSH-induced CYP11A and 3beta-hydroxysteroid dehydrogenase expression
+- term:
+    id: GO:0048471
+    label: perinuclear region of cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:22503972
+  review:
+    summary: &gt;-
+      STC2 localizes to the perinuclear region of the cytoplasm as shown by immunofluorescence.
+      This is consistent with ER/Golgi localization since these organelles are concentrated in
+      the perinuclear region. The localization was validated by immunofluorescence studies of
+      STC2 and its interaction partner HO-1.
+    action: ACCEPT
+    reason: &gt;-
+      Immunofluorescence evidence supports perinuclear localization, which is consistent with
+      the ER/Golgi localization expected for a secreted protein with a signal peptide.
+    supported_by:
+      - reference_id: PMID:22503972
+        supporting_text: &gt;-
+          The interaction was validated by in vivo co-immunoprecipitation and immunofluorescence
+- term:
+    id: GO:0005615
+    label: extracellular space
+  evidence_type: HDA
+  original_reference_id: PMID:16502470
+  review:
+    summary: &gt;-
+      STC2 was detected in the extracellular space (human colostrum) by proteomics analysis. This
+      high-throughput study identified STC2 among 151 proteins in the aqueous phase of human
+      colostrum, confirming its secreted nature and presence in biological fluids.
+    action: ACCEPT
+    reason: &gt;-
+      Proteomic detection of STC2 in human colostrum provides direct evidence for its presence
+      in the extracellular space. This is consistent with STC2 being a secreted glycoprotein.
+    supported_by:
+      - reference_id: PMID:16502470
+        supporting_text: &gt;-
+          One hundred and fifty-one proteins were identified, 83 of which have not been previously
+          reported in human colostrum, or milk
+- term:
+    id: GO:0008191
+    label: metalloendopeptidase inhibitor activity
+  evidence_type: IDA
+  original_reference_id: file:human/STC2/STC2-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A and PAPP-A2).
+      By inhibiting these metalloendopeptidases, STC2 reduces IGFBP proteolysis and thereby
+      modulates local IGF bioavailability. This represents a well-established mechanism of STC2
+      action supported by biochemical and genetic studies.
+    action: NEW
+    reason: &gt;-
+      This molecular function is not currently annotated in GO for STC2 but is well-supported
+      by deep research literature. PAPP-A and PAPP-A2 are metalloendopeptidases, and STC2
+      inhibition of their activity is a core function linking STC2 to growth regulation
+      via the IGF axis.
+    supported_by:
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          Mammalian STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases
+          (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local insulin-like
+          growth factor (IGF) bioavailability
+references:
+- id: file:human/STC2/STC2-deep-research-falcon.md
+  title: Deep research review of STC2 function
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15486227
+  title: Identification of a stanniocalcin paralog, stanniocalcin-2, in fish and the
+    paracrine actions of stanniocalcin-2 in the mammalian ovary.
+  findings: []
+- id: PMID:16502470
+  title: &#39;Human colostrum: identification of minor proteins in the aqueous phase by
+    proteomics.&#39;
+  findings: []
+- id: PMID:22503972
+  title: Stanniocalcin 2, forms a complex with heme oxygenase 1, binds hemin and is
+    a heat shock protein.
+  findings: []
+- id: PMID:9753616
+  title: Molecular cloning of a second human stanniocalcin homologue (STC2).
+  findings: []
+- id: Reactome:R-HSA-8952289
+  title: FAM20C phosphorylates FAM20C substrates
+  findings: []
+core_functions:
+  - molecular_function:
+      id: GO:0005179
+      label: hormone activity
+    description: &gt;-
+      STC2 is a secreted glycoprotein hormone belonging to the stanniocalcin family. It functions
+      as an autocrine/paracrine regulator with anti-hypocalcemic action on calcium and phosphate
+      homeostasis. STC2 regulates target cell function including suppression of steroidogenesis
+      in granulosa cells.
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+    directly_involved_in:
+      - id: GO:0006874
+        label: intracellular calcium ion homeostasis
+  - molecular_function:
+      id: GO:0008191
+      label: metalloendopeptidase inhibitor activity
+    description: &gt;-
+      STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases (PAPP-A and PAPP-A2),
+      thereby reducing IGFBP proteolysis and modulating local insulin-like growth factor (IGF)
+      bioavailability. This is a key mechanism linking STC2 to growth regulation.
+    locations:
+      - id: GO:0005615
+        label: extracellular space
+    supported_by:
+      - reference_id: file:human/STC2/STC2-deep-research-falcon.md
+        supporting_text: &gt;-
+          Mammalian STC2 acts as an endogenous inhibitor of pappalysin metalloproteinases
+          (PAPP-A/PAPP-A2), thereby reducing IGFBP proteolysis and modulating local insulin-like
+          growth factor (IGF) bioavailability
+  - molecular_function:
+      id: GO:0020037
+      label: heme binding
+    description: &gt;-
+      STC2 binds hemin via a consensus heme regulatory motif. This was demonstrated experimentally
+      and suggests STC2 may function in heme metabolism as part of a stressosome complex with HO-1.
+    locations:
+      - id: GO:0005783
+        label: endoplasmic reticulum
+  - molecular_function:
+      id: GO:0042803
+      label: protein homodimerization activity
+    description: &gt;-
+      STC2 forms disulfide-linked homodimers. This is the functional form of the protein required
+      for its hormone activity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

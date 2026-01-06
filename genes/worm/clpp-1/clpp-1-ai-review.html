@@ -1,0 +1,2863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clpp-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>clpp-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q27539" target="_blank" class="term-link">
+                        Q27539
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "clpp-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q27539" data-a="DESCRIPTION: CLPP-1 is the proteolytic subunit of the mitochond..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CLPP-1 is the proteolytic subunit of the mitochondrial ATP-dependent ClpXP protease complex in C. elegans. It is a serine-type endopeptidase (EC 3.4.21.92) of the peptidase S14 family that forms a tetradecameric barrel composed of two heptameric rings in the mitochondrial matrix. CLPP-1 functions with the ClpX ATPase to degrade unfolded, misfolded, or damaged matrix proteins. Beyond its housekeeping proteolytic role, CLPP-1 is essential for signaling the mitochondrial unfolded protein response (UPR-mt) by generating peptide signals that are exported from the mitochondria via HAF-1 to activate nuclear transcription factors including DVE-1/UBL-5 and ATFS-1.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009368" target="_blank" class="term-link">
+                                    GO:0009368
+                                </a>
+                            </span>
+                            <span class="term-label">endopeptidase Clp complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0009368" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CLPP-1 is the proteolytic core of the ClpXP protease complex. The protein forms a homo-oligomeric barrel (two heptameric rings) that assembles with ClpX ATPase to form the functional ATP-dependent protease in the mitochondrial matrix. This annotation is well-supported by phylogenetic inference from characterized ClpP proteins across species.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation correctly identifies CLPP-1 as part of the endopeptidase Clp complex. CLPP-1 assembles as a homo-oligomeric barrel that partners with the AAA+ ATPase ClpX to form the ATP-dependent ClpXP protease. The ClpP proteolytic chamber requires association with ClpX ATPase for substrate recognition and unfolding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92), a serine protease of the S14 family that assembles as a homo-oligomeric barrel (typically two heptameric rings) and partners with the AAA+ ATPase ClpX to form the ATP-dependent ClpXP protease in the mitochondrial matrix</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006515" target="_blank" class="term-link">
+                                    GO:0006515
+                                </a>
+                            </span>
+                            <span class="term-label">protein quality control for misfolded or incompletely synthesized proteins</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0006515" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CLPP-1, as the proteolytic subunit of the ClpXP complex, degrades misfolded and damaged proteins in the mitochondrial matrix. This represents a core housekeeping function of the protein, providing protein quality control within the mitochondria.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation correctly captures the protein quality control function of CLPP-1. As the proteolytic core of ClpXP, CLPP-1 degrades unfolded or selected proteins that are recognized, unfolded, and translocated by ClpX into the CLPP-1 chamber.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CLPP-1 provides processive proteolysis of unfolded or selected proteins that are recognized, unfolded, and translocated by ClpX into the CLPP-1 chamber</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004252" target="_blank" class="term-link">
+                                    GO:0004252
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0004252" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CLPP-1 is a serine-type endopeptidase belonging to the peptidase S14 family. The protein contains conserved ClpP catalytic motifs with active site serine and histidine residues essential for proteolytic activity (EC 3.4.21.92).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation correctly identifies the serine-type endopeptidase activity of CLPP-1. This is a core molecular function supported by domain architecture (ClpP domain with conserved Ser and His active sites), family membership (peptidase S14), and experimental validation in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92), a serine protease of the S14 family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004176" target="_blank" class="term-link">
+                                    GO:0004176
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0004176" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CLPP-1 as the proteolytic subunit of the ClpXP complex exhibits ATP-dependent peptidase activity. While CLPP-1 itself does not hydrolyze ATP (that function resides in ClpX), the functional complex requires ATP hydrolysis by ClpX for substrate unfolding and translocation into the CLPP-1 proteolytic chamber.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation is accurate for the ClpXP holoenzyme function. ATP hydrolysis is required for CLPP-1-mediated proteolysis in vivo. In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis is CLPP-dependent and can be inhibited by the ClpP inhibitor LY-CMK.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis and peptide generation are substantially CLPP-dependent and inhibited by the ClpP inhibitor LY-CMK</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051117" target="_blank" class="term-link">
+                                    GO:0051117
+                                </a>
+                            </span>
+                            <span class="term-label">ATPase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0051117" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CLPP-1 binds to the AAA+ ATPase ClpX to form the functional ClpXP protease complex. This interaction is essential for CLPP-1 function as ClpX provides substrate recognition, unfolding, and translocation into the CLPP-1 proteolytic chamber.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA annotation correctly identifies the ATPase binding function of CLPP-1. CLPP-1 partners with ClpX ATPase to form the ATP-dependent ClpXP protease. This is a conserved feature of all ClpP proteases that require AAA+ ATPase partners for substrate delivery.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">partners with the AAA+ ATPase ClpX to form the ATP-dependent ClpXP protease in the mitochondrial matrix</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004176" target="_blank" class="term-link">
+                                    GO:0004176
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0004176" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation derived from InterPro domain mapping (IPR001907 ClpP domain). This annotation is consistent with the experimentally validated function of CLPP-1 as part of the ATP-dependent ClpXP protease complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is redundant with the IBA annotation for the same term but is acceptable. The InterPro-based inference correctly identifies ATP-dependent peptidase activity based on the conserved ClpP domain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004252" target="_blank" class="term-link">
+                                    GO:0004252
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0004252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from combined automated methods based on InterPro domain and EC number (3.4.21.92). This is consistent with CLPP-1 being a serine protease of the peptidase S14 family with conserved active site serine.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is redundant with both IBA and IDA annotations for the same term but is acceptable. The automated inference correctly identifies serine-type endopeptidase activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB subcellular location vocabulary mapping. CLPP-1 localization to the mitochondrial matrix is supported by experimental evidence from mitoplast protection assays and the presence of an N-terminal mitochondrial targeting sequence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is redundant with the IDA annotation for the same term but is acceptable. The subcellular location inference correctly identifies mitochondrial matrix localization, which has been experimentally validated.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0006508" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from combined automated methods. CLPP-1 is involved in proteolysis as the proteolytic subunit of the ClpXP complex, degrading proteins in the mitochondrial matrix.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is redundant with the IDA annotation for the same term but is acceptable. The term is very general but accurately describes a core function of CLPP-1. More specific terms (serine-type endopeptidase activity, protein quality control) provide additional detail.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0008233" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (KW-0645 Protease). CLPP-1 has peptidase activity as part of its core function as the proteolytic subunit of the ClpXP complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is very general but accurate. More specific child terms (serine-type endopeptidase activity, ATP-dependent peptidase activity) are also annotated and provide better functional specificity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008236" target="_blank" class="term-link">
+                                    GO:0008236
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type peptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0008236" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (KW-0720 Serine protease). CLPP-1 is a serine-type peptidase belonging to the peptidase S14 family with conserved active site serine residue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is accurate but less specific than the serine-type endopeptidase activity term (GO:0004252) which is also annotated with stronger evidence (IDA, IBA). Both annotations are acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping (KW-0378 Hydrolase). CLPP-1 has hydrolase activity as it catalyzes the hydrolysis of peptide bonds in protein substrates.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is very general but technically accurate. CLPP-1 is a hydrolase that cleaves peptide bonds. More specific child terms provide better functional characterization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004252" target="_blank" class="term-link">
+                                    GO:0004252
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type endopeptidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0004252" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on direct experimental evidence from Haynes et al. 2007. CLPP-1 was shown to have serine-type endopeptidase activity as the proteolytic subunit of the ClpXP complex in the mitochondrial matrix. The protein belongs to the peptidase S14 family with conserved catalytic residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function annotation with direct experimental support. CLPP-1 encodes a mitochondrial matrix protease homologous to bacterial ClpP, which is a well-characterized serine protease.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0006508" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on direct experimental evidence from Haynes et al. 2007. CLPP-1 is involved in proteolysis as the proteolytic subunit of the ClpXP complex, degrading proteins in the mitochondrial matrix.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate but general. The term proteolysis is a broad biological process term. More specific annotations (protein quality control, UPR-mt) provide better functional context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0034514" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on mutant phenotype analysis from Haynes et al. 2007. clpp-1(RNAi) attenuates UPR-mt activation, blocking DVE-1 nuclear redistribution and induction of mitochondrial chaperone genes. CLPP-1 acts upstream to generate peptide signals that are exported via HAF-1 to activate nuclear transcription factors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process annotation with strong experimental support. CLPP-1 is required for signaling the mitochondrial unfolded protein response. This represents a key function beyond simple housekeeping proteolysis - CLPP-1 generates signaling peptides that communicate mitochondrial stress to the nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These events and the downstream UPR(mt) are attenuated in animals with reduced activity of clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q27539" data-a="GO:0005759" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on direct localization evidence from Haynes et al. 2007. CLPP-1 was shown to localize to the mitochondrial matrix using mitoplast protection assays. The protein contains an N-terminal mitochondrial targeting sequence (residues 1-25) that directs import into the matrix.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a well-supported cellular component annotation. CLPP-1 localization to the mitochondrial matrix is consistent with its function in the ClpXP protease complex that degrades matrix proteins and generates UPR-mt signals.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CLPP-1 resides in the mitochondrial matrix; epitope-tagged CLPP-1 fractionates with mitochondrial pellets and is protected from exogenous protease in mitoplasts, consistent with matrix localization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CLPP-1 is a serine-type endopeptidase (EC 3.4.21.92) of the peptidase S14 family. As the proteolytic core of the ClpXP complex, it cleaves proteins delivered by the ClpX ATPase into small peptides. This represents the primary enzymatic activity of the protein.</h3>
+                <span class="vote-buttons" data-g="Q27539" data-a="FUNCTION: CLPP-1 is a serine-type endopeptidase (EC 3.4.21.9..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004252" target="_blank" class="term-link">
+                            serine-type endopeptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009368" target="_blank" class="term-link">
+                            endopeptidase Clp complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CLPP-1 functions as part of the ATP-dependent ClpXP protease complex. While CLPP-1 itself does not hydrolyze ATP, the functional holoenzyme requires ATP hydrolysis by the ClpX partner for substrate unfolding and translocation into the proteolytic chamber.</h3>
+                <span class="vote-buttons" data-g="Q27539" data-a="FUNCTION: CLPP-1 functions as part of the ATP-dependent ClpX..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004176" target="_blank" class="term-link">
+                            ATP-dependent peptidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                mitochondrial unfolded protein response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006515" target="_blank" class="term-link">
+                                protein quality control for misfolded or incompletely synthesized proteins
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                            PMID:17925224
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ClpP mediates activation of a mitochondrial unfolded protein response in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLPP-1 encodes a mitochondrial matrix protease homologous to bacterial ClpP</div>
+                        
+                        <div class="finding-text">"clpp-1, which encodes a mitochondrial matrix protease homologous to bacterial ClpP"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">clpp-1(RNAi) attenuates UPR-mt signaling and blocks DVE-1 nuclear redistribution</div>
+                        
+                        <div class="finding-text">"These events and the downstream UPR(mt) are attenuated in animals with reduced activity of clpp-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLPP-1 is required for induction of mitochondrial chaperone genes under stress</div>
+                        
+                        <div class="finding-text">"These events and the downstream UPR(mt) are attenuated in animals with reduced activity of clpp-1"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/clpp-1/clpp-1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on clpp-1 function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLPP-1 forms homo-oligomeric barrel (two heptameric rings) with ClpX ATPase</div>
+                        
+                        <div class="finding-text">"clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92), a serine protease of the S14 family that assembles as a homo-oligomeric barrel (typically two heptameric rings) and partners with the AAA+ ATPase ClpX"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP-dependent matrix proteolysis is CLPP-dependent and inhibited by LY-CMK</div>
+                        
+                        <div class="finding-text">"In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis and peptide generation are substantially CLPP-dependent and inhibited by the ClpP inhibitor LY-CMK"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLPP-1 generates peptide signals exported via HAF-1 for UPR-mt activation</div>
+                        
+                        <div class="finding-text">"HAF-1–dependent peptide export couples CLPP-1–generated peptides to downstream transcription factors"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-upr-stress</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(clpp-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q27539" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T10:56:29.483724'<br />
+end_time: '2025-12-28T11:04:07.345600'<br />
+duration_seconds: 457.86<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: clpp-1<br />
+  gene_symbol: clpp-1<br />
+  uniprot_accession: Q27539<br />
+  protein_description: 'RecName: Full=ATP-dependent Clp protease proteolytic subunit<br />
+    1, mitochondrial; EC=3.4.21.92; AltName: Full=Endopeptidase Clp; Flags: Precursor;'<br />
+  gene_info: Name=clpp-1; ORFNames=ZK970.2;<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the peptidase S14 family. .<br />
+  protein_domains: ClpP. (IPR001907); ClpP/crotonase-like_dom_sf. (IPR029045); ClpP/TepA.<br />
+    (IPR023562); ClpP_His_AS. (IPR033135); ClpP_Ser_AS. (IPR018215)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 20</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q27539</li>
+<li><strong>Protein Description:</strong> RecName: Full=ATP-dependent Clp protease proteolytic subunit 1, mitochondrial; EC=3.4.21.92; AltName: Full=Endopeptidase Clp; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=clpp-1; ORFNames=ZK970.2;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the peptidase S14 family. .</li>
+<li><strong>Key Domains:</strong> ClpP. (IPR001907); ClpP/crotonase-like_dom_sf. (IPR029045); ClpP/TepA. (IPR023562); ClpP_His_AS. (IPR033135); ClpP_Ser_AS. (IPR018215)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "clpp-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'clpp-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>clpp-1</strong> (gene ID: clpp-1, UniProt: Q27539) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q27539</li>
+<li><strong>Protein Description:</strong> RecName: Full=ATP-dependent Clp protease proteolytic subunit 1, mitochondrial; EC=3.4.21.92; AltName: Full=Endopeptidase Clp; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=clpp-1; ORFNames=ZK970.2;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the peptidase S14 family. .</li>
+<li><strong>Key Domains:</strong> ClpP. (IPR001907); ClpP/crotonase-like_dom_sf. (IPR029045); ClpP/TepA. (IPR023562); ClpP_His_AS. (IPR033135); ClpP_Ser_AS. (IPR018215)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "clpp-1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'clpp-1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>clpp-1</strong> (gene ID: clpp-1, UniProt: Q27539) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan compliance and identity verification</p>
+<p>We verified the target as C. elegans clpp-1 (ORF ZK970.2), encoding the mitochondrial matrix caseinolytic protease P (ClpP) homolog, a serine protease of the peptidase S14 family that forms the proteolytic core of the ClpXP complex. Localization to the mitochondrial matrix was demonstrated by mitoplast protection assays and an N-terminal targeting sequence, and clpp-1 is required for mitochondrial UPR (UPRmt) signaling in worms (haynes2007clppmediatesactivation pages 4-7).</p>
+<p>Key concepts and definitions</p>
+<ul>
+<li>Protein identity and domain architecture: clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92), a serine protease of the S14 family that assembles as a homo-oligomeric barrel (typically two heptameric rings) and partners with the AAA+ ATPase ClpX to form the ATP-dependent ClpXP protease in the mitochondrial matrix (haynes2010thematrixpeptide pages 5-6, haynes2007clppmediatesactivation pages 4-7).</li>
+<li>Enzymatic function and substrate specificity: CLPP-1 provides processive proteolysis of unfolded or selected proteins that are recognized, unfolded, and translocated by ClpX into the CLPP-1 chamber. In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis and peptide generation are substantially CLPP-dependent and inhibited by the ClpP inhibitor LY-CMK, indicating a central role for CLPP-1 in matrix proteolysis (haynes2010thematrixpeptide pages 5-6). Substrate scope in metazoa includes mitochondrial biogenesis and metabolism factors; candidate worm substrates/peptides were detected in exported fractions after stress (mabanglo2022substratesandinteractors pages 25-27).</li>
+<li>Cellular localization: CLPP-1 resides in the mitochondrial matrix; epitope-tagged CLPP-1 fractionates with mitochondrial pellets and is protected from exogenous protease in mitoplasts, consistent with matrix localization (haynes2007clppmediatesactivation pages 4-7).</li>
+</ul>
+<p>Recent developments and latest research (prioritize 2023–2024)</p>
+<ul>
+<li>UPRmt architecture updates emphasize ATFS-1 (bZIP with dual targeting), chromatin cofactors DVE-1/UBL-5, and nuclear chromatin scaffolds (e.g., LIN-65) that coordinate developmental timing and adult inducibility; reviews highlight that LIN-65 nuclear trafficking/function requires inputs from mitochondrial proteases including CLPP-1 (haynes2022mitochondrialdysfunctionaging pages 6-7). A 2024 review of mitochondria–nucleus communication integrates UPRmt with innate immunity and proteostasis, situating CLPP-1 in the upstream mitochondrial proteolysis that generates signals for nuclear responses (haynes2022mitochondrialdysfunctionaging pages 6-7). Mini-reviews also stress context-specific requirements of ClpP for UPRmt across species (pareek2022aaa+proteasesthe pages 13-15).</li>
+<li>Proteomic and biochemical context for ClpP substrates/interactors in mitochondria remains active: surveys summarize extensive ClpP substrate pools and cross-species roles in mitochondrial gene expression and respiratory maintenance; worm peptide-export paradigms continue to inform mammalian hypotheses (mabanglo2022substratesandinteractors pages 25-27).</li>
+</ul>
+<p>Current applications and real-world implementations</p>
+<ul>
+<li>C. elegans UPRmt reporters (e.g., hsp-60pr::gfp; ubl-5pr::gfp) are standard tools to assay mitochondrial proteostasis. Acute inhibition of CLPP-1 in developed adults rapidly attenuates UPRmt reporter induction, establishing practical use of clpp-1 perturbation to probe proteostasis signaling (haynes2007clppmediatesactivation pages 7-8, haynes2007clppmediatesactivation pages 4-7).</li>
+<li>Isolated mitochondria assays measure ATP-dependent proteolysis and peptide efflux; these readouts are used to functionally link CLPP-1 proteolysis with HAF-1–dependent peptide export in vitro and in vivo (haynes2010thematrixpeptide pages 5-6).</li>
+<li>Translationally, ClpP/ClpXP is explored as a drug target in oncology and neurodegeneration; although these applications are in mammalian models, worm studies provide conceptual underpinnings for modulating mitochondrial protease activity to remodel proteostasis (mabanglo2022substratesandinteractors pages 25-27, pareek2022aaa+proteasesthe pages 13-15).</li>
+</ul>
+<p>Expert opinions and analysis from authoritative sources</p>
+<ul>
+<li>Foundational primary evidence establishes clpp-1 as a matrix ClpP required for UPRmt activation; clpp-1(RNAi) blocks DVE-1 redistribution, prevents promoter binding at mitochondrial chaperone genes, and attenuates ubl-5 induction, placing CLPP-1 upstream of DVE-1/UBL-5 (haynes2007clppmediatesactivation pages 4-7, haynes2007clppmediatesactivation pages 8-10). Adult-stage experiments demonstrate that acute pharmacologic inhibition of CLPP-1 rapidly blocks UPRmt signaling, arguing against a purely developmental effect (haynes2007clppmediatesactivation pages 7-8).</li>
+<li>HAF-1 (matrix peptide exporter) couples CLPP-1–generated peptides to downstream transcription factors: in isolated mitochondria, ATP-stimulated proteolysis produces peptides whose efflux is HAF-1 dependent; genetic perturbations support a model in which HAF-1-mediated export signals to the bZIP factor ZC376.7, downstream of ClpP, to activate nuclear UPRmt genes (haynes2010thematrixpeptide pages 5-6, haynes2010thematrixpeptide pages 10-10).</li>
+<li>Recent reviews consolidate that ATFS-1 is the master UPRmt transcription factor with dual mitochondrial/nuclear localization; desumoylation of DVE-1 and ATFS-1 and LIN-65–dependent chromatin changes contribute to UPRmt competence, with LIN-65 trafficking reported to require CLPP-1 (haynes2022mitochondrialdysfunctionaging pages 6-7).</li>
+</ul>
+<p>Relevant statistics and data from recent studies</p>
+<ul>
+<li>In adult ubl-5pr::gfp worms shifted to stress conditions, reporter induction within approximately 3 hours is strongly reduced by clpp-1(RNAi), demonstrating rapid CLPP-1 dependence for UPRmt activation in developed animals (haynes2007clppmediatesactivation pages 4-7).</li>
+<li>In isolated mitochondria, peptide efflux (A230 nm) is ATP-stimulated and inhibited by LY-CMK; haf-1 mutants reduce peptide recovery ~3-fold despite normal bulk proteolysis, directly linking peptide export to signaling (haynes2010thematrixpeptide pages 5-6).</li>
+<li>Proteomic screens under stress identified dozens of exported peptides/candidate matrix substrates (e.g., metabolic enzymes) consistent with ClpP-dependent proteostasis remodeling (mabanglo2022substratesandinteractors pages 9-14).</li>
+</ul>
+<p>Functional annotation of clpp-1 in C. elegans</p>
+<ul>
+<li>Primary biochemical role: CLPP-1 is the proteolytic subunit of the mitochondrial ClpXP protease. It degrades misfolded/damaged or regulatory substrates translocated by ClpX, generating peptides (haynes2010thematrixpeptide pages 5-6, mabanglo2022substratesandinteractors pages 25-27).</li>
+<li>Pathway role: CLPP-1 lies upstream in UPRmt signaling. Its proteolysis produces signals—exported via HAF-1—that enable nuclear activation of UPRmt by factors including ZC376.7, DVE-1/UBL-5, and ATFS-1; CLPP-1 activity is necessary for DVE-1 relocalization and ubl-5 induction (haynes2007clppmediatesactivation pages 4-7, haynes2010thematrixpeptide pages 10-10, haynes2010thematrixpeptide pages 5-6).</li>
+<li>Subcellular location: Mitochondrial matrix (mitoplast-protected), consistent with N-terminal MTS (haynes2007clppmediatesactivation pages 4-7).</li>
+<li>Genetic/phenotypic evidence: clpp-1(RNAi) blocks induction of mitochondrial chaperone genes (hsp-60p::gfp) under mitochondrial stress, perturbs mitochondrial morphology, and reduces adult inducibility of UPRmt reporters; pharmacologic inhibition recapitulates rapid signaling blockade (haynes2007clppmediatesactivation pages 7-8, haynes2007clppmediatesactivation pages 4-7).</li>
+</ul>
+<p>Embed: key facts summary table</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings (1–3 bullets)</th>
+<th style="text-align: right;">Primary sources (author, year)</th>
+<th>URLs / DOIs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity &amp; domains</td>
+<td>- Gene: clpp-1 (ZK970.2), encodes ClpP homolog in C. elegans; member of peptidase S14 / ClpP family<br>- Contains N-terminal mitochondrial targeting sequence and conserved ClpP catalytic motifs (serine protease) (haynes2007clppmediatesactivation pages 4-7)</td>
+<td style="text-align: right;">Haynes et al., 2007 (Dev Cell) (haynes2007clppmediatesactivation pages 4-7)</td>
+<td>https://doi.org/10.1016/j.devcel.2007.07.016</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>- Localizes to the mitochondrial matrix / mitoplasts; protected from protease digestion consistent with matrix residency<br>- N-terminal MTS required for import (haynes2007clppmediatesactivation pages 4-7)</td>
+<td style="text-align: right;">Haynes et al., 2007 (Dev Cell) (haynes2007clppmediatesactivation pages 4-7)</td>
+<td>https://doi.org/10.1016/j.devcel.2007.07.016</td>
+</tr>
+<tr>
+<td>Enzymatic function &amp; complex</td>
+<td>- Proteolytic subunit of the ATP-dependent ClpXP protease (serine peptidase activity)<br>- Forms homo-oligomeric proteolytic core (14-mer) and functions with ClpX ATPase homologs in C. elegans (haynes2010thematrixpeptide pages 5-6, mabanglo2022substratesandinteractors pages 25-27)</td>
+<td style="text-align: right;">Haynes et al., 2010 (Mol Cell); Mabanglo et al., 2022 (Curr Opin Chem Biol) (haynes2010thematrixpeptide pages 5-6, mabanglo2022substratesandinteractors pages 25-27)</td>
+<td>https://doi.org/10.1016/j.molcel.2010.01.015 ; https://doi.org/10.1016/j.cbpa.2021.07.003</td>
+</tr>
+<tr>
+<td>UPRmt signaling mechanism</td>
+<td>- CLPP-1 activity is required upstream for UPRmt activation: clpp-1(RNAi) blocks DVE-1 relocalization and ubl-5 induction (haynes2007clppmediatesactivation pages 4-7, haynes2007clppmediatesactivation pages 8-10)<br>- HAF-1–dependent peptide export couples CLPP-1 proteolysis to downstream nuclear transcription factors (ZC376.7 / bZIP) (haynes2010thematrixpeptide pages 5-6, haynes2010thematrixpeptide pages 10-10)<br>- ATFS-1 is the mitochondrial/nuclear bZIP master regulator; LIN-65 nuclear trafficking has been reported to require CLPP-1 input (review) (haynes2022mitochondrialdysfunctionaging pages 6-7, haynes2010thematrixpeptide pages 10-10)</td>
+<td style="text-align: right;">Haynes et al., 2007; Haynes et al., 2010; Haynes &amp; Hekimi, 2022 (haynes2007clppmediatesactivation pages 4-7, haynes2010thematrixpeptide pages 5-6, haynes2022mitochondrialdysfunctionaging pages 6-7)</td>
+<td>https://doi.org/10.1016/j.devcel.2007.07.016 ; https://doi.org/10.1016/j.molcel.2010.01.015 ; https://doi.org/10.1093/genetics/iyac160</td>
+</tr>
+<tr>
+<td>Phenotypes (knockdown / inhibition)</td>
+<td>- clpp-1(RNAi) or pharmacologic inhibition attenuates induction of mitochondrial chaperone reporters (e.g., hsp-60pr::gfp) and prevents rapid adult UPRmt induction (~hours) (haynes2007clppmediatesactivation pages 7-8, haynes2007clppmediatesactivation pages 4-7)<br>- Perturbs mitochondrial morphology and reduces mitochondrial proteolysis capacity (haynes2010thematrixpeptide pages 5-6)</td>
+<td style="text-align: right;">Haynes et al., 2007; Haynes et al., 2010 (haynes2007clppmediatesactivation pages 7-8, haynes2010thematrixpeptide pages 5-6)</td>
+<td>https://doi.org/10.1016/j.devcel.2007.07.016 ; https://doi.org/10.1016/j.molcel.2010.01.015</td>
+</tr>
+<tr>
+<td>Substrates / evidence of proteolysis</td>
+<td>- In isolated mitochondria, ATP-dependent proteolysis and peptide efflux are CLPP-dependent and inhibited by LY-CMK; HAF-1 promotes peptide export linking proteolysis to signaling (haynes2010thematrixpeptide pages 5-6)<br>- Proteomic screens identify exported peptides / candidate matrix substrates (respiratory enzymes, chaperones) after stress (mabanglo2022substratesandinteractors pages 25-27)</td>
+<td style="text-align: right;">Haynes et al., 2010; Mabanglo et al., 2022 (haynes2010thematrixpeptide pages 5-6, mabanglo2022substratesandinteractors pages 25-27)</td>
+<td>https://doi.org/10.1016/j.molcel.2010.01.015 ; https://doi.org/10.1016/j.cbpa.2021.07.003</td>
+</tr>
+<tr>
+<td>Recent developments (2023–2024)</td>
+<td>- Reviews and recent analyses emphasize conserved roles of ClpP/ClpXP in mitochondrial proteostasis and crosstalk with immunity and aging; LIN-65 dependence on mitochondrial proteases highlighted in recent reviews (haynes2022mitochondrialdysfunctionaging pages 6-7, pareek2022aaa+proteasesthe pages 13-15)<br>- Some mammalian studies complicate a universal requirement for ClpP in UPRmt, indicating species/context-specific roles (pareek2022aaa+proteasesthe pages 13-15)</td>
+<td style="text-align: right;">Haynes &amp; Hekimi, 2022 (review); Pareek, 2022 (mini-review) (haynes2022mitochondrialdysfunctionaging pages 6-7, pareek2022aaa+proteasesthe pages 13-15)</td>
+<td>https://doi.org/10.1093/genetics/iyac160 ; https://doi.org/10.7717/peerj.14350</td>
+</tr>
+<tr>
+<td>Applications / therapeutic context</td>
+<td>- ClpP/ClpXP considered druggable in disease contexts (cancer, neurodegeneration); chemical inhibitors/activators modulate mitochondrial proteostasis in multiple models (mabanglo2022substratesandinteractors pages 25-27, pareek2022aaa+proteasesthe pages 13-15)<br>- C. elegans studies provide mechanistic foundation for translational exploration</td>
+<td style="text-align: right;">Mabanglo et al., 2022; Pareek, 2022 (mabanglo2022substratesandinteractors pages 25-27, pareek2022aaa+proteasesthe pages 13-15)</td>
+<td>https://doi.org/10.1016/j.cbpa.2021.07.003 ; https://doi.org/10.7717/peerj.14350</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact, citable summary of identity, localization, enzymatic role, UPRmt mechanism, phenotypes, substrates, recent developments, and therapeutic context for clpp-1 (UniProt Q27539) in C. elegans, with primary literature DOIs and evidence citations.</em></p>
+<p>Cited sources with URLs and publication dates</p>
+<ul>
+<li>Haynes CM, Petrova K, Benedetti C, Yang Y, Ron D. ClpP mediates activation of a mitochondrial unfolded protein response in C. elegans. Developmental Cell. 2007 Oct;13(4):467–480. doi:10.1016/j.devcel.2007.07.016. URL: https://doi.org/10.1016/j.devcel.2007.07.016 (haynes2007clppmediatesactivation pages 4-7, haynes2007clppmediatesactivation pages 8-10)</li>
+<li>Haynes CM, Yang Y, Blais SP, Neubert TA, Ron D. The matrix peptide exporter HAF-1 signals a mitochondrial UPR by activating the transcription factor ZC376.7 in C. elegans. Molecular Cell. 2010 Feb;37(4):529–540. doi:10.1016/j.molcel.2010.01.015. URL: https://doi.org/10.1016/j.molcel.2010.01.015 (haynes2010thematrixpeptide pages 5-6, haynes2010thematrixpeptide pages 10-10)</li>
+<li>Mabanglo MF, Bhandari V, Houry WA. Substrates and interactors of the ClpP protease in the mitochondria. Current Opinion in Chemical Biology. 2022 Feb;66:102078. doi:10.1016/j.cbpa.2021.07.003. URL: https://doi.org/10.1016/j.cbpa.2021.07.003 (mabanglo2022substratesandinteractors pages 25-27, mabanglo2022substratesandinteractors pages 9-14)</li>
+<li>Haynes CM, Hekimi S. Mitochondrial dysfunction, aging, and the mitochondrial unfolded protein response in Caenorhabditis elegans. Genetics. 2022 Nov;222(4). doi:10.1093/genetics/iyac160. URL: https://doi.org/10.1093/genetics/iyac160 (haynes2022mitochondrialdysfunctionaging pages 6-7)</li>
+<li>Pareek G. AAA+ proteases: the first line of defense against mitochondrial damage. PeerJ. 2022 Nov;10:e14350. doi:10.7717/peerj.14350. URL: https://doi.org/10.7717/peerj.14350 (pareek2022aaa+proteasesthe pages 13-15, pareek2022aaa+proteasesthe pages 21-22)</li>
+<li>Additional context (general AAA+/ClpP biology across species, supports CLPP-1 mechanistic role): Matsushima Y et al., Scientific Reports. 2017 Aug;7: (doi:10.1038/s41598-017-08088-6) (matsushima2017drosophilaproteaseclpxp pages 13-13).</li>
+</ul>
+<p>Notes on symbol ambiguity</p>
+<p>The clpp-1 symbol is sometimes used for other organisms’ ClpP genes. Our evidence derives from C. elegans studies and explicitly maps to the nematode gene clpp-1 (ZK970.2), consistent with UniProt Q27539 and the peptidase S14 domain architecture; no conflicting symbol usage was used in this report (haynes2007clppmediatesactivation pages 4-7).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(haynes2007clppmediatesactivation pages 4-7): Cole M. Haynes, Kseniya Petrova, Cristina Benedetti, Yun Yang, and David Ron. Clpp mediates activation of a mitochondrial unfolded protein response in c. elegans. Developmental cell, 13 4:467-80, Oct 2007. URL: https://doi.org/10.1016/j.devcel.2007.07.016, doi:10.1016/j.devcel.2007.07.016. This article has 690 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2010thematrixpeptide pages 5-6): Cole M. Haynes, Yun Yang, Steven P. Blais, Thomas A. Neubert, and David Ron. The matrix peptide exporter haf-1 signals a mitochondrial upr by activating the transcription factor zc376.7 in c. elegans. Molecular cell, 37 4:529-40, Feb 2010. URL: https://doi.org/10.1016/j.molcel.2010.01.015, doi:10.1016/j.molcel.2010.01.015. This article has 605 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mabanglo2022substratesandinteractors pages 25-27): Mark F. Mabanglo, Vaibhav Bhandari, and Walid A. Houry. Substrates and interactors of the clpp protease in the mitochondria. Current Opinion in Chemical Biology, 66:102078, Feb 2022. URL: https://doi.org/10.1016/j.cbpa.2021.07.003, doi:10.1016/j.cbpa.2021.07.003. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2022mitochondrialdysfunctionaging pages 6-7): Cole M Haynes and Siegfried Hekimi. Mitochondrial dysfunction, aging, and the mitochondrial unfolded protein response in <i>caenorhabditis elegans</i>. Genetics, Nov 2022. URL: https://doi.org/10.1093/genetics/iyac160, doi:10.1093/genetics/iyac160. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pareek2022aaa+proteasesthe pages 13-15): Gautam Pareek. Aaa+ proteases: the first line of defense against mitochondrial damage. PeerJ, 10:e14350, Nov 2022. URL: https://doi.org/10.7717/peerj.14350, doi:10.7717/peerj.14350. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2007clppmediatesactivation pages 7-8): Cole M. Haynes, Kseniya Petrova, Cristina Benedetti, Yun Yang, and David Ron. Clpp mediates activation of a mitochondrial unfolded protein response in c. elegans. Developmental cell, 13 4:467-80, Oct 2007. URL: https://doi.org/10.1016/j.devcel.2007.07.016, doi:10.1016/j.devcel.2007.07.016. This article has 690 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2007clppmediatesactivation pages 8-10): Cole M. Haynes, Kseniya Petrova, Cristina Benedetti, Yun Yang, and David Ron. Clpp mediates activation of a mitochondrial unfolded protein response in c. elegans. Developmental cell, 13 4:467-80, Oct 2007. URL: https://doi.org/10.1016/j.devcel.2007.07.016, doi:10.1016/j.devcel.2007.07.016. This article has 690 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haynes2010thematrixpeptide pages 10-10): Cole M. Haynes, Yun Yang, Steven P. Blais, Thomas A. Neubert, and David Ron. The matrix peptide exporter haf-1 signals a mitochondrial upr by activating the transcription factor zc376.7 in c. elegans. Molecular cell, 37 4:529-40, Feb 2010. URL: https://doi.org/10.1016/j.molcel.2010.01.015, doi:10.1016/j.molcel.2010.01.015. This article has 605 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mabanglo2022substratesandinteractors pages 9-14): Mark F. Mabanglo, Vaibhav Bhandari, and Walid A. Houry. Substrates and interactors of the clpp protease in the mitochondria. Current Opinion in Chemical Biology, 66:102078, Feb 2022. URL: https://doi.org/10.1016/j.cbpa.2021.07.003, doi:10.1016/j.cbpa.2021.07.003. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pareek2022aaa+proteasesthe pages 21-22): Gautam Pareek. Aaa+ proteases: the first line of defense against mitochondrial damage. PeerJ, 10:e14350, Nov 2022. URL: https://doi.org/10.7717/peerj.14350, doi:10.7717/peerj.14350. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(matsushima2017drosophilaproteaseclpxp pages 13-13): Yuichi Matsushima, Yuta Hirofuji, Masamune Aihara, Song Yue, Takeshi Uchiumi, Laurie S. Kaguni, and Dongchon Kang. Drosophila protease clpxp specifically degrades dmlrpprc1 controlling mitochondrial mrna and translation. Scientific Reports, Aug 2017. URL: https://doi.org/10.1038/s41598-017-08088-6, doi:10.1038/s41598-017-08088-6. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>haynes2007clppmediatesactivation pages 4-7</li>
+<li>haynes2010thematrixpeptide pages 5-6</li>
+<li>mabanglo2022substratesandinteractors pages 25-27</li>
+<li>haynes2022mitochondrialdysfunctionaging pages 6-7</li>
+<li>haynes2007clppmediatesactivation pages 7-8</li>
+<li>mabanglo2022substratesandinteractors pages 9-14</li>
+<li>matsushima2017drosophilaproteaseclpxp pages 13-13</li>
+<li>haynes2007clppmediatesactivation pages 8-10</li>
+<li>haynes2010thematrixpeptide pages 10-10</li>
+<li>https://doi.org/10.1016/j.devcel.2007.07.016</li>
+<li>https://doi.org/10.1016/j.molcel.2010.01.015</li>
+<li>https://doi.org/10.1016/j.cbpa.2021.07.003</li>
+<li>https://doi.org/10.1093/genetics/iyac160</li>
+<li>https://doi.org/10.7717/peerj.14350</li>
+<li>https://doi.org/10.1016/j.devcel.2007.07.016,</li>
+<li>https://doi.org/10.1016/j.molcel.2010.01.015,</li>
+<li>https://doi.org/10.1016/j.cbpa.2021.07.003,</li>
+<li>https://doi.org/10.1093/genetics/iyac160,</li>
+<li>https://doi.org/10.7717/peerj.14350,</li>
+<li>https://doi.org/10.1038/s41598-017-08088-6,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q27539
+gene_symbol: clpp-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: CLPP-1 is the proteolytic subunit of the mitochondrial ATP-dependent
+  ClpXP protease complex in C. elegans. It is a serine-type endopeptidase (EC 3.4.21.92)
+  of the peptidase S14 family that forms a tetradecameric barrel composed of two heptameric
+  rings in the mitochondrial matrix. CLPP-1 functions with the ClpX ATPase to degrade
+  unfolded, misfolded, or damaged matrix proteins. Beyond its housekeeping proteolytic
+  role, CLPP-1 is essential for signaling the mitochondrial unfolded protein response
+  (UPR-mt) by generating peptide signals that are exported from the mitochondria via
+  HAF-1 to activate nuclear transcription factors including DVE-1/UBL-5 and ATFS-1.
+existing_annotations:
+- term:
+    id: GO:0009368
+    label: endopeptidase Clp complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CLPP-1 is the proteolytic core of the ClpXP protease complex. The protein
+      forms a homo-oligomeric barrel (two heptameric rings) that assembles with ClpX
+      ATPase to form the functional ATP-dependent protease in the mitochondrial matrix.
+      This annotation is well-supported by phylogenetic inference from characterized
+      ClpP proteins across species.
+    action: ACCEPT
+    reason: The IBA annotation correctly identifies CLPP-1 as part of the endopeptidase
+      Clp complex. CLPP-1 assembles as a homo-oligomeric barrel that partners with
+      the AAA+ ATPase ClpX to form the ATP-dependent ClpXP protease. The ClpP proteolytic
+      chamber requires association with ClpX ATPase for substrate recognition and
+      unfolding.
+    supported_by:
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92),
+        a serine protease of the S14 family that assembles as a homo-oligomeric barrel
+        (typically two heptameric rings) and partners with the AAA+ ATPase ClpX to
+        form the ATP-dependent ClpXP protease in the mitochondrial matrix
+- term:
+    id: GO:0006515
+    label: protein quality control for misfolded or incompletely synthesized proteins
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CLPP-1, as the proteolytic subunit of the ClpXP complex, degrades misfolded
+      and damaged proteins in the mitochondrial matrix. This represents a core housekeeping
+      function of the protein, providing protein quality control within the mitochondria.
+    action: ACCEPT
+    reason: The IBA annotation correctly captures the protein quality control function
+      of CLPP-1. As the proteolytic core of ClpXP, CLPP-1 degrades unfolded or selected
+      proteins that are recognized, unfolded, and translocated by ClpX into the CLPP-1
+      chamber.
+    supported_by:
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: CLPP-1 provides processive proteolysis of unfolded or selected
+        proteins that are recognized, unfolded, and translocated by ClpX into the
+        CLPP-1 chamber
+- term:
+    id: GO:0004252
+    label: serine-type endopeptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CLPP-1 is a serine-type endopeptidase belonging to the peptidase S14
+      family. The protein contains conserved ClpP catalytic motifs with active site
+      serine and histidine residues essential for proteolytic activity (EC 3.4.21.92).
+    action: ACCEPT
+    reason: The IBA annotation correctly identifies the serine-type endopeptidase
+      activity of CLPP-1. This is a core molecular function supported by domain architecture
+      (ClpP domain with conserved Ser and His active sites), family membership (peptidase
+      S14), and experimental validation in C. elegans.
+    supported_by:
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92),
+        a serine protease of the S14 family
+- term:
+    id: GO:0004176
+    label: ATP-dependent peptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CLPP-1 as the proteolytic subunit of the ClpXP complex exhibits ATP-dependent
+      peptidase activity. While CLPP-1 itself does not hydrolyze ATP (that function
+      resides in ClpX), the functional complex requires ATP hydrolysis by ClpX for
+      substrate unfolding and translocation into the CLPP-1 proteolytic chamber.
+    action: ACCEPT
+    reason: The IBA annotation is accurate for the ClpXP holoenzyme function. ATP
+      hydrolysis is required for CLPP-1-mediated proteolysis in vivo. In isolated
+      C. elegans mitochondria, ATP-dependent matrix proteolysis is CLPP-dependent
+      and can be inhibited by the ClpP inhibitor LY-CMK.
+    supported_by:
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis
+        and peptide generation are substantially CLPP-dependent and inhibited by the
+        ClpP inhibitor LY-CMK
+- term:
+    id: GO:0051117
+    label: ATPase binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CLPP-1 binds to the AAA+ ATPase ClpX to form the functional ClpXP protease
+      complex. This interaction is essential for CLPP-1 function as ClpX provides
+      substrate recognition, unfolding, and translocation into the CLPP-1 proteolytic
+      chamber.
+    action: ACCEPT
+    reason: The IBA annotation correctly identifies the ATPase binding function of
+      CLPP-1. CLPP-1 partners with ClpX ATPase to form the ATP-dependent ClpXP protease.
+      This is a conserved feature of all ClpP proteases that require AAA+ ATPase partners
+      for substrate delivery.
+    supported_by:
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: partners with the AAA+ ATPase ClpX to form the ATP-dependent
+        ClpXP protease in the mitochondrial matrix
+- term:
+    id: GO:0004176
+    label: ATP-dependent peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation derived from InterPro domain mapping (IPR001907 ClpP domain).
+      This annotation is consistent with the experimentally validated function of
+      CLPP-1 as part of the ATP-dependent ClpXP protease complex.
+    action: ACCEPT
+    reason: This IEA annotation is redundant with the IBA annotation for the same
+      term but is acceptable. The InterPro-based inference correctly identifies ATP-dependent
+      peptidase activity based on the conserved ClpP domain.
+- term:
+    id: GO:0004252
+    label: serine-type endopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from combined automated methods based on InterPro domain
+      and EC number (3.4.21.92). This is consistent with CLPP-1 being a serine protease
+      of the peptidase S14 family with conserved active site serine.
+    action: ACCEPT
+    reason: This IEA annotation is redundant with both IBA and IDA annotations for
+      the same term but is acceptable. The automated inference correctly identifies
+      serine-type endopeptidase activity.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProtKB subcellular location vocabulary mapping.
+      CLPP-1 localization to the mitochondrial matrix is supported by experimental
+      evidence from mitoplast protection assays and the presence of an N-terminal
+      mitochondrial targeting sequence.
+    action: ACCEPT
+    reason: This IEA annotation is redundant with the IDA annotation for the same
+      term but is acceptable. The subcellular location inference correctly identifies
+      mitochondrial matrix localization, which has been experimentally validated.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from combined automated methods. CLPP-1 is involved in
+      proteolysis as the proteolytic subunit of the ClpXP complex, degrading proteins
+      in the mitochondrial matrix.
+    action: ACCEPT
+    reason: This IEA annotation is redundant with the IDA annotation for the same
+      term but is acceptable. The term is very general but accurately describes a
+      core function of CLPP-1. More specific terms (serine-type endopeptidase activity,
+      protein quality control) provide additional detail.
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping (KW-0645 Protease).
+      CLPP-1 has peptidase activity as part of its core function as the proteolytic
+      subunit of the ClpXP complex.
+    action: ACCEPT
+    reason: This IEA annotation is very general but accurate. More specific child
+      terms (serine-type endopeptidase activity, ATP-dependent peptidase activity)
+      are also annotated and provide better functional specificity.
+- term:
+    id: GO:0008236
+    label: serine-type peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping (KW-0720 Serine protease).
+      CLPP-1 is a serine-type peptidase belonging to the peptidase S14 family with
+      conserved active site serine residue.
+    action: ACCEPT
+    reason: This IEA annotation is accurate but less specific than the serine-type
+      endopeptidase activity term (GO:0004252) which is also annotated with stronger
+      evidence (IDA, IBA). Both annotations are acceptable.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping (KW-0378 Hydrolase).
+      CLPP-1 has hydrolase activity as it catalyzes the hydrolysis of peptide bonds
+      in protein substrates.
+    action: ACCEPT
+    reason: This IEA annotation is very general but technically accurate. CLPP-1 is
+      a hydrolase that cleaves peptide bonds. More specific child terms provide better
+      functional characterization.
+- term:
+    id: GO:0004252
+    label: serine-type endopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:17925224
+  review:
+    summary: IDA annotation based on direct experimental evidence from Haynes et al.
+      2007. CLPP-1 was shown to have serine-type endopeptidase activity as the proteolytic
+      subunit of the ClpXP complex in the mitochondrial matrix. The protein belongs
+      to the peptidase S14 family with conserved catalytic residues.
+    action: ACCEPT
+    reason: This is a core molecular function annotation with direct experimental
+      support. CLPP-1 encodes a mitochondrial matrix protease homologous to bacterial
+      ClpP, which is a well-characterized serine protease.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: clpp-1, which encodes a mitochondrial matrix protease homologous
+        to bacterial ClpP
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IDA
+  original_reference_id: PMID:17925224
+  review:
+    summary: IDA annotation based on direct experimental evidence from Haynes et al.
+      2007. CLPP-1 is involved in proteolysis as the proteolytic subunit of the ClpXP
+      complex, degrading proteins in the mitochondrial matrix.
+    action: ACCEPT
+    reason: This annotation is accurate but general. The term proteolysis is a broad
+      biological process term. More specific annotations (protein quality control,
+      UPR-mt) provide better functional context.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: clpp-1, which encodes a mitochondrial matrix protease homologous
+        to bacterial ClpP
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:17925224
+  review:
+    summary: IMP annotation based on mutant phenotype analysis from Haynes et al.
+      2007. clpp-1(RNAi) attenuates UPR-mt activation, blocking DVE-1 nuclear redistribution
+      and induction of mitochondrial chaperone genes. CLPP-1 acts upstream to generate
+      peptide signals that are exported via HAF-1 to activate nuclear transcription
+      factors.
+    action: ACCEPT
+    reason: This is a core biological process annotation with strong experimental
+      support. CLPP-1 is required for signaling the mitochondrial unfolded protein
+      response. This represents a key function beyond simple housekeeping proteolysis
+      - CLPP-1 generates signaling peptides that communicate mitochondrial stress
+      to the nucleus.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: These events and the downstream UPR(mt) are attenuated in animals
+        with reduced activity of clpp-1, which encodes a mitochondrial matrix protease
+        homologous to bacterial ClpP
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:17925224
+  review:
+    summary: IDA annotation based on direct localization evidence from Haynes et al.
+      2007. CLPP-1 was shown to localize to the mitochondrial matrix using mitoplast
+      protection assays. The protein contains an N-terminal mitochondrial targeting
+      sequence (residues 1-25) that directs import into the matrix.
+    action: ACCEPT
+    reason: This is a well-supported cellular component annotation. CLPP-1 localization
+      to the mitochondrial matrix is consistent with its function in the ClpXP protease
+      complex that degrades matrix proteins and generates UPR-mt signals.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: clpp-1, which encodes a mitochondrial matrix protease homologous
+        to bacterial ClpP
+    - reference_id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+      supporting_text: CLPP-1 resides in the mitochondrial matrix; epitope-tagged
+        CLPP-1 fractionates with mitochondrial pellets and is protected from exogenous
+        protease in mitoplasts, consistent with matrix localization
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17925224
+  title: ClpP mediates activation of a mitochondrial unfolded protein response in
+    C. elegans.
+  findings:
+  - statement: CLPP-1 encodes a mitochondrial matrix protease homologous to bacterial
+      ClpP
+    supporting_text: clpp-1, which encodes a mitochondrial matrix protease homologous
+      to bacterial ClpP
+  - statement: clpp-1(RNAi) attenuates UPR-mt signaling and blocks DVE-1 nuclear redistribution
+    supporting_text: These events and the downstream UPR(mt) are attenuated in animals
+      with reduced activity of clpp-1
+  - statement: CLPP-1 is required for induction of mitochondrial chaperone genes under
+      stress
+    supporting_text: These events and the downstream UPR(mt) are attenuated in animals
+      with reduced activity of clpp-1
+- id: file:worm/clpp-1/clpp-1-deep-research-falcon.md
+  title: Deep research report on clpp-1 function
+  findings:
+  - statement: CLPP-1 forms homo-oligomeric barrel (two heptameric rings) with ClpX
+      ATPase
+    supporting_text: clpp-1 encodes the mitochondrial ClpP protease (EC 3.4.21.92),
+      a serine protease of the S14 family that assembles as a homo-oligomeric barrel
+      (typically two heptameric rings) and partners with the AAA+ ATPase ClpX
+  - statement: ATP-dependent matrix proteolysis is CLPP-dependent and inhibited by
+      LY-CMK
+    supporting_text: In isolated C. elegans mitochondria, ATP-dependent matrix proteolysis
+      and peptide generation are substantially CLPP-dependent and inhibited by the
+      ClpP inhibitor LY-CMK
+  - statement: CLPP-1 generates peptide signals exported via HAF-1 for UPR-mt activation
+    supporting_text: &#34;HAF-1\u2013dependent peptide export couples CLPP-1\u2013generated\
+      \ peptides to downstream transcription factors&#34;
+core_functions:
+- molecular_function:
+    id: GO:0004252
+    label: serine-type endopeptidase activity
+  description: CLPP-1 is a serine-type endopeptidase (EC 3.4.21.92) of the peptidase
+    S14 family. As the proteolytic core of the ClpXP complex, it cleaves proteins
+    delivered by the ClpX ATPase into small peptides. This represents the primary
+    enzymatic activity of the protein.
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  in_complex:
+    id: GO:0009368
+    label: endopeptidase Clp complex
+- molecular_function:
+    id: GO:0004176
+    label: ATP-dependent peptidase activity
+  description: CLPP-1 functions as part of the ATP-dependent ClpXP protease complex.
+    While CLPP-1 itself does not hydrolyze ATP, the functional holoenzyme requires
+    ATP hydrolysis by the ClpX partner for substrate unfolding and translocation into
+    the proteolytic chamber.
+  directly_involved_in:
+  - id: GO:0034514
+    label: mitochondrial unfolded protein response
+  - id: GO:0006515
+    label: protein quality control for misfolded or incompletely synthesized proteins
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+tags:
+- caeel-upr-stress
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

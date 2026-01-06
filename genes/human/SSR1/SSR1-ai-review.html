@@ -1,0 +1,3116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SSR1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P43307" target="_blank" class="term-link">
+                        P43307
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SSR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P43307" data-a="DESCRIPTION: SSR1 encodes Translocon-associated protein subunit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SSR1 encodes Translocon-associated protein subunit alpha (TRAP-alpha), a single-pass type I ER membrane glycoprotein that is a core component of the heterotetrameric TRAP complex (TRAP-alpha/beta/gamma/delta, encoded by SSR1-4). The TRAP complex stably associates with the Sec61 protein-conducting channel and ribosomes at the ER membrane, facilitating co-translational translocation of secretory and membrane proteins, particularly those with weak or atypical signal peptides. TRAP-alpha features a large N-terminal luminal domain positioned beneath the Sec61 channel exit site and a single long transmembrane helix that contacts Sec61. The complex coordinates with the oligosaccharyltransferase (OST) to couple translocation with N-glycosylation. TRAP-alpha also participates in ER quality control and ERAD pathways.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for ER localization based on phylogenetic inference from PANTHER. TRAP-alpha is well-established as an ER-resident protein across eukaryotes. Recent cryo-EM structures confirm TRAP as a core ER translocon component [SSR1-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization annotation. TRAP-alpha is definitively an ER membrane protein. The IBA annotation is well-supported by extensive structural and biochemical evidence showing TRAP-alpha as a core component of the ER translocon complex [Pauwels et al. 2023; Karki et al. 2023; PMID:36697828].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link">
+                                        PMID:8050590
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on InterPro TRAP_alpha domain and UniProt subcellular location annotation. This is the specific membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization annotation. TRAP-alpha is a single-pass type I membrane protein anchored in the ER membrane. UniProt confirms this topology with a luminal N-terminal domain and cytoplasmic C-terminus. Structural studies confirm ER membrane integration [PMID:36697828].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17380188" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17380188
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Simultaneous induction of the four subunits of the TRAP comp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005515" data-r="PMID:17380188" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation based on interaction with SERPINA1/alpha1-antitrypsin, calnexin (CANX), and SEC61B detected in the context of ER stress and ERAD studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein binding annotation reflects genuine interactions, it is uninformative. The study shows TRAP complex involvement in ERAD and interaction with misfolded substrates like alpha1-antitrypsin NHK variant. A more specific term capturing the functional interaction would be appropriate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140597" target="_blank" class="term-link">
+                                    protein localization to ribosome-translocon complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17380188" target="_blank" class="term-link">
+                                        PMID:17380188
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The TRAP complex bound preferentially to misfolded proteins rather than correctly folded wild-type substrates. Thus, the TRAP complex induced by the unfolded protein response pathway might discriminate ERAD substrates from correctly folded substrates, accelerating degradation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22314232" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22314232
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Palmitoylated calnexin is a key component of the ribosome-tr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005515" data-r="PMID:22314232" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for interaction with palmitoylated calnexin (CANX). The study demonstrates calnexin association with the ribosome-translocon complex including TRAP components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein binding term is too generic. The interaction with calnexin is functionally significant - palmitoylated calnexin associates with the ribosome-translocon complex to facilitate glycoprotein folding. A more specific MF term should be used.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140597" target="_blank" class="term-link">
+                                    protein localization to ribosome-translocon complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22314232" target="_blank" class="term-link">
+                                        PMID:22314232
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Palmitoylation mediates the association of calnexin with the ribosome-translocon complex (RTC) leading to the formation of a supercomplex that recruits the actin cytoskeleton, leading to further stabilization of the assembly.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29568061
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An AP-MS- and BioID-compatible MAC-tag enables comprehensive...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005515" data-r="PMID:29568061" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for interaction with calnexin detected by AP-MS and BioID proximity labeling methods.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interaction study confirming calnexin-TRAP association. The generic protein binding term is uninformative - should be captured by more specific translocon-related terms.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140597" target="_blank" class="term-link">
+                                    protein localization to ribosome-translocon complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005515" data-r="PMID:35271311" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from OpenCell study detecting interactions with calnexin and SEC61B via endogenous tagging.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput proteomics confirming established TRAP complex interactions. The generic protein binding is uninformative for understanding function. These represent structural associations within the translocon complex.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140597" target="_blank" class="term-link">
+                                    protein localization to ribosome-translocon complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation transferred from mouse ortholog via Ensembl Compara.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with IBA annotation but correct. ER localization is core to TRAP-alpha function and well-conserved across mammals.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation based on Human Protein Atlas immunofluorescence data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for ER localization. HPA immunofluorescence confirms ER residence of SSR1/TRAP-alpha.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005789" data-r="PMID:36697828" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation from ComplexPortal based on cryo-ET structural study visualizing the SEC61-TRAP-OSTA translocon complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization. The structural study provides near-atomic resolution of TRAP within the ER membrane translocon complex [Gemmer et al. 2023].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An AlphaFold-based model of TRAP could be fitted unambiguously into the SEC61-OSTA-TRAP translocon map, requiring only minor repositioning of single transmembrane helices</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031204" target="_blank" class="term-link">
+                                    GO:0031204
+                                </a>
+                            </span>
+                            <span class="term-label">post-translational protein targeting to membrane, translocation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0031204" data-r="PMID:36697828" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation from ComplexPortal. However, this term refers to post-translational translocation, whereas TRAP is primarily involved in co-translational translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is inaccurate. TRAP/SSR1 is primarily involved in co-translational protein targeting, not post-translational. The structural study and all functional evidence show TRAP associating with translating ribosomes at the ER. Should be replaced with co-translational targeting term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                    cotranslational protein targeting to membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The dynamic ribosome-translocon complex, which resides at the endoplasmic reticulum (ER) membrane, produces a major fraction of the human proteome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-1791164
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005789" data-r="Reactome:R-HSA-1791164" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from Reactome pathway &#34;Expression of SSR1 (Trap alpha)&#34; indicating ER membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization annotation. Reactome pathway information is consistent with established TRAP-alpha function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8050590
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The N-terminal region of the alpha-subunit of the TRAP compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0005783" data-r="PMID:8050590" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from original characterization paper describing TRAP-alpha as an ER protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Primary literature confirming ER localization. This paper established the widespread conservation of TRAP-alpha in eukaryotes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link">
+                                        PMID:8050590
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                    GO:0006613
+                                </a>
+                            </span>
+                            <span class="term-label">cotranslational protein targeting to membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8050590
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The N-terminal region of the alpha-subunit of the TRAP compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0006613" data-r="PMID:8050590" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation indicating involvement in co-translational protein targeting based on the original characterization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function annotation. TRAP-alpha is established as a component of the ribosome-translocon complex facilitating co-translational translocation of nascent polypeptides into the ER.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link">
+                                        PMID:8050590
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008284" target="_blank" class="term-link">
+                                    GO:0008284
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cell population proliferation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10437777" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10437777
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Translocon-associated protein alpha transcripts are induced ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0008284" data-r="PMID:10437777" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation based on observation that TRAP-alpha transcripts are induced by GM-CSF and more abundant in growing vs quiescent cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a pleiotropic effect rather than a core function. The study shows TRAP-alpha mRNA is upregulated in proliferating cells stimulated by GM-CSF, but this reflects increased demand for protein secretion capacity rather than direct regulation of proliferation. TRAP-alpha&#39;s primary function is in protein translocation, not proliferation control.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10437777" target="_blank" class="term-link">
+                                        PMID:10437777
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Its messenger RNA was more abundant in growing cells than in either factor-deprived cells or quiescent cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8050590
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The N-terminal region of the alpha-subunit of the TRAP compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0016020" data-r="PMID:8050590" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation for generic membrane localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general. GO:0005789 (endoplasmic reticulum membrane) is more specific and accurate for TRAP-alpha localization. This generic term adds no additional information.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                                    GO:0036503
+                                </a>
+                            </span>
+                            <span class="term-label">ERAD pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17380188" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17380188
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Simultaneous induction of the four subunits of the TRAP comp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P43307" data-a="GO:0036503" data-r="PMID:17380188" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation based on evidence that TRAP complex participates in ERAD by preferentially binding misfolded proteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TRAP complex is induced by ER stress and preferentially binds misfolded proteins, facilitating their degradation via ERAD. This represents an additional function beyond co-translational translocation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17380188" target="_blank" class="term-link">
+                                        PMID:17380188
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The TRAP complex bound preferentially to misfolded proteins rather than correctly folded wild-type substrates. Thus, the TRAP complex induced by the unfolded protein response pathway might discriminate ERAD substrates from correctly folded substrates, accelerating degradation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Core component of the ribosome-translocon complex facilitating co-translational translocation of nascent polypeptides</h3>
+                <span class="vote-buttons" data-g="P43307" data-a="FUNCTION: Core component of the ribosome-translocon complex ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                            protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                cotranslational protein targeting to membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036503" target="_blank" class="term-link">
+                                ERAD pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                PMID:36697828
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link">
+                                PMID:8050590
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8050590" target="_blank" class="term-link">
+                            PMID:8050590
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The N-terminal region of the alpha-subunit of the TRAP complex has a conserved cluster of negative charges.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP-alpha is a single-spanning ER membrane protein found in proximity to nascent polypeptides during translocation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Conservation across eukaryotes (human, fish, plants) with preserved charge distribution and glycosylation sites</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10437777" target="_blank" class="term-link">
+                            PMID:10437777
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Translocon-associated protein alpha transcripts are induced by granulocyte-macrophage colony-stimulating factor and exhibit complex alternative polyadenylation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP-alpha mRNA is upregulated by GM-CSF</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Higher expression in proliferating vs quiescent cells</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gene located on chromosome 6</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17380188" target="_blank" class="term-link">
+                            PMID:17380188
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Simultaneous induction of the four subunits of the TRAP complex by ER stress accelerates ER degradation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All four TRAP subunits induced by ER stress via XBP1/IRE1alpha pathway</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP complex associates with ERAD substrates at late stage</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Preferential binding to misfolded proteins over correctly folded substrates</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP involved in ERAD pathway, not just nascent polypeptide biosynthesis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22314232" target="_blank" class="term-link">
+                            PMID:22314232
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Palmitoylated calnexin is a key component of the ribosome-translocon complex.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Palmitoylated calnexin associates with ribosome-translocon complex (RTC) including TRAP</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This supercomplex formation is essential for glycoprotein folding</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link">
+                            PMID:29568061
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein interactions and subcellular localizations.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirmed TRAP-alpha interaction with calnexin by proximity labeling</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput proteomics confirming SSR1 interactions with calnexin and SEC61B</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                            PMID:36697828
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Visualization of translation and protein biogenesis at the ER membrane.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Near-atomic resolution cryo-ET structure of SEC61-TRAP-OSTA translocon complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP present in both signal peptide and multipass translocon variants</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AlphaFold model of TRAP fits structural density</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP makes specific interactions with SEC61 and OSTA within the translocon</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-1791164
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of SSR1 (Trap alpha)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Basic gene expression pathway for SSR1</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SSR1/SSR1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of SSR1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP-alpha is the alpha subunit of the ER-resident TRAP complex that stably associates with the Sec61 protein-conducting channel and the ribosome</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP assists co-translational translocation of secretory and membrane proteins, especially those with weak or atypical signal peptides</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM structures show TRAP-alpha contains a prominent luminal domain positioned directly beneath the Sec61alpha channel exit and a long, diagonal transmembrane helix</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise mechanism by which TRAP-alpha recognizes and assists translocation of substrates with weak signal peptides?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="Q: What is the precise mechanism by which TRAP-alpha ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does TRAP-alpha have substrate specificity or does it function equivalently for all translocon-dependent substrates?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="Q: Does TRAP-alpha have substrate specificity or does..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of TRAP-alpha phosphorylation at Ser-268 during mitosis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="Q: What is the functional significance of TRAP-alpha ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function studies with TRAP-alpha luminal domain mutants to determine residues critical for nascent chain interaction</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="EXPERIMENT: Structure-function studies with TRAP-alpha luminal..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative proteomics comparing translocation efficiency of defined substrates in TRAP-knockdown vs control cells</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="EXPERIMENT: Quantitative proteomics comparing translocation ef..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Investigation of TRAP-alpha post-translational modifications and their regulation during cell cycle or ER stress</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43307" data-a="EXPERIMENT: Investigation of TRAP-alpha post-translational mod..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SSR1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P43307" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: true<br />
+start_time: '2025-12-26T21:55:31.421673'<br />
+end_time: '2025-12-26T21:55:31.422529'<br />
+duration_seconds: 0.0<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: SSR1<br />
+  gene_symbol: SSR1<br />
+  uniprot_accession: P43307<br />
+  protein_description: 'RecName: Full=Translocon-associated protein subunit alpha;<br />
+    Short=TRAP-alpha; AltName: Full=Signal sequence receptor subunit alpha; Short=SSR-alpha;<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=SSR1; Synonyms=TRAPA; ORFNames=PSEC0262;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the TRAP-alpha family. .<br />
+  protein_domains: TRAP_alpha. (IPR005595); TRAP_alpha (PF03896)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 20</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P43307</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translocon-associated protein subunit alpha; Short=TRAP-alpha; AltName: Full=Signal sequence receptor subunit alpha; Short=SSR-alpha; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SSR1; Synonyms=TRAPA; ORFNames=PSEC0262;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TRAP-alpha family. .</li>
+<li><strong>Key Domains:</strong> TRAP_alpha. (IPR005595); TRAP_alpha (PF03896)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SSR1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SSR1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SSR1</strong> (gene ID: SSR1, UniProt: P43307) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P43307</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translocon-associated protein subunit alpha; Short=TRAP-alpha; AltName: Full=Signal sequence receptor subunit alpha; Short=SSR-alpha; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SSR1; Synonyms=TRAPA; ORFNames=PSEC0262;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TRAP-alpha family. .</li>
+<li><strong>Key Domains:</strong> TRAP_alpha. (IPR005595); TRAP_alpha (PF03896)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SSR1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SSR1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SSR1</strong> (gene ID: SSR1, UniProt: P43307) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity and nomenclature: The human SSR1 gene encodes TRAP-α (also called signal sequence receptor subunit α), a subunit of the heterotetrameric translocon-associated protein (TRAP) complex composed of SSR1–SSR4 (TRAP-α, -β, -γ, -δ) that binds the Sec61 translocon on the endoplasmic reticulum (ER) membrane (Pauwels et al., Science Advances, 3 Mar 2023, https://doi.org/10.1126/sciadv.adf0797) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3). The articles cited below use mammalian, including human, ribosome–Sec61–TRAP assemblies and explicitly identify the TRAP subunits by the SSR1–SSR4 nomenclature, satisfying organism and symbol verification (Pauwels 2023; Karki et al., EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, karki2023molecularviewof pages 1-2).<br />
+- Family/domains: Recent structures and reviews align with UniProt’s TRAP-α family assignment and domain features: a large luminal glycoprotein domain and a single long transmembrane helix for TRAP-α, as detailed below (Karki 2023; Russo 2020) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, russo2020understandingthemammalian pages 5-6).</p>
+<p>Key concepts and definitions<br />
+- What is TRAP-α/SSR1? TRAP-α is the α subunit of the ER-resident TRAP complex that stably associates with the Sec61 protein-conducting channel and the ribosome, assisting co‑translational translocation of secretory and membrane proteins, especially those with weak or atypical signal peptides (Pauwels 2023; Russo 2020) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, russo2020understandingthemammalian pages 5-6).<br />
+- Structure and domains: Cryo‑EM/ET reveals that TRAP-α contains a prominent luminal domain positioned directly beneath the Sec61α channel exit and a long, diagonal transmembrane helix that contacts Sec61 at the hinge/backside region; its luminal domain bears N‑glycosylation sites (e.g., Asn136, Asn191) and is poised for nascent chain interactions (Karki 2023, EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5). In the assembled TRAP, a seven-helix membrane bundle forms from TRAP-γ’s four helices plus one C‑terminal helix each from TRAP-α/β/δ, positioning the luminal TRAP-α/β/δ “crescent” adjacent to Sec61 (Pauwels 2023, 3 Mar 2023, https://doi.org/10.1126/sciadv.adf0797) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3).<br />
+- Localization and topology: TRAP-α is an ER membrane single-pass type I membrane glycoprotein with a large luminal N‑terminal domain and a short cytosolic C‑terminus; its luminal mass sits under the Sec61 pore, while the C‑terminal cytosolic tail localizes near ribosomal proteins (Karki 2023) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2).</p>
+<p>Molecular function and pathways<br />
+- Co‑translational translocation: TRAP-α, within the TRAP complex, stabilizes the ribosome–Sec61 assembly and facilitates insertion/translocation of nascent polypeptides, particularly those with below‑average hydrophobicity or Gly/Pro‑rich signal peptides that would otherwise inefficiently open Sec61’s lateral gate (Pauwels 2023; Gemmer et al., Life Science Alliance, 12 Jun 2024, https://doi.org/10.26508/lsa.202302496) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, gemmer2024exploringthemolecular pages 1-3). Karki 2023 further demonstrates in atomistic MD and cellular assays that TRAP strengthens ribosome anchoring and supports preproinsulin translocation, with TRAP-α perturbation impairing this pathway (Karki 2023, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).<br />
+- Substrate specificity: Multiple recent studies converge that TRAP dependency correlates with weakly hydrophobic and Gly/Pro‑rich signal peptides; TRAP-α’s luminal proximity to the exit likely helps “ratchet” such sequences into the ER and prevent back‑sliding (Pauwels 2023; Gemmer 2024; Russo 2020) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, gemmer2024exploringthemolecular pages 1-3, russo2020understandingthemammalian pages 5-6).<br />
+- Coordination with N‑glycosylation: TRAP’s luminal surface lies adjacent to the oligosaccharyltransferase (OST) active site; structures and modeling support a role for TRAP-α in positioning nascent chains for initial N‑linked glycosylation during co‑translational translocation (Pauwels 2023; Karki 2023) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2). This spatial coupling explains why defects in TRAP subunits can present with glycosylation abnormalities (Karki 2023) (karki2023molecularviewof pages 1-2).<br />
+- ER membrane remodeling: Cryo‑EM/MD indicates that Sec61/TRAP locally thins and curves the ER luminal leaflet, reduces local lipid order, and increases lipid flip‑flops; this remodeling likely tunes lateral‑gate dynamics to promote engagement of challenging signal sequences (Karki 2023, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).<br />
+- ERQC/UPR connections: TRAP abundance and association with the ribosome–Sec61 assembly vary with translational state and ER stress, situating TRAP-α within ER quality control networks that influence substrate selection and processing; reviews emphasize TRAP integration with ERAD/UPR pathways (Gemmer 2024; Russo 2020) (gemmer2024exploringthemolecular pages 1-3, russo2020understandingthemammalian pages 5-6).</p>
+<p>Recent developments (2023–2024)<br />
+- High-resolution architectures: Two 2023 cryo‑EM studies established the ribosome–Sec61–TRAP organization and details of TRAP-α placement and interfaces, including a seven‑TMH bundle incorporating the α/β/δ C‑terminal helices around TRAP-γ (Pauwels 2023, Science Advances, 3 Mar 2023, https://doi.org/10.1126/sciadv.adf0797) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3). Karki 2023 provided a ribosome‑bound Sec61/TRAP reconstruction with MD that explains how TRAP reshapes the ER membrane to aid translocation and highlighted TRAP-α’s role in preproinsulin biogenesis (EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).<br />
+- Native-membrane context: Cryo‑ET/subtomogram averaging in 2024 showed TRAP’s substoichiometric association with multipass translocons and higher abundance on non‑translating ribosome–MPTs; luminal TRAP contacts bridge to back‑of‑Sec61 factors, supporting a modular assembly that adapts to translational state (Gemmer 2024, 12 Jun 2024, https://doi.org/10.26508/lsa.202302496) (gemmer2024exploringthemolecular pages 1-3).<br />
+- Mechanistic implications: Together, these studies substantiate that TRAP-α’s luminal domain is spatially poised to influence nascent chain handling and N‑glycosylation, while its TM helix and complex interfaces modulate Sec61 conformation and the local membrane to expand the repertoire of efficiently translocated substrates (Pauwels 2023; Karki 2023) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3, karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).</p>
+<p>Current applications and real-world implementations<br />
+- Translocon inhibitors: Pauwels 2023 identified the cyclotriazadisulfonamide derivative CK147 as a Sec61 inhibitor that binds near the lumenal plug; resistance mutations cluster around the lateral gate/plug. This provides a structural foothold for rational design of translocon inhibitors with potential antiviral or anticancer applications (Science Advances, 3 Mar 2023, https://doi.org/10.1126/sciadv.adf0797) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3).<br />
+- Host dependency in viral infection: Genetic and mechanistic studies indicate that ER translocon modules (including TRAP subunits SSR1–SSR4) are host factors for flaviviruses; comprehensive CRISPR screens and recent reviews highlight reliance on the mammalian translocon for dengue/Zika replication and ER processes (Marceau et al., Nature, 22 Jun 2016, https://doi.org/10.1038/nature18631; Verhaegen &amp; Vermeire, npj Viruses, 6 Jun 2024, https://doi.org/10.1038/s44298-024-00031-7) (, ). These insights motivate host-directed antiviral strategies targeting translocon/OST modules.<br />
+- Endocrine relevance: Building on 2021–2023 evidence that SSR1/TRAP‑α affects insulin biogenesis, recent mechanistic work indicates that TRAP-α supports preproinsulin translocation and early folding steps, linking TRAP function to glycemic control; this provides a conceptual framework for potential biomarkers/interventions in metabolic disease (Karki 2023, EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2).</p>
+<p>Expert perspectives and authoritative syntheses<br />
+- A focused review (Russo 2020) consolidates the view of TRAP (including TRAP‑α/SSR1) as a substrate‑selective facilitator in co‑translational translocation, located to couple with OST and influence ERQC/UPR, anticipating the detailed structural confirmations published in 2023–2024 (Open Biology, 20 May 2020, https://doi.org/10.1098/rsob.190244) (russo2020understandingthemammalian pages 5-6).<br />
+- A 2024 native-membrane structural analysis (Gemmer 2024) argues for dynamic association of TRAP with multipass translocons and variable stoichiometry depending on translation state, shaping current models of how accessory factors tune ER translocation in situ (Life Science Alliance, 12 Jun 2024, https://doi.org/10.26508/lsa.202302496) (gemmer2024exploringthemolecular pages 1-3).<br />
+- A 2024 virology review (Verhaegen &amp; Vermeire) frames TRAP within the ER hub exploited across the flavivirus lifecycle and discusses ER‑targeting antiviral strategies, underscoring translational relevance (npj Viruses, 6 Jun 2024, https://doi.org/10.1038/s44298-024-00031-7) ().</p>
+<p>Relevant statistics and data<br />
+- Structural resolutions and architecture: Pauwels 2023 resolved ribosome–Sec61–TRAP architecture and a seven‑helix TM bundle positioning luminal TRAP-α/β/δ; CK147 binding site mapped at the Sec61 plug/lateral gate region (Science Advances, 3 Mar 2023, https://doi.org/10.1126/sciadv.adf0797) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3). Karki 2023 provided a high‑resolution ribosome‑bound Sec61/TRAP map and multi‑microsecond MD showing local ER membrane thinning/curvature and lipid disorder increases near TRAP (EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).<br />
+- Translational-state dependence: Cryo‑ET indicates TRAP is substoichiometric within multipass translocons and most abundant in complexes with non‑translating ribosomes, implying regulated engagement with MPTs (Gemmer 2024, 12 Jun 2024, https://doi.org/10.26508/lsa.202302496) (gemmer2024exploringthemolecular pages 1-3).<br />
+- Substrate class: Across studies, TRAP dependence associates with signal peptides of lower hydrophobicity and higher Gly/Pro content, consistent with a role in enabling otherwise inefficient Sec61 gating and nascent chain handling (Pauwels 2023; Gemmer 2024; Russo 2020) (pauwels2023structuralinsightsinto pages 1-2, gemmer2024exploringthemolecular pages 1-3, russo2020understandingthemammalian pages 5-6).</p>
+<p>Human disease links<br />
+- Congenital disorders of glycosylation (CDG): Germline mutations in TRAP subunits produce glycosylation phenotypes, mechanistically consistent with TRAP’s spatial coupling to OST and role in early translocation (Karki 2023, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 1-2).<br />
+- Infection biology: TRAP components are host dependency factors for dengue/Zika and related flaviviruses, with genetic screens and reviews implicating mammalian translocon function in viral RNA replication complexes (Marceau 2016, 22 Jun 2016, https://doi.org/10.1038/nature18631; Verhaegen 2024, 6 Jun 2024, https://doi.org/10.1038/s44298-024-00031-7) (, ).<br />
+- Endocrine/metabolic disease: TRAP‑α supports preproinsulin translocation; perturbation compromises insulin biogenesis and can contribute to ER stress in β cells, suggesting mechanistic ties to dysglycemia (Karki 2023, EMBO Reports, 20 Nov 2023, https://doi.org/10.15252/embr.202357910) (karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2).</p>
+<p>Concise mechanistic model<br />
+- Topology: TRAP-α is a single-pass ER glycoprotein with a luminal N‑terminal domain and a diagonal TM helix packing against Sec61 (Karki 2023) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 3-5).<br />
+- Assembly: In the ribosome–Sec61–TRAP supercomplex, TRAP-γ anchors to rRNA and rpL38 and packs with α/β/δ helices; TRAP‑α/β/δ luminal domains form a crescent under Sec61’s luminal exit (Pauwels 2023) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3).<br />
+- Function: TRAP-α helps stabilize the ribosome exit tunnel and modulates Sec61 gating within a locally remodeled ER membrane, enabling efficient co‑translational translocation and coupling to OST for N‑glycosylation—particularly benefitting substrates with weak/atypical signal peptides (Karki 2023; Pauwels 2023; Gemmer 2024) (karki2023molecularviewof pages 5-7, pauwels2023structuralinsightsinto pages 1-2, gemmer2024exploringthemolecular pages 1-3).</p>
+<p>Embedded key sources (with URLs and dates)<br />
+| Year | Citation (first author et al., journal) | Topic focus | Key finding(s) relevant to SSR1/TRAP-α (citation) | URL | Publication date (month/year) |<br />
+|------:|----------------------------------------|-------------|--------------------------------------------------|-----|----------------------------|<br />
+| 2023 | Pauwels et al., Science Advances | Cryo-EM of ribosome–Sec61–TRAP; translocon inhibition | Defines heterotetrameric TRAP architecture; positions TRAP-α (SSR1) lumenal trimer adjacent to Sec61 exit and a TM helix contacting Sec61; identifies CK147 binding site on Sec61 (translocon inhibitor) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3) | https://doi.org/10.1126/sciadv.adf0797 | Mar/2023 |<br />
+| 2023 | Karki et al., EMBO Reports | Cryo-EM/MD of Sec61/TRAP; membrane remodeling; preproinsulin dependence | Atomic/modeling view of Sec61–TRAP–ribosome showing TRAP-α lumenal domain below Sec61 exit, ribosome anchoring, and TRAP-driven local ER membrane thinning/curvature that facilitates insertion of weak signal peptides; TRAP-α required for efficient preproinsulin translocation (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 5-7) | https://doi.org/10.15252/embr.202357910 | Nov/2023 |<br />
+| 2024 | Gemmer et al., Life Science Alliance | Cryo-ET of multipass translocon in native ER membranes | Subtomogram averages reveal compositional variability of multipass translocon; TRAP associates substoichiometrically and is enriched in non-translating ribosome-bound MPTs; luminal TRAP contacts a back-of-Sec61 subunit, supporting TRAP-α role in SP handling and coordination with OST (gemmer2024exploringthemolecular pages 1-3) | https://doi.org/10.26508/lsa.202302496 | Jun/2024 |<br />
+| 2020 | Russo et al., Open Biology (review) | Review of mammalian TRAP functions; ERQC/UPR links | Synthesizes functional evidence that TRAP (including SSR1/TRAP‑α) is a substrate‑selective co‑translational facilitator for weak/hydrophilic signal peptides, influences topology/insertion, and is positioned to coordinate with OST and ER‑quality control (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1098/rsob.190244 | May/2020 |<br />
+| 2017 | Pfeffer et al., Nature Communications | Molecular organization of the TRAP complex | Assigned positions of TRAP subunits within native translocon structures; established TRAP as integral Sec61 accessory that helps regulate signal peptide insertion and topology (see Pfeffer et al.; foundational architecture referenced in later cryo-EM work) (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1038/ncomms14516 | Feb/2017 |</p>
+<p><em>Table: Concise table of authoritative recent and foundational publications describing SSR1 (TRAP‑α) structure and function, with URLs, dates, and context‑ID citations for the evidence used.</em></p>
+<p>Notes on symbol ambiguity<br />
+- The symbol SSR1 is used in oncology literature for unrelated targets; here, all cited structural and mechanistic works explicitly define SSR1 as TRAP‑α/signal sequence receptor subunit α in Homo sapiens and place it in the TRAP complex with SSR2–SSR4, consistent with UniProt P43307 (Pauwels 2023; Karki 2023) (pauwels2023structuralinsightsinto pages 1-2, karki2023molecularviewof pages 1-2).</p>
+<p>References (with direct links and publication dates)<br />
+- Pauwels E. et al. Structural insights into TRAP association with ribosome–Sec61 complex and translocon inhibition by a CADA derivative. Science Advances. 3 Mar 2023. https://doi.org/10.1126/sciadv.adf0797 (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3).<br />
+- Karki S. et al. Molecular view of ER membrane remodeling by the Sec61/TRAP translocon. EMBO Reports. 20 Nov 2023. https://doi.org/10.15252/embr.202357910 (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 5-7, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5).<br />
+- Gemmer M. et al. Exploring the molecular composition of the multipass translocon in its native membrane environment. Life Science Alliance. 12 Jun 2024. https://doi.org/10.26508/lsa.202302496 (gemmer2024exploringthemolecular pages 1-3).<br />
+- Russo A. Understanding the mammalian TRAP complex function(s). Open Biology. 20 May 2020. https://doi.org/10.1098/rsob.190244 (russo2020understandingthemammalian pages 5-6).<br />
+- Verhaegen M., Vermeire K. The ER: a crucial cellular hub in flavivirus infection and potential target site for antiviral interventions. npj Viruses. 6 Jun 2024. https://doi.org/10.1038/s44298-024-00031-7 ().<br />
+- Marceau C.D. et al. Genetic dissection of Flaviviridae host factors through genome-scale CRISPR screens. Nature. 22 Jun 2016. https://doi.org/10.1038/nature18631 ().</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pauwels2023structuralinsightsinto pages 1-2): Eva Pauwels, Neesha R. Shewakramani, Brent De Wijngaert, Anita Camps, Becky Provinciael, Joren Stroobants, Kai-Uwe Kalies, Enno Hartmann, Piet Maes, Kurt Vermeire, and Kalyan Das. Structural insights into trap association with ribosome-sec61 complex and translocon inhibition by a cada derivative. Science Advances, Mar 2023. URL: https://doi.org/10.1126/sciadv.adf0797, doi:10.1126/sciadv.adf0797. This article has 36 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pauwels2023structuralinsightsinto pages 2-3): Eva Pauwels, Neesha R. Shewakramani, Brent De Wijngaert, Anita Camps, Becky Provinciael, Joren Stroobants, Kai-Uwe Kalies, Enno Hartmann, Piet Maes, Kurt Vermeire, and Kalyan Das. Structural insights into trap association with ribosome-sec61 complex and translocon inhibition by a cada derivative. Science Advances, Mar 2023. URL: https://doi.org/10.1126/sciadv.adf0797, doi:10.1126/sciadv.adf0797. This article has 36 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 1-2): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 2-3): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2020understandingthemammalian pages 5-6): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 3-5): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gemmer2024exploringthemolecular pages 1-3): Max Gemmer, Marten L. Chaillet, and Friedrich Förster. Exploring the molecular composition of the multipass translocon in its native membrane environment. Life Science Alliance, 7:e202302496, Jun 2024. URL: https://doi.org/10.26508/lsa.202302496, doi:10.26508/lsa.202302496. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 5-7): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>karki2023molecularviewof pages 1-2</li>
+<li>gemmer2024exploringthemolecular pages 1-3</li>
+<li>russo2020understandingthemammalian pages 5-6</li>
+<li>pauwels2023structuralinsightsinto pages 1-2</li>
+<li>pauwels2023structuralinsightsinto pages 2-3</li>
+<li>karki2023molecularviewof pages 2-3</li>
+<li>karki2023molecularviewof pages 3-5</li>
+<li>karki2023molecularviewof pages 5-7</li>
+<li>https://doi.org/10.1126/sciadv.adf0797</li>
+<li>https://doi.org/10.15252/embr.202357910</li>
+<li>https://doi.org/10.26508/lsa.202302496</li>
+<li>https://doi.org/10.1038/nature18631;</li>
+<li>https://doi.org/10.1038/s44298-024-00031-7</li>
+<li>https://doi.org/10.1098/rsob.190244</li>
+<li>https://doi.org/10.1038/ncomms14516</li>
+<li>https://doi.org/10.1038/nature18631</li>
+<li>https://doi.org/10.1126/sciadv.adf0797,</li>
+<li>https://doi.org/10.15252/embr.202357910,</li>
+<li>https://doi.org/10.1098/rsob.190244,</li>
+<li>https://doi.org/10.26508/lsa.202302496,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P43307
+gene_symbol: SSR1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: SSR1 encodes Translocon-associated protein subunit alpha (TRAP-alpha), a single-pass type I ER membrane glycoprotein that is a core component of the heterotetrameric TRAP complex (TRAP-alpha/beta/gamma/delta, encoded by SSR1-4). The TRAP complex stably associates with the Sec61 protein-conducting channel and ribosomes at the ER membrane, facilitating co-translational translocation of secretory and membrane proteins, particularly those with weak or atypical signal peptides. TRAP-alpha features a large N-terminal luminal domain positioned beneath the Sec61 channel exit site and a single long transmembrane helix that contacts Sec61. The complex coordinates with the oligosaccharyltransferase (OST) to couple translocation with N-glycosylation. TRAP-alpha also participates in ER quality control and ERAD pathways.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for ER localization based on phylogenetic inference from PANTHER. TRAP-alpha is well-established as an ER-resident protein across eukaryotes. Recent cryo-EM structures confirm TRAP as a core ER translocon component [SSR1-deep-research-falcon.md].
+    action: ACCEPT
+    reason: Core localization annotation. TRAP-alpha is definitively an ER membrane protein. The IBA annotation is well-supported by extensive structural and biochemical evidence showing TRAP-alpha as a core component of the ER translocon complex [Pauwels et al. 2023; Karki et al. 2023; PMID:36697828].
+    supported_by:
+      - reference_id: PMID:8050590
+        supporting_text: &#34;The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation based on InterPro TRAP_alpha domain and UniProt subcellular location annotation. This is the specific membrane localization.
+    action: ACCEPT
+    reason: Core localization annotation. TRAP-alpha is a single-pass type I membrane protein anchored in the ER membrane. UniProt confirms this topology with a luminal N-terminal domain and cytoplasmic C-terminus. Structural studies confirm ER membrane integration [PMID:36697828].
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17380188
+  review:
+    summary: IPI annotation based on interaction with SERPINA1/alpha1-antitrypsin, calnexin (CANX), and SEC61B detected in the context of ER stress and ERAD studies.
+    action: MODIFY
+    reason: While the protein binding annotation reflects genuine interactions, it is uninformative. The study shows TRAP complex involvement in ERAD and interaction with misfolded substrates like alpha1-antitrypsin NHK variant. A more specific term capturing the functional interaction would be appropriate.
+    proposed_replacement_terms:
+      - id: GO:0140597
+        label: protein localization to ribosome-translocon complex
+    additional_reference_ids:
+      - PMID:17380188
+    supported_by:
+      - reference_id: PMID:17380188
+        supporting_text: &#34;The TRAP complex bound preferentially to misfolded proteins rather than correctly folded wild-type substrates. Thus, the TRAP complex induced by the unfolded protein response pathway might discriminate ERAD substrates from correctly folded substrates, accelerating degradation.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22314232
+  review:
+    summary: IPI annotation for interaction with palmitoylated calnexin (CANX). The study demonstrates calnexin association with the ribosome-translocon complex including TRAP components.
+    action: MODIFY
+    reason: The protein binding term is too generic. The interaction with calnexin is functionally significant - palmitoylated calnexin associates with the ribosome-translocon complex to facilitate glycoprotein folding. A more specific MF term should be used.
+    proposed_replacement_terms:
+      - id: GO:0140597
+        label: protein localization to ribosome-translocon complex
+    supported_by:
+      - reference_id: PMID:22314232
+        supporting_text: &#34;Palmitoylation mediates the association of calnexin with the ribosome-translocon complex (RTC) leading to the formation of a supercomplex that recruits the actin cytoskeleton, leading to further stabilization of the assembly.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29568061
+  review:
+    summary: IPI annotation for interaction with calnexin detected by AP-MS and BioID proximity labeling methods.
+    action: MODIFY
+    reason: High-throughput interaction study confirming calnexin-TRAP association. The generic protein binding term is uninformative - should be captured by more specific translocon-related terms.
+    proposed_replacement_terms:
+      - id: GO:0140597
+        label: protein localization to ribosome-translocon complex
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  review:
+    summary: IPI annotation from OpenCell study detecting interactions with calnexin and SEC61B via endogenous tagging.
+    action: MODIFY
+    reason: High-throughput proteomics confirming established TRAP complex interactions. The generic protein binding is uninformative for understanding function. These represent structural associations within the translocon complex.
+    proposed_replacement_terms:
+      - id: GO:0140597
+        label: protein localization to ribosome-translocon complex
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: IEA annotation transferred from mouse ortholog via Ensembl Compara.
+    action: ACCEPT
+    reason: Redundant with IBA annotation but correct. ER localization is core to TRAP-alpha function and well-conserved across mammals.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: IDA annotation based on Human Protein Atlas immunofluorescence data.
+    action: ACCEPT
+    reason: Direct experimental evidence for ER localization. HPA immunofluorescence confirms ER residence of SSR1/TRAP-alpha.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:36697828
+  review:
+    summary: NAS annotation from ComplexPortal based on cryo-ET structural study visualizing the SEC61-TRAP-OSTA translocon complex.
+    action: ACCEPT
+    reason: Core localization. The structural study provides near-atomic resolution of TRAP within the ER membrane translocon complex [Gemmer et al. 2023].
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;An AlphaFold-based model of TRAP could be fitted unambiguously into the SEC61-OSTA-TRAP translocon map, requiring only minor repositioning of single transmembrane helices&#34;
+- term:
+    id: GO:0031204
+    label: post-translational protein targeting to membrane, translocation
+  evidence_type: NAS
+  original_reference_id: PMID:36697828
+  review:
+    summary: NAS annotation from ComplexPortal. However, this term refers to post-translational translocation, whereas TRAP is primarily involved in co-translational translocation.
+    action: MODIFY
+    reason: The term is inaccurate. TRAP/SSR1 is primarily involved in co-translational protein targeting, not post-translational. The structural study and all functional evidence show TRAP associating with translating ribosomes at the ER. Should be replaced with co-translational targeting term.
+    proposed_replacement_terms:
+      - id: GO:0006613
+        label: cotranslational protein targeting to membrane
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;The dynamic ribosome-translocon complex, which resides at the endoplasmic reticulum (ER) membrane, produces a major fraction of the human proteome&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1791164
+  review:
+    summary: TAS annotation from Reactome pathway &#34;Expression of SSR1 (Trap alpha)&#34; indicating ER membrane localization.
+    action: ACCEPT
+    reason: Core localization annotation. Reactome pathway information is consistent with established TRAP-alpha function.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: TAS
+  original_reference_id: PMID:8050590
+  review:
+    summary: TAS annotation from original characterization paper describing TRAP-alpha as an ER protein.
+    action: ACCEPT
+    reason: Primary literature confirming ER localization. This paper established the widespread conservation of TRAP-alpha in eukaryotes.
+    supported_by:
+      - reference_id: PMID:8050590
+        supporting_text: &#34;The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.&#34;
+- term:
+    id: GO:0006613
+    label: cotranslational protein targeting to membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8050590
+  review:
+    summary: TAS annotation indicating involvement in co-translational protein targeting based on the original characterization.
+    action: ACCEPT
+    reason: Core function annotation. TRAP-alpha is established as a component of the ribosome-translocon complex facilitating co-translational translocation of nascent polypeptides into the ER.
+    supported_by:
+      - reference_id: PMID:8050590
+        supporting_text: &#34;The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.&#34;
+- term:
+    id: GO:0008284
+    label: positive regulation of cell population proliferation
+  evidence_type: TAS
+  original_reference_id: PMID:10437777
+  review:
+    summary: TAS annotation based on observation that TRAP-alpha transcripts are induced by GM-CSF and more abundant in growing vs quiescent cells.
+    action: KEEP_AS_NON_CORE
+    reason: This is a pleiotropic effect rather than a core function. The study shows TRAP-alpha mRNA is upregulated in proliferating cells stimulated by GM-CSF, but this reflects increased demand for protein secretion capacity rather than direct regulation of proliferation. TRAP-alpha&#39;s primary function is in protein translocation, not proliferation control.
+    supported_by:
+      - reference_id: PMID:10437777
+        supporting_text: &#34;Its messenger RNA was more abundant in growing cells than in either factor-deprived cells or quiescent cells&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8050590
+  review:
+    summary: TAS annotation for generic membrane localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Too general. GO:0005789 (endoplasmic reticulum membrane) is more specific and accurate for TRAP-alpha localization. This generic term adds no additional information.
+- term:
+    id: GO:0036503
+    label: ERAD pathway
+  evidence_type: TAS
+  original_reference_id: PMID:17380188
+  review:
+    summary: Proposed new annotation based on evidence that TRAP complex participates in ERAD by preferentially binding misfolded proteins.
+    action: NEW
+    reason: TRAP complex is induced by ER stress and preferentially binds misfolded proteins, facilitating their degradation via ERAD. This represents an additional function beyond co-translational translocation.
+    supported_by:
+      - reference_id: PMID:17380188
+        supporting_text: &#34;The TRAP complex bound preferentially to misfolded proteins rather than correctly folded wild-type substrates. Thus, the TRAP complex induced by the unfolded protein response pathway might discriminate ERAD substrates from correctly folded substrates, accelerating degradation.&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:8050590
+  title: The N-terminal region of the alpha-subunit of the TRAP complex has a conserved cluster of negative charges.
+  findings:
+    - statement: TRAP-alpha is a single-spanning ER membrane protein found in proximity to nascent polypeptides during translocation
+    - statement: Conservation across eukaryotes (human, fish, plants) with preserved charge distribution and glycosylation sites
+- id: PMID:10437777
+  title: Translocon-associated protein alpha transcripts are induced by granulocyte-macrophage colony-stimulating factor and exhibit complex alternative polyadenylation.
+  findings:
+    - statement: TRAP-alpha mRNA is upregulated by GM-CSF
+    - statement: Higher expression in proliferating vs quiescent cells
+    - statement: Gene located on chromosome 6
+- id: PMID:17380188
+  title: Simultaneous induction of the four subunits of the TRAP complex by ER stress accelerates ER degradation.
+  findings:
+    - statement: All four TRAP subunits induced by ER stress via XBP1/IRE1alpha pathway
+    - statement: TRAP complex associates with ERAD substrates at late stage
+    - statement: Preferential binding to misfolded proteins over correctly folded substrates
+    - statement: TRAP involved in ERAD pathway, not just nascent polypeptide biosynthesis
+- id: PMID:22314232
+  title: Palmitoylated calnexin is a key component of the ribosome-translocon complex.
+  findings:
+    - statement: Palmitoylated calnexin associates with ribosome-translocon complex (RTC) including TRAP
+    - statement: This supercomplex formation is essential for glycoprotein folding
+- id: PMID:29568061
+  title: An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein interactions and subcellular localizations.
+  findings:
+    - statement: Confirmed TRAP-alpha interaction with calnexin by proximity labeling
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings:
+    - statement: High-throughput proteomics confirming SSR1 interactions with calnexin and SEC61B
+- id: PMID:36697828
+  title: Visualization of translation and protein biogenesis at the ER membrane.
+  findings:
+    - statement: Near-atomic resolution cryo-ET structure of SEC61-TRAP-OSTA translocon complex
+    - statement: TRAP present in both signal peptide and multipass translocon variants
+    - statement: AlphaFold model of TRAP fits structural density
+    - statement: TRAP makes specific interactions with SEC61 and OSTA within the translocon
+- id: Reactome:R-HSA-1791164
+  title: Expression of SSR1 (Trap alpha)
+  findings:
+    - statement: Basic gene expression pathway for SSR1
+- id: file:human/SSR1/SSR1-deep-research-falcon.md
+  title: Deep research review of SSR1
+  findings:
+    - statement: TRAP-alpha is the alpha subunit of the ER-resident TRAP complex that stably associates with the Sec61 protein-conducting channel and the ribosome
+    - statement: TRAP assists co-translational translocation of secretory and membrane proteins, especially those with weak or atypical signal peptides
+    - statement: Cryo-EM structures show TRAP-alpha contains a prominent luminal domain positioned directly beneath the Sec61alpha channel exit and a long, diagonal transmembrane helix
+core_functions:
+  - description: Core component of the ribosome-translocon complex facilitating co-translational translocation of nascent polypeptides
+    molecular_function:
+      id: GO:0005515
+      label: protein binding
+    directly_involved_in:
+      - id: GO:0006613
+        label: cotranslational protein targeting to membrane
+      - id: GO:0036503
+        label: ERAD pathway
+    locations:
+      - id: GO:0005789
+        label: endoplasmic reticulum membrane
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components&#34;
+      - reference_id: PMID:8050590
+        supporting_text: &#34;The alpha-subunit of the TRAP complex (TRAP alpha) is a single-spanning membrane protein of the endoplasmic reticulum (ER) which is found in proximity of nascent polypeptide chains translocating across the membrane.&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: What is the precise mechanism by which TRAP-alpha recognizes and assists translocation of substrates with weak signal peptides?
+  - question: Does TRAP-alpha have substrate specificity or does it function equivalently for all translocon-dependent substrates?
+  - question: What is the functional significance of TRAP-alpha phosphorylation at Ser-268 during mitosis?
+suggested_experiments:
+  - description: Structure-function studies with TRAP-alpha luminal domain mutants to determine residues critical for nascent chain interaction
+  - description: Quantitative proteomics comparing translocation efficiency of defined substrates in TRAP-knockdown vs control cells
+  - description: Investigation of TRAP-alpha post-translational modifications and their regulation during cell cycle or ER stress
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

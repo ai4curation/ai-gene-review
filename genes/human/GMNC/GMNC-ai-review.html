@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMNC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GMNC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A6NCL1" target="_blank" class="term-link">
+                        A6NCL1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GMNC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A6NCL1" data-a="DESCRIPTION: TODO: Add description for GMNC..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for GMNC</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003712" target="_blank" class="term-link">
+                                    GO:0003712
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coregulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0003712" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030174" target="_blank" class="term-link">
+                                    GO:0030174
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated DNA replication initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0030174" data-r="GO_REF:0000033" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006260" target="_blank" class="term-link">
+                                    GO:0006260
+                                </a>
+                            </span>
+                            <span class="term-label">DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0006260" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0005515" data-r="PMID:32296183" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    GO:0003713
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coactivator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0003713" data-r="GO_REF:0000107" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0045944" data-r="GO_REF:0000107" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0003682" data-r="GO_REF:0000024" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="A6NCL1" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GMNC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A6NCL1" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-31T19:52:39.854319'<br />
+end_time: '2025-12-31T19:58:28.532037'<br />
+duration_seconds: 348.68<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: GMNC<br />
+  gene_symbol: GMNC<br />
+  uniprot_accession: A6NCL1<br />
+  protein_description: 'RecName: Full=Geminin coiled-coil domain-containing protein<br />
+    1;'<br />
+  gene_info: Name=GMNC; Synonyms=GEMC1;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the GEMC1 family. .<br />
+  protein_domains: Not specified in UniProt<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A6NCL1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Geminin coiled-coil domain-containing protein 1;</li>
+<li><strong>Gene Information:</strong> Name=GMNC; Synonyms=GEMC1;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the GEMC1 family. .</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "GMNC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'GMNC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>GMNC</strong> (gene ID: GMNC, UniProt: A6NCL1) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A6NCL1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Geminin coiled-coil domain-containing protein 1;</li>
+<li><strong>Gene Information:</strong> Name=GMNC; Synonyms=GEMC1;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the GEMC1 family. .</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "GMNC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'GMNC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>GMNC</strong> (gene ID: GMNC, UniProt: A6NCL1) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Verify identity: confirm GMNC (aka GEMC1) refers to the human geminin coiled-coil domain-containing protein 1 (UniProt A6NCL1) and belongs to the GEMC1/geminin family; ensure literature matches Homo sapiens protein and family/domain context. (Completed)<br />
+- Compile mechanistic evidence: molecular function, interacting partners (E2F4/5–DP1; SWI/SNF subcomplexes), downstream targets (FOXJ1, TP73, MYB, CCNO, CDC20B; RFXs), cellular localization, and discrete step in multiciliogenesis. Prioritize 2016 foundational and 2019 mechanistic dissection; add 2023 updates. (Completed)<br />
+- Collate phenotypes and disease relevance: hydrocephalus, infertility, and airway multiciliogenesis defects; summarize model organism evidence and what is known/unknown in human genetics. (Completed)<br />
+- Extract recent developments (2023) with translational angles: chromatin remodeling partners and perturbation (e.g., BRD9/ncBAF). (Completed)<br />
+- Synthesize a comprehensive, cited report with URLs and publication dates; include a compact evidence table. (Completed)</p>
+<p>Gene/protein identity verification<br />
+- Symbol and name: GMNC (gene) encoding GEMC1 (Geminin coiled-coil domain-containing protein 1). The cited literature consistently uses “GEMC1 (encoded by GMNC)” and positions it within the geminin family, matching the UniProt entry A6NCL1. Organismal context is mammalian with direct mouse functional genetics; mechanistic conclusions concern the mammalian ortholog and apply to human GMNC by sequence and family homology. This confirms the correct target and family/domain context. (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Primary molecular function: GEMC1 is a nuclear, E2F–DP1-dependent transcriptional co-activator that initiates the multiciliated cell (MCC) transcriptional program. It lacks a DNA-binding domain and functions by forming complexes with E2F4/5–DP1 and engaging transcriptional/chromatin machinery to activate MCC regulators and effectors. Key induced genes include the transcription factors FOXJ1, MYB, and TP73 and the motile ciliogenesis effectors CCNO and CDC20B. GEMC1 also induces MCIDAS (Multicilin), positioning it upstream in the MCC program. 2016–2019 mouse genetics and molecular assays established these roles. 2023 work refined the cofactor landscape (see below). URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882; Development (Mar 2019) https://doi.org/10.1242/dev.172643; Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9, lu2019mcidasmutantmice pages 14-18, lewis2023gemc1andmcidas pages 1-2)<br />
+- Distinct step in multiciliogenesis: A two-step model is supported by genetic and rescue experiments. GEMC1 specifies MCC precursors and induces MCIDAS; MCIDAS then activates the deuterosome-dependent (DD) basal-body amplification program (e.g., DEUP1, CCNO, CDC20B) necessary for generating multiple motile cilia. GEMC1 cannot substitute for MCIDAS in basal-body amplification; MCIDAS can partially substitute for GEMC1 upstream in some rescue contexts. URL: Development (Mar 2019) https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18, lu2019mcidasmutantmice pages 39-48, lu2019mcidasmutantmice pages 10-14, lu2019mcidasmutantmice pages 1-6)<br />
+- Cellular localization: Functional evidence places GEMC1 in the nucleus as a transcriptional co-activator, operating with E2F–DP1 complexes and chromatin remodelers (Mediator, SWI/SNF). URLs: EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882; Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (arbi2016gemc1controlsmulticiliogenesis pages 7-9, lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 4-6)<br />
+- Interactors and pathways: GEMC1 interacts with E2F5 more strongly than with E2F4, via a conserved C-terminal TIRT-like motif; both interactions require DP1. GEMC1 and MCIDAS show differential engagement of SWI/SNF subcomplexes (BAF vs ncBAF), providing pathway specificity for transcriptional activation of MCC genes. URLs: Development (Mar 2019) https://doi.org/10.1242/dev.172643; Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lu2019mcidasmutantmice pages 14-18, lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 8-10)</p>
+<p>2) Recent developments and latest research (prioritize 2023–2024)<br />
+- Differential SWI/SNF engagement (2023): Proximity-labeling proteomics and functional assays showed GEMC1 associates primarily with ARID1A-containing BAF, while MCIDAS associates with BRD9-containing ncBAF. Domain mapping implicated distinct C-terminal regions in these partnerships. Pharmacologic BRD9 inhibition/degradation (I-BRD9, dBRD9) attenuated MCIDAS-driven transcription (e.g., FOXJ1, TP73, CCNO) and impaired centriole amplification and multiciliation in cell-based models, nominating ncBAF/BRD9 as a druggable regulator of MCC differentiation. URL: Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 4-6, lewis2023gemc1andmcidas pages 8-10)<br />
+- Mechanistic resolution of stepwise roles (context for 2023): The 2019 mouse study clarified that GEMC1 preferentially activates ciliary TFs and MCIDAS, while MCIDAS predominantly activates deuterosome/DD genes (DEUP1, CCNO, CDC20B). It also showed GMNC’s transcriptional activity is potentiated by E2F5 but not E2F4; MCIDAS functions with both E2F4 and E2F5. These distinctions underlie the 2023 observation that distinct SWI/SNF subcomplexes are recruited at different stages of the program. URL: Development (Mar 2019) https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18, lu2019mcidasmutantmice pages 39-48, lu2019mcidasmutantmice pages 10-14)</p>
+<p>3) Current applications and real-world implementations<br />
+- Experimental modulation of MCC differentiation: Small-molecule inhibition or degradation of BRD9 (ncBAF) impairs MCIDAS-dependent gene activation and ciliation, demonstrating a tractable, drug-responsive node in the MCC transcriptional network. This provides a proof-of-principle strategy to modulate multiciliogenesis in vitro and potentially in disease models where increasing or decreasing MCC differentiation is desired (e.g., airway remodeling or tumor cell state manipulation). URL: Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 8-10)<br />
+- Diagnostic candidate gene consideration: Based on mouse phenocopy of human motile ciliopathy features and its position upstream in the MCC network, GMNC is considered a candidate locus for reduced generation of multiple motile cilia (RGMC) and related mucociliary clearance disorders; this informs gene panel design and variant interpretation workflows for unexplained motile ciliopathy phenotypes. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Foundational consensus: Two independent 2016 studies established GEMC1 as an early-acting master activator of the MCC program in airway and other epithelia, operating with E2F–DP1 and inducing MCIDAS, FOXJ1, and core MCC effectors. These are widely cited and form the basis of current models. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)<br />
+- Mechanistic refinement: The 2019 Development study by Lu et al. provided decisive genetic and biochemical evidence for the specification (GEMC1) versus amplification (MCIDAS) division of labor and partner preferences (E2F5 vs E2F4/5), which the 2023 study further contextualized by mapping BAF/ncBAF recruitment. URLs: Development (Mar 2019) https://doi.org/10.1242/dev.172643; Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lu2019mcidasmutantmice pages 14-18, lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 8-10)</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Transcriptional target induction: Overexpression of GEMC1 or MCIDAS in cell systems activates overlapping MCC programs, including canonical transcription factors (FOXJ1, TP73, MYB) and effectors (CCNO, CDC20B); loss-of-function models show selective loss of deuterosome/DD pathway gene expression upon MCIDAS loss versus broad MCC-program dampening upon GEMC1 loss. These statements are supported by qRT-PCR/microarray profiling and genetic models rather than a single summary statistic, but they provide quantifiable readouts in the cited studies. URLs: Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4; Development (Mar 2019) https://doi.org/10.1242/dev.172643 (lewis2023gemc1andmcidas pages 4-6, lewis2023gemc1andmcidas pages 8-10, lu2019mcidasmutantmice pages 10-14)<br />
+- Phenotypic penetrance in mouse: GEMC1-null mice exhibit hydrocephalus and infertility with severe loss of MCCs across tissues; airway MCCs fail to form beyond very early centriole stages, and ependymal and reproductive tract MCCs are compromised. While exact percentages vary across cohorts, these phenotypes are consistently observed across multiple GEMC1 loss-of-function studies and mirror human motile ciliopathy manifestations. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)</p>
+<p>Mechanism, partners, and pathway placement<br />
+- E2F–DP1 interaction: GEMC1’s C-terminal TIRT-like region mediates binding to E2F5/DP1 (with weak E2F4 binding), enabling activation of upstream MCC TFs and MCIDAS; MCIDAS binds both E2F4 and E2F5 and predominantly turns on deuterosome/DD genes for centriole amplification. URL: Development (Mar 2019) https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18)<br />
+- SWI/SNF subcomplex specificity (2023): GEMC1 preferentially recruits ARID1A–BAF, while MCIDAS recruits BRD9–ncBAF to drive MCC-specific transcription; BRD9 inhibition/degradation dampens MCIDAS-dependent gene activation and multiciliation. URLs: Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 8-10)<br />
+- Downstream target network: Targets include core transcription factors (FOXJ1, MYB, TP73) and effectors for basal-body amplification (DEUP1, CCNO, CDC20B). The network also interfaces with RFX factors (RFX2/3) downstream of early activators. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; Development (Mar 2019) https://doi.org/10.1242/dev.172643; Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (terre2016gemc1isa pages 1-2, lu2019mcidasmutantmice pages 10-14, lewis2023gemc1andmcidas pages 4-6)</p>
+<p>Tissue distribution and cellular context<br />
+- Sites of action: MCCs in airway epithelium (mucociliary clearance), ependyma lining brain ventricles (CSF flow), and reproductive tracts (efferent ducts for sperm fluid dynamics; oviduct for ovum transport). GEMC1 function is necessary to establish MCC identity in these sites, as shown by tissue-specific and whole-body knockout analyses. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)</p>
+<p>Disease and phenotype relevance<br />
+- Mouse LOF phenotypes: Gemc1 deficiency leads to severe defects in MCC formation with hydrocephalus, infertility, and airway mucociliary dysfunction. These phenotypes are consistent with failure to drive MCIDAS and FOXJ1 and to initiate the MCC program. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; EMBO Rep (Mar 2016) https://doi.org/10.15252/embr.201540882 (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9)<br />
+- Human genetics: While MCIDAS mutations are a known cause of reduced generation of multiple motile cilia (RGMC), GMNC itself is highlighted as a strong candidate for RGMC and motile ciliopathy-like presentations based on its upstream role and mouse phenocopy; prior studies also noted SNPs near GMNC in GWAS signals, but definitive human GMNC pathogenic variants remain to be fully established in the motile ciliopathy spectrum. URLs: EMBO J (May 2016) https://doi.org/10.15252/embj.201592821; Development (Mar 2019) https://doi.org/10.1242/dev.172643 (terre2016gemc1isa pages 1-2, lu2019mcidasmutantmice pages 55-60)</p>
+<p>Implications and outlook<br />
+- Therapeutic targeting: Distinct reliance on SWI/SNF subcomplexes suggests opportunities to finely tune stages of MCC differentiation—e.g., ncBAF/BRD9 as a lever to modulate MCIDAS-dependent centriole amplification, versus BAF/ARID1A contexts for GEMC1-driven specification. Context-specific effects and safety considerations (chromatin remodelers are pleiotropic) will guide translational development. URL: Cell Death &amp; Disease (Mar 2023) https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 8-10)<br />
+- Research gaps: Direct human genetic evidence for GMNC in RGMC is emerging but not yet definitive; systematic sequencing of unresolved motile ciliopathy cohorts with functional validation in MCC differentiation models (ALI cultures) will be informative. The selective engagement with BAF versus ncBAF warrants further in vivo validation in human airway and ependymal systems.</p>
+<p>Embedded evidence table<br />
+| Aspect | Summary (1-2 sentences) | Key partners/targets | Models/Evidence | Primary sources (Year, URL) |<br />
+|---|---|---|---|---|<br />
+| Identity &amp; family | Human GMNC (GEMC1) is a geminin-family coiled-coil protein containing a C-terminal TIRT-like domain implicated in transcriptional activation of the multiciliogenesis program. | Geminin family, MCIDAS (Multicilin) | Protein annotation and mouse genetics showing GEMC1 as a geminin-like factor (mouse KO, expression studies) (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9) | 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2); 2016, EMBO Rep https://doi.org/10.15252/embr.201540882 (arbi2016gemc1controlsmulticiliogenesis pages 7-9) |<br />
+| Molecular function | Functions as an E2F-DP1–dependent transcriptional activator upstream of MCIDAS, inducing ciliary TFs (FOXJ1, TP73, MYB) and ciliogenesis effectors (CCNO, CDC20B). | E2F4/E2F5–DP1 complexes; downstream targets FOXJ1, TP73, MYB, CCNO, CDC20B | Transcriptional assays, qRT-PCR and mouse KO/transcriptomics showing target induction and dependency (terre2016gemc1isa pages 1-2, lu2019mcidasmutantmice pages 14-18) | 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2); 2019, Development https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18) |<br />
+| Partner specificity | Preferentially engages E2F5 (over E2F4) and differentially recruits SWI/SNF subcomplexes: GEMC1→ARID1A-BAF vs MCIDAS→BRD9-ncBAF. | E2F5, E2F4, DP1, ARID1A-BAF, BRD9-ncBAF | BioID/proximity proteomics, domain-swap experiments, PLA and cell-based assays (lewis2023gemc1andmcidas pages 1-2, lu2019mcidasmutantmice pages 14-18) | 2023, Cell Death &amp; Disease https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2); 2019, Development https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18) |<br />
+| Stepwise role in multiciliogenesis | GMNC specifies multiciliated cell (MCC) precursors and induces MCIDAS; MCIDAS then activates the deuterosome (DD) program to amplify basal bodies for multiciliation. | GMNC → MCIDAS → DD genes (DEUP1, CCNO, CDC20B) | Genetic loss-of-function (gmnc-/- and mcidas-/- mice), zebrafish rescue, mTEC ALI differentiation assays (lu2019mcidasmutantmice pages 14-18, terre2016gemc1isa pages 1-2) | 2019, Development https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18); 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2) |<br />
+| Cellular localization | Predominantly nuclear acting transcriptional co-activator (no intrinsic DNA-binding domain; functions via cofactor recruitment). | Nuclear E2F/DP1 complexes, chromatin remodelers (Mediator, SWI/SNF) | Subcellular localization inferred from functional transcription assays, BioID proteomics and nuclear-targeted interactomes (arbi2016gemc1controlsmulticiliogenesis pages 7-9, lewis2023gemc1andmcidas pages 1-2) | 2016, EMBO Rep https://doi.org/10.15252/embr.201540882 (arbi2016gemc1controlsmulticiliogenesis pages 7-9); 2023, Cell Death &amp; Disease https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2) |<br />
+| Tissue expression / function | Critical for multiciliated cells in airway epithelium, ependyma (brain ventricles) and reproductive tract (efferent ducts/oviduct), enabling fluid/gamete transport and mucociliary clearance. | Airway MCCs, ependymal MCCs, efferent-duct/oviduct MCCs | Mouse KO phenotyping (trachea, ependyma, reproductive tract), histology and functional assays (terre2016gemc1isa pages 1-2, lu2019mcidasmutantmice pages 14-18) | 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2); 2019, Development https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18) |<br />
+| Loss-of-function phenotypes | gmnc loss causes loss/defect of MCCs with resultant hydrocephalus, infertility and airway mucociliary defects in mouse models. | Phenotypes linked to failure to induce MCIDAS/FOXJ1 and DD genes | Mouse knockout and physiological phenotyping (neuropathology, fertility assays, airway analyses) (terre2016gemc1isa pages 1-2, lu2019mcidasmutantmice pages 14-18) | 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2); 2019, Development https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18) |<br />
+| Disease relevance &amp; human genetics | Candidate gene for Reduced Generation of Multiple Motile Cilia (RGMC) / mucociliary clearance disorders; mouse phenotypes mirror human ciliopathy features (hydrocephalus, infertility); nearby SNP associations noted. | RGMC spectrum, mucociliary clearance disorders, potential links from GWAS | Translation from mouse genetics to human disease candidacy; literature notes candidate status and nearby SNP signals (terre2016gemc1isa pages 1-2, arbi2016gemc1controlsmulticiliogenesis pages 7-9) | 2016, EMBO J https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2); 2016, EMBO Rep https://doi.org/10.15252/embr.201540882 (arbi2016gemc1controlsmulticiliogenesis pages 7-9) |<br />
+| Therapeutic / implementation implications | Chromatin-remodeling cofactors are actionable nodes: BRD9/ncBAF inhibition impairs MCIDAS-driven centriole amplification, suggesting SWI/SNF subcomplexes as modulatable targets to influence MCC differentiation. | BRD9 (ncBAF), ARID1A (BAF), small-molecule BRD9 inhibitors/degraders | Chemical inhibition (I-BRD9) and targeted degradation (dBRD9), proteomics and functional ALI assays show impaired centriole amplification and ciliogenesis (lewis2023gemc1andmcidas pages 8-10, lewis2023gemc1andmcidas pages 1-2) | 2023, Cell Death &amp; Disease https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 8-10) |</p>
+<p><em>Table: A compact evidence table summarizing GMNC/GEMC1 identity, molecular role, partners, models, phenotypes, disease relevance, and therapeutic implications with primary-source URLs and context citations for each claim.</em></p>
+<p>References (URLs and dates)<br />
+- Terré et al., Gemc1 is a critical regulator of multiciliated cell differentiation. The EMBO Journal. Published May 2016. DOI: 10.15252/embj.201592821. URL: https://doi.org/10.15252/embj.201592821 (terre2016gemc1isa pages 1-2)<br />
+- Arbi et al., Gemc1 controls multiciliogenesis in the airway epithelium. EMBO Reports. Published Mar 2016. DOI: 10.15252/embr.201540882. URL: https://doi.org/10.15252/embr.201540882 (arbi2016gemc1controlsmulticiliogenesis pages 7-9)<br />
+- Lu et al., Mcidas mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development. Published Mar 2019. DOI: 10.1242/dev.172643. URL: https://doi.org/10.1242/dev.172643 (lu2019mcidasmutantmice pages 14-18, lu2019mcidasmutantmice pages 39-48, lu2019mcidasmutantmice pages 10-14, lu2019mcidasmutantmice pages 55-60, lu2019mcidasmutantmice pages 1-6)<br />
+- Lewis et al., GEMC1 and MCIDAS interactions with SWI/SNF complexes regulate the multiciliated cell-specific transcriptional program. Cell Death &amp; Disease. Published Mar 2023. DOI: 10.1038/s41419-023-05720-4. URL: https://doi.org/10.1038/s41419-023-05720-4 (lewis2023gemc1andmcidas pages 1-2, lewis2023gemc1andmcidas pages 4-6, lewis2023gemc1andmcidas pages 8-10)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(terre2016gemc1isa pages 1-2): Berta Terré, Gabriele Piergiovanni, Sandra Segura‐Bayona, Gabriel Gil‐Gómez, Sameh A Youssef, Camille Stephan‐Otto Attolini, Michaela Wilsch‐Bräuninger, Carole Jung, Ana M Rojas, Marko Marjanović, Philip A Knobel, Lluís Palenzuela, Teresa López‐Rovira, Stephen Forrow, Wieland B Huttner, Miguel A Valverde, Alain de Bruin, Vincenzo Costanzo, and Travis H Stracker. Gemc1 is a critical regulator of multiciliated cell differentiation. The EMBO Journal, 35:942-960, May 2016. URL: https://doi.org/10.15252/embj.201592821, doi:10.15252/embj.201592821. This article has 120 citations.</p>
+</li>
+<li>
+<p>(arbi2016gemc1controlsmulticiliogenesis pages 7-9): Marina Arbi, Dafni‐Eleftheria Pefani, Christina Kyrousi, Maria‐Eleni Lalioti, Argyro Kalogeropoulou, Anastasios D Papanastasiou, Stavros Taraviras, and Zoi Lygerou. Gemc1 controls multiciliogenesis in the airway epithelium. EMBO reports, 17:400-413, Mar 2016. URL: https://doi.org/10.15252/embr.201540882, doi:10.15252/embr.201540882. This article has 104 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019mcidasmutantmice pages 14-18): Hao Lu, Priyanka Anujan, Feng Zhou, Yiliu Zhang, Yan Ling Chong, Colin D. Bingle, and Sudipto Roy. <i>mcidas</i> mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development, Mar 2019. URL: https://doi.org/10.1242/dev.172643, doi:10.1242/dev.172643. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lewis2023gemc1andmcidas pages 1-2): Michael Lewis, Berta Terré, Philip A. Knobel, Tao Cheng, Hao Lu, Camille Stephan-Otto Attolini, Jordann Smak, Etienne Coyaud, Isabel Garcia-Cao, Shalu Sharma, Chithran Vineethakumari, Jessica Querol, Gabriel Gil-Gómez, Gabriele Piergiovanni, Vincenzo Costanzo, Sandra Peiró, Brian Raught, Haotian Zhao, Xavier Salvatella, Sudipto Roy, Moe R. Mahjoub, and Travis H. Stracker. Gemc1 and mcidas interactions with swi/snf complexes regulate the multiciliated cell-specific transcriptional program. Cell Death &amp; Disease, Mar 2023. URL: https://doi.org/10.1038/s41419-023-05720-4, doi:10.1038/s41419-023-05720-4. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019mcidasmutantmice pages 39-48): Hao Lu, Priyanka Anujan, Feng Zhou, Yiliu Zhang, Yan Ling Chong, Colin D. Bingle, and Sudipto Roy. <i>mcidas</i> mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development, Mar 2019. URL: https://doi.org/10.1242/dev.172643, doi:10.1242/dev.172643. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019mcidasmutantmice pages 10-14): Hao Lu, Priyanka Anujan, Feng Zhou, Yiliu Zhang, Yan Ling Chong, Colin D. Bingle, and Sudipto Roy. <i>mcidas</i> mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development, Mar 2019. URL: https://doi.org/10.1242/dev.172643, doi:10.1242/dev.172643. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019mcidasmutantmice pages 1-6): Hao Lu, Priyanka Anujan, Feng Zhou, Yiliu Zhang, Yan Ling Chong, Colin D. Bingle, and Sudipto Roy. <i>mcidas</i> mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development, Mar 2019. URL: https://doi.org/10.1242/dev.172643, doi:10.1242/dev.172643. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lewis2023gemc1andmcidas pages 4-6): Michael Lewis, Berta Terré, Philip A. Knobel, Tao Cheng, Hao Lu, Camille Stephan-Otto Attolini, Jordann Smak, Etienne Coyaud, Isabel Garcia-Cao, Shalu Sharma, Chithran Vineethakumari, Jessica Querol, Gabriel Gil-Gómez, Gabriele Piergiovanni, Vincenzo Costanzo, Sandra Peiró, Brian Raught, Haotian Zhao, Xavier Salvatella, Sudipto Roy, Moe R. Mahjoub, and Travis H. Stracker. Gemc1 and mcidas interactions with swi/snf complexes regulate the multiciliated cell-specific transcriptional program. Cell Death &amp; Disease, Mar 2023. URL: https://doi.org/10.1038/s41419-023-05720-4, doi:10.1038/s41419-023-05720-4. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lewis2023gemc1andmcidas pages 8-10): Michael Lewis, Berta Terré, Philip A. Knobel, Tao Cheng, Hao Lu, Camille Stephan-Otto Attolini, Jordann Smak, Etienne Coyaud, Isabel Garcia-Cao, Shalu Sharma, Chithran Vineethakumari, Jessica Querol, Gabriel Gil-Gómez, Gabriele Piergiovanni, Vincenzo Costanzo, Sandra Peiró, Brian Raught, Haotian Zhao, Xavier Salvatella, Sudipto Roy, Moe R. Mahjoub, and Travis H. Stracker. Gemc1 and mcidas interactions with swi/snf complexes regulate the multiciliated cell-specific transcriptional program. Cell Death &amp; Disease, Mar 2023. URL: https://doi.org/10.1038/s41419-023-05720-4, doi:10.1038/s41419-023-05720-4. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lu2019mcidasmutantmice pages 55-60): Hao Lu, Priyanka Anujan, Feng Zhou, Yiliu Zhang, Yan Ling Chong, Colin D. Bingle, and Sudipto Roy. <i>mcidas</i> mutant mice reveal a two-step process for the specification and differentiation of multiciliated cells in mammals. Development, Mar 2019. URL: https://doi.org/10.1242/dev.172643, doi:10.1242/dev.172643. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lu2019mcidasmutantmice pages 14-18</li>
+<li>lu2019mcidasmutantmice pages 39-48</li>
+<li>lu2019mcidasmutantmice pages 10-14</li>
+<li>lu2019mcidasmutantmice pages 1-6</li>
+<li>lu2019mcidasmutantmice pages 55-60</li>
+<li>https://doi.org/10.15252/embj.201592821;</li>
+<li>https://doi.org/10.15252/embr.201540882;</li>
+<li>https://doi.org/10.1242/dev.172643;</li>
+<li>https://doi.org/10.1038/s41419-023-05720-4</li>
+<li>https://doi.org/10.1242/dev.172643</li>
+<li>https://doi.org/10.15252/embr.201540882</li>
+<li>https://doi.org/10.1038/s41419-023-05720-4;</li>
+<li>https://doi.org/10.15252/embj.201592821</li>
+<li>https://doi.org/10.15252/embj.201592821,</li>
+<li>https://doi.org/10.15252/embr.201540882,</li>
+<li>https://doi.org/10.1242/dev.172643,</li>
+<li>https://doi.org/10.1038/s41419-023-05720-4,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A6NCL1
+gene_symbol: GMNC
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;TODO: Add description for GMNC&#39;
+existing_annotations:
+- term:
+    id: GO:0003712
+    label: transcription coregulator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0030174
+    label: regulation of DNA-templated DNA replication initiation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006260
+    label: DNA replication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003713
+    label: transcription coactivator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSR2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SSR2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P43308" target="_blank" class="term-link">
+                        P43308
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SSR2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P43308" data-a="DESCRIPTION: SSR2 encodes the beta subunit of the translocon-as..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SSR2 encodes the beta subunit of the translocon-associated protein (TRAP) complex, also known as signal sequence receptor subunit beta (SSR-beta/TRAP-beta). TRAP is a heterotetrameric complex (SSR1/alpha, SSR2/beta, SSR3/gamma, SSR4/delta) that associates with the Sec61 translocon at the endoplasmic reticulum membrane. The complex assists in co-translational protein translocation, particularly for nascent polypeptides with weak or suboptimal signal peptides. SSR2/TRAP-beta is a type I single-pass membrane glycoprotein with its N-terminus facing the ER lumen, where it contributes to the lumenal crescent structure that contacts nascent chains exiting the Sec61 pore. The TRAP complex also coordinates with the oligosaccharyltransferase (OST) complex to facilitate N-glycosylation of nascent proteins. SSR2 has been shown to interact with STING1, suggesting potential roles in innate immune signaling pathways.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TRAP complex</h3>
+                <span class="vote-buttons" data-g="P43308" data-a="TRAP complex" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A heterotetrameric protein complex composed of TRAP-alpha (SSR1), TRAP-beta (SSR2), TRAP-gamma (SSR3), and TRAP-delta (SSR4) subunits that associates with the Sec61 translocon at the endoplasmic reticulum membrane. The TRAP complex facilitates co-translational protein translocation, particularly for substrates with weak or suboptimal signal peptides.</p>
+            
+
+            
+            <p><strong>Justification:</strong> There is currently no specific GO term for the translocon-associated protein (TRAP) complex. This heterotetrameric complex (SSR1-4/TRAP-alpha,beta,gamma,delta) is distinct from the Sec61 translocon core and functions as a co-factor for protein translocation. A dedicated cellular component term would improve annotation precision for all TRAP subunit genes.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0005783" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from InterPro domain mapping (IPR008856 TRAP_beta). SSR2/TRAP-beta is well-established as an ER-resident protein. The protein is part of the TRAP complex that associates with the Sec61 translocon at the ER membrane [file:human/SSR2/SSR2-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate annotation. SSR2 is an integral ER membrane protein as part of the TRAP complex. The InterPro-based inference is consistent with extensive experimental evidence showing ER localization [PMID:7789174, PMID:36697828].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                        PMID:7789174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene, which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SSR2/SSR2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Deep research confirms] SSR2 encodes TRAP-beta (signal sequence receptor subunit beta) ... predominantly resides in the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on UniProt subcellular location vocabulary mapping. SSR2 is an integral ER membrane protein with a single transmembrane helix. UniProt records: &#34;Endoplasmic reticulum membrane; Single-pass type I membrane protein.&#34;
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate and well-supported annotation. SSR2/TRAP-beta has type I topology (N lumen, C cytosol) with a single transmembrane helix embedded in the ER membrane [file:human/SSR2/SSR2-deep-research-falcon.md]. Cryo-EM structures confirm this localization [PMID:36697828].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An AlphaFold-based model of TRAP could be fitted unambiguously into the SEC61-OSTA-TRAP translocon map</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from InterPro domain mapping. While correct that SSR2 is a membrane protein, this term is too general compared to the more specific GO:0005789 (endoplasmic reticulum membrane) annotation that is also present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but general annotation. Given that the more specific term GO:0005789 (ER membrane) is already annotated, this broader term provides redundant but not incorrect information. Accept as it doesn&#39;t violate any rules and is consistent with the protein&#39;s membrane localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                        PMID:7789174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">which codes for an endoplasmic reticulum (ER) membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18724357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18724357
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    STING is an endoplasmic reticulum adaptor that facilitates i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0005515" data-r="PMID:18724357" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI annotation is based on the interaction between SSR2/TRAP-beta and STING1, demonstrated by yeast two-hybrid screening and co-immunoprecipitation in PMID:18724357. The study identified SSR2 as a STING1 interactor and showed that TRAP-beta ablation reduced STING&#39;s ability to induce interferon-beta.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The generic term &#34;protein binding&#34; is uninformative for GO annotation purposes. While the STING1 interaction is experimentally validated (yeast two-hybrid and co-IP), the biological significance and mechanism of this interaction are not fully characterized. However, a more informative annotation would be to the specific complex (TRAP complex) or to Sec61 translocon complex binding, which represents the core function of SSR2.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106138" target="_blank" class="term-link">
+                                    Sec61 translocon complex binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18724357" target="_blank" class="term-link">
+                                        PMID:18724357
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we screened an IFN-induced, human fibroblast yeast two-hybrid cDNA library using STING (amino acids 173-379) as a bait and repeatedly isolated Ssr2/TRAPbeta, a member of the TRAP complex comprising four subunits (alpha-delta) that facilitates translocation of proteins into the ER following translation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18724357" target="_blank" class="term-link">
+                                        PMID:18724357
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we confirmed that TRAPbeta can indeed associate with endogenous STING in HEK 293 cells following co-immunoprecipitation experiments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0005789" data-r="PMID:36697828" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This NAS annotation is based on Gemmer et al. (2023), which used cryo-electron tomography to visualize the native ER translocon including the TRAP complex. The study provides near-complete atomic models of the SEC61-TRAP-OSTA complex at the ER membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an accurate annotation supported by high-resolution structural data. The cryo-ET study directly visualizes SSR2/TRAP-beta as an integral component of the ER membrane translocon complex [PMID:36697828].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031204" target="_blank" class="term-link">
+                                    GO:0031204
+                                </a>
+                            </span>
+                            <span class="term-label">post-translational protein targeting to membrane, translocation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36697828
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Visualization of translation and protein biogenesis at the E...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0031204" data-r="PMID:36697828" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This NAS annotation suggests SSR2/TRAP-beta is involved in post-translational protein translocation. However, the TRAP complex is primarily associated with co-translational translocation, assisting the Sec61 translocon during ribosome- associated protein synthesis and membrane insertion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The TRAP complex is predominantly associated with co-translational (SRP-dependent) protein translocation, not post-translational translocation. While the Sec61 translocon can function in both pathways, TRAP specifically associates with ribosome-bound translocons and facilitates translocation of nascent chains with weak signal peptides during active translation [file:human/SSR2/SSR2-deep-research-falcon.md]. GO:0006613 (cotranslational protein targeting to membrane) is the more appropriate term and is already annotated.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                    cotranslational protein targeting to membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                        PMID:36697828
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">distinct polysomes bind to different ER translocons specialized in the synthesis of proteins with signal peptides or multipass transmembrane proteins with the translocon-associated protein complex (TRAP) present in both</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SSR2/SSR2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Deep research confirms] TRAP is a heterotetramer of SSR1 (alpha), SSR2 (beta), SSR3 (gamma), SSR4 (delta) ... co-translational protein translocation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7789174
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and mapping of the human beta-signal sequence rece...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0005783" data-r="PMID:7789174" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TAS annotation is based on the original cloning paper by Chinen et al. (1995) which identified SSR2 as encoding an ER membrane protein. The paper describes isolation of the human beta-signal sequence receptor gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate annotation with appropriate primary literature support. The paper explicitly describes SSR2 as encoding &#34;an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                        PMID:7789174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene, which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                    GO:0006613
+                                </a>
+                            </span>
+                            <span class="term-label">cotranslational protein targeting to membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7789174
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and mapping of the human beta-signal sequence rece...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0006613" data-r="PMID:7789174" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TAS annotation captures the core function of SSR2/TRAP-beta in co-translational protein translocation. The TRAP complex associates with ribosome-Sec61 complexes and facilitates membrane targeting of nascent polypeptides, particularly those with weak or suboptimal signal peptides.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function annotation. SSR2 as part of the TRAP complex is directly involved in co-translational protein translocation at the ER membrane. Recent cryo-EM studies confirm that TRAP is consistently present in the co-translational translocon and modulates Sec61 function for challenging substrates [PMID:36697828; file:human/SSR2/SSR2-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                        PMID:7789174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7789174
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and mapping of the human beta-signal sequence rece...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43308" data-a="GO:0016020" data-r="PMID:7789174" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TAS annotation based on PMID:7789174 indicates SSR2 is a membrane protein. This is accurate but less specific than GO:0005789 (ER membrane) which is also annotated from the same reference.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but general annotation. The more specific term GO:0005789 (ER membrane) better captures the localization. However, this annotation is not incorrect and is supported by the cited literature.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                        PMID:7789174
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">which codes for an endoplasmic reticulum (ER) membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SSR2/TRAP-beta is a component of the TRAP complex that associates with the Sec61 translocon during co-translational protein translocation. The complex assists in membrane targeting and insertion of nascent polypeptides with weak or suboptimal signal peptides [PMID:7789174; PMID:36697828].</h3>
+                <span class="vote-buttons" data-g="P43308" data-a="FUNCTION: SSR2/TRAP-beta is a component of the TRAP complex ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106138" target="_blank" class="term-link">
+                            Sec61 translocon complex binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006613" target="_blank" class="term-link">
+                                cotranslational protein targeting to membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                                PMID:7789174
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                                PMID:36697828
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location Vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18724357" target="_blank" class="term-link">
+                            PMID:18724357
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">STING is an endoplasmic reticulum adaptor that facilitates innate immune signalling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Yeast two-hybrid screening identified SSR2/TRAP-beta as a STING1 interacting protein</div>
+                        
+                        <div class="finding-text">"we screened an IFN-induced, human fibroblast yeast two-hybrid cDNA library using STING (amino acids 173-379) as a bait and repeatedly isolated Ssr2/TRAPbeta"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Co-immunoprecipitation confirmed TRAP-beta association with endogenous STING</div>
+                        
+                        <div class="finding-text">"we confirmed that TRAPbeta can indeed associate with endogenous STING in HEK 293 cells following co-immunoprecipitation experiments"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP-beta ablation reduced STING-mediated interferon-beta induction</div>
+                        
+                        <div class="finding-text">"loss of TRAPbeta or SEC61beta reduced STING&#39;s, ability to induce an IFNbeta promoter driving luciferase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36697828" target="_blank" class="term-link">
+                            PMID:36697828
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Visualization of translation and protein biogenesis at the ER membrane.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-electron tomography visualization of native ER translocon complexes</div>
+                        
+                        <div class="finding-text">"Here we use cryo-electron tomography, extensive classification and molecular modelling to capture snapshots of mRNA translation and protein maturation at the ER membrane"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Near-complete atomic model of SEC61-TRAP-OSTA complex</div>
+                        
+                        <div class="finding-text">"The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP present in both signal peptide and multipass translocon variants</div>
+                        
+                        <div class="finding-text">"distinct polysomes bind to different ER translocons specialized in the synthesis of proteins with signal peptides or multipass transmembrane proteins with the translocon-associated protein complex (TRAP) present in both"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7789174" target="_blank" class="term-link">
+                            PMID:7789174
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Isolation and mapping of the human beta-signal sequence receptor gene (SSR2).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original cloning of human SSR2 cDNA</div>
+                        
+                        <div class="finding-text">"We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified SSR2 as encoding ER membrane protein involved in translocation</div>
+                        
+                        <div class="finding-text">"which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mapped SSR2 to chromosome 1q21-q23</div>
+                        
+                        <div class="finding-text">"We also localized the human beta-signal sequence receptor gene (SSR2) to chromosome bands 1q21--&gt;q23"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SSR2/SSR2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for SSR2/TRAP-beta</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of TRAP complex structure and function from recent literature</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP is a heterotetramer (alpha, beta, gamma, delta subunits)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP-beta has type I topology with single transmembrane helix</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TRAP modulates Sec61 lateral gate for weak signal peptides</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise mechanism by which the TRAP complex modulates Sec61 lateral gate dynamics to facilitate translocation of weak signal peptide substrates? Recent structural and MD studies suggest TRAP influences gate conformations but the detailed mechanism remains incompletely characterized.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43308" data-a="Q: What is the precise mechanism by which the TRAP co..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the SSR2/TRAP-beta interaction with STING1? Is this interaction related to TRAP&#39;s role in protein translocation or does it represent a distinct function in innate immune signaling? The STING1 interaction was identified in a focused study on innate immunity, but whether this represents a core or peripheral function of SSR2 is unclear.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P43308" data-a="Q: What is the functional significance of the SSR2/TR..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SSR2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P43308" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T21:23:33.664118'<br />
+end_time: '2025-12-26T21:30:36.231071'<br />
+duration_seconds: 422.57<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: SSR2<br />
+  gene_symbol: SSR2<br />
+  uniprot_accession: P43308<br />
+  protein_description: 'RecName: Full=Translocon-associated protein subunit beta;<br />
+    Short=TRAP-beta; AltName: Full=Signal sequence receptor subunit beta; Short=SSR-beta;<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=SSR2; Synonyms=TRAPB; ORFNames=HSD25;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the TRAP-beta family. .<br />
+  protein_domains: TRAP_beta. (IPR008856); TRAP_beta (PF05753)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 25</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P43308</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translocon-associated protein subunit beta; Short=TRAP-beta; AltName: Full=Signal sequence receptor subunit beta; Short=SSR-beta; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SSR2; Synonyms=TRAPB; ORFNames=HSD25;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TRAP-beta family. .</li>
+<li><strong>Key Domains:</strong> TRAP_beta. (IPR008856); TRAP_beta (PF05753)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SSR2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SSR2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SSR2</strong> (gene ID: SSR2, UniProt: P43308) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P43308</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translocon-associated protein subunit beta; Short=TRAP-beta; AltName: Full=Signal sequence receptor subunit beta; Short=SSR-beta; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SSR2; Synonyms=TRAPB; ORFNames=HSD25;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TRAP-beta family. .</li>
+<li><strong>Key Domains:</strong> TRAP_beta. (IPR008856); TRAP_beta (PF05753)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SSR2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SSR2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SSR2</strong> (gene ID: SSR2, UniProt: P43308) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and approach<br />
+We verified gene/protein identity and then synthesized recent structural and mechanistic literature (emphasizing 2023–2024 cryo-EM/ET) together with authoritative reviews to annotate human SSR2 (TRAP-β) within the ER translocon. We prioritized precise functional roles, localization/topology, pathways (Sec61/TRAP/OST), disease links, viral-host relevance, and applications, and we include URLs and publication dates.</p>
+<p>Key concepts and definitions (current understanding)<br />
+- Identity and nomenclature: SSR2 (synonyms: TRAPB; signal sequence receptor subunit beta) encodes the β subunit of the mammalian Translocon-Associated Protein (TRAP) complex, a heterotetramer at the ER translocon. This subunit is termed TRAP‑β/SSR‑β and is an integral ER membrane protein (UniProt P43308). SSR2 is part of the canonical SSR1/SSR2/SSR3/SSR4 complex that associates with Sec61 during co-translational protein translocation (Open Biology, 2020; doi:10.1098/rsob.190244, published May 13, 2020). (russo2020understandingthemammalian pages 5-6, russo2020understandingthemammalian pages 2-4)<br />
+- Topology and family: TRAP‑β is a single-pass, type I membrane glycoprotein with an N‑lumenal domain, a single transmembrane helix, and a short cytosolic C-terminus; it belongs to the TRAP‑beta family. Structural/topological placement of β within the lumenal TRAP crescent has been resolved in human ribosome–Sec61–TRAP complexes (Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797). (russo2020understandingthemammalian pages 5-6, pauwels2023structuralinsightsinto pages 1-2)<br />
+- TRAP composition and architecture: TRAP is a heterotetramer of SSR1 (α), SSR2 (β), SSR3 (γ), SSR4 (δ). High-resolution cryo‑EM (2023) shows a seven‑TM helix bundle formed by TRAP‑γ plus one C‑terminal helix each from α/β/δ; the N‑terminal lumenal domains of α/β/δ form a crescent facing the Sec61 pore. TRAP‑γ anchors to 28S rRNA and ribosomal protein L38 and contacts Sec61α/γ, stabilizing the ribosome–Sec61–TRAP assembly (Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797). (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3)</p>
+<p>Mechanistic role and pathways (with recent advances)<br />
+- Sec61 gating and signal-peptide selectivity: TRAP modulates Sec61 lateral-gate conformations and facilitates translocation/insertion of precursors with weak/low‑hydrophobicity or Pro/Gly‑rich signal peptides. Cryo‑EM combined with atomistic MD indicates TRAP interactions bias gate conformations favorable for these challenging clients (EMBO Reports, November 20, 2023; doi:10.15252/embr.202357910; Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797). (karki2023molecularviewof pages 2-3, pauwels2023structuralinsightsinto pages 1-2, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5)<br />
+- Coupling to N‑glycosylation (OST): TRAP frequently coexists with the oligosaccharyltransferase (OSTA) complex in the ribosome–translocon megacomplex; TRAPα’s lumenal domain lies immediately below the Sec61 pore and near OSTA, positioning nascent chains for cotranslational N‑glycosylation. Structural analyses and in situ tomography link TRAP to OST proximity and nascent‑chain handling; deficiency in TRAP subunits leads to aberrant N‑glycosylation (EMBO Reports, November 20, 2023; doi:10.15252/embr.202357910; eLife preprint, May 2, 2024; doi:10.1101/2023.12.22.572959). (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, lewis2024structuralanalysisof pages 9-11)<br />
+- ER membrane remodeling: MD simulations and cryo‑ET reveal that the Sec61/TRAP assembly locally thins and curves the ER membrane, which may lower the energetic barrier for lateral gate opening and integration of transmembrane segments. This physical remodeling is proposed to aid insertion of weak SP/TMD clients (EMBO Reports, November 20, 2023; doi:10.15252/embr.202357910; Life Science Alliance, June 12, 2024; doi:10.26508/lsa.202302496). (karki2023molecularviewof pages 2-3, gemmer2024exploringthemolecular pages 1-3)<br />
+- Localization and interactions: TRAP is an ER-resident, ribosome-associated complex stably bound to the “back” of Sec61 with multiple TRAP–ribosome and TRAP–Sec61 contact points. TRAPα likely contacts the Sec61 hinge; TRAPβ participates in the lumenal crescent near the nascent‑chain exit (Open Biology, 2020; doi:10.1098/rsob.190244; Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797; eLife preprint, May 2, 2024; doi:10.1101/2023.12.22.572959). (russo2020understandingthemammalian pages 5-6, pauwels2023structuralinsightsinto pages 1-2, lewis2024structuralanalysisof pages 9-11)</p>
+<p>Recent developments and latest research (2023–2024 focus)<br />
+- Atomic models of human ribosome–Sec61–TRAP resolve TRAP subunit positioning and contacts, including the seven‑helix TM bundle and a dynamic, crescent‑shaped lumenal α/β/δ core that adjusts across translation stages (Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797). (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3)<br />
+- Mechanistic hypotheses supported by cryo‑EM and MD: TRAP stabilizes the ribosome exit tunnel, prevents nascent‑chain back‑diffusion, and biases Sec61 toward a translocation‑competent state for weak signal peptides; local lipid thinning by TRAP/Sec61 complex further facilitates insertion (EMBO Reports, November 20, 2023; doi:10.15252/embr.202357910). (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5)<br />
+- Native membrane cryo‑ET reveals variable association of auxiliary factors in multipass translocons, with TRAP substoichiometric and enriched in Sec61 variants bound to non‑translating ribosomes; TRAP lumenal domains contact a “back‑of‑Sec61” factor tentatively modeled as a nodal modulator linking nicalin to TRAPα (Life Science Alliance, June 12, 2024; doi:10.26508/lsa.202302496). (gemmer2024exploringthemolecular pages 1-3)</p>
+<p>Primary function and substrate scope<br />
+- Primary role: SSR2 (TRAP‑β) contributes to the structural core of TRAP that, together with the other subunits, assists Sec61-mediated co‑translational translocation of secretory and membrane proteins with suboptimal/weak signal peptides and helps coordinate access to OSTA for N‑glycosylation. This is a structural/adaptor role, not enzymatic catalysis (Open Biology, 2020; doi:10.1098/rsob.190244; Science Advances, 2023; doi:10.1126/sciadv.adf0797). (russo2020understandingthemammalian pages 5-6, pauwels2023structuralinsightsinto pages 1-2)<br />
+- Substrate bias: Clients with low hydrophobicity or Pro/Gly‑rich signal sequences show TRAP dependence; structural data and MD support this bias via gate-opening and membrane remodeling mechanisms (Science Advances, 2023; EMBO Reports, 2023) (pauwels2023structuralinsightsinto pages 1-2, karki2023molecularviewof pages 2-3)</p>
+<p>Subcellular localization and topology<br />
+- SSR2 is ER membrane-resident; type I topology (N lumen, C cytosol) with a single TM helix; embedded within the TRAP lumenal crescent facing the Sec61 pore (Open Biology, 2020; doi:10.1098/rsob.190244; Science Advances, 2023; doi:10.1126/sciadv.adf0797). (russo2020understandingthemammalian pages 5-6, pauwels2023structuralinsightsinto pages 1-2)</p>
+<p>Coupling to glycosylation machinery<br />
+- TRAP–OST coordination: In the prevalent ER translocon variant, Sec61, TRAP, and OSTA are present together; TRAP lumenal domains (especially α adjacent to β/δ) are positioned below the pore and near OSTA active sites, enabling nascent chain capture and early N‑glycosylation. In situ analyses report OSTA association in ~40–70% of complexes, while TRAP is consistently present in the major co‑translational translocon (Open Biology, 2020; eLife preprint, 2024) (russo2020understandingthemammalian pages 5-6, lewis2024structuralanalysisof pages 9-11)</p>
+<p>Disease links and real-world implementations<br />
+- Congenital disorders of glycosylation (CDG): TRAP integrity is required for proper N‑glycosylation; loss-of-function in SSR4 (TRAP‑δ) causes a CDG phenotype with hypoglycosylation and ER stress, and destabilizes other TRAP subunits (review synthesis). Human genetic observations and structural comparisons in patient-derived contexts underscore the dependence of glycoprotein biogenesis on the intact complex (Open Biology, 2020; EMBO Reports, 2023) (russo2020understandingthemammalian pages 5-6, karki2023molecularviewof pages 2-3)<br />
+- ER stress and proteostasis: TRAP levels can be modulated during ER stress, and the complex is implicated in ER homeostasis and ERAD coupling in the ribosome-translocon complex (Open Biology, 2020; review) (russo2020understandingthemammalian pages 5-6, russo2019themammaliantransloconassociated pages 27-35)<br />
+- Viral host dependency: TRAP’s role in co‑translational translocation and glycoprotein maturation places it within pathways exploited by enveloped viruses; structural work and reviews integrate TRAP within the mammalian translocon machinery that is targeted in functional screens and by translocon inhibitors (Science Advances, 2023; review) (pauwels2023structuralinsightsinto pages 1-2, russo2020understandingthemammalian pages 1-2)</p>
+<p>Applications: small-molecule modulation of the translocon<br />
+- Sec61 inhibitors: Cryo‑EM reveals that the cyclotriazadisulfonamide derivative CK147 binds the Sec61 channel, interacting with the plug from the lumenal side, and induces a partially open conformation; resistance mutations map around the inhibitor. These structures nominate a druggable site relevant to client‑selective inhibition strategies impacting secretory protein biogenesis (Science Advances, March 22, 2023; doi:10.1126/sciadv.adf0797). (pauwels2023structuralinsightsinto pages 1-2)</p>
+<p>Expert opinions and integrative analyses<br />
+- Reviews emphasize TRAP as a substrate‑selective auxiliary of Sec61 that stabilizes translocation of challenging signal peptides and coordinates with OSTA, integrating co‑translational modification and quality control. Recent structural studies consolidate TRAP’s position and contacts and propose mechanistic models involving membrane thinning and ribosome‑tunnel stabilization (Open Biology, 2020; Science Advances, 2023; EMBO Reports, 2023; eLife preprint, 2024; Life Science Alliance, 2024). (russo2020understandingthemammalian pages 5-6, pauwels2023structuralinsightsinto pages 1-2, karki2023molecularviewof pages 2-3, lewis2024structuralanalysisof pages 9-11, gemmer2024exploringthemolecular pages 1-3)</p>
+<p>Relevant statistics and quantitative data<br />
+- Coexistence frequency: In ribosome–ER translocon assemblies, OSTA is present in roughly 40–70% of complexes, whereas TRAP is consistently found in the predominant co‑translational translocon; TRAP association varies with translational state in multipass translocons (Open Biology, 2020; eLife preprint, 2024; Life Science Alliance, 2024). (russo2020understandingthemammalian pages 5-6, lewis2024structuralanalysisof pages 9-11, gemmer2024exploringthemolecular pages 1-3)<br />
+- Structural placements: 2023 cryo‑EM resolves TRAP‑γ anchoring to 28S rRNA and L38 and a seven‑TM bundle incorporating α/β/δ C‑terminal helices; the lumenal α/β/δ crescent faces the Sec61 pore, consistent with direct nascent‑chain engagement (Science Advances, 2023). (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3)</p>
+<p>Verification of identity and organism (MANDATORY)<br />
+- The gene symbol “SSR2” in this report refers to the human Signal Sequence Receptor subunit beta (TRAP‑β), UniProt P43308, within Homo sapiens. The protein is a member of the TRAP‑beta family and forms part of the ER TRAP complex alongside SSR1/SSR3/SSR4; the features, domains, topology and interactions reported here align with the TRAP‑β family and domain annotations. If alternative “SSR2” symbols exist in other organisms/pathways, they are not the subject of this analysis. (russo2020understandingthemammalian pages 5-6, russo2020understandingthemammalian pages 2-4)</p>
+<p>Embedded summary table of key facts<br />
+| Aspect | Key points | Most supporting sources (with journal, year) | URL(s) |<br />
+|---|---|---:|---|<br />
+| Identity / synonyms | SSR2 encodes TRAP-β (signal sequence receptor subunit beta); gene symbol SSR2, alias TRAPB. | Russo, Open Biol., 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1098/rsob.190244 |<br />
+| Organism | Human (Homo sapiens) protein annotated as UniProt P43308 (TRAP‑β). | Russo, Open Biol., 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1098/rsob.190244 |<br />
+| Family / domains | Member of the TRAP‑beta family; luminal/extracellular domain plus single transmembrane helix (TRAP_beta domain). | Pauwels et al., Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2); Russo, 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1126/sciadv.adf0797 https://doi.org/10.1098/rsob.190244 |<br />
+| TRAP subunit composition | TRAP is a heterotetramer: SSR1 (TRAP‑α), SSR2 (TRAP‑β), SSR3 (TRAP‑γ), SSR4 (TRAP‑δ) assembled with Sec61 in the ribosome–translocon complex. | Russo, 2020 (russo2020understandingthemammalian pages 5-6); Pauwels, 2023 (pauwels2023structuralinsightsinto pages 1-2) | https://doi.org/10.1098/rsob.190244 https://doi.org/10.1126/sciadv.adf0797 |<br />
+| SSR2 topology | Type I membrane protein: luminal N‑terminus, single TM (approx. residues ~147–167), cytosolic C‑terminus. | Russo, Open Biol., 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.1098/rsob.190244 |<br />
+| Ribosome–Sec61–TRAP architecture (2023–2024) | High‑resolution cryo‑EM places TRAP tetramer adjacent to Sec61; TRAP‑β (central) is sandwiched between TRAP‑α and TRAP‑δ and contributes to lumenal core facing Sec61; multiple ribosomal contacts stabilize the assembly. | Pauwels et al., Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2); Karki et al., EMBO Rep, 2023 (karki2023molecularviewof pages 2-3); Lewis et al., eLife, 2024 (lewis2024structuralanalysisof pages 9-11) | https://doi.org/10.1126/sciadv.adf0797 https://doi.org/10.15252/embr.202357910 https://doi.org/10.1101/2023.12.22.572959 |<br />
+| Sec61 gating / signal‑peptide selectivity | Structural + MD data show TRAP biases Sec61 lateral‑gate conformations, facilitating translocation of substrates with weak/low‑hydrophobicity or Pro/Gly‑rich signal peptides. | Pauwels, Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2); Karki, EMBO Rep, 2023 (karki2023molecularviewof pages 2-3); Gemmer et al., Life Sci Alliance, 2024 (gemmer2024exploringthemolecular pages 1-3) | https://doi.org/10.1126/sciadv.adf0797 https://doi.org/10.15252/embr.202357910 https://doi.org/10.26508/lsa.202302496 |<br />
+| Coupling to OST / N‑glycosylation | TRAP often co‑occurs with oligosaccharyltransferase (OST) in translocons; TRAP lumenal domains are positioned to coordinate nascent‑chain glycosylation and TRAP deficiency (e.g., SSR4 loss) associates with hypoglycosylation. | Karki, EMBO Rep, 2023 (karki2023molecularviewof pages 2-3); Lewis et al., 2024 (lewis2024structuralanalysisof pages 9-11); Russo, 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.15252/embr.202357910 https://doi.org/10.1101/2023.12.22.572959 https://doi.org/10.1098/rsob.190244 |<br />
+| ER membrane remodeling / thinning | MD simulations and cryo‑ET show TRAP deforms and locally thins the ER membrane near Sec61, which may lower the energetic barrier for insertion of challenging transmembrane segments. | Karki, EMBO Rep, 2023 (karki2023molecularviewof pages 2-3); Gemmer, Life Sci Alliance, 2024 (gemmer2024exploringthemolecular pages 1-3) | https://doi.org/10.15252/embr.202357910 https://doi.org/10.26508/lsa.202302496 |<br />
+| Localization | Integral ER membrane protein; TRAP luminal domains face ER lumen and complex is ribosome‑associated at the cytosolic face. | Russo, 2020 (russo2020understandingthemammalian pages 5-6); Pauwels, 2023 (pauwels2023structuralinsightsinto pages 1-2) | https://doi.org/10.1098/rsob.190244 https://doi.org/10.1126/sciadv.adf0797 |<br />
+| Disease genetics (TRAP‑related CDG) | Mutations in TRAP subunits (notably SSR4/TRAP‑δ) cause congenital disorders of glycosylation (hypoglycosylation); SSR2‑specific clinical cases are limited but TRAP integrity affects glycoprotein biogenesis. | Russo, 2019/2020 reviews (russo2019themammaliantransloconassociated pages 27-35, russo2020understandingthemammalian pages 5-6); Karki et al., 2023 (patient cell comparisons) (karki2023molecularviewof pages 2-3) | https://doi.org/10.1098/rsob.190244 https://doi.org/10.15252/embr.202357910 |<br />
+| Viral host‑dependency | TRAP influences glycoprotein biogenesis and translocation fidelity, processes exploited by enveloped viruses; translocon components are implicated in virus dependency in functional screens and translocon inhibition affects select secretory clients. | Russo review, 2019/2020 (russo2019themammaliantransloconassociated pages 27-35, russo2020understandingthemammalian pages 5-6); Pauwels, Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2) | https://doi.org/10.1098/rsob.190244 https://doi.org/10.1126/sciadv.adf0797 |<br />
+| Small‑molecule translocon modulators | Sec61 inhibitors (e.g., CK147, cotransin derivatives) bind lumenal/plug/lateral‑gate regions; cryo‑EM structures reveal inhibitor sites and suggest routes to client‑selective translocon modulation. | Pauwels et al., Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2); Karki et al., 2023 (karki2023molecularviewof pages 2-3) | https://doi.org/10.1126/sciadv.adf0797 https://doi.org/10.15252/embr.202357910 |<br />
+| Expression / biomarker evidence | Proteomics and transcriptomic surveys report TRAP subunit expression across tissues; altered TRAP/SSR expression observed in some tumors but SSR2‑specific biomarker status remains provisional. | Gemmer et al., Life Sci Alliance, 2024 (gemmer2024exploringthemolecular pages 1-3); Russo, 2020 (russo2020understandingthemammalian pages 5-6) | https://doi.org/10.26508/lsa.202302496 https://doi.org/10.1098/rsob.190244 |<br />
+| Recent expert / structural reviews | Integrated reviews and recent cryo‑EM studies synthesize TRAP function, structure, OST coupling and disease links (key refs: Russo 2020; Pauwels 2023; Karki 2023; Lewis 2024; Gemmer 2024). | Russo, Open Biol., 2020 (russo2020understandingthemammalian pages 5-6); Pauwels, Sci Adv, 2023 (pauwels2023structuralinsightsinto pages 1-2); Karki, EMBO Rep, 2023 (karki2023molecularviewof pages 2-3); Lewis, 2024 (lewis2024structuralanalysisof pages 9-11); Gemmer, 2024 (gemmer2024exploringthemolecular pages 1-3) | https://doi.org/10.1098/rsob.190244 https://doi.org/10.1126/sciadv.adf0797 https://doi.org/10.15252/embr.202357910 https://doi.org/10.1101/2023.12.22.572959 https://doi.org/10.26508/lsa.202302496 |</p>
+<p><em>Table: Concise, cited summary table of human SSR2 (TRAP‑β) covering identity, structure, function, disease links, viral relevance, and recent structural studies (2023–2024) useful for functional annotation and literature review.</em></p>
+<p>Notes on evidence strength and gaps<br />
+- Most SSR2-specific functional roles are supported at the complex level, with subunit‑resolved placement and contacts captured in 2023–2024 structures; direct SSR2‑unique disease reports are limited, but complex integrity (e.g., SSR4 deficiency) yields N‑glycosylation defects that infer importance of all subunits. (pauwels2023structuralinsightsinto pages 1-2, karki2023molecularviewof pages 2-3, russo2020understandingthemammalian pages 5-6)</p>
+<p>References with URLs and dates<br />
+- Russo A. Understanding the mammalian TRAP complex function(s). Open Biology. Published May 13, 2020. doi:10.1098/rsob.190244; https://doi.org/10.1098/rsob.190244 (overview of TRAP identity, composition, topology, and coupling) (russo2020understandingthemammalian pages 5-6, russo2020understandingthemammalian pages 2-4, russo2020understandingthemammalian pages 8-10, russo2020understandingthemammalian pages 12-13, russo2020understandingthemammalian pages 1-2)<br />
+- Pauwels E. et al. Structural insights into TRAP association with ribosome–Sec61 complex and translocon inhibition by a CADA derivative. Science Advances. Published March 22, 2023. doi:10.1126/sciadv.adf0797; https://doi.org/10.1126/sciadv.adf0797 (human cryo‑EM architecture; CK147 inhibitor site; SP selectivity) (pauwels2023structuralinsightsinto pages 1-2, pauwels2023structuralinsightsinto pages 2-3)<br />
+- Karki S. et al. Molecular view of ER membrane remodeling by the Sec61/TRAP translocon. EMBO Reports. Published November 20, 2023. doi:10.15252/embr.202357910; https://doi.org/10.15252/embr.202357910 (atomic model; MD membrane thinning; gate modulation; OST proximity) (karki2023molecularviewof pages 2-3, karki2023molecularviewof pages 1-2, karki2023molecularviewof pages 3-5)<br />
+- Lewis A.J.O. et al. Structural analysis of the dynamic ribosome–translocon complex. eLife preprint (bioRxiv). Posted May 2, 2024. doi:10.1101/2023.12.22.572959; https://doi.org/10.1101/2023.12.22.572959 (TRAP contacts, OST linkage, dynamic composition) (lewis2024structuralanalysisof pages 9-11)<br />
+- Gemmer M. et al. Exploring the molecular composition of the multipass translocon in its native membrane environment. Life Science Alliance. Published June 12, 2024. doi:10.26508/lsa.202302496; https://doi.org/10.26508/lsa.202302496 (native ER cryo‑ET; TRAP variability; BOS contact; multipass context) (gemmer2024exploringthemolecular pages 1-3)<br />
+- Russo A. The mammalian TRAP complex and co‑translational protein transport. Review synthesis (2019) providing historical context for subunit composition and function. (russo2019themammaliantransloconassociated pages 94-96, russo2019themammaliantransloconassociated pages 35-41, russo2019themammaliantransloconassociated pages 27-35)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(russo2020understandingthemammalian pages 5-6): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2020understandingthemammalian pages 2-4): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pauwels2023structuralinsightsinto pages 1-2): Eva Pauwels, Neesha R. Shewakramani, Brent De Wijngaert, Anita Camps, Becky Provinciael, Joren Stroobants, Kai-Uwe Kalies, Enno Hartmann, Piet Maes, Kurt Vermeire, and Kalyan Das. Structural insights into trap association with ribosome-sec61 complex and translocon inhibition by a cada derivative. Science Advances, Mar 2023. URL: https://doi.org/10.1126/sciadv.adf0797, doi:10.1126/sciadv.adf0797. This article has 36 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pauwels2023structuralinsightsinto pages 2-3): Eva Pauwels, Neesha R. Shewakramani, Brent De Wijngaert, Anita Camps, Becky Provinciael, Joren Stroobants, Kai-Uwe Kalies, Enno Hartmann, Piet Maes, Kurt Vermeire, and Kalyan Das. Structural insights into trap association with ribosome-sec61 complex and translocon inhibition by a cada derivative. Science Advances, Mar 2023. URL: https://doi.org/10.1126/sciadv.adf0797, doi:10.1126/sciadv.adf0797. This article has 36 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 2-3): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 1-2): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karki2023molecularviewof pages 3-5): Sudeep Karki, Matti Javanainen, Shahid Rehan, Dale Tranter, Juho Kellosalo, Juha T Huiskonen, Lotta Happonen, and Ville Paavilainen. Molecular view of <scp>er</scp> membrane remodeling by the sec61/<scp>trap</scp> translocon. EMBO reports, Nov 2023. URL: https://doi.org/10.15252/embr.202357910, doi:10.15252/embr.202357910. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lewis2024structuralanalysisof pages 9-11): Aaron J. O. Lewis, Frank Zhong, Robert J. Keenan, and Ramanujan S. Hegde. Structural analysis of the dynamic ribosome-translocon complex. eLife, May 2024. URL: https://doi.org/10.1101/2023.12.22.572959, doi:10.1101/2023.12.22.572959. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gemmer2024exploringthemolecular pages 1-3): Max Gemmer, Marten L. Chaillet, and Friedrich Förster. Exploring the molecular composition of the multipass translocon in its native membrane environment. Life Science Alliance, 7:e202302496, Jun 2024. URL: https://doi.org/10.26508/lsa.202302496, doi:10.26508/lsa.202302496. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2019themammaliantransloconassociated pages 27-35): A Russo. The mammalian translocon-associated protein (trap) complex and co-translational protein transport. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(russo2020understandingthemammalian pages 1-2): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2020understandingthemammalian pages 8-10): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2020understandingthemammalian pages 12-13): Antonietta Russo. Understanding the mammalian trap complex function(s). Open Biology, 10:190244, May 2020. URL: https://doi.org/10.1098/rsob.190244, doi:10.1098/rsob.190244. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(russo2019themammaliantransloconassociated pages 94-96): A Russo. The mammalian translocon-associated protein (trap) complex and co-translational protein transport. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(russo2019themammaliantransloconassociated pages 35-41): A Russo. The mammalian translocon-associated protein (trap) complex and co-translational protein transport. Unknown journal, 2019.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gemmer2024exploringthemolecular pages 1-3</li>
+<li>pauwels2023structuralinsightsinto pages 1-2</li>
+<li>russo2020understandingthemammalian pages 5-6</li>
+<li>karki2023molecularviewof pages 2-3</li>
+<li>lewis2024structuralanalysisof pages 9-11</li>
+<li>russo2020understandingthemammalian pages 2-4</li>
+<li>pauwels2023structuralinsightsinto pages 2-3</li>
+<li>karki2023molecularviewof pages 1-2</li>
+<li>karki2023molecularviewof pages 3-5</li>
+<li>russo2019themammaliantransloconassociated pages 27-35</li>
+<li>russo2020understandingthemammalian pages 1-2</li>
+<li>russo2020understandingthemammalian pages 8-10</li>
+<li>russo2020understandingthemammalian pages 12-13</li>
+<li>russo2019themammaliantransloconassociated pages 94-96</li>
+<li>russo2019themammaliantransloconassociated pages 35-41</li>
+<li>https://doi.org/10.1098/rsob.190244</li>
+<li>https://doi.org/10.1126/sciadv.adf0797</li>
+<li>https://doi.org/10.15252/embr.202357910</li>
+<li>https://doi.org/10.1101/2023.12.22.572959</li>
+<li>https://doi.org/10.26508/lsa.202302496</li>
+<li>https://doi.org/10.1098/rsob.190244,</li>
+<li>https://doi.org/10.1126/sciadv.adf0797,</li>
+<li>https://doi.org/10.15252/embr.202357910,</li>
+<li>https://doi.org/10.1101/2023.12.22.572959,</li>
+<li>https://doi.org/10.26508/lsa.202302496,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P43308
+gene_symbol: SSR2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SSR2 encodes the beta subunit of the translocon-associated protein (TRAP) complex,
+  also known as signal sequence receptor subunit beta (SSR-beta/TRAP-beta). TRAP is
+  a heterotetrameric complex (SSR1/alpha, SSR2/beta, SSR3/gamma, SSR4/delta) that
+  associates with the Sec61 translocon at the endoplasmic reticulum membrane. The
+  complex assists in co-translational protein translocation, particularly for nascent
+  polypeptides with weak or suboptimal signal peptides. SSR2/TRAP-beta is a type I
+  single-pass membrane glycoprotein with its N-terminus facing the ER lumen, where it
+  contributes to the lumenal crescent structure that contacts nascent chains exiting
+  the Sec61 pore. The TRAP complex also coordinates with the oligosaccharyltransferase
+  (OST) complex to facilitate N-glycosylation of nascent proteins. SSR2 has been shown
+  to interact with STING1, suggesting potential roles in innate immune signaling pathways.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from InterPro domain mapping (IPR008856 TRAP_beta).
+      SSR2/TRAP-beta is well-established as an ER-resident protein. The protein is
+      part of the TRAP complex that associates with the Sec61 translocon at the ER
+      membrane [file:human/SSR2/SSR2-deep-research-falcon.md].
+    action: ACCEPT
+    reason: &gt;-
+      Accurate annotation. SSR2 is an integral ER membrane protein as part of the
+      TRAP complex. The InterPro-based inference is consistent with extensive
+      experimental evidence showing ER localization [PMID:7789174, PMID:36697828].
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene, which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane.&#34;
+      - reference_id: file:human/SSR2/SSR2-deep-research-falcon.md
+        supporting_text: &#34;[Deep research confirms] SSR2 encodes TRAP-beta (signal sequence receptor subunit beta) ... predominantly resides in the endoplasmic reticulum&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This IEA annotation is based on UniProt subcellular location vocabulary mapping.
+      SSR2 is an integral ER membrane protein with a single transmembrane helix.
+      UniProt records: &#34;Endoplasmic reticulum membrane; Single-pass type I membrane protein.&#34;
+    action: ACCEPT
+    reason: &gt;-
+      Accurate and well-supported annotation. SSR2/TRAP-beta has type I topology
+      (N lumen, C cytosol) with a single transmembrane helix embedded in the ER membrane
+      [file:human/SSR2/SSR2-deep-research-falcon.md]. Cryo-EM structures confirm this localization
+      [PMID:36697828].
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;An AlphaFold-based model of TRAP could be fitted unambiguously into the SEC61-OSTA-TRAP translocon map&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from InterPro domain mapping. While correct that
+      SSR2 is a membrane protein, this term is too general compared to the more specific
+      GO:0005789 (endoplasmic reticulum membrane) annotation that is also present.
+    action: ACCEPT
+    reason: &gt;-
+      This is a valid but general annotation. Given that the more specific term
+      GO:0005789 (ER membrane) is already annotated, this broader term provides
+      redundant but not incorrect information. Accept as it doesn&#39;t violate any rules
+      and is consistent with the protein&#39;s membrane localization.
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;which codes for an endoplasmic reticulum (ER) membrane protein&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18724357
+  review:
+    summary: &gt;-
+      This IPI annotation is based on the interaction between SSR2/TRAP-beta and STING1,
+      demonstrated by yeast two-hybrid screening and co-immunoprecipitation in PMID:18724357.
+      The study identified SSR2 as a STING1 interactor and showed that TRAP-beta ablation
+      reduced STING&#39;s ability to induce interferon-beta.
+    action: MODIFY
+    reason: &gt;-
+      The generic term &#34;protein binding&#34; is uninformative for GO annotation purposes.
+      While the STING1 interaction is experimentally validated (yeast two-hybrid and
+      co-IP), the biological significance and mechanism of this interaction are not
+      fully characterized. However, a more informative annotation would be to the
+      specific complex (TRAP complex) or to Sec61 translocon complex binding, which
+      represents the core function of SSR2.
+    proposed_replacement_terms:
+      - id: GO:0106138
+        label: Sec61 translocon complex binding
+    supported_by:
+      - reference_id: PMID:18724357
+        supporting_text: &#34;we screened an IFN-induced, human fibroblast yeast two-hybrid cDNA library using STING (amino acids 173-379) as a bait and repeatedly isolated Ssr2/TRAPbeta, a member of the TRAP complex comprising four subunits (alpha-delta) that facilitates translocation of proteins into the ER following translation&#34;
+      - reference_id: PMID:18724357
+        supporting_text: &#34;we confirmed that TRAPbeta can indeed associate with endogenous STING in HEK 293 cells following co-immunoprecipitation experiments&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:36697828
+  review:
+    summary: &gt;-
+      This NAS annotation is based on Gemmer et al. (2023), which used cryo-electron
+      tomography to visualize the native ER translocon including the TRAP complex.
+      The study provides near-complete atomic models of the SEC61-TRAP-OSTA complex
+      at the ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      This is an accurate annotation supported by high-resolution structural data.
+      The cryo-ET study directly visualizes SSR2/TRAP-beta as an integral component
+      of the ER membrane translocon complex [PMID:36697828].
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components.&#34;
+- term:
+    id: GO:0031204
+    label: post-translational protein targeting to membrane, translocation
+  evidence_type: NAS
+  original_reference_id: PMID:36697828
+  review:
+    summary: &gt;-
+      This NAS annotation suggests SSR2/TRAP-beta is involved in post-translational
+      protein translocation. However, the TRAP complex is primarily associated with
+      co-translational translocation, assisting the Sec61 translocon during ribosome-
+      associated protein synthesis and membrane insertion.
+    action: MODIFY
+    reason: &gt;-
+      The TRAP complex is predominantly associated with co-translational (SRP-dependent)
+      protein translocation, not post-translational translocation. While the Sec61
+      translocon can function in both pathways, TRAP specifically associates with
+      ribosome-bound translocons and facilitates translocation of nascent chains with
+      weak signal peptides during active translation [file:human/SSR2/SSR2-deep-research-falcon.md].
+      GO:0006613 (cotranslational protein targeting to membrane) is the more appropriate
+      term and is already annotated.
+    proposed_replacement_terms:
+      - id: GO:0006613
+        label: cotranslational protein targeting to membrane
+    supported_by:
+      - reference_id: PMID:36697828
+        supporting_text: &#34;distinct polysomes bind to different ER translocons specialized in the synthesis of proteins with signal peptides or multipass transmembrane proteins with the translocon-associated protein complex (TRAP) present in both&#34;
+      - reference_id: file:human/SSR2/SSR2-deep-research-falcon.md
+        supporting_text: &#34;[Deep research confirms] TRAP is a heterotetramer of SSR1 (alpha), SSR2 (beta), SSR3 (gamma), SSR4 (delta) ... co-translational protein translocation&#34;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: TAS
+  original_reference_id: PMID:7789174
+  review:
+    summary: &gt;-
+      This TAS annotation is based on the original cloning paper by Chinen et al. (1995)
+      which identified SSR2 as encoding an ER membrane protein. The paper describes
+      isolation of the human beta-signal sequence receptor gene.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate annotation with appropriate primary literature support. The paper
+      explicitly describes SSR2 as encoding &#34;an endoplasmic reticulum (ER) membrane
+      protein associated with protein translocation across the ER membrane.&#34;
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene, which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane.&#34;
+- term:
+    id: GO:0006613
+    label: cotranslational protein targeting to membrane
+  evidence_type: TAS
+  original_reference_id: PMID:7789174
+  review:
+    summary: &gt;-
+      This TAS annotation captures the core function of SSR2/TRAP-beta in co-translational
+      protein translocation. The TRAP complex associates with ribosome-Sec61 complexes
+      and facilitates membrane targeting of nascent polypeptides, particularly those
+      with weak or suboptimal signal peptides.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core function annotation. SSR2 as part of the TRAP complex is directly
+      involved in co-translational protein translocation at the ER membrane. Recent
+      cryo-EM studies confirm that TRAP is consistently present in the co-translational
+      translocon and modulates Sec61 function for challenging substrates [PMID:36697828;
+      file:human/SSR2/SSR2-deep-research-falcon.md].
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane&#34;
+    additional_reference_ids:
+      - PMID:36697828
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:7789174
+  review:
+    summary: &gt;-
+      This TAS annotation based on PMID:7789174 indicates SSR2 is a membrane protein.
+      This is accurate but less specific than GO:0005789 (ER membrane) which is also
+      annotated from the same reference.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate but general annotation. The more specific term GO:0005789 (ER membrane)
+      better captures the localization. However, this annotation is not incorrect and
+      is supported by the cited literature.
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;which codes for an endoplasmic reticulum (ER) membrane protein&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    Vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:18724357
+  title: STING is an endoplasmic reticulum adaptor that facilitates innate immune signalling.
+  findings:
+    - statement: Yeast two-hybrid screening identified SSR2/TRAP-beta as a STING1 interacting protein
+      supporting_text: &#34;we screened an IFN-induced, human fibroblast yeast two-hybrid cDNA library using STING (amino acids 173-379) as a bait and repeatedly isolated Ssr2/TRAPbeta&#34;
+    - statement: Co-immunoprecipitation confirmed TRAP-beta association with endogenous STING
+      supporting_text: &#34;we confirmed that TRAPbeta can indeed associate with endogenous STING in HEK 293 cells following co-immunoprecipitation experiments&#34;
+    - statement: TRAP-beta ablation reduced STING-mediated interferon-beta induction
+      supporting_text: &#34;loss of TRAPbeta or SEC61beta reduced STING&#39;s, ability to induce an IFNbeta promoter driving luciferase&#34;
+- id: PMID:36697828
+  title: Visualization of translation and protein biogenesis at the ER membrane.
+  findings:
+    - statement: Cryo-electron tomography visualization of native ER translocon complexes
+      supporting_text: &#34;Here we use cryo-electron tomography, extensive classification and molecular modelling to capture snapshots of mRNA translation and protein maturation at the ER membrane&#34;
+    - statement: Near-complete atomic model of SEC61-TRAP-OSTA complex
+      supporting_text: &#34;The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA)&#34;
+    - statement: TRAP present in both signal peptide and multipass translocon variants
+      supporting_text: &#34;distinct polysomes bind to different ER translocons specialized in the synthesis of proteins with signal peptides or multipass transmembrane proteins with the translocon-associated protein complex (TRAP) present in both&#34;
+- id: PMID:7789174
+  title: Isolation and mapping of the human beta-signal sequence receptor gene (SSR2).
+  findings:
+    - statement: Original cloning of human SSR2 cDNA
+      supporting_text: &#34;We have isolated a human cDNA clone homologous to the canine beta-signal sequence receptor gene&#34;
+    - statement: Identified SSR2 as encoding ER membrane protein involved in translocation
+      supporting_text: &#34;which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane&#34;
+    - statement: Mapped SSR2 to chromosome 1q21-q23
+      supporting_text: &#34;We also localized the human beta-signal sequence receptor gene (SSR2) to chromosome bands 1q21--&gt;q23&#34;
+- id: file:human/SSR2/SSR2-deep-research-falcon.md
+  title: Deep research summary for SSR2/TRAP-beta
+  findings:
+    - statement: Comprehensive review of TRAP complex structure and function from recent literature
+    - statement: TRAP is a heterotetramer (alpha, beta, gamma, delta subunits)
+    - statement: TRAP-beta has type I topology with single transmembrane helix
+    - statement: TRAP modulates Sec61 lateral gate for weak signal peptides
+core_functions:
+  - description: &gt;-
+      SSR2/TRAP-beta is a component of the TRAP complex that associates with the
+      Sec61 translocon during co-translational protein translocation. The complex
+      assists in membrane targeting and insertion of nascent polypeptides with
+      weak or suboptimal signal peptides [PMID:7789174; PMID:36697828].
+    molecular_function:
+      id: GO:0106138
+      label: Sec61 translocon complex binding
+    directly_involved_in:
+      - id: GO:0006613
+        label: cotranslational protein targeting to membrane
+    locations:
+      - id: GO:0005789
+        label: endoplasmic reticulum membrane
+    supported_by:
+      - reference_id: PMID:7789174
+        supporting_text: &#34;which codes for an endoplasmic reticulum (ER) membrane protein associated with protein translocation across the ER membrane&#34;
+      - reference_id: PMID:36697828
+        supporting_text: &#34;The near-complete atomic model of the most abundant ER translocon variant comprising the protein-conducting channel SEC61, TRAP and the oligosaccharyltransferase complex A (OSTA) reveals specific interactions of TRAP with other translocon components.&#34;
+proposed_new_terms:
+  - proposed_name: TRAP complex
+    proposed_definition: &gt;-
+      A heterotetrameric protein complex composed of TRAP-alpha (SSR1), TRAP-beta (SSR2),
+      TRAP-gamma (SSR3), and TRAP-delta (SSR4) subunits that associates with the Sec61
+      translocon at the endoplasmic reticulum membrane. The TRAP complex facilitates
+      co-translational protein translocation, particularly for substrates with weak
+      or suboptimal signal peptides.
+    justification: &gt;-
+      There is currently no specific GO term for the translocon-associated protein
+      (TRAP) complex. This heterotetrameric complex (SSR1-4/TRAP-alpha,beta,gamma,delta)
+      is distinct from the Sec61 translocon core and functions as a co-factor for
+      protein translocation. A dedicated cellular component term would improve
+      annotation precision for all TRAP subunit genes.
+suggested_questions:
+  - question: &gt;-
+      What is the precise mechanism by which the TRAP complex modulates Sec61 lateral
+      gate dynamics to facilitate translocation of weak signal peptide substrates?
+      Recent structural and MD studies suggest TRAP influences gate conformations
+      but the detailed mechanism remains incompletely characterized.
+  - question: &gt;-
+      What is the functional significance of the SSR2/TRAP-beta interaction with STING1?
+      Is this interaction related to TRAP&#39;s role in protein translocation or does it
+      represent a distinct function in innate immune signaling? The STING1 interaction
+      was identified in a focused study on innate immunity, but whether this represents
+      a core or peripheral function of SSR2 is unclear.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

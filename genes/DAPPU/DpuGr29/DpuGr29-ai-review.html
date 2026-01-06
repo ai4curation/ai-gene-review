@@ -1,0 +1,2462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DpuGr29 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DpuGr29</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/E9FXF3" target="_blank" class="term-link">
+                        E9FXF3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Daphnia pulex</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DpuGr29";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="E9FXF3" data-a="DESCRIPTION: DpuGr29 is a gustatory receptor (GR) from the wate..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DpuGr29 is a gustatory receptor (GR) from the water flea Daphnia pulex, belonging to the 7TM chemoreceptor superfamily. Unlike classical GPCRs, GRs function as ligand-gated ion channels with inverted membrane topology (C-terminus extracellular). D. pulex has 58 GRs but notably lacks odorant receptors (ORs), making GRs (along with ionotropic receptors) the primary chemosensory receptors in this crustacean. DpuGr29 belongs to subfamily 1 (Grs1-29 and Grs47-54) and is predicted to function in contact chemosensation in antennular or feeding appendage neurons. No direct experimental characterization of DpuGr29 ligand specificity or cellular expression has been published.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008049" target="_blank" class="term-link">
+                                    GO:0008049
+                                </a>
+                            </span>
+                            <span class="term-label">male courtship behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0008049" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from Drosophila Gr32a and Gr33a, which are involved in male courtship behavior by detecting inhibitory pheromones that suppress male-male courtship. However, D. pulex reproduces primarily by cyclical parthenogenesis, with males appearing only under stress conditions. The annotation of male courtship behavior to a crustacean GR based on Drosophila genes involved in insect-specific courtship rituals (wing extension, licking, copulation attempts) is not phylogenetically appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Male courtship behavior as defined in GO (GO:0008049) specifically describes &#34;behavior of a male for the purpose of attracting a sexual partner&#34; with Drosophila melanogaster cited as the example organism. The behavior involves insect-specific courtship rituals including wing extension and vibration. While Drosophila Gr32a and Gr33a function in detecting pheromones that modulate courtship, Daphnia pulex is a crustacean that reproduces primarily through parthenogenesis, with males being facultative. There is no evidence that crustacean GRs play any role in courtship behavior. The phylogenetic inference across such divergent arthropod lineages (insects vs. branchiopod crustaceans) for a highly species-specific behavioral process is not justified.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D. pulex genome has 58 gustatory receptor genes and lacks the insect OR family and Orco, indicating Daphnia relies on GRs (and IRs) for chemoreception</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                    GO:0007635
+                                </a>
+                            </span>
+                            <span class="term-label">chemosensory behavior</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0007635" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on phylogenetic inference from Drosophila GR genes that function in chemosensory behavior. Given that GRs are chemoreceptors that detect chemical stimuli and trigger behavioral responses, this annotation is appropriate for DpuGr29. Daphnia relies heavily on chemosensory detection for predator avoidance, food finding, and environmental sensing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chemosensory behavior (GO:0007635) is defined as &#34;behavior that is dependent upon the sensation of chemicals.&#34; GRs are established chemoreceptors across arthropods. Daphnia pulex has an expanded GR repertoire (58 genes) and relies heavily on chemosensory detection for predator avoidance (kairomone detection), food finding, and environmental sensing. The phylogenetic inference from Drosophila GRs to Daphnia GRs for this general chemosensory function is well-supported, as the fundamental role of GRs as chemoreceptors mediating behavioral responses is conserved across arthropods.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Daphnia chemosensory-driven phenotypic plasticity to environmental cues (e.g., predator kairomones), supporting the biological relevance of chemosensory programs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0030424" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This cellular component annotation is inferred from Drosophila Gr32a and Gr33a expression in gustatory receptor neurons (GRNs) which have axons projecting to the brain. While crustacean chemosensory neurons also have axonal projections, there is no direct evidence for DpuGr29 localization to axons specifically.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on phylogenetic inference from Drosophila GRN expression patterns. Crustacean chemosensory neurons are expected to have similar morphology with axonal projections to central ganglia. However, there is no direct evidence for DpuGr29 expression pattern or subcellular localization in Daphnia. The inference is plausible but unverified. Without expression data showing DpuGr29 in neurons with axons, this remains speculative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GR family presence has been robustly documented in Daphnia but remained elusive in other crustaceans at that time; IRs dominate across crustaceans. The review stresses gaps in tissue-level expression and physiological roles for crustacean GRs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0030425" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from Drosophila GR expression in gustatory receptor neurons, where GRs localize to dendrites that contact tastant molecules. GRs in chemosensory neurons are expected to localize to dendritic membranes where ligand detection occurs, but direct evidence for DpuGr29 is lacking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is phylogenetically inferred from Drosophila GRN morphology. Chemoreceptors typically localize to dendritic/ciliary membranes of sensory neurons where they contact chemical stimuli. However, there is no published expression or localization data for DpuGr29 in Daphnia. The inference is reasonable based on general GR biology but remains unverified for this specific gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">There is no direct gene-level functional characterization (ligand specificity, electrophysiology, or precise cellular expression) published for DpuGr29</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043025" target="_blank" class="term-link">
+                                    GO:0043025
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal cell body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0043025" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from Drosophila GR expression in gustatory receptor neurons. GRs are expressed in neurons, so presence in the neuronal cell body (soma) is expected for protein synthesis/trafficking, though the functional site is typically dendrites/cilia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation indicates DpuGr29 is active in neuronal cell bodies, inferred from Drosophila GRN expression patterns. While GRs are neuronally expressed proteins and would be present in cell bodies, this is less informative than dendritic localization which represents the functional site. No direct expression data exists for DpuGr29 in Daphnia neurons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">There is no direct gene-level functional characterization (ligand specificity, electrophysiology, or precise cellular expression) published for DpuGr29</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on UniProt subcellular location prediction indicating DpuGr29 is a multi-pass membrane protein localized to the cell membrane. This is consistent with the 7TM architecture of gustatory receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GRs are established 7-transmembrane receptors that localize to the plasma membrane. The UniProt entry shows 8 predicted transmembrane helices consistent with the 7TM chemoreceptor superfamily. Plasma membrane localization is essential for chemoreceptor function in detecting external chemical stimuli. This annotation is well-supported by structural predictions and family membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Daphnia GRs are members of the arthropod GR/OR chemoreceptor superfamily with characteristic 7 transmembrane helices and a conserved motif in TM7 (TYhhhhhQF)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on InterPro domain IPR013604 (7TM_chemorcpt) indicating membrane localization. This is correct but less specific than GO:0005886 (plasma membrane) which is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is accurate - DpuGr29 contains the 7TM chemoreceptor domain (IPR013604) which is a multi-pass transmembrane domain. While GO:0016020 (membrane) is a more general term than GO:0005886 (plasma membrane), both annotations are appropriate. The IEA annotation based on InterPro domain mapping is well-supported by structural predictions showing 7-8 transmembrane helices.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D. pulex GR genes typically share a characteristic intron-exon structure with phase-0 introns; this 7TM chemoreceptor architecture aligns with the InterPro 7TM_chemorcpt and Pfam 7tm_7 domain assignments noted for E9FXF3 (PF08395; IPR013604)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050909" target="_blank" class="term-link">
+                                    GO:0050909
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of taste</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0050909" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on InterPro domain IPR013604 (7TM_chemorcpt) mapping to taste perception. For aquatic organisms like Daphnia, the distinction between taste (contact chemosensation) and smell (olfaction/distant chemosensation) is less clear than in terrestrial organisms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term GO:0050909 (sensory perception of taste) implies terrestrial-style gustation, but Daphnia lives in aquatic environments where chemicals are detected in solution. The distinction between taste and smell in aquatic organisms is blurred. A more appropriate annotation would be GO:0007606 (sensory perception of chemical stimulus), which is the parent term that encompasses both taste and smell without implying a specific modality. Given no direct evidence for DpuGr29 ligands or expression site, we cannot determine if this gene functions in contact chemosensation vs. distant chemosensation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007606" target="_blank" class="term-link">
+                                    sensory perception of chemical stimulus
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Inference from family-level evidence suggests a role in peripheral chemosensation (likely taste/contact chemosensation) in antennules or feeding appendages, consistent with Daphnia chemosensory biology</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099094" target="_blank" class="term-link">
+                                    GO:0099094
+                                </a>
+                            </span>
+                            <span class="term-label">ligand-gated monoatomic cation channel activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="E9FXF3" data-a="GO:0099094" data-r="file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW ANNOTATION: GRs have been shown to function as ligand-gated cation channels, not GPCRs. Recent cryo-EM structures of Bombyx mori Gr9 demonstrate tetrameric channel architecture with defined ligand-binding pockets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Recent structural and functional studies have definitively established that arthropod gustatory receptors function as ligand-gated ion channels, not G-protein coupled receptors despite their 7TM architecture. The cryo-EM structure of BmGr9 shows a tetrameric fructose-gated cation channel. This molecular function annotation is essential for accurately representing GR function and should be added based on sequence similarity (ISS) to characterized GRs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cryo-EM structures of Bombyx mori Gr9 (BmGr9) revealed a tetrameric fructose-gated cation channel. Ligand binding occurs in a solvent-accessible pocket shaped by S4/S5 and aromatic/polar residues; channel opening is associated with S7b helix movement</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DpuGr29 is predicted to function as a ligand-gated cation channel for chemosensory detection of dissolved chemicals in the aquatic environment, based on GR family membership and structural homology to BmGr9.</h3>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="FUNCTION: DpuGr29 is predicted to function as a ligand-gated..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099094" target="_blank" class="term-link">
+                            ligand-gated monoatomic cation channel activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007606" target="_blank" class="term-link">
+                                sensory perception of chemical stimulus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19383158" target="_blank" class="term-link">
+                            PMID:19383158
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The chemoreceptor genes of the waterflea Daphnia pulex - many Grs but no Ors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D. pulex has 58 gustatory receptors organized into three subfamilies</div>
+                        
+                        <div class="finding-text">"These 58 Grs form 3 distinctive subfamilies of 37, 12, and 5 genes, as well as a highly divergent singleton (Gr58)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GRs function as ligand-gated ion channels</div>
+                        
+                        <div class="finding-text">"They therefore support the hypothesis that these chemoreceptors are not coupled to G-proteins and instead function as ligand-gated ion channels"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DpuGr29 location</div>
+                        
+                        <div class="finding-text">"29scaffold_4:2213168-2214628NCBI_GNO_04003953116213468595th intron is longer"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Daphnia GRs have conserved 7TM architecture with TYhhhhhQF motif</div>
+                        
+                        <div class="finding-text">"These Grs are fairly easily recognized through their somewhat conserved TM7 regions near the C-terminus, which includes a TYhhhhhQF motif in TM7"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of DpuGr29 gustatory receptor</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D. pulex has 58 GRs organized into three subfamilies</div>
+                        
+                        <div class="finding-text">"D. pulex genome has 58 gustatory receptor genes and lacks the insect OR family and Orco, indicating Daphnia relies on GRs (and IRs) for chemoreception"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No odorant receptors (ORs) or Orco found in D. pulex genome</div>
+                        
+                        <div class="finding-text">"D. pulex genome has 58 gustatory receptor genes and lacks the insect OR family and Orco"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DpuGr29 maps to DAPPUDRAFT_346859 on scaffold_4</div>
+                        
+                        <div class="finding-text">"DpuGr29 is a bona fide Daphnia pulex gustatory receptor gene located on scaffold_4 and mapped to DAPPUDRAFT_346859"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GRs have characteristic 7TM architecture with conserved TYhhhhhQF motif</div>
+                        
+                        <div class="finding-text">"Daphnia GRs are members of the arthropod GR/OR chemoreceptor superfamily with characteristic 7 transmembrane helices and a conserved motif in TM7 (TYhhhhhQF)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GRs function as ligand-gated cation channels, not GPCRs</div>
+                        
+                        <div class="finding-text">"GRs are 7-transmembrane chemoreceptors that function as ligand-gated ion channels (7TMIC superfamily) rather than GPCRs; their membrane topology is inverted relative to class A GPCRs, with the C-terminus extracellular"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM structure of BmGr9 shows tetrameric channel architecture</div>
+                        
+                        <div class="finding-text">"Cryo-EM structures of Bombyx mori Gr9 (BmGr9) revealed a tetrameric fructose-gated cation channel. Ligand binding occurs in a solvent-accessible pocket shaped by S4/S5 and aromatic/polar residues; channel opening is associated with S7b helix movement"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the ligand specificity of DpuGr29 (sugars, bitter compounds, pheromones)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="Q: What is the ligand specificity of DpuGr29 (sugars,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> In which tissues/cells is DpuGr29 expressed in Daphnia?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="Q: In which tissues/cells is DpuGr29 expressed in Dap..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DpuGr29 function as a homomer or heteromer with other Daphnia GRs?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="Q: Does DpuGr29 function as a homomer or heteromer wi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Heterologous expression of DpuGr29 in Xenopus oocytes or HEK293 cells followed by calcium imaging or electrophysiology to identify ligand specificity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DpuGr29 responds to specific chemical ligands (sugars, bitter compounds, or environmental cues)</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: functional assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="EXPERIMENT: Heterologous expression of DpuGr29 in Xenopus oocy..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In situ hybridization or single-cell RNA-seq of Daphnia chemosensory organs to determine DpuGr29 expression pattern</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DpuGr29 is expressed in chemosensory neurons of antennules or feeding appendages</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: expression analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="EXPERIMENT: In situ hybridization or single-cell RNA-seq of Da..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> AlphaFold2 structure prediction and molecular docking to identify potential ligand-binding residues</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Structural modeling can identify candidate ligands based on binding pocket architecture</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: computational analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="E9FXF3" data-a="EXPERIMENT: AlphaFold2 structure prediction and molecular dock..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DpuGr29-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="E9FXF3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-23T00:07:58.471643'<br />
+end_time: '2025-12-23T00:15:52.928400'<br />
+duration_seconds: 474.46<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DAPPU<br />
+  gene_id: DpuGr29<br />
+  gene_symbol: DpuGr29<br />
+  uniprot_accession: E9FXF3<br />
+  protein_description: 'RecName: Full=Gustatory receptor {ECO:0008006|Google:ProtNLM};'<br />
+  gene_info: Name=DpuGr29 {ECO:0000313|EMBL:EFX88279.1}; ORFNames=DAPPUDRAFT_346859<br />
+    {ECO:0000313|EMBL:EFX88279.1};<br />
+  organism_full: Daphnia pulex (Water flea).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: 7TM_chemorcpt. (IPR013604); 7tm_7 (PF08395)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 31</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> E9FXF3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Gustatory receptor {ECO:0008006|Google:ProtNLM};</li>
+<li><strong>Gene Information:</strong> Name=DpuGr29 {ECO:0000313|EMBL:EFX88279.1}; ORFNames=DAPPUDRAFT_346859 {ECO:0000313|EMBL:EFX88279.1};</li>
+<li><strong>Organism (full):</strong> Daphnia pulex (Water flea).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> 7TM_chemorcpt. (IPR013604); 7tm_7 (PF08395)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "DpuGr29" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Daphnia pulex (Water flea).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'DpuGr29' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>DpuGr29</strong> (gene ID: DpuGr29, UniProt: E9FXF3) in DAPPU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> E9FXF3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Gustatory receptor {ECO:0008006|Google:ProtNLM};</li>
+<li><strong>Gene Information:</strong> Name=DpuGr29 {ECO:0000313|EMBL:EFX88279.1}; ORFNames=DAPPUDRAFT_346859 {ECO:0000313|EMBL:EFX88279.1};</li>
+<li><strong>Organism (full):</strong> Daphnia pulex (Water flea).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> 7TM_chemorcpt. (IPR013604); 7tm_7 (PF08395)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "DpuGr29" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Daphnia pulex (Water flea).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'DpuGr29' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>DpuGr29</strong> (gene ID: DpuGr29, UniProt: E9FXF3) in DAPPU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive Research Report: DpuGr29 (UniProt: E9FXF3) — Daphnia pulex Gustatory Receptor</p>
+<p>Executive verification of target identity</p>
+<ul>
+<li>Gene/protein identity: The Daphnia pulex gustatory receptor gene DpuGr29 maps explicitly to the genomic model DAPPUDRAFT_346859 in the reference genome analysis of D. pulex chemoreceptors (Table 1 in Peñalva-Arana et al. 2009), confirming organism and gene symbol alignment with the UniProt entry E9FXF3 (gustatory receptor) (penalvaarana2009thechemoreceptorgenes pages 2-4).</li>
+<li>Family/domains/topology: Daphnia GRs are members of the arthropod GR/OR chemoreceptor superfamily with characteristic 7 transmembrane helices and a conserved motif in TM7 (TYhhhhhQF). D. pulex GR genes typically share a characteristic intron-exon structure with phase-0 introns; this 7TM chemoreceptor architecture aligns with the InterPro 7TM_chemorcpt and Pfam 7tm_7 domain assignments noted for E9FXF3 (PF08395; IPR013604) (penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10, robertson2019molecularevolutionof pages 2-4).</li>
+</ul>
+<p>1) Key concepts and definitions with current understanding</p>
+<ul>
+<li>GRs in arthropods: GRs are 7-transmembrane chemoreceptors that function as ligand-gated ion channels (7TMIC superfamily) rather than GPCRs; their membrane topology is inverted relative to class A GPCRs, with the C-terminus extracellular. Insects use GRs broadly in taste and some olfactory functions, but Daphnia lacks ORs and has an expanded GR repertoire (penalvaarana2009thechemoreceptorgenes pages 8-10, robertson2019molecularevolutionof pages 2-4).</li>
+<li>Daphnia chemoreceptor complement: The D. pulex genome encodes 58 gustatory receptor genes and lacks the insect OR family and Orco, indicating Daphnia relies on GRs (and IRs) for chemoreception (penalvaarana2009thechemoreceptorgenes pages 6-8, penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10, penalvaarana2009thechemoreceptorgenes pages 2-4).</li>
+<li>Evolutionary context: GRs likely represent one of the oldest chemosensory receptor families in Arthropoda, with lineage-specific expansions; Daphnia (Branchiopoda) is a canonical example of GR expansion, contrasting with paucity of GRs reported in many multicrustaceans (e.g., decapods) (eyun2017evolutionaryhistoryof pages 8-11, kozma2018chemoreceptorproteinsin pages 33-34).</li>
+</ul>
+<p>2) Recent developments and latest research (prioritize 2023–2024)</p>
+<ul>
+<li>Structural mechanism of GR activation (2024): Cryo-EM structures of Bombyx mori Gr9 (BmGr9) revealed a tetrameric fructose-gated cation channel. Ligand binding occurs in a solvent-accessible pocket shaped by S4/S5 and aromatic/polar residues; channel opening is associated with S7b helix movement. These structures clarify ligand specificity determinants and gating transitions for 7TM GR channels, informing functional inference across arthropod GRs (frank2024structuralbasisof pages 1-3). URL: https://doi.org/10.1016/j.celrep.2024.114035 (Apr 2024).</li>
+<li>Repertoire evolution and cryptic homology (2023–2024 context): Structure-guided remote homology analyses indicate that insect chemoreceptors (including GRs) belong to a broader, previously cryptic 7TMIC superfamily spanning the tree of life; structural screens can identify distant homologs, underscoring deep evolutionary roots and mechanistic conservation of 7TM ion channels (cited in Frank 2024) (frank2024structuralbasisof pages 20-22). URL: see references within Frank 2024 (Apr 2024).</li>
+<li>Sensory receptor evolution review (2024): A comprehensive review highlights duplication (including tandem arrays) and retroduplication as drivers of chemoreceptor diversification; notably, many divergent GRs are intronless, consistent with retrocopy origins. These mechanisms help explain large, clustered GR repertoires such as in Daphnia (valenciamontoya2024evolutionofsensory pages 10-12). URL: https://doi.org/10.1146/annurev-cellbio-120123-112853 (Oct 2024).</li>
+<li>Daphnia transcriptomics and taste-related programs (2024): Developmental RNA-seq in Daphnia mitsukuri identified juvenile-stage modules enriched for taste-related GO terms (e.g., “sensory perception of bitter taste,” “sweet taste receptor activity”) and KEGG taste transduction pathways, supporting the biological relevance of chemosensory programs in Daphnia juveniles. Although not D. pulex, these findings strengthen the expectation of GR activity in Daphnia taste/chemosensation (zhang2024rnaseqanalysisreveals pages 4-8). URL: https://doi.org/10.1186/s12864-024-10210-8 (Mar 2024).</li>
+</ul>
+<p>3) Current applications and real-world implementations</p>
+<ul>
+<li>Comparative crustacean chemoreception: Expression surveys in decapods report scant GR representation relative to IRs and extensive non-GR chemosensory signaling components; this informs comparative models and target prioritization for functional studies and potential bioinspired sensing applications (kozma2018chemoreceptorproteinsin pages 33-34). URL: https://doi.org/10.1371/journal.pone.0203935 (Sep 2018).</li>
+<li>Daphnia as a model for aquatic chemical ecology: Reviews emphasize Daphnia’s chemosensory-driven phenotypic plasticity to environmental cues (e.g., predator kairomones), supporting use in ecotoxicology and aquatic sensory ecology; the genomic repertoire data provide molecular candidates (GRs) for mechanistic dissection (weiss2019sensoryecologyof pages 5-6). URL: https://doi.org/10.3389/fnbeh.2018.00330 (Jan 2019).</li>
+</ul>
+<p>4) Expert opinions and analysis from authoritative sources</p>
+<ul>
+<li>Foundational Daphnia GR analysis: The original genome study concludes D. pulex has “many Grs but no Ors,” with 58 GRs organized into three subfamilies (37, 12, 5 genes), several in tandem arrays, and with conserved TM7 motif and intron features; possible sugar-receptor-like clustering is limited (DpuGr55–57), and no CO2 receptor orthologs were found (penalvaarana2009thechemoreceptorgenes pages 6-8, penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10). URL: https://doi.org/10.1186/1471-2148-9-79 (Apr 2009).</li>
+<li>Crustacean chemoreception review: A 2016 comparative review notes GR family presence has been robustly documented in Daphnia but remained elusive in other crustaceans at that time; IRs dominate across crustaceans. The review stresses gaps in tissue-level expression and physiological roles for crustacean GRs, motivating focused studies in Daphnia (derby2016molecularmechanismsof pages 6-7). URL: https://doi.org/10.1093/chemse/bjw057 (Jun 2016).</li>
+<li>Evolutionary synthesis: GRs are among the oldest arthropod chemosensory families and display extreme sequence divergence with lineage-specific expansions and losses; intron-position conservation and gene structure aid annotation where sequence similarity is low (eyun2017evolutionaryhistoryof pages 8-11, robertson2019molecularevolutionof pages 2-4). URLs: https://doi.org/10.1093/molbev/msx147 (Apr 2017); https://doi.org/10.1146/annurev-ento-020117-043322 (Jan 2019).</li>
+</ul>
+<p>5) Relevant statistics and data from recent studies</p>
+<ul>
+<li>Daphnia GR counts and absence of ORs: D. pulex has 58 GRs; no ORs or Orco are present in the genome (penalvaarana2009thechemoreceptorgenes pages 6-8, penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10, penalvaarana2009thechemoreceptorgenes pages 2-4). URL: https://doi.org/10.1186/1471-2148-9-79 (Apr 2009).</li>
+<li>Comparative crustacean counts: Decapod crustaceans often have very few GRs (e.g., one identified in Panulirus argus), contrasting sharply with Daphnia’s expanded GR repertoire (kozma2018chemoreceptorproteinsin pages 33-34). URL: https://doi.org/10.1371/journal.pone.0203935 (Sep 2018).</li>
+<li>Developmental transcriptomics in Daphnia: Taste-related GO and KEGG pathway enrichment in Daphnia mitsukuri juvenile gene expression modules supports functional significance of chemosensory receptor pathways during ontogeny (zhang2024rnaseqanalysisreveals pages 4-8). URL: https://doi.org/10.1186/s12864-024-10210-8 (Mar 2024).</li>
+<li>Structural statistics for GRs (insects as models): Insect GR repertoires reach dozens of genes per genome (e.g., ~60 in D. melanogaster, 72 in Aedes aegypti, 65 in Bombyx mori), and the 2024 BmGr9 cryo-EM structures demonstrated tetrameric assembly and ligand-pocket features underlying fructose specificity (frank2024structuralbasisof pages 1-3). URL: https://doi.org/10.1016/j.celrep.2024.114035 (Apr 2024).</li>
+</ul>
+<p>Gene-centric synthesis for DpuGr29 (E9FXF3)</p>
+<ul>
+<li>Genomic identity and mapping: DpuGr29 is a bona fide Daphnia pulex gustatory receptor gene located on scaffold_4 and mapped to DAPPUDRAFT_346859; the gene model was noted to have a longer 5th intron. This supports inclusion in the canonical Daphnia GR repertoire (penalvaarana2009thechemoreceptorgenes pages 2-4).</li>
+<li>Predicted structure and localization: Based on Daphnia GR family features, DpuGr29 is predicted to encode a 7-transmembrane chemoreceptor bearing the conserved TYhhhhhQF motif in TM7 and phase-0 introns typical of Daphnia GRs. GRs in Daphnia are expected to localize to membranes of chemosensory neurons; the inverted topology relative to GPCRs places the C-terminus extracellular. GRs in arthropods operate as ligand-gated cation channels rather than G-protein-coupled receptors (penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10, robertson2019molecularevolutionof pages 2-4).</li>
+<li>Function and pathways: There is no direct gene-level functional characterization (ligand specificity, electrophysiology, or precise cellular expression) published for DpuGr29. Inference from family-level evidence suggests a role in peripheral chemosensation (likely taste/contact chemosensation) in antennules or feeding appendages, consistent with Daphnia chemosensory biology and low-level GR expression patterns (penalvaarana2009thechemoreceptorgenes pages 8-10, derby2016molecularmechanismsof pages 6-7). The broader structural mechanism established in 2024 for BmGr9 supports a general model in which GRs act as tetrameric ligand-gated cation channels; whether DpuGr29 functions as a homomer or in heteromeric assemblies remains unknown (frank2024structuralbasisof pages 1-3).</li>
+</ul>
+<p>Limitations and recommendations</p>
+<ul>
+<li>Literature specific to DpuGr29 is limited. While the gene is confidently identified and placed within the Daphnia GR family, no direct assays of DpuGr29 ligands, signaling, or cellular localization were found. Targeted expression mapping (in situ hybridization or single-cell RNA-seq of Daphnia sensory organs) and heterologous functional assays guided by structural alignments to recently solved GR structures are recommended (penalvaarana2009thechemoreceptorgenes pages 2-4, frank2024structuralbasisof pages 1-3).</li>
+</ul>
+<p>References (URLs and dates)</p>
+<ul>
+<li>Peñalva-Arana DC, Lynch M, Robertson HM. The chemoreceptor genes of the waterflea Daphnia pulex: many Grs but no Ors. BMC Evol Biol. Apr 2009. https://doi.org/10.1186/1471-2148-9-79 (penalvaarana2009thechemoreceptorgenes pages 6-8, penalvaarana2009thechemoreceptorgenes pages 4-6, penalvaarana2009thechemoreceptorgenes pages 8-10, penalvaarana2009thechemoreceptorgenes pages 2-4).</li>
+<li>Derby CD, Kozma MT, Senatore A, Schmidt M. Molecular Mechanisms of Reception and Perireception in Crustacean Chemoreception: A Comparative Review. Chem Senses. Jun 2016. https://doi.org/10.1093/chemse/bjw057 (derby2016molecularmechanismsof pages 6-7).</li>
+<li>Eyun S-I et al. Evolutionary History of Chemosensory-Related Gene Families across the Arthropoda. Mol Biol Evol. Apr 2017. https://doi.org/10.1093/molbev/msx147 (eyun2017evolutionaryhistoryof pages 8-11).</li>
+<li>Robertson HM. Molecular Evolution of the Major Arthropod Chemoreceptor Gene Families. Annu Rev Entomol. Jan 2019. https://doi.org/10.1146/annurev-ento-020117-043322 (robertson2019molecularevolutionof pages 2-4).</li>
+<li>Kozma MT et al. Chemoreceptor proteins in the Caribbean spiny lobster, Panulirus argus. PLoS One. Sep 2018. https://doi.org/10.1371/journal.pone.0203935 (kozma2018chemoreceptorproteinsin pages 33-34).</li>
+<li>Weiss LC. Sensory Ecology of Predator-Induced Phenotypic Plasticity. Front Behav Neurosci. Jan 2019. https://doi.org/10.3389/fnbeh.2018.00330 (weiss2019sensoryecologyof pages 5-6).</li>
+<li>Frank HM et al. Structural basis of ligand specificity and channel activation in an insect gustatory receptor. Cell Reports. Apr 2024. https://doi.org/10.1016/j.celrep.2024.114035 (frank2024structuralbasisof pages 1-3, frank2024structuralbasisof pages 20-22).</li>
+<li>Valencia-Montoya WA, Pierce NE, Bellono NW. Evolution of Sensory Receptors. Annu Rev Cell Dev Biol. Oct 2024. https://doi.org/10.1146/annurev-cellbio-120123-112853 (valenciamontoya2024evolutionofsensory pages 10-12).</li>
+<li>Zhang X et al. RNA-seq analysis reveals changes in mRNA expression during development in Daphnia mitsukuri. BMC Genomics. Mar 2024. https://doi.org/10.1186/s12864-024-10210-8 (zhang2024rnaseqanalysisreveals pages 4-8).</li>
+</ul>
+<p>Conclusion</p>
+<p>DpuGr29 (E9FXF3) is a verified Daphnia pulex gustatory receptor belonging to the 7tm_7/7TM_chemorcpt superfamily, mapped to DAPPUDRAFT_346859. While gene-specific functional and localization data are not yet reported, strong family- and organism-level evidence indicates that DpuGr29 likely encodes a 7TM ligand-gated ion channel participating in Daphnia peripheral chemosensation, potentially in antennular or feeding appendage neurons. Recent 2024 structural advances in insect GRs clarify channel architecture and ligand-binding mechanisms that can guide functional inference and future experimental design for DpuGr29. Developmental transcriptomics in Daphnia further supports the relevance of taste/chemosensory programs in juveniles, motivating targeted studies of GR expression and function in this clade (penalvaarana2009thechemoreceptorgenes pages 2-4, penalvaarana2009thechemoreceptorgenes pages 8-10, frank2024structuralbasisof pages 1-3, zhang2024rnaseqanalysisreveals pages 4-8).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(penalvaarana2009thechemoreceptorgenes pages 2-4): D Carolina Peñalva-Arana, Michael Lynch, and Hugh M Robertson. The chemoreceptor genes of the waterflea daphnia pulex: many grs but no ors. BMC Evolutionary Biology, 9:79-79, Apr 2009. URL: https://doi.org/10.1186/1471-2148-9-79, doi:10.1186/1471-2148-9-79. This article has 155 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalvaarana2009thechemoreceptorgenes pages 4-6): D Carolina Peñalva-Arana, Michael Lynch, and Hugh M Robertson. The chemoreceptor genes of the waterflea daphnia pulex: many grs but no ors. BMC Evolutionary Biology, 9:79-79, Apr 2009. URL: https://doi.org/10.1186/1471-2148-9-79, doi:10.1186/1471-2148-9-79. This article has 155 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalvaarana2009thechemoreceptorgenes pages 8-10): D Carolina Peñalva-Arana, Michael Lynch, and Hugh M Robertson. The chemoreceptor genes of the waterflea daphnia pulex: many grs but no ors. BMC Evolutionary Biology, 9:79-79, Apr 2009. URL: https://doi.org/10.1186/1471-2148-9-79, doi:10.1186/1471-2148-9-79. This article has 155 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(robertson2019molecularevolutionof pages 2-4): Hugh M. Robertson. Molecular evolution of the major arthropod chemoreceptor gene families. Annual review of entomology, 64:227-242, Jan 2019. URL: https://doi.org/10.1146/annurev-ento-020117-043322, doi:10.1146/annurev-ento-020117-043322. This article has 239 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalvaarana2009thechemoreceptorgenes pages 6-8): D Carolina Peñalva-Arana, Michael Lynch, and Hugh M Robertson. The chemoreceptor genes of the waterflea daphnia pulex: many grs but no ors. BMC Evolutionary Biology, 9:79-79, Apr 2009. URL: https://doi.org/10.1186/1471-2148-9-79, doi:10.1186/1471-2148-9-79. This article has 155 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eyun2017evolutionaryhistoryof pages 8-11): Seong-il Eyun, Ho Young Soh, Marijan Posavi, James B. Munro, Daniel S.T. Hughes, Shwetha C. Murali, Jiaxin Qu, Shannon Dugan, Sandra L. Lee, Hsu Chao, Huyen Dinh, Yi Han, HarshaVardhan Doddapaneni, Kim C. Worley, Donna M. Muzny, Eun-Ok Park, Joana C. Silva, Richard A. Gibbs, Stephen Richards, and Carol Eunmi Lee. Evolutionary history of chemosensory-related gene families across the arthropoda. Molecular Biology and Evolution, 34:1838-1862, Apr 2017. URL: https://doi.org/10.1093/molbev/msx147, doi:10.1093/molbev/msx147. This article has 192 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kozma2018chemoreceptorproteinsin pages 33-34): Mihika T. Kozma, Manfred Schmidt, Hanh Ngo-Vu, Shea D. Sparks, Adriano Senatore, and Charles D. Derby. Chemoreceptor proteins in the caribbean spiny lobster, panulirus argus: expression of ionotropic receptors, gustatory receptors, and trp channels in two chemosensory organs and brain. PLOS ONE, 13:e0203935, Sep 2018. URL: https://doi.org/10.1371/journal.pone.0203935, doi:10.1371/journal.pone.0203935. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frank2024structuralbasisof pages 1-3): Heather M. Frank, Sanket Walujkar, Richard M. Walsh, Willem J. Laursen, Douglas L. Theobald, Paul A. Garrity, and Rachelle Gaudet. Structural basis of ligand specificity and channel activation in an insect gustatory receptor. Cell reports, 43:114035-114035, Apr 2024. URL: https://doi.org/10.1016/j.celrep.2024.114035, doi:10.1016/j.celrep.2024.114035. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frank2024structuralbasisof pages 20-22): Heather M. Frank, Sanket Walujkar, Richard M. Walsh, Willem J. Laursen, Douglas L. Theobald, Paul A. Garrity, and Rachelle Gaudet. Structural basis of ligand specificity and channel activation in an insect gustatory receptor. Cell reports, 43:114035-114035, Apr 2024. URL: https://doi.org/10.1016/j.celrep.2024.114035, doi:10.1016/j.celrep.2024.114035. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(valenciamontoya2024evolutionofsensory pages 10-12): Wendy A. Valencia-Montoya, Naomi E. Pierce, and Nicholas W. Bellono. Evolution of sensory receptors. Annual Review of Cell and Developmental Biology, 40:353-379, Oct 2024. URL: https://doi.org/10.1146/annurev-cellbio-120123-112853, doi:10.1146/annurev-cellbio-120123-112853. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024rnaseqanalysisreveals pages 4-8): Xiuping Zhang, Wenwu Yang, David Blair, Wei Hu, and Mingbo Yin. Rna-seq analysis reveals changes in mrna expression during development in daphnia mitsukuri. BMC Genomics, Mar 2024. URL: https://doi.org/10.1186/s12864-024-10210-8, doi:10.1186/s12864-024-10210-8. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weiss2019sensoryecologyof pages 5-6): Linda C. Weiss. Sensory ecology of predator-induced phenotypic plasticity. Frontiers in Behavioral Neuroscience, Jan 2019. URL: https://doi.org/10.3389/fnbeh.2018.00330, doi:10.3389/fnbeh.2018.00330. This article has 89 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(derby2016molecularmechanismsof pages 6-7): Charles D. Derby, Mihika T. Kozma, Adriano Senatore, and Manfred Schmidt. Molecular mechanisms of reception and perireception in crustacean chemoreception: a comparative review. Chemical senses, 41 5:381-98, Jun 2016. URL: https://doi.org/10.1093/chemse/bjw057, doi:10.1093/chemse/bjw057. This article has 115 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>penalvaarana2009thechemoreceptorgenes pages 2-4</li>
+<li>frank2024structuralbasisof pages 1-3</li>
+<li>frank2024structuralbasisof pages 20-22</li>
+<li>valenciamontoya2024evolutionofsensory pages 10-12</li>
+<li>zhang2024rnaseqanalysisreveals pages 4-8</li>
+<li>kozma2018chemoreceptorproteinsin pages 33-34</li>
+<li>weiss2019sensoryecologyof pages 5-6</li>
+<li>derby2016molecularmechanismsof pages 6-7</li>
+<li>eyun2017evolutionaryhistoryof pages 8-11</li>
+<li>robertson2019molecularevolutionof pages 2-4</li>
+<li>penalvaarana2009thechemoreceptorgenes pages 4-6</li>
+<li>penalvaarana2009thechemoreceptorgenes pages 8-10</li>
+<li>penalvaarana2009thechemoreceptorgenes pages 6-8</li>
+<li>https://doi.org/10.1016/j.celrep.2024.114035</li>
+<li>https://doi.org/10.1146/annurev-cellbio-120123-112853</li>
+<li>https://doi.org/10.1186/s12864-024-10210-8</li>
+<li>https://doi.org/10.1371/journal.pone.0203935</li>
+<li>https://doi.org/10.3389/fnbeh.2018.00330</li>
+<li>https://doi.org/10.1186/1471-2148-9-79</li>
+<li>https://doi.org/10.1093/chemse/bjw057</li>
+<li>https://doi.org/10.1093/molbev/msx147</li>
+<li>https://doi.org/10.1146/annurev-ento-020117-043322</li>
+<li>https://doi.org/10.1186/1471-2148-9-79,</li>
+<li>https://doi.org/10.1146/annurev-ento-020117-043322,</li>
+<li>https://doi.org/10.1093/molbev/msx147,</li>
+<li>https://doi.org/10.1371/journal.pone.0203935,</li>
+<li>https://doi.org/10.1016/j.celrep.2024.114035,</li>
+<li>https://doi.org/10.1146/annurev-cellbio-120123-112853,</li>
+<li>https://doi.org/10.1186/s12864-024-10210-8,</li>
+<li>https://doi.org/10.3389/fnbeh.2018.00330,</li>
+<li>https://doi.org/10.1093/chemse/bjw057,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: E9FXF3
+gene_symbol: DpuGr29
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6669
+  label: Daphnia pulex
+description: &gt;-
+  DpuGr29 is a gustatory receptor (GR) from the water flea Daphnia pulex,
+  belonging to the 7TM chemoreceptor superfamily. Unlike classical GPCRs, GRs
+  function as ligand-gated ion channels with inverted membrane topology (C-terminus
+  extracellular). D. pulex has 58 GRs but notably lacks odorant receptors (ORs),
+  making GRs (along with ionotropic receptors) the primary chemosensory receptors
+  in this crustacean. DpuGr29 belongs to subfamily 1 (Grs1-29 and Grs47-54) and is
+  predicted to function in contact chemosensation in antennular or feeding appendage
+  neurons. No direct experimental characterization of DpuGr29 ligand specificity or
+  cellular expression has been published.
+existing_annotations:
+- term:
+    id: GO:0008049
+    label: male courtship behavior
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is inferred from Drosophila Gr32a and Gr33a, which are involved
+      in male courtship behavior by detecting inhibitory pheromones that suppress
+      male-male courtship. However, D. pulex reproduces primarily by cyclical
+      parthenogenesis, with males appearing only under stress conditions. The
+      annotation of male courtship behavior to a crustacean GR based on Drosophila
+      genes involved in insect-specific courtship rituals (wing extension, licking,
+      copulation attempts) is not phylogenetically appropriate.
+    action: REMOVE
+    reason: &gt;-
+      Male courtship behavior as defined in GO (GO:0008049) specifically describes
+      &#34;behavior of a male for the purpose of attracting a sexual partner&#34; with
+      Drosophila melanogaster cited as the example organism. The behavior involves
+      insect-specific courtship rituals including wing extension and vibration.
+      While Drosophila Gr32a and Gr33a function in detecting pheromones that modulate
+      courtship, Daphnia pulex is a crustacean that reproduces primarily through
+      parthenogenesis, with males being facultative. There is no evidence that
+      crustacean GRs play any role in courtship behavior. The phylogenetic inference
+      across such divergent arthropod lineages (insects vs. branchiopod crustaceans)
+      for a highly species-specific behavioral process is not justified.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          D. pulex genome has 58 gustatory receptor genes and lacks the insect OR
+          family and Orco, indicating Daphnia relies on GRs (and IRs) for chemoreception
+- term:
+    id: GO:0007635
+    label: chemosensory behavior
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is based on phylogenetic inference from Drosophila GR genes
+      that function in chemosensory behavior. Given that GRs are chemoreceptors that
+      detect chemical stimuli and trigger behavioral responses, this annotation is
+      appropriate for DpuGr29. Daphnia relies heavily on chemosensory detection for
+      predator avoidance, food finding, and environmental sensing.
+    action: ACCEPT
+    reason: &gt;-
+      Chemosensory behavior (GO:0007635) is defined as &#34;behavior that is dependent
+      upon the sensation of chemicals.&#34; GRs are established chemoreceptors across
+      arthropods. Daphnia pulex has an expanded GR repertoire (58 genes) and relies
+      heavily on chemosensory detection for predator avoidance (kairomone detection),
+      food finding, and environmental sensing. The phylogenetic inference from
+      Drosophila GRs to Daphnia GRs for this general chemosensory function is
+      well-supported, as the fundamental role of GRs as chemoreceptors mediating
+      behavioral responses is conserved across arthropods.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          Daphnia chemosensory-driven phenotypic plasticity to environmental cues
+          (e.g., predator kairomones), supporting the biological relevance of
+          chemosensory programs
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This cellular component annotation is inferred from Drosophila Gr32a and Gr33a
+      expression in gustatory receptor neurons (GRNs) which have axons projecting
+      to the brain. While crustacean chemosensory neurons also have axonal projections,
+      there is no direct evidence for DpuGr29 localization to axons specifically.
+    action: UNDECIDED
+    reason: &gt;-
+      The annotation is based on phylogenetic inference from Drosophila GRN expression
+      patterns. Crustacean chemosensory neurons are expected to have similar morphology
+      with axonal projections to central ganglia. However, there is no direct evidence
+      for DpuGr29 expression pattern or subcellular localization in Daphnia. The
+      inference is plausible but unverified. Without expression data showing DpuGr29
+      in neurons with axons, this remains speculative.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          GR family presence has been robustly documented in Daphnia but remained
+          elusive in other crustaceans at that time; IRs dominate across crustaceans.
+          The review stresses gaps in tissue-level expression and physiological roles
+          for crustacean GRs
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is inferred from Drosophila GR expression in gustatory receptor
+      neurons, where GRs localize to dendrites that contact tastant molecules. GRs
+      in chemosensory neurons are expected to localize to dendritic membranes where
+      ligand detection occurs, but direct evidence for DpuGr29 is lacking.
+    action: UNDECIDED
+    reason: &gt;-
+      The annotation is phylogenetically inferred from Drosophila GRN morphology.
+      Chemoreceptors typically localize to dendritic/ciliary membranes of sensory
+      neurons where they contact chemical stimuli. However, there is no published
+      expression or localization data for DpuGr29 in Daphnia. The inference is
+      reasonable based on general GR biology but remains unverified for this
+      specific gene.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          There is no direct gene-level functional characterization (ligand specificity,
+          electrophysiology, or precise cellular expression) published for DpuGr29
+- term:
+    id: GO:0043025
+    label: neuronal cell body
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is inferred from Drosophila GR expression in gustatory receptor
+      neurons. GRs are expressed in neurons, so presence in the neuronal cell body
+      (soma) is expected for protein synthesis/trafficking, though the functional
+      site is typically dendrites/cilia.
+    action: UNDECIDED
+    reason: &gt;-
+      The annotation indicates DpuGr29 is active in neuronal cell bodies, inferred
+      from Drosophila GRN expression patterns. While GRs are neuronally expressed
+      proteins and would be present in cell bodies, this is less informative than
+      dendritic localization which represents the functional site. No direct
+      expression data exists for DpuGr29 in Daphnia neurons.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          There is no direct gene-level functional characterization (ligand specificity,
+          electrophysiology, or precise cellular expression) published for DpuGr29
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This annotation is based on UniProt subcellular location prediction indicating
+      DpuGr29 is a multi-pass membrane protein localized to the cell membrane. This
+      is consistent with the 7TM architecture of gustatory receptors.
+    action: ACCEPT
+    reason: &gt;-
+      GRs are established 7-transmembrane receptors that localize to the plasma
+      membrane. The UniProt entry shows 8 predicted transmembrane helices consistent
+      with the 7TM chemoreceptor superfamily. Plasma membrane localization is
+      essential for chemoreceptor function in detecting external chemical stimuli.
+      This annotation is well-supported by structural predictions and family membership.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          Daphnia GRs are members of the arthropod GR/OR chemoreceptor superfamily
+          with characteristic 7 transmembrane helices and a conserved motif in TM7
+          (TYhhhhhQF)
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is based on InterPro domain IPR013604 (7TM_chemorcpt)
+      indicating membrane localization. This is correct but less specific than
+      GO:0005886 (plasma membrane) which is also annotated.
+    action: ACCEPT
+    reason: &gt;-
+      The annotation is accurate - DpuGr29 contains the 7TM chemoreceptor domain
+      (IPR013604) which is a multi-pass transmembrane domain. While GO:0016020
+      (membrane) is a more general term than GO:0005886 (plasma membrane), both
+      annotations are appropriate. The IEA annotation based on InterPro domain
+      mapping is well-supported by structural predictions showing 7-8 transmembrane
+      helices.
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          D. pulex GR genes typically share a characteristic intron-exon structure
+          with phase-0 introns; this 7TM chemoreceptor architecture aligns with the
+          InterPro 7TM_chemorcpt and Pfam 7tm_7 domain assignments noted for E9FXF3
+          (PF08395; IPR013604)
+- term:
+    id: GO:0050909
+    label: sensory perception of taste
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is based on InterPro domain IPR013604 (7TM_chemorcpt) mapping
+      to taste perception. For aquatic organisms like Daphnia, the distinction
+      between taste (contact chemosensation) and smell (olfaction/distant
+      chemosensation) is less clear than in terrestrial organisms.
+    action: MODIFY
+    reason: &gt;-
+      The term GO:0050909 (sensory perception of taste) implies terrestrial-style
+      gustation, but Daphnia lives in aquatic environments where chemicals are
+      detected in solution. The distinction between taste and smell in aquatic
+      organisms is blurred. A more appropriate annotation would be GO:0007606
+      (sensory perception of chemical stimulus), which is the parent term that
+      encompasses both taste and smell without implying a specific modality. Given
+      no direct evidence for DpuGr29 ligands or expression site, we cannot determine
+      if this gene functions in contact chemosensation vs. distant chemosensation.
+    proposed_replacement_terms:
+      - id: GO:0007606
+        label: sensory perception of chemical stimulus
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          Inference from family-level evidence suggests a role in peripheral
+          chemosensation (likely taste/contact chemosensation) in antennules or
+          feeding appendages, consistent with Daphnia chemosensory biology
+- term:
+    id: GO:0099094
+    label: ligand-gated monoatomic cation channel activity
+  evidence_type: ISS
+  original_reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      NEW ANNOTATION: GRs have been shown to function as ligand-gated cation
+      channels, not GPCRs. Recent cryo-EM structures of Bombyx mori Gr9 demonstrate
+      tetrameric channel architecture with defined ligand-binding pockets.
+    action: NEW
+    reason: &gt;-
+      Recent structural and functional studies have definitively established that
+      arthropod gustatory receptors function as ligand-gated ion channels, not
+      G-protein coupled receptors despite their 7TM architecture. The cryo-EM
+      structure of BmGr9 shows a tetrameric fructose-gated cation channel. This
+      molecular function annotation is essential for accurately representing GR
+      function and should be added based on sequence similarity (ISS) to
+      characterized GRs.
+    proposed_replacement_terms: []
+    additional_reference_ids:
+      - file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+        supporting_text: &gt;-
+          Cryo-EM structures of Bombyx mori Gr9 (BmGr9) revealed a tetrameric
+          fructose-gated cation channel. Ligand binding occurs in a solvent-accessible
+          pocket shaped by S4/S5 and aromatic/polar residues; channel opening is
+          associated with S7b helix movement
+references:
+- id: PMID:19383158
+  title: The chemoreceptor genes of the waterflea Daphnia pulex - many Grs but no Ors
+  findings:
+    - statement: D. pulex has 58 gustatory receptors organized into three subfamilies
+      supporting_text: &gt;-
+        These 58 Grs form 3 distinctive subfamilies of 37, 12, and 5 genes, as well
+        as a highly divergent singleton (Gr58)
+    - statement: GRs function as ligand-gated ion channels
+      supporting_text: &gt;-
+        They therefore support the hypothesis that these chemoreceptors are not
+        coupled to G-proteins and instead function as ligand-gated ion channels
+    - statement: DpuGr29 location
+      supporting_text: &gt;-
+        29scaffold_4:2213168-2214628NCBI_GNO_04003953116213468595th intron is longer
+    - statement: Daphnia GRs have conserved 7TM architecture with TYhhhhhQF motif
+      supporting_text: &gt;-
+        These Grs are fairly easily recognized through their somewhat conserved TM7
+        regions near the C-terminus, which includes a TYhhhhhQF motif in TM7
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: file:DAPPU/DpuGr29/DpuGr29-deep-research-falcon.md
+  title: Deep research review of DpuGr29 gustatory receptor
+  findings:
+    - statement: D. pulex has 58 GRs organized into three subfamilies
+      supporting_text: &gt;-
+        D. pulex genome has 58 gustatory receptor genes and lacks the insect OR
+        family and Orco, indicating Daphnia relies on GRs (and IRs) for chemoreception
+    - statement: No odorant receptors (ORs) or Orco found in D. pulex genome
+      supporting_text: &gt;-
+        D. pulex genome has 58 gustatory receptor genes and lacks the insect OR
+        family and Orco
+    - statement: DpuGr29 maps to DAPPUDRAFT_346859 on scaffold_4
+      supporting_text: &gt;-
+        DpuGr29 is a bona fide Daphnia pulex gustatory receptor gene located on
+        scaffold_4 and mapped to DAPPUDRAFT_346859
+    - statement: GRs have characteristic 7TM architecture with conserved TYhhhhhQF motif
+      supporting_text: &gt;-
+        Daphnia GRs are members of the arthropod GR/OR chemoreceptor superfamily
+        with characteristic 7 transmembrane helices and a conserved motif in TM7
+        (TYhhhhhQF)
+    - statement: GRs function as ligand-gated cation channels, not GPCRs
+      supporting_text: &gt;-
+        GRs are 7-transmembrane chemoreceptors that function as ligand-gated ion
+        channels (7TMIC superfamily) rather than GPCRs; their membrane topology
+        is inverted relative to class A GPCRs, with the C-terminus extracellular
+    - statement: Cryo-EM structure of BmGr9 shows tetrameric channel architecture
+      supporting_text: &gt;-
+        Cryo-EM structures of Bombyx mori Gr9 (BmGr9) revealed a tetrameric
+        fructose-gated cation channel. Ligand binding occurs in a solvent-accessible
+        pocket shaped by S4/S5 and aromatic/polar residues; channel opening is
+        associated with S7b helix movement
+core_functions:
+  - molecular_function:
+      id: GO:0099094
+      label: ligand-gated monoatomic cation channel activity
+    description: &gt;-
+      DpuGr29 is predicted to function as a ligand-gated cation channel for
+      chemosensory detection of dissolved chemicals in the aquatic environment,
+      based on GR family membership and structural homology to BmGr9.
+    directly_involved_in:
+      - id: GO:0007606
+        label: sensory perception of chemical stimulus
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+suggested_questions:
+  - question: What is the ligand specificity of DpuGr29 (sugars, bitter compounds, pheromones)?
+  - question: In which tissues/cells is DpuGr29 expressed in Daphnia?
+  - question: Does DpuGr29 function as a homomer or heteromer with other Daphnia GRs?
+suggested_experiments:
+  - description: Heterologous expression of DpuGr29 in Xenopus oocytes or HEK293 cells followed by calcium imaging or electrophysiology to identify ligand specificity
+    hypothesis: DpuGr29 responds to specific chemical ligands (sugars, bitter compounds, or environmental cues)
+    experiment_type: functional assay
+  - description: In situ hybridization or single-cell RNA-seq of Daphnia chemosensory organs to determine DpuGr29 expression pattern
+    hypothesis: DpuGr29 is expressed in chemosensory neurons of antennules or feeding appendages
+    experiment_type: expression analysis
+  - description: AlphaFold2 structure prediction and molecular docking to identify potential ligand-binding residues
+    hypothesis: Structural modeling can identify candidate ligands based on binding pocket architecture
+    experiment_type: computational analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

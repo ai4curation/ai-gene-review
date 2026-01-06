@@ -772,6 +772,22 @@ stats output_file="docs/stats_report.html":
 stats-open: stats
     @open docs/stats_report.html
 
+# Build all artifacts: statistics report AND browser
+build: stats render-all deploy-browser
+    @echo ""
+    @echo "═══════════════════════════════════════════════════════════"
+    @echo "✅ Build complete!"
+    @echo "═══════════════════════════════════════════════════════════"
+    @echo ""
+    @echo "📊 Statistics Report:"
+    @echo "   → docs/stats_report.html"
+    @echo ""
+    @echo "🌐 Gene Browser:"
+    @echo "   → app/index.html"
+    @echo ""
+    @echo "To serve browser locally: just serve-browser"
+    @echo "To view statistics: open docs/stats_report.html"
+
 # Export annotations for a specific organism
 export-organism-annotations organism output_file="exports/exported_annotations.csv":
     @mkdir -p exports

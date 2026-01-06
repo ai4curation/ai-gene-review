@@ -1,0 +1,3060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ubl-5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ubl-5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P91302" target="_blank" class="term-link">
+                        P91302
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ubl-5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P91302" data-a="DESCRIPTION: UBL-5 is a small ubiquitin-like protein (73 aa) th..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UBL-5 is a small ubiquitin-like protein (73 aa) that functions as an atypical, non-enzymatic regulator acting through non-covalent protein-protein interactions. Unlike typical ubiquitin-like proteins, UBL-5/Hub1 lacks the C-terminal di-glycine motif required for covalent conjugation. UBL-5 has two main functional roles: (1) as a spliceosome-associated cofactor that promotes proper pre-mRNA splicing through specific interactions with HIND-containing spliceosomal proteins (SART-1/Snu66, PRP-38), and (2) as a positive regulator of the mitochondrial unfolded protein response (UPR-mt) where it forms a complex with DVE-1 to activate transcription of mitochondrial chaperone genes (hsp-6, hsp-60). Under mitochondrial stress, UBL-5 accumulates in the nucleus. Loss of ubl-5 causes L3 larval arrest and splicing defects.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                    GO:0000398
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0000398" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from Hub1/UBL5 orthologs. Recent direct experimental evidence in C. elegans (Kolathur et al., 2023) demonstrates that UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38, co-immunoprecipitates with spliceosomal components, and is essential for splicing. Loss of ubl-5 causes accumulation of unspliced transcripts and defects in both cis- and trans-splicing (PMID:16816413, Kolathur et al. 2023).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by recent C. elegans-specific experimental data. Kolathur et al. (2023) showed UBL-5 binds HIND-containing splicing factors, associates with spliceosome components via co-IP/MS, and ubl-5 mutants accumulate unspliced RNAs. The splicing role is now considered the primary molecular function of UBL-5, with UPR-mt effects potentially being downstream of its nuclear RNA processing role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss of ubl-5 causes selective splicing defects (intron retention and trans-/cis-splicing defects) and developmental arrest (L3 lethality), demonstrating an essential splicing role in vivo.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for nuclear localization based on phylogenetic inference. This is directly supported by experimental evidence in C. elegans showing UBL-5-GFP accumulates in nuclei under mitochondrial stress (PMID:16816413).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-supported by direct experimental evidence. Benedetti et al. (2006) showed that &#34;Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms.&#34; The nuclear localization is consistent with UBL-5&#39;s role in both splicing (spliceosome is nuclear) and UPR-mt transcriptional regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms, suggesting that UBL-5 effects a nuclear step required for mounting a response to the threat of mitochondrial protein misfolding.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for cytoplasmic localization. UBL-5 is present in both cytoplasm and nucleus, with stress-induced nuclear accumulation. UniProt lists cytoplasm based on sequence similarity (ISS evidence).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with UBL-5 being present in both compartments and shuttling to the nucleus under stress. The UniProt record indicates &#34;Cytoplasm {ECO:0000250}&#34; and the stress-induced nuclear redistribution implies a basal cytoplasmic pool. This is an appropriate annotation at the correct level of specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031386" target="_blank" class="term-link">
+                                    GO:0031386
+                                </a>
+                            </span>
+                            <span class="term-label">protein tag activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0031386" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from ubiquitin-like protein family. However, UBL-5/Hub1 is atypical - it lacks the C-terminal di-glycine motif required for covalent conjugation and functions via non-covalent protein-protein interactions rather than as a covalent tag.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is incorrect for UBL-5. The deep research explicitly states: &#34;UBL-5 is an atypical, non-enzymatic ubiquitin-like protein that acts via non-covalent protein-protein interactions&#34; and &#34;Not a covalent modifier: Consistent with atypical UBL classification, UBL-5 does not act through E1-E2-E3 conjugation but via direct protein-protein interactions in the splicing machinery.&#34; The protein tag activity term (GO:0031386) is defined as covalent attachment of a small protein tag to another protein, which does not apply to UBL-5.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">UBL-5/Hub1 is a ubiquitin-like protein that, unlike many UBLs, lacks the C-terminal di-Gly motif for covalent conjugation and instead acts primarily through non-covalent binding to partner proteins, especially within the spliceosome.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location vocabulary mapping. This is consistent with the IBA annotation above and with experimental evidence of cytoplasmic presence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation duplicates the IBA annotation but with different evidence. Both are valid - the protein is present in cytoplasm. While duplicates exist, retaining both preserves the evidence provenance trail.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23870130" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23870130
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The NAD(+)/Sirtuin Pathway Modulates Longevity through Activ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0034514" data-r="PMID:23870130" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Mouchiroud et al. (2013) Cell paper on NAD+/Sirtuin pathway and longevity. This study showed UPR-mt activation through NAD+ modulation involves mitonuclear protein imbalance and stress signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The role of UBL-5 in UPR-mt is well-established through multiple independent studies. While the 2013 Cell paper focuses on NAD+/sirtuin pathway, it demonstrates UPR-mt involvement. The UPR-mt role of UBL-5 is a core function, though recent work suggests it may be partially mediated through its splicing function affecting nuclear RNA processing of stress-responsive genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23870130" target="_blank" class="term-link">
+                                        PMID:23870130
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These effects are dependent upon the protein deacetylase sir-2.1 and involve the induction of mitonuclear protein imbalance as well as activation of stress signaling via the mitochondrial unfolded protein response (UPR(mt))</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0034514" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Haynes et al. (2007) Dev Cell paper. This is the key paper establishing UBL-5 as a UPR-mt regulator, showing DVE-1/UBL-5 complex formation under mitochondrial stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is foundational experimental evidence for UBL-5&#39;s role in UPR-mt. The paper demonstrated that &#34;Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded by genes required for signaling the UPR(mt).&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded by genes required for signaling the UPR(mt).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005667" target="_blank" class="term-link">
+                                    GO:0005667
+                                </a>
+                            </span>
+                            <span class="term-label">transcription regulator complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005667" data-r="PMID:17925224" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation indicating UBL-5 is part of a transcription regulator complex, based on its physical interaction with DVE-1, a homeodomain transcription factor. This complex regulates mitochondrial chaperone gene expression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The DVE-1/UBL-5 complex functions as a transcriptional regulatory unit for UPR-mt target genes. Haynes et al. (2007) showed that &#34;Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters of mitochondrial chaperone genes.&#34; UBL-5 forms a complex with DVE-1 that binds these promoters.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters of mitochondrial chaperone genes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with dve-1; the interaction occurs in a mitochondrial stress-dependent manner.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                    GO:0034514
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial unfolded protein response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16816413
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ubiquitin-like protein 5 positively regulates chaperone gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0034514" data-r="PMID:16816413" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Benedetti et al. (2006) Genetics paper. This was the first paper to identify UBL-5 as a positive regulator of UPR-mt through an RNAi screen for suppressors of UPR-mt activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the original discovery paper for UBL-5&#39;s role in UPR-mt. The study showed that &#34;RNAi of ubl-5 suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp&#34; and that UBL-5 is required for induction of endogenous mitochondrial chaperone genes. This represents core UBL-5 function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation and by other manipulations that promote mitochondrial protein misfolding. ubl-5 (RNAi) inhibits the induction of endogenous mitochondrial chaperone encoding genes hsp-60 and hsp-6 and compromises the ability of animals to cope with mitochondrial stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16816413
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ubiquitin-like protein 5 positively regulates chaperone gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005634" data-r="PMID:16816413" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for nuclear localization from Benedetti et al. (2006). Direct visualization of GFP-tagged UBL-5 accumulating in nuclei under mitochondrial stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is direct experimental evidence (IDA) for nuclear localization. The paper explicitly states that &#34;Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms.&#34; Nuclear localization is essential for both UBL-5&#39;s splicing and transcriptional regulatory functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms, suggesting that UBL-5 effects a nuclear step required for mounting a response to the threat of mitochondrial protein misfolding.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16816413
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ubiquitin-like protein 5 positively regulates chaperone gene...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0005829" data-r="PMID:16816413" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for cytosolic localization from Benedetti et al. (2006). The paper shows UBL-5 is present in cytoplasm and redistributes to nucleus under stress, implying baseline cytosolic presence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The stress-induced nuclear accumulation implies UBL-5 must be present in the cytosol under basal conditions before translocating to the nucleus. Cytosol (GO:0005829) is more specific than cytoplasm (GO:0005737) but appropriate here as UBL-5 is a soluble protein that shuttles between compartments.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms [implying baseline cytoplasmic/cytosolic presence before nuclear redistribution]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990935" target="_blank" class="term-link">
+                                    GO:1990935
+                                </a>
+                            </span>
+                            <span class="term-label">splicing factor binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:1990935" data-r="file:worm/ubl-5/ubl-5-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation based on 2023 FEBS Letters study (Kolathur et al.) demonstrating that UBL-5 directly binds HIND-containing spliceosomal proteins SART-1 and PRP-38 via co-immunoprecipitation and binding assays. This molecular function term captures UBL-5&#39;s role as a non-enzymatic splicing cofactor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UBL-5&#39;s molecular function as a splicing factor binding protein is well-supported by recent C. elegans experimental data showing direct interaction with spliceosomal components. This is more specific than the existing IBA annotation for the biological process (mRNA splicing) and accurately reflects UBL-5&#39;s non-covalent binding mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38, co-IPs with spliceosomal proteins... co-IP/MS showed enrichment of spliceosomal proteins in UBL-5 complexes in C. elegans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                                    GO:0003713
+                                </a>
+                            </span>
+                            <span class="term-label">transcription coactivator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17925224
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ClpP mediates activation of a mitochondrial unfolded protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P91302" data-a="GO:0003713" data-r="PMID:17925224" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation based on UBL-5&#39;s role as a cofactor with DVE-1 in activating transcription of mitochondrial chaperone genes during UPR-mt. UBL-5 forms a stress-dependent complex with DVE-1 that binds to and activates promoters of hsp-6 and hsp-60 genes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UBL-5 functions as a transcription coactivator by forming a complex with the transcription factor DVE-1. This complex is required for activation of UPR-mt target genes. The evidence from PMID:17925224 shows that UBL-5 is required for DVE-1-mediated transcriptional activation of mitochondrial chaperone genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                        PMID:17925224
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded by genes required for signaling the UPR(mt)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                        PMID:16816413
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UBL-5 is an essential spliceosome-associated cofactor. Kolathur et al. (2023) demonstrated that UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38, co-IPs with spliceosomal components, and loss of function causes accumulation of unspliced transcripts and L3 larval arrest. This is now considered the primary molecular function of UBL-5.</h3>
+                <span class="vote-buttons" data-g="P91302" data-a="FUNCTION: UBL-5 is an essential spliceosome-associated cofac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990935" target="_blank" class="term-link">
+                            splicing factor binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                mRNA splicing, via spliceosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38... Loss of ubl-5 causes selective splicing defects (intron retention and trans-/cis-splicing defects) and developmental arrest (L3 lethality)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UBL-5 is a positive regulator of UPR-mt. Multiple independent studies (PMID:16816413, PMID:17925224, PMID:23870130) demonstrate that UBL-5 is required for activation of mitochondrial chaperone genes (hsp-6, hsp-60) during mitochondrial stress. UBL-5 forms a complex with the transcription factor DVE-1 to activate UPR-mt target gene expression.</h3>
+                <span class="vote-buttons" data-g="P91302" data-a="FUNCTION: UBL-5 is a positive regulator of UPR-mt. Multiple ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003713" target="_blank" class="term-link">
+                            transcription coactivator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034514" target="_blank" class="term-link">
+                                mitochondrial unfolded protein response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005667" target="_blank" class="term-link">
+                            transcription regulator complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                                PMID:17925224
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded by genes required for signaling the UPR(mt)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                                PMID:16816413
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16816413" target="_blank" class="term-link">
+                            PMID:16816413
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ubiquitin-like protein 5 positively regulates chaperone gene expression in the mitochondrial unfolded protein response.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First identification of UBL-5 as positive regulator of UPR-mt</div>
+                        
+                        <div class="finding-text">"RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNAi of ubl-5 suppresses hsp-60::gfp and hsp-6::gfp reporter activation</div>
+                        
+                        <div class="finding-text">"RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ubl-5 RNAi inhibits induction of endogenous hsp-60 and hsp-6 genes</div>
+                        
+                        <div class="finding-text">"ubl-5 (RNAi) inhibits the induction of endogenous mitochondrial chaperone encoding genes hsp-60 and hsp-6 and compromises the ability of animals to cope with mitochondrial stress"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mitochondrial stress promotes nuclear accumulation of GFP-tagged UBL-5</div>
+                        
+                        <div class="finding-text">"Induction of mitochondrial stress promotes accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 effects a nuclear step in UPR-mt signaling</div>
+                        
+                        <div class="finding-text">"UBL-5 effects a nuclear step required for mounting a response to the threat of mitochondrial protein misfolding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17925224" target="_blank" class="term-link">
+                            PMID:17925224
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ClpP mediates activation of a mitochondrial unfolded protein response in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVE-1 and UBL-5 form a complex during mitochondrial stress</div>
+                        
+                        <div class="finding-text">"Unfolded protein stress in the mitochondria correlates with complex formation between a homeodomain-containing transcription factor DVE-1 and the small ubiquitin-like protein UBL-5"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Both DVE-1 and UBL-5 are required for signaling UPR-mt</div>
+                        
+                        <div class="finding-text">"DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded by genes required for signaling the UPR(mt)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVE-1 nuclear redistribution correlates with UPR-mt activation</div>
+                        
+                        <div class="finding-text">"Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVE-1 binds promoters of mitochondrial chaperone genes</div>
+                        
+                        <div class="finding-text">"Activation of the UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters of mitochondrial chaperone genes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23870130" target="_blank" class="term-link">
+                            PMID:23870130
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The NAD(+)/Sirtuin Pathway Modulates Longevity through Activation of Mitochondrial UPR and FOXO Signaling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NAD+ restoration promotes longevity via UPR-mt activation</div>
+                        
+                        <div class="finding-text">"genetic or pharmacological restoration of NAD(+) prevents age-associated metabolic decline and promotes longevity in worms"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UPR-mt is part of the mitochondrial stress signaling pathway</div>
+                        
+                        <div class="finding-text">"activation of stress signaling via the mitochondrial unfolded protein response (UPR(mt)) and the nuclear translocation and activation of FOXO transcription factor DAF-16"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Links metabolic regulation to mitochondrial proteostasis</div>
+                        
+                        <div class="finding-text">"augmenting mitochondrial stress signaling through the modulation of NAD(+) levels may be a target to improve mitochondrial function"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/ubl-5/ubl-5-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for UBL-5</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38</div>
+                        
+                        <div class="finding-text">"UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38, co-IPs with spliceosomal proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 co-immunoprecipitates with spliceosomal components</div>
+                        
+                        <div class="finding-text">"co-IP/MS showed enrichment of spliceosomal proteins in UBL-5 complexes in C. elegans"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ubl-5 mutants arrest at L3 and exhibit splicing defects</div>
+                        
+                        <div class="finding-text">"ubl-5 null mutants arrest at L3, and ubl-5 expression is elevated at L3, aligning with a critical developmental window for its splicing function"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 lacks C-terminal di-Gly motif for covalent conjugation</div>
+                        
+                        <div class="finding-text">"UBL-5/Hub1 is a ubiquitin-like protein that, unlike many UBLs, lacks the C-terminal di-Gly motif for covalent conjugation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UBL-5 functions via non-covalent protein-protein interactions</div>
+                        
+                        <div class="finding-text">"Not a covalent modifier... UBL-5 does not act through E1-E2-E3 conjugation but via direct protein-protein interactions in the splicing machinery"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/ubl-5/ubl-5-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry for UBL-5 C. elegans</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">73 amino acid ubiquitin-like protein</div>
+                        
+                        <div class="finding-text">"73 AA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains Hub1/Ubl5 domain (IPR039732)</div>
+                        
+                        <div class="finding-text">"InterPro; IPR039732; Hub1/Ubl5"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytoplasmic localization by sequence similarity</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts with DVE-1 in stress-dependent manner</div>
+                        
+                        <div class="finding-text">"Interacts with dve-1; the interaction occurs in a mitochondrial stress-dependent manner"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the UPR-mt role of UBL-5 mechanistically dependent on its splicing function, or are these independent pathways? Recent work suggests UBL-5&#39;s effects on nuclear RNA processing (splicing) may contribute to its UPR-mt phenotypes, but the DVE-1 interaction appears to be a distinct function.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91302" data-a="Q: Is the UPR-mt role of UBL-5 mechanistically depend..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether splicing-defective UBL-5 mutants (disrupting HIND-binding) retain ability to interact with DVE-1 and activate UPR-mt reporters. This would distinguish whether the splicing and UPR-mt functions are mechanistically linked or represent independent activities of UBL-5.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P91302" data-a="EXPERIMENT: Test whether splicing-defective UBL-5 mutants (dis..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-upr-stress</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ubl-5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P91302" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-28T10:56:26.456497'<br />
+end_time: '2025-12-28T11:00:45.798247'<br />
+duration_seconds: 259.34<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: ubl-5<br />
+  gene_symbol: ubl-5<br />
+  uniprot_accession: P91302<br />
+  protein_description: 'RecName: Full=Ubiquitin-like protein 5;'<br />
+  gene_info: Name=ubl-5; ORFNames=F46F11.4;<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Hub1/Ubl5. (IPR039732); Ubiquitin-like_dom. (IPR000626); Ubiquitin-like_domsf.<br />
+    (IPR029071)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P91302</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ubiquitin-like protein 5;</li>
+<li><strong>Gene Information:</strong> Name=ubl-5; ORFNames=F46F11.4;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Hub1/Ubl5. (IPR039732); Ubiquitin-like_dom. (IPR000626); Ubiquitin-like_domsf. (IPR029071)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ubl-5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ubl-5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ubl-5</strong> (gene ID: ubl-5, UniProt: P91302) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P91302</li>
+<li><strong>Protein Description:</strong> RecName: Full=Ubiquitin-like protein 5;</li>
+<li><strong>Gene Information:</strong> Name=ubl-5; ORFNames=F46F11.4;</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Hub1/Ubl5. (IPR039732); Ubiquitin-like_dom. (IPR000626); Ubiquitin-like_domsf. (IPR029071)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ubl-5" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ubl-5' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ubl-5</strong> (gene ID: ubl-5, UniProt: P91302) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan for this report<br />
+- Verify target identity and nomenclature for C. elegans ubl-5 (UniProt P91302) and reconcile known aliases (Hub1/UBL5) with domain annotations.<br />
+- Gather recent (2023–2024) and foundational literature on molecular function, localization, pathways (pre-mRNA splicing; UPRmt), and phenotypes.<br />
+- Synthesize evidence emphasizing precise molecular mechanisms, cellular location, and pathway role, prioritizing 2023–2024 primary studies/reviews.<br />
+- Summarize applications/implementations and quantitative readouts where available.<br />
+- Provide a concise evidence table and a narrative research report with URLs, dates, and source-backed citations.</p>
+<p>Verification of target identity and scope<br />
+- Gene symbol and protein: ubl-5 encodes UBL-5, the C. elegans ortholog of Hub1/UBL5, an atypical ubiquitin-like protein lacking the canonical di-Gly motif and functioning via non-covalent protein–protein interactions. The 2023 FEBS Letters study explicitly refers to the C. elegans protein as Hub1/UBL-5 and demonstrates conserved molecular interactions and functions consistent with the Hub1/Ubl5 domain family, validating the identity and domain-based expectations (IPR039732, IPR000626, IPR029071) in the context of a nematode ortholog (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 1-3, kolathur2023theubiquitin‐likeprotein pages 3-4). </p>
+<p>Key concepts and definitions (current understanding)<br />
+- Atypical ubiquitin-like protein: UBL-5/Hub1 is a ubiquitin-like protein that, unlike many UBLs, lacks the C-terminal di-Gly motif for covalent conjugation and instead acts primarily through non-covalent binding to partner proteins, especially within the spliceosome (Aug 2021) (chanarat2021ubl5hub1anatypical pages 6-8, chanarat2021ubl5hub1anatypical pages 4-6).<br />
+- HIND-mediated interactions: UBL-5 recognizes Hub1-interaction domains (HINDs) in spliceosomal proteins (e.g., Snu66/SART1, Prp38/PRPF38A), with a conserved salt bridge between UBL-5 Asp and HIND Arg, stabilizing the complex and modulating spliceosome assembly/activation (Aug 2021; Dec 2023) (chanarat2021ubl5hub1anatypical pages 6-8, kolathur2023theubiquitin‐likeprotein pages 3-4, chanarat2021ubl5hub1anatypical pages 4-6).<br />
+- Non-enzymatic splicing cofactor: UBL-5 can interact with splicing ATPase Prp5/DDX46 and multiple tri-snRNP components to tune splicing efficiency and fidelity; in multicellular organisms, its in vivo splicing role was recently demonstrated in C. elegans (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4, chanarat2021ubl5hub1anatypical pages 4-6).</p>
+<p>Recent developments and latest research (2023–2024 prioritized)<br />
+- Direct demonstration in C. elegans (FEBS Letters, Dec 2023): Kolathur et al. showed that UBL-5 binds HIND-containing SART-1 and PRP-38, co-IPs with spliceosomal proteins, and is essential for splicing of selected targets; ubl-5 mutant animals arrest at L3 and exhibit accumulation of unspliced transcripts. A C. elegans ubl-5 genomic clone rescues lethality, and UBL-5 complements growth/splicing defects in S. pombe hub1 mutants, supporting strong conservation (https://doi.org/10.1002/1873-3468.14555; Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4, kolathur2023theubiquitin‐likeprotein pages 1-3).<br />
+- Stress-pathway integration updates (2024 review): UBL5 is positioned at the interface of splicing and stress signaling, including the mitochondrial UPR (mtUPR) and ER stress PERK arm (mammalian cells). Under ER stress, PERK activation decreases UBL5 stability via a ubiquitin-independent proteasome system, hinting that UBL5 levels are dynamically regulated during stress (https://doi.org/10.3390/v16121922; Dec 2024) (xia2024ubl5andits pages 5-7, xia2024ubl5andits pages 4-5).</p>
+<p>Primary molecular function and mechanism (precision, partners)<br />
+- Non-enzymatic splicing regulator: UBL-5 functions as a non-covalent cofactor within the spliceosome. In C. elegans, UBL-5 binds the HIND-containing splicing factors Snu66/SART-1 and PRP-38 and associates with additional spliceosomal proteins. Loss of ubl-5 produces intron retention and defective cis- and trans-splicing, with lethality at L3, indicating an essential splicing role (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4, kolathur2023theubiquitin‐likeprotein pages 1-3).<br />
+- Structural interaction logic: The HIND–UBL-5 interface is characterized by a conserved salt bridge and hydrophobic contacts; UBL-5 binding can stabilize HIND motifs and modulate splicing ATPases (e.g., Prp5/DDX46) to promote splicing efficiency, with overexpression generally relaxing splice-site stringency as shown in other systems (Aug 2021) (chanarat2021ubl5hub1anatypical pages 4-6, chanarat2021ubl5hub1anatypical pages 6-8).<br />
+- Not a covalent modifier: Consistent with atypical UBL classification, UBL-5 does not act through E1–E2–E3 conjugation but via direct protein–protein interactions in the splicing machinery (Aug 2021) (chanarat2021ubl5hub1anatypical pages 6-8).</p>
+<p>Subcellular localization<br />
+- Nuclear accumulation with spliceosome association: UBL-5 accumulates in the nucleus, associates with spliceosomal complexes, and can redistribute under stress. Human UBL5 has been observed near Cajal bodies, consistent with a role at spliceosome-related subnuclear structures; C. elegans UBL-5 shows stress-induced nuclear accumulation (Aug 2021; Dec 2024) (chanarat2021ubl5hub1anatypical pages 6-8, xia2024ubl5andits pages 4-5, xia2024ubl5andits pages 2-4).</p>
+<p>Roles in signaling and biochemical pathways<br />
+- Pre-mRNA splicing pathway: UBL-5 integrates at the level of spliceosome assembly/activation by binding HIND-containing factors (SART-1/Snu66, PRP-38/PRPF38A) and potentially modulating helicase activity (Prp5/DDX46), thereby influencing intron recognition and splicing fidelity in vivo in C. elegans (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4).<br />
+- Mitochondrial unfolded protein response (UPRmt): In C. elegans, UBL-5 has been linked as a cofactor with DVE-1 to promote transcription of mitochondrial chaperones (hsp-6, hsp-60) during mtUPR; RNAi against ubl-5 reduces hsp-6p::gfp and hsp-60 reporter activation and lowers endogenous chaperone mRNAs, with effects on mitochondrial morphology and complex assembly (Sep 2014; Dec 2024) (bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5).<br />
+- UPRmt and longevity nuance: Genetic studies indicate that while UBL-5 participates in mtUPR readouts, activation of mtUPR is neither necessary nor sufficient for lifespan extension across conditions, cautioning against equating UBL-5’s mtUPR role with longevity causality (Mar 2014; review perspective Sep 2014) (xia2024ubl5andits pages 5-7, bennett2014searchingforthe pages 3-5).<br />
+- ER stress/PERK arm (mammalian data, mechanistic relevance): UBL5 is degraded downstream of PERK via UIPS, suggesting a conserved logic where stress pathways tune UBL5 abundance to limit prolonged stress signaling; this offers a mechanistic backdrop for stress–splicing crosstalk potentially relevant across metazoans (Dec 2024) (xia2024ubl5andits pages 5-7).<br />
+- Genetic screen intersections: Genome-wide RNAi screens for UPRmt regulators in C. elegans uncovered links between splicing factors and UPRmt modulation; overlap between ubl-5 interactors and screen hits supports a mechanistic bridge between splicing and mitochondrial stress responses (Mar 2021; synthesis with Dec 2023 findings) (kolathur2023theubiquitin‐likeprotein pages 3-4, chanarat2021ubl5hub1anatypical pages 4-6).</p>
+<p>Key phenotypes upon loss-of-function<br />
+- Developmental arrest: ubl-5 mutants arrest at the L3 larval stage and are inviable; lethality is rescued by a genomic ubl-5 transgene, defining an essential developmental requirement (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4).<br />
+- Splicing defects: Splicing-sensitive arrays reveal accumulation of unspliced intron-containing RNAs and defects in both cis- and trans-splicing in ubl-5 mutants, consistent with impaired spliceosome function (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4).<br />
+- UPRmt reporters and mitochondrial homeostasis: RNAi knockdown of ubl-5 suppresses mtUPR reporters (hsp-6p::gfp, hsp-60) and reduces endogenous chaperone gene expression; concomitant changes in mitochondrial morphology and multi-subunit complex assembly have been reported (Sep 2014; Dec 2024) (bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5).</p>
+<p>Current applications and real-world implementations<br />
+- C. elegans toolkits: Functional analyses employ RNAi against ubl-5, mtUPR reporter strains (hsp-6p::gfp; hsp-60 reporters), GFP-tagged UBL-5 for localization, and genetic mutants complemented by genomic rescue; cross-species complementation in S. pombe validates conservation (Dec 2023; Sep 2014; Dec 2024) (kolathur2023theubiquitin‐likeprotein pages 3-4, bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5).<br />
+- Screening paradigms: Genome-wide RNAi screens and cross-species modifier screens connect splicing factors (including UBL-5 interactors) to mtUPR regulation, enabling systems-level dissection of mitochondrial stress signaling (Mar 2021; synthesis with Dec 2023) (chanarat2021ubl5hub1anatypical pages 4-6, kolathur2023theubiquitin‐likeprotein pages 3-4).</p>
+<p>Expert opinions and analysis from authoritative sources<br />
+- Mechanistic synthesis: Reviews emphasize that UBL-5/Hub1 is a stress-responsive, non-enzymatic UBL-like factor that primarily regulates pre-mRNA splicing via direct interactions with spliceosomal components and that its roles in mitochondrial stress signaling likely emerge from its impact on nuclear RNA processing rather than a dedicated enzymatic function (Aug 2021; Dec 2024) (chanarat2021ubl5hub1anatypical pages 6-8, xia2024ubl5andits pages 5-7, xia2024ubl5andits pages 4-5).<br />
+- Longevity context: Expert commentary argues mtUPR activation is not a reliable proxy for longevity extension, cautioning against over-attributing lifespan effects to UBL-5–dependent mtUPR readouts in the absence of rigorous genetic controls (Mar 2014; Sep 2014) (xia2024ubl5andits pages 5-7, bennett2014searchingforthe pages 3-5).</p>
+<p>Relevant statistics and data from recent studies<br />
+- Essentiality and stage specificity: ubl-5 null mutants arrest at L3, and ubl-5 expression is elevated at L3, aligning with a critical developmental window for its splicing function (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4).<br />
+- Molecular interaction specificity: The UBL-5–SART-1 interaction depends on a conserved salt bridge (UBL-5 Asp22–SART-1 Arg62) demonstrated in binding assays; co-IP/MS showed enrichment of spliceosomal proteins in UBL-5 complexes in C. elegans (Dec 2023) (kolathur2023theubiquitin‐likeprotein pages 3-4).<br />
+- Reporter and expression effects: In C. elegans mtUPR paradigms, ubl-5 RNAi reduces hsp-6p::gfp and hsp-60 signals and lowers endogenous hsp-6/hsp-60 mRNAs; under stress, UBL-5-GFP accumulates in nuclei (Sep 2014; Dec 2024) (bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5, xia2024ubl5andits pages 2-4).</p>
+<p>Concise evidence table<br />
+| Aspect | Key finding (1-2 sentences) | Experimental details / quantitative notes | Organism / context | Source (authors, year) | Journal | URL | Publication date (Month Year) | Citation ID(s) available |<br />
+|---|---|---:|---|---|---|---|---|---|<br />
+| Primary molecular function | UBL-5 is an atypical, non-enzymatic ubiquitin-like protein that acts via non-covalent protein–protein interactions with spliceosomal factors (HIND-containing proteins) and can modulate splicing machinery (e.g., PRP-38 / SART-1 binding). | Biochemical binding (Y2H, GST pulldown), co-IP/MS identifying spliceosomal partners; structural/biophysical evidence for HIND salt-bridge interactions. | Caenorhabditis elegans (functional conservation shown across species) | Kolathur et al., 2023; Chanarat, 2021 | FEBS Letters; Int. J. Mol. Sci. | https://doi.org/10.1002/1873-3468.14555; https://doi.org/10.3390/ijms22179384 | Dec 2023; Aug 2021 | (kolathur2023theubiquitin‐likeprotein pages 1-3, chanarat2021ubl5hub1anatypical pages 6-8) |<br />
+| Role in pre-mRNA splicing | Loss of ubl-5 causes selective splicing defects (intron retention and trans-/cis-splicing defects) and developmental arrest (L3 lethality), demonstrating an essential splicing role in vivo. | Splicing-sensitive microarray and rescue assays; ubl-5 mutants accumulate unspliced RNAs; genomic ubl-5 clone rescues lethality; complementation of S. pombe hub1 mutants. | C. elegans (developmental L3 arrest phenotype) and cross-species complementation | Kolathur et al., 2023 | FEBS Letters | https://doi.org/10.1002/1873-3468.14555 | Dec 2023 | (kolathur2023theubiquitin‐likeprotein pages 3-4) |<br />
+| Subcellular localization | UBL-5 accumulates in the nucleus and associates with spliceosomal complexes; localizes near Cajal bodies in other systems and shows stress-induced nuclear redistribution. | GFP-fusion localization (nuclear accumulation under stress), co-IP with spliceosome components, microscopy showing proximity to Cajal body markers in other species. | Observed in C. elegans (stress-induced nuclear accumulation) and human/yeast models for localization context | Chanarat, 2021; Xia, 2024 | Int. J. Mol. Sci.; Viruses | https://doi.org/10.3390/ijms22179384; https://doi.org/10.3390/v16121922 | Aug 2021; Dec 2024 | (chanarat2021ubl5hub1anatypical pages 6-8, xia2024ubl5andits pages 2-4) |<br />
+| UPRmt pathway role | UBL-5 has been implicated as a cofactor with DVE-1 in activating mitochondrial chaperone genes (hsp-6, hsp-60) in UPRmt models, but its UPRmt role may be mediated via effects on pre-mRNA splicing rather than a separate enzymatic activity. | Reporter assays (hsp-6p::gfp, hsp-60), RNAi knockdown reducing reporter activation and endogenous chaperone mRNAs; genetic studies linking UBL-5 to UPRmt readouts but with caveats about causality for longevity. | C. elegans UPRmt models and reporter assays | Bennett et al., 2014; Kolathur et al., 2023; Xia, 2024 | Worm; FEBS Lett; Viruses | https://doi.org/10.4161/21624046.2014.959404; https://doi.org/10.1002/1873-3468.14555; https://doi.org/10.3390/v16121922 | Sep 2014; Dec 2023; Dec 2024 | (bennett2014searchingforthe pages 3-5, kolathur2023theubiquitin‐likeprotein pages 1-3, xia2024ubl5andits pages 4-5) |<br />
+| Links to ER stress / PERK and degradation | In mammalian studies UBL5 levels are regulated by ER stress (PERK arm) and UBL5 can be degraded via a ubiquitin-independent proteasome pathway, suggesting UBL5 levels are stress-regulated and that turnover modulates downstream responses. | Cellular assays showing PERK-dependent decreases in UBL5 stability and UIPS-mediated degradation (mammalian). | Mammalian cell models (implications for conserved stress regulation) | Xia, 2024 | Viruses | https://doi.org/10.3390/v16121922 | Dec 2024 | (xia2024ubl5andits pages 5-7) |<br />
+| Genetic screens linking splicing to UPRmt | Genome-wide RNAi and cross-species screens identified splicing factors and UBL-5 interactors as modifiers of UPRmt, suggesting a functional link between splicing machinery and mitochondrial stress signaling. | RNAi suppressor/enhancer screens for UPRmt regulators; overlap observed between UBL-5 interactors and screen hits. | C. elegans genetic screens for UPRmt regulators (fusion-defective and other models) | Bennett et al., 2014; Kolathur et al., 2023 | Worm; FEBS Lett | https://doi.org/10.4161/21624046.2014.959404; https://doi.org/10.1002/1873-3468.14555 | Sep 2014; Dec 2023 | (bennett2014searchingforthe pages 3-5, kolathur2023theubiquitin‐likeprotein pages 3-4) |<br />
+| Applications / implementations in C. elegans | UBL-5 has been studied using RNAi, hsp-6/hsp-60 reporter assays, GFP fusions, loss-of-function mutants (L3 arrest), and cross-species complementation (S. pombe), enabling functional dissection and in vivo validation. | RNAi reporter knockdowns, transgenic GFP localization, mutant phenotyping (developmental arrest), and genetic rescue/complementation experiments. | Experimental tools applied in C. elegans research | Kolathur et al., 2023; Bennett et al., 2014; Xia, 2024 | FEBS Lett; Worm; Viruses | https://doi.org/10.1002/1873-3468.14555; https://doi.org/10.4161/21624046.2014.959404; https://doi.org/10.3390/v16121922 | Dec 2023; Sep 2014; Dec 2024 | (kolathur2023theubiquitin‐likeprotein pages 3-4, bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5) |<br />
+| Recent 2023–2024 updates (C. elegans-specific) | Dec 2023 FEBS Lett. study provided direct, in vivo evidence that C. elegans UBL-5 is a conserved spliceosome-associated factor essential for proper splicing and development; 2024 reviews expand UBL5 links to stress responses, UPRmt, ER stress, and viral contexts. | FEBS Lett.: splicing arrays and genetic rescue in C. elegans; 2024 reviews compile mechanistic hypotheses and stress-regulatory observations (reporter and RNAi data summarized). | Primary C. elegans experimental data (2023) and 2024 integrative reviews | Kolathur et al., 2023; Xia, 2024 | FEBS Letters; Viruses | https://doi.org/10.1002/1873-3468.14555; https://doi.org/10.3390/v16121922 | Dec 2023; Dec 2024 | (kolathur2023theubiquitin‐likeprotein pages 1-3, xia2024ubl5andits pages 4-5) |</p>
+<p><em>Table: Concise, source-backed summary of key findings about Caenorhabditis elegans ubl-5 (UniProt P91302), including molecular function, splicing role, localization, pathway links, experimental evidence, and recent (2023–2024) updates; useful for quick reference and citation tracking.</em></p>
+<p>Conclusion<br />
+In Caenorhabditis elegans, ubl-5 encodes UBL-5, a conserved, non-enzymatic ubiquitin-like protein whose primary molecular role is to act as a spliceosome-associated cofactor that promotes proper pre-mRNA splicing through specific non-covalent interactions with HIND-containing spliceosomal proteins and splicing ATPases. Its nuclear localization and stress-responsive accumulation, together with genetic and reporter evidence, explain why UBL-5 contributes to mtUPR transcriptional outputs, but recent work indicates that its fundamental, essential function is splicing rather than a dedicated mitochondrial stress enzymatic role. Loss-of-function causes L3 lethality and splicing defects; RNAi reduces mtUPR reporter activation and mitochondrial chaperone expression. These findings, anchored by 2023 C. elegans genetics and biochemistry, position UBL-5 as a core splicing regulator that interfaces with broader stress-response networks through its control of nuclear RNA processing (Dec 2023; Mar/Sep 2014; Dec 2024) (kolathur2023theubiquitin‐likeprotein pages 3-4, xia2024ubl5andits pages 5-7, bennett2014searchingforthe pages 3-5, xia2024ubl5andits pages 4-5).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(kolathur2023theubiquitin‐likeprotein pages 1-3): Kiran Kumar Kolathur, Pallavi Sharma, Nagesh Y. Kadam, Navneet Shahi, Ane Nishitha, Kavita Babu, and Shravan Kumar Mishra. The ubiquitin‐like protein hub1/<scp>ubl</scp>‐5 functions in <scp>pre‐mrna</scp> splicing in <i>caenorhabditis elegans</i>. FEBS Letters, 597:448-457, Dec 2023. URL: https://doi.org/10.1002/1873-3468.14555, doi:10.1002/1873-3468.14555. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kolathur2023theubiquitin‐likeprotein pages 3-4): Kiran Kumar Kolathur, Pallavi Sharma, Nagesh Y. Kadam, Navneet Shahi, Ane Nishitha, Kavita Babu, and Shravan Kumar Mishra. The ubiquitin‐like protein hub1/<scp>ubl</scp>‐5 functions in <scp>pre‐mrna</scp> splicing in <i>caenorhabditis elegans</i>. FEBS Letters, 597:448-457, Dec 2023. URL: https://doi.org/10.1002/1873-3468.14555, doi:10.1002/1873-3468.14555. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chanarat2021ubl5hub1anatypical pages 6-8): Sittinan Chanarat. Ubl5/hub1: an atypical ubiquitin-like protein with a typical role as a stress-responsive regulator. International Journal of Molecular Sciences, 22:9384, Aug 2021. URL: https://doi.org/10.3390/ijms22179384, doi:10.3390/ijms22179384. This article has 21 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chanarat2021ubl5hub1anatypical pages 4-6): Sittinan Chanarat. Ubl5/hub1: an atypical ubiquitin-like protein with a typical role as a stress-responsive regulator. International Journal of Molecular Sciences, 22:9384, Aug 2021. URL: https://doi.org/10.3390/ijms22179384, doi:10.3390/ijms22179384. This article has 21 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(xia2024ubl5andits pages 5-7): Liancheng Xia, Yanhua He, Yifan Sui, Xijia Feng, Xijing Qian, Yangang Liu, and Zhongtian Qi. Ubl5 and its role in viral infections. Viruses, 16:1922, Dec 2024. URL: https://doi.org/10.3390/v16121922, doi:10.3390/v16121922. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(xia2024ubl5andits pages 4-5): Liancheng Xia, Yanhua He, Yifan Sui, Xijia Feng, Xijing Qian, Yangang Liu, and Zhongtian Qi. Ubl5 and its role in viral infections. Viruses, 16:1922, Dec 2024. URL: https://doi.org/10.3390/v16121922, doi:10.3390/v16121922. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(xia2024ubl5andits pages 2-4): Liancheng Xia, Yanhua He, Yifan Sui, Xijia Feng, Xijing Qian, Yangang Liu, and Zhongtian Qi. Ubl5 and its role in viral infections. Viruses, 16:1922, Dec 2024. URL: https://doi.org/10.3390/v16121922, doi:10.3390/v16121922. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(bennett2014searchingforthe pages 3-5): Christopher F Bennett, Haeri Choi, and Matt Kaeberlein. Searching for the elusive mitochondrial longevity signal in c. elegans. Worm, 3:e959404, Sep 2014. URL: https://doi.org/10.4161/21624046.2014.959404, doi:10.4161/21624046.2014.959404. This article has 8 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bennett2014searchingforthe pages 3-5</li>
+<li>https://doi.org/10.1002/1873-3468.14555;</li>
+<li>https://doi.org/10.3390/v16121922;</li>
+<li>https://doi.org/10.3390/ijms22179384</li>
+<li>https://doi.org/10.1002/1873-3468.14555</li>
+<li>https://doi.org/10.3390/ijms22179384;</li>
+<li>https://doi.org/10.3390/v16121922</li>
+<li>https://doi.org/10.4161/21624046.2014.959404;</li>
+<li>https://doi.org/10.1002/1873-3468.14555,</li>
+<li>https://doi.org/10.3390/ijms22179384,</li>
+<li>https://doi.org/10.3390/v16121922,</li>
+<li>https://doi.org/10.4161/21624046.2014.959404,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P91302
+gene_symbol: ubl-5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &#39;UBL-5 is a small ubiquitin-like protein (73 aa) that functions as an
+  atypical, non-enzymatic regulator acting through non-covalent protein-protein interactions.
+  Unlike typical ubiquitin-like proteins, UBL-5/Hub1 lacks the C-terminal di-glycine
+  motif required for covalent conjugation. UBL-5 has two main functional roles: (1)
+  as a spliceosome-associated cofactor that promotes proper pre-mRNA splicing through
+  specific interactions with HIND-containing spliceosomal proteins (SART-1/Snu66,
+  PRP-38), and (2) as a positive regulator of the mitochondrial unfolded protein response
+  (UPR-mt) where it forms a complex with DVE-1 to activate transcription of mitochondrial
+  chaperone genes (hsp-6, hsp-60). Under mitochondrial stress, UBL-5 accumulates in
+  the nucleus. Loss of ubl-5 causes L3 larval arrest and splicing defects.&#39;
+existing_annotations:
+- term:
+    id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference from Hub1/UBL5 orthologs.
+      Recent direct experimental evidence in C. elegans (Kolathur et al., 2023) demonstrates
+      that UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38, co-immunoprecipitates
+      with spliceosomal components, and is essential for splicing. Loss of ubl-5 causes
+      accumulation of unspliced transcripts and defects in both cis- and trans-splicing
+      (PMID:16816413, Kolathur et al. 2023).
+    action: ACCEPT
+    reason: This annotation is strongly supported by recent C. elegans-specific experimental
+      data. Kolathur et al. (2023) showed UBL-5 binds HIND-containing splicing factors,
+      associates with spliceosome components via co-IP/MS, and ubl-5 mutants accumulate
+      unspliced RNAs. The splicing role is now considered the primary molecular function
+      of UBL-5, with UPR-mt effects potentially being downstream of its nuclear RNA
+      processing role.
+    supported_by:
+    - reference_id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+      supporting_text: Loss of ubl-5 causes selective splicing defects (intron retention
+        and trans-/cis-splicing defects) and developmental arrest (L3 lethality),
+        demonstrating an essential splicing role in vivo.
+    - reference_id: PMID:16816413
+      supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+        activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for nuclear localization based on phylogenetic inference.
+      This is directly supported by experimental evidence in C. elegans showing UBL-5-GFP
+      accumulates in nuclei under mitochondrial stress (PMID:16816413).
+    action: ACCEPT
+    reason: Nuclear localization is well-supported by direct experimental evidence.
+      Benedetti et al. (2006) showed that &#34;Induction of mitochondrial stress promotes
+      accumulation of GFP-tagged UBL-5 in nuclei of transgenic worms.&#34; The nuclear
+      localization is consistent with UBL-5&#39;s role in both splicing (spliceosome is
+      nuclear) and UPR-mt transcriptional regulation.
+    supported_by:
+    - reference_id: PMID:16816413
+      supporting_text: Induction of mitochondrial stress promotes accumulation of
+        GFP-tagged UBL-5 in nuclei of transgenic worms, suggesting that UBL-5 effects
+        a nuclear step required for mounting a response to the threat of mitochondrial
+        protein misfolding.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation for cytoplasmic localization. UBL-5 is present in both
+      cytoplasm and nucleus, with stress-induced nuclear accumulation. UniProt lists
+      cytoplasm based on sequence similarity (ISS evidence).
+    action: ACCEPT
+    reason: Cytoplasmic localization is consistent with UBL-5 being present in both
+      compartments and shuttling to the nucleus under stress. The UniProt record indicates
+      &#34;Cytoplasm {ECO:0000250}&#34; and the stress-induced nuclear redistribution implies
+      a basal cytoplasmic pool. This is an appropriate annotation at the correct level
+      of specificity.
+    supported_by:
+    - reference_id: file:worm/ubl-5/ubl-5-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}.&#39;
+- term:
+    id: GO:0031386
+    label: protein tag activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference from ubiquitin-like protein
+      family. However, UBL-5/Hub1 is atypical - it lacks the C-terminal di-glycine
+      motif required for covalent conjugation and functions via non-covalent protein-protein
+      interactions rather than as a covalent tag.
+    action: REMOVE
+    reason: &#39;This annotation is incorrect for UBL-5. The deep research explicitly
+      states: &#34;UBL-5 is an atypical, non-enzymatic ubiquitin-like protein that acts
+      via non-covalent protein-protein interactions&#34; and &#34;Not a covalent modifier:
+      Consistent with atypical UBL classification, UBL-5 does not act through E1-E2-E3
+      conjugation but via direct protein-protein interactions in the splicing machinery.&#34;
+      The protein tag activity term (GO:0031386) is defined as covalent attachment
+      of a small protein tag to another protein, which does not apply to UBL-5.&#39;
+    supported_by:
+    - reference_id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+      supporting_text: UBL-5/Hub1 is a ubiquitin-like protein that, unlike many UBLs,
+        lacks the C-terminal di-Gly motif for covalent conjugation and instead acts
+        primarily through non-covalent binding to partner proteins, especially within
+        the spliceosome.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProt subcellular location vocabulary mapping.
+      This is consistent with the IBA annotation above and with experimental evidence
+      of cytoplasmic presence.
+    action: ACCEPT
+    reason: This IEA annotation duplicates the IBA annotation but with different evidence.
+      Both are valid - the protein is present in cytoplasm. While duplicates exist,
+      retaining both preserves the evidence provenance trail.
+    supported_by:
+    - reference_id: file:worm/ubl-5/ubl-5-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}.&#39;
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:23870130
+  review:
+    summary: IMP annotation from Mouchiroud et al. (2013) Cell paper on NAD+/Sirtuin
+      pathway and longevity. This study showed UPR-mt activation through NAD+ modulation
+      involves mitonuclear protein imbalance and stress signaling.
+    action: ACCEPT
+    reason: The role of UBL-5 in UPR-mt is well-established through multiple independent
+      studies. While the 2013 Cell paper focuses on NAD+/sirtuin pathway, it demonstrates
+      UPR-mt involvement. The UPR-mt role of UBL-5 is a core function, though recent
+      work suggests it may be partially mediated through its splicing function affecting
+      nuclear RNA processing of stress-responsive genes.
+    supported_by:
+    - reference_id: PMID:23870130
+      supporting_text: These effects are dependent upon the protein deacetylase sir-2.1
+        and involve the induction of mitonuclear protein imbalance as well as activation
+        of stress signaling via the mitochondrial unfolded protein response (UPR(mt))
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:17925224
+  review:
+    summary: IMP annotation from Haynes et al. (2007) Dev Cell paper. This is the
+      key paper establishing UBL-5 as a UPR-mt regulator, showing DVE-1/UBL-5 complex
+      formation under mitochondrial stress.
+    action: ACCEPT
+    reason: This is foundational experimental evidence for UBL-5&#39;s role in UPR-mt.
+      The paper demonstrated that &#34;Unfolded protein stress in the mitochondria correlates
+      with complex formation between a homeodomain-containing transcription factor
+      DVE-1 and the small ubiquitin-like protein UBL-5, both of which are encoded
+      by genes required for signaling the UPR(mt).&#34;
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: Unfolded protein stress in the mitochondria correlates with
+        complex formation between a homeodomain-containing transcription factor DVE-1
+        and the small ubiquitin-like protein UBL-5, both of which are encoded by genes
+        required for signaling the UPR(mt).
+- term:
+    id: GO:0005667
+    label: transcription regulator complex
+  evidence_type: IPI
+  original_reference_id: PMID:17925224
+  review:
+    summary: IPI annotation indicating UBL-5 is part of a transcription regulator
+      complex, based on its physical interaction with DVE-1, a homeodomain transcription
+      factor. This complex regulates mitochondrial chaperone gene expression.
+    action: ACCEPT
+    reason: The DVE-1/UBL-5 complex functions as a transcriptional regulatory unit
+      for UPR-mt target genes. Haynes et al. (2007) showed that &#34;Activation of the
+      UPR(mt) correlates temporally and spatially with nuclear redistribution of DVE-1
+      and with its enhanced binding to the promoters of mitochondrial chaperone genes.&#34;
+      UBL-5 forms a complex with DVE-1 that binds these promoters.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: Activation of the UPR(mt) correlates temporally and spatially
+        with nuclear redistribution of DVE-1 and with its enhanced binding to the
+        promoters of mitochondrial chaperone genes.
+    - reference_id: file:worm/ubl-5/ubl-5-uniprot.txt
+      supporting_text: Interacts with dve-1; the interaction occurs in a mitochondrial
+        stress-dependent manner.
+- term:
+    id: GO:0034514
+    label: mitochondrial unfolded protein response
+  evidence_type: IMP
+  original_reference_id: PMID:16816413
+  review:
+    summary: IMP annotation from Benedetti et al. (2006) Genetics paper. This was
+      the first paper to identify UBL-5 as a positive regulator of UPR-mt through
+      an RNAi screen for suppressors of UPR-mt activation.
+    action: ACCEPT
+    reason: This is the original discovery paper for UBL-5&#39;s role in UPR-mt. The study
+      showed that &#34;RNAi of ubl-5 suppresses activation of the UPR(mt) markers hsp-60::gfp
+      and hsp-6::gfp&#34; and that UBL-5 is required for induction of endogenous mitochondrial
+      chaperone genes. This represents core UBL-5 function.
+    supported_by:
+    - reference_id: PMID:16816413
+      supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+        activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation
+        and by other manipulations that promote mitochondrial protein misfolding.
+        ubl-5 (RNAi) inhibits the induction of endogenous mitochondrial chaperone
+        encoding genes hsp-60 and hsp-6 and compromises the ability of animals to
+        cope with mitochondrial stress.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:16816413
+  review:
+    summary: IDA annotation for nuclear localization from Benedetti et al. (2006).
+      Direct visualization of GFP-tagged UBL-5 accumulating in nuclei under mitochondrial
+      stress.
+    action: ACCEPT
+    reason: This is direct experimental evidence (IDA) for nuclear localization. The
+      paper explicitly states that &#34;Induction of mitochondrial stress promotes accumulation
+      of GFP-tagged UBL-5 in nuclei of transgenic worms.&#34; Nuclear localization is
+      essential for both UBL-5&#39;s splicing and transcriptional regulatory functions.
+    supported_by:
+    - reference_id: PMID:16816413
+      supporting_text: Induction of mitochondrial stress promotes accumulation of
+        GFP-tagged UBL-5 in nuclei of transgenic worms, suggesting that UBL-5 effects
+        a nuclear step required for mounting a response to the threat of mitochondrial
+        protein misfolding.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:16816413
+  review:
+    summary: IDA annotation for cytosolic localization from Benedetti et al. (2006).
+      The paper shows UBL-5 is present in cytoplasm and redistributes to nucleus under
+      stress, implying baseline cytosolic presence.
+    action: ACCEPT
+    reason: The stress-induced nuclear accumulation implies UBL-5 must be present
+      in the cytosol under basal conditions before translocating to the nucleus. Cytosol
+      (GO:0005829) is more specific than cytoplasm (GO:0005737) but appropriate here
+      as UBL-5 is a soluble protein that shuttles between compartments.
+    supported_by:
+    - reference_id: PMID:16816413
+      supporting_text: Induction of mitochondrial stress promotes accumulation of
+        GFP-tagged UBL-5 in nuclei of transgenic worms [implying baseline cytoplasmic/cytosolic
+        presence before nuclear redistribution]
+- term:
+    id: GO:1990935
+    label: splicing factor binding
+  evidence_type: IDA
+  original_reference_id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+  review:
+    summary: NEW annotation based on 2023 FEBS Letters study (Kolathur et al.) demonstrating
+      that UBL-5 directly binds HIND-containing spliceosomal proteins SART-1 and PRP-38
+      via co-immunoprecipitation and binding assays. This molecular function term
+      captures UBL-5&#39;s role as a non-enzymatic splicing cofactor.
+    action: NEW
+    reason: UBL-5&#39;s molecular function as a splicing factor binding protein is well-supported
+      by recent C. elegans experimental data showing direct interaction with spliceosomal
+      components. This is more specific than the existing IBA annotation for the biological
+      process (mRNA splicing) and accurately reflects UBL-5&#39;s non-covalent binding
+      mechanism.
+    supported_by:
+    - reference_id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+      supporting_text: UBL-5 binds HIND-containing spliceosomal proteins SART-1 and
+        PRP-38, co-IPs with spliceosomal proteins... co-IP/MS showed enrichment of
+        spliceosomal proteins in UBL-5 complexes in C. elegans
+- term:
+    id: GO:0003713
+    label: transcription coactivator activity
+  evidence_type: IDA
+  original_reference_id: PMID:17925224
+  review:
+    summary: NEW annotation based on UBL-5&#39;s role as a cofactor with DVE-1 in activating
+      transcription of mitochondrial chaperone genes during UPR-mt. UBL-5 forms a
+      stress-dependent complex with DVE-1 that binds to and activates promoters of
+      hsp-6 and hsp-60 genes.
+    action: NEW
+    reason: UBL-5 functions as a transcription coactivator by forming a complex with
+      the transcription factor DVE-1. This complex is required for activation of UPR-mt
+      target genes. The evidence from PMID:17925224 shows that UBL-5 is required for
+      DVE-1-mediated transcriptional activation of mitochondrial chaperone genes.
+    supported_by:
+    - reference_id: PMID:17925224
+      supporting_text: Unfolded protein stress in the mitochondria correlates with
+        complex formation between a homeodomain-containing transcription factor DVE-1
+        and the small ubiquitin-like protein UBL-5, both of which are encoded by genes
+        required for signaling the UPR(mt)
+    - reference_id: PMID:16816413
+      supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+        activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings: []
+- id: PMID:16816413
+  title: Ubiquitin-like protein 5 positively regulates chaperone gene expression in
+    the mitochondrial unfolded protein response.
+  findings:
+  - statement: First identification of UBL-5 as positive regulator of UPR-mt
+    supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+      activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp
+  - statement: RNAi of ubl-5 suppresses hsp-60::gfp and hsp-6::gfp reporter activation
+    supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+      activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp by the zc32 mutation
+  - statement: ubl-5 RNAi inhibits induction of endogenous hsp-60 and hsp-6 genes
+    supporting_text: ubl-5 (RNAi) inhibits the induction of endogenous mitochondrial
+      chaperone encoding genes hsp-60 and hsp-6 and compromises the ability of animals
+      to cope with mitochondrial stress
+  - statement: Mitochondrial stress promotes nuclear accumulation of GFP-tagged UBL-5
+    supporting_text: Induction of mitochondrial stress promotes accumulation of GFP-tagged
+      UBL-5 in nuclei of transgenic worms
+  - statement: UBL-5 effects a nuclear step in UPR-mt signaling
+    supporting_text: UBL-5 effects a nuclear step required for mounting a response
+      to the threat of mitochondrial protein misfolding
+- id: PMID:17925224
+  title: ClpP mediates activation of a mitochondrial unfolded protein response in
+    C. elegans.
+  findings:
+  - statement: DVE-1 and UBL-5 form a complex during mitochondrial stress
+    supporting_text: Unfolded protein stress in the mitochondria correlates with complex
+      formation between a homeodomain-containing transcription factor DVE-1 and the
+      small ubiquitin-like protein UBL-5
+  - statement: Both DVE-1 and UBL-5 are required for signaling UPR-mt
+    supporting_text: DVE-1 and the small ubiquitin-like protein UBL-5, both of which
+      are encoded by genes required for signaling the UPR(mt)
+  - statement: DVE-1 nuclear redistribution correlates with UPR-mt activation
+    supporting_text: Activation of the UPR(mt) correlates temporally and spatially
+      with nuclear redistribution of DVE-1
+  - statement: DVE-1 binds promoters of mitochondrial chaperone genes
+    supporting_text: Activation of the UPR(mt) correlates temporally and spatially
+      with nuclear redistribution of DVE-1 and with its enhanced binding to the promoters
+      of mitochondrial chaperone genes
+- id: PMID:23870130
+  title: The NAD(+)/Sirtuin Pathway Modulates Longevity through Activation of Mitochondrial
+    UPR and FOXO Signaling.
+  findings:
+  - statement: NAD+ restoration promotes longevity via UPR-mt activation
+    supporting_text: genetic or pharmacological restoration of NAD(+) prevents age-associated
+      metabolic decline and promotes longevity in worms
+  - statement: UPR-mt is part of the mitochondrial stress signaling pathway
+    supporting_text: activation of stress signaling via the mitochondrial unfolded
+      protein response (UPR(mt)) and the nuclear translocation and activation of FOXO
+      transcription factor DAF-16
+  - statement: Links metabolic regulation to mitochondrial proteostasis
+    supporting_text: augmenting mitochondrial stress signaling through the modulation
+      of NAD(+) levels may be a target to improve mitochondrial function
+- id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+  title: Deep research summary for UBL-5
+  findings:
+  - statement: UBL-5 binds HIND-containing spliceosomal proteins SART-1 and PRP-38
+    supporting_text: UBL-5 binds HIND-containing spliceosomal proteins SART-1 and
+      PRP-38, co-IPs with spliceosomal proteins
+  - statement: UBL-5 co-immunoprecipitates with spliceosomal components
+    supporting_text: co-IP/MS showed enrichment of spliceosomal proteins in UBL-5
+      complexes in C. elegans
+  - statement: ubl-5 mutants arrest at L3 and exhibit splicing defects
+    supporting_text: ubl-5 null mutants arrest at L3, and ubl-5 expression is elevated
+      at L3, aligning with a critical developmental window for its splicing function
+  - statement: UBL-5 lacks C-terminal di-Gly motif for covalent conjugation
+    supporting_text: UBL-5/Hub1 is a ubiquitin-like protein that, unlike many UBLs,
+      lacks the C-terminal di-Gly motif for covalent conjugation
+  - statement: UBL-5 functions via non-covalent protein-protein interactions
+    supporting_text: Not a covalent modifier... UBL-5 does not act through E1-E2-E3
+      conjugation but via direct protein-protein interactions in the splicing machinery
+- id: file:worm/ubl-5/ubl-5-uniprot.txt
+  title: UniProtKB entry for UBL-5 C. elegans
+  findings:
+  - statement: 73 amino acid ubiquitin-like protein
+    supporting_text: 73 AA
+  - statement: Contains Hub1/Ubl5 domain (IPR039732)
+    supporting_text: InterPro; IPR039732; Hub1/Ubl5
+  - statement: Cytoplasmic localization by sequence similarity
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}&#39;
+  - statement: Interacts with DVE-1 in stress-dependent manner
+    supporting_text: Interacts with dve-1; the interaction occurs in a mitochondrial
+      stress-dependent manner
+core_functions:
+- description: UBL-5 is an essential spliceosome-associated cofactor. Kolathur et
+    al. (2023) demonstrated that UBL-5 binds HIND-containing spliceosomal proteins
+    SART-1 and PRP-38, co-IPs with spliceosomal components, and loss of function causes
+    accumulation of unspliced transcripts and L3 larval arrest. This is now considered
+    the primary molecular function of UBL-5.
+  molecular_function:
+    id: GO:1990935
+    label: splicing factor binding
+  directly_involved_in:
+  - id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:worm/ubl-5/ubl-5-deep-research-falcon.md
+    supporting_text: UBL-5 binds HIND-containing spliceosomal proteins SART-1 and
+      PRP-38... Loss of ubl-5 causes selective splicing defects (intron retention
+      and trans-/cis-splicing defects) and developmental arrest (L3 lethality)
+- description: UBL-5 is a positive regulator of UPR-mt. Multiple independent studies
+    (PMID:16816413, PMID:17925224, PMID:23870130) demonstrate that UBL-5 is required
+    for activation of mitochondrial chaperone genes (hsp-6, hsp-60) during mitochondrial
+    stress. UBL-5 forms a complex with the transcription factor DVE-1 to activate
+    UPR-mt target gene expression.
+  molecular_function:
+    id: GO:0003713
+    label: transcription coactivator activity
+  directly_involved_in:
+  - id: GO:0034514
+    label: mitochondrial unfolded protein response
+  in_complex:
+    id: GO:0005667
+    label: transcription regulator complex
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:17925224
+    supporting_text: Unfolded protein stress in the mitochondria correlates with complex
+      formation between a homeodomain-containing transcription factor DVE-1 and the
+      small ubiquitin-like protein UBL-5, both of which are encoded by genes required
+      for signaling the UPR(mt)
+  - reference_id: PMID:16816413
+    supporting_text: RNAi of ubl-5, a gene encoding a ubiquitin-like protein, suppresses
+      activation of the UPR(mt) markers hsp-60::gfp and hsp-6::gfp
+proposed_new_terms: []
+suggested_questions:
+- question: Is the UPR-mt role of UBL-5 mechanistically dependent on its splicing
+    function, or are these independent pathways? Recent work suggests UBL-5&#39;s effects
+    on nuclear RNA processing (splicing) may contribute to its UPR-mt phenotypes,
+    but the DVE-1 interaction appears to be a distinct function.
+suggested_experiments:
+- description: Test whether splicing-defective UBL-5 mutants (disrupting HIND-binding)
+    retain ability to interact with DVE-1 and activate UPR-mt reporters. This would
+    distinguish whether the splicing and UPR-mt functions are mechanistically linked
+    or represent independent activities of UBL-5.
+tags:
+- caeel-upr-stress
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

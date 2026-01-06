@@ -1,0 +1,3685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>daf-19 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>daf-19</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q09555" target="_blank" class="term-link">
+                        Q09555
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "daf-19";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q09555" data-a="DESCRIPTION: DAF-19 is the sole RFX-type transcription factor i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DAF-19 is the sole RFX-type transcription factor in C. elegans, functioning as the master regulator of ciliogenesis in sensory neurons. It activates expression of ciliary genes by binding to X-box promoter sequences. Multiple isoforms exist with distinct functions: DAF-19C is specifically expressed in ciliated sensory neurons and is sufficient for ciliogenesis, while DAF-19A/B function in nonciliated neurons for synaptic maintenance. daf-19 mutants lack sensory cilia, are chemosensory defective, and form constitutive dauer larvae. DAF-19 also plays roles in innate immunity and serotonin biosynthesis in response to pathogenic bacteria, working with ATF-7 to regulate tph-1 expression in ADF neurons.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 is an RFX-type transcription factor that binds X-box sequences in promoters of ciliary genes. RFX transcription factors are known to recognize specific DNA sequences in cis-regulatory regions. The IBA annotation is phylogenetically inferred from other RFX family members including mammalian orthologs that have been experimentally characterized.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately reflects DAF-19&#39;s function as a sequence-specific DNA-binding transcription factor. RFX family members bind to X-box sequences. The IBA inference from characterized RFX orthologs is well-supported and consistent with the UniProt domain annotation showing an RFX-type winged-helix DNA-binding domain (aa 260-334).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                        PMID:10882127
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Several genes that function in all ciliated sensory neurons have an RFX target site in their promoters and require daf-19 function.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11290289" target="_blank" class="term-link">
+                                        PMID:11290289
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">osm-5 is expressed in ciliated sensory neurons in C. elegans and its expression is regulated by DAF-19, an RFX-type transcription factor that governs the expression of other genes involved in cilia formation in the worm.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 functions as a transcription factor that activates expression of ciliary genes. This is a core molecular function of DAF-19, supported by multiple lines of experimental evidence showing loss of ciliary gene expression in daf-19 mutants.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This core molecular function annotation is well supported by multiple lines of evidence. DAF-19 is the sole RFX transcription factor in C. elegans and directly regulates transcription of ciliary genes. The IBA inference from characterized orthologs is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                        PMID:10882127
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss of daf-19 function causes the absence of cilia, resulting in severe sensory defects. Several genes that function in all ciliated sensory neurons have an RFX target site in their promoters and require daf-19 function.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                        PMID:18843046
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the worm Caenorhabditis elegans, lack of the RFX transcription factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 regulates transcription of ciliary genes. This is the core biological process annotation corresponding to its molecular function as an RFX transcription factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly describes DAF-19&#39;s involvement in transcriptional regulation. The IBA annotation is well-supported by phylogenetic evidence and is consistent with extensive experimental data in C. elegans showing that daf-19 mutants fail to express ciliary genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                        PMID:10882127
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These results suggest that expression of the shared components of sensory cilia is activated by daf-19, whereas cell-type-specific expression occurs independently of daf-19.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11290289" target="_blank" class="term-link">
+                                        PMID:11290289
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">osm-5 is expressed in ciliated sensory neurons in C. elegans and its expression is regulated by DAF-19, an RFX-type transcription factor that governs the expression of other genes involved in cilia formation in the worm.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 is a transcription factor localized to the nucleus. This is supported by IBA evidence and consistent with its role in gene regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is expected for a transcription factor and is supported by the IBA inference. UniProt confirms nuclear localization based on PROSITE analysis and experimental data (PMID:12954713, PMID:20923979).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link">
+                                        PMID:12954713
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ciliogenic pathway regulator DAF-19 affects downstream components of the HOB-specific program indirectly and is independent of EGL-46 activity. [Authors demonstrate DAF-19 expression in nuclei of sensory neurons]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic DNA binding annotation from InterPro domain mapping (RFX DNA-binding domain IPR003150).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a broader term subsuming the more specific GO:0000978 annotation. While the more specific term is preferred, this IEA annotation is accurate. The RFX DNA-binding domain is clearly present in DAF-19 (UniProt feature DNA_BIND 260-334, RFX-type winged-helix).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro:IPR003150|UniProtKB-KW:KW-0238</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transcription factor activity annotation from InterPro mapping (IPR039779, RFX-like family).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation is accurate but is a broader parent of the more specific GO:0000981 annotation. DAF-19 belongs to the RFX transcription factor family as annotated by InterPro.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro:IPR039779</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization from UniProt subcellular location mapping.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is consistent with DAF-19&#39;s role as a transcription factor. The UniProt entry states &#34;Nucleus&#34; under SUBCELLULAR LOCATION with evidence from PROSITE and experimental data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000044
+                                    
+                                </span>
+                                
+                                <div class="support-text">UniProtKB-SubCell:SL-0191</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transcription annotation from UniProt keyword mapping (KW-0804, Transcription).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate but very general. DAF-19 is a transcription factor involved in transcription. The more specific annotation GO:0006357 (regulation of transcription by RNA polymerase II) better captures its regulatory role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000043
+                                    
+                                </span>
+                                
+                                <div class="support-text">UniProtKB-KW:KW-0804</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transcription regulation annotation from InterPro domain mapping.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate. The more specific GO:0006357 annotation better captures DAF-19&#39;s role in RNA polymerase II-dependent transcription.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro:IPR003150</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12954713
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct roles of transcription factors EGL-46 and DAF-19 in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0005634" data-r="PMID:12954713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence of nuclear localization from Yu et al. 2003 study on DAF-19 function in the male-specific HOB neuron.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IDA annotation provides direct experimental evidence for nuclear localization. The study examined DAF-19 expression and function in sensory neurons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link">
+                                        PMID:12954713
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ciliogenic pathway regulator DAF-19 affects downstream components of the HOB-specific program indirectly and is independent of EGL-46 activity. [Study demonstrates DAF-19 expression in ciliated sensory neurons including male-specific HOB]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12954713
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct roles of transcription factors EGL-46 and DAF-19 in...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0010468" data-r="PMID:12954713" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence for gene expression regulation from the Yu et al. 2003 study showing that DAF-19 regulates expression of ciliary genes in sensory neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While accurate, this annotation is quite general. DAF-19&#39;s primary role is as a transcriptional activator of ciliary gene expression. A more specific annotation such as GO:0045724 (positive regulation of cilium assembly) would better capture the biological outcome of DAF-19&#39;s transcriptional regulatory activity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045724" target="_blank" class="term-link">
+                                    positive regulation of cilium assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link">
+                                        PMID:12954713
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The ciliogenic pathway regulator DAF-19 affects downstream components of the HOB-specific program indirectly and is independent of EGL-46 activity.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                        PMID:18843046
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The short isoform DAF-19C is specifically expressed in ciliated sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19 mutants.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23505381
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RFX transcription factor DAF-19 regulates 5-HT and innate im...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0050829" data-r="PMID:23505381" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 is involved in innate immune responses to pathogenic bacteria. The Xie et al. 2013 study showed that daf-19 mutants display heightened susceptibility to killing by Pseudomonas aeruginosa PA14 and have reduced expression of antimicrobial genes. DAF-19 works with ATF-7 to regulate immune gene expression via the TIR-1 pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a legitimate function of DAF-19 supported by experimental evidence, but it represents a secondary/pleiotropic role rather than its core function. DAF-19&#39;s primary role is in ciliogenesis and ciliary gene expression. The innate immunity function is mediated through DAF-19&#39;s broader transcription factor activity and its interaction with ATF-7.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link">
+                                        PMID:23505381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">daf-19 mutants display heightened susceptibility to killing by PA14.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link">
+                                        PMID:23505381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that DAF-19 concerts with ATF-7, a member of the activating transcription factor (ATF)/cAMP response element-binding B (CREB) family of transcription factors, to regulate tph-1 and antimicrobial genes, reminiscent of RFX-CREB interaction in human immune cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042427" target="_blank" class="term-link">
+                                    GO:0042427
+                                </a>
+                            </span>
+                            <span class="term-label">serotonin biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23505381
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RFX transcription factor DAF-19 regulates 5-HT and innate im...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0042427" data-r="PMID:23505381" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 regulates tph-1 (tryptophan hydroxylase) expression in ADF neurons, which is required for serotonin biosynthesis. The Xie et al. 2013 study showed that daf-19 mutants have diminished tph-1 expression in ADF neurons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation reflects DAF-19&#39;s role in regulating serotonin biosynthesis through transcriptional control of tph-1. However, this is a secondary function related to the serotonergic response to pathogens rather than DAF-19&#39;s core ciliogenesis function. Note that the GOA annotation uses &#34;acts_upstream_of_or_within&#34; qualifier, which is appropriate since DAF-19 does not directly participate in the enzymatic pathway but regulates expression of pathway components.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link">
+                                        PMID:23505381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">daf-19 is required for tph-1 expression in the ADF neurons.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link">
+                                        PMID:23505381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">To assess whether daf-19 deficiency abolishes all 5-HT phenotype genes, we analyzed the expression of cat-1, encoding the vesicular monoamine transporter required for 5-HT synaptic release [28]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26595381
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TMEM107 recruits ciliopathy proteins to subdomains of the ci...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0045944" data-r="PMID:26595381" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The Lambacher et al. 2016 study on TMEM107 and ciliary transition zone proteins showed DAF-19&#39;s role as a positive transcriptional regulator of ciliary genes. DAF-19 positively regulates transcription of transition zone components.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately reflects DAF-19&#39;s role as a transcriptional activator. DAF-19 positively regulates expression of ciliary genes including transition zone components. This is a core function of DAF-19 as a transcription factor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link">
+                                        PMID:26595381
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mechanistic studies in Caenorhabditis elegans showed that TMEM-107 controls ciliary composition and functions redundantly with NPHP-4 to regulate cilium integrity, TZ docking and assembly of membrane to microtubule Y-link connectors.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                        PMID:10882127
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These results suggest that expression of the shared components of sensory cilia is activated by daf-19, whereas cell-type-specific expression occurs independently of daf-19.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18843046
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct isoforms of the RFX transcription factor DAF-19 reg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0005634" data-r="PMID:18843046" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence of nuclear localization from Senti &amp; Swoboda 2008 study characterizing DAF-19 isoforms. Both the short isoform DAF-19C in ciliated neurons and long isoforms DAF-19A/B in nonciliated neurons were localized to the nucleus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IDA annotation provides additional direct experimental evidence for nuclear localization of DAF-19 isoforms, complementing the evidence from PMID:12954713. Nuclear localization is expected and required for its transcription factor activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                        PMID:18843046
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The short isoform DAF-19C is specifically expressed in ciliated sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19 mutants. In contrast, the long isoforms DAF-19A/B function in basically all nonciliated neurons.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11290289" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11290289
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The C. elegans homolog of the murine cystic kidney disease g...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0006357" data-r="PMID:11290289" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence from Haycraft et al. 2001 study on osm-5, showing that DAF-19 regulates transcription of ciliary genes. osm-5 expression is regulated by DAF-19 as part of the ciliogenic pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is directly supported by the study showing that DAF-19 regulates osm-5 expression as part of the ciliogenic transcriptional program. This is a core function of DAF-19.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11290289" target="_blank" class="term-link">
+                                        PMID:11290289
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">osm-5 is expressed in ciliated sensory neurons in C. elegans and its expression is regulated by DAF-19, an RFX-type transcription factor that governs the expression of other genes involved in cilia formation in the worm.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045724" target="_blank" class="term-link">
+                                    GO:0045724
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18843046
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Distinct isoforms of the RFX transcription factor DAF-19 reg...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q09555" data-a="GO:0045724" data-r="PMID:18843046" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DAF-19 is required for cilium formation in sensory neurons. daf-19 mutants lack cilia on sensory neurons, and the DAF-19C isoform is sufficient to rescue all cilia-related phenotypes. This represents DAF-19&#39;s core biological function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by the literature and represents DAF-19&#39;s central role in ciliogenesis. This biological process annotation captures the functional outcome of DAF-19&#39;s transcriptional regulatory activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                        PMID:10882127
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss of daf-19 function causes the absence of cilia, resulting in severe sensory defects.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                        PMID:18843046
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the worm Caenorhabditis elegans, lack of the RFX transcription factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                        PMID:18843046
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The short isoform DAF-19C is specifically expressed in ciliated sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19 mutants.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DAF-19 is the sole RFX-type transcription factor in C. elegans. It binds to X-box promoter sequences and activates transcription of ciliary genes. The RFX DNA-binding domain (aa 260-334) mediates sequence-specific recognition of target promoters.</h3>
+                <span class="vote-buttons" data-g="Q09555" data-a="FUNCTION: DAF-19 is the sole RFX-type transcription factor i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045724" target="_blank" class="term-link">
+                                positive regulation of cilium assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                positive regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                PMID:10882127
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Loss of daf-19 function causes the absence of cilia, resulting in severe sensory defects. Several genes that function in all ciliated sensory neurons have an RFX target site in their promoters and require daf-19 function.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                                PMID:18843046
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In the worm Caenorhabditis elegans, lack of the RFX transcription factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DAF-19 binds to X-box DNA sequences in promoters of ciliary genes. This sequence-specific binding activity is characteristic of RFX family transcription factors and underlies DAF-19&#39;s regulatory function.</h3>
+                <span class="vote-buttons" data-g="Q09555" data-a="FUNCTION: DAF-19 binds to X-box DNA sequences in promoters o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                            RNA polymerase II cis-regulatory region sequence-specific DNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                                PMID:10882127
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Several genes that function in all ciliated sensory neurons have an RFX target site in their promoters and require daf-19 function.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 groups with other RFX family transcription factors in PANTHER phylogenetic analysis</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10882127" target="_blank" class="term-link">
+                            PMID:10882127
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The RFX-type transcription factor DAF-19 regulates sensory neuron cilium formation in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 is an RFX-type transcription factor expressed in all ciliated sensory neurons</div>
+                        
+                        <div class="finding-text">"We report that the C. elegans gene daf-19 encodes an RFX-type transcription factor that is expressed specifically in all ciliated sensory neurons."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of daf-19 causes absence of cilia</div>
+                        
+                        <div class="finding-text">"Loss of daf-19 function causes the absence of cilia, resulting in severe sensory defects."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 activates expression of shared ciliary components via RFX target sites</div>
+                        
+                        <div class="finding-text">"Several genes that function in all ciliated sensory neurons have an RFX target site in their promoters and require daf-19 function"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11290289" target="_blank" class="term-link">
+                            PMID:11290289
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C. elegans homolog of the murine cystic kidney disease gene Tg737 functions in a ciliogenic pathway and is disrupted in osm-5 mutant worms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">osm-5 expression is regulated by DAF-19</div>
+                        
+                        <div class="finding-text">"osm-5 is expressed in ciliated sensory neurons in C. elegans and its expression is regulated by DAF-19, an RFX-type transcription factor that governs the expression of other genes involved in cilia formation in the worm."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12954713" target="_blank" class="term-link">
+                            PMID:12954713
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Distinct roles of transcription factors EGL-46 and DAF-19 in specifying the functionality of a polycystin-expressing sensory neuron necessary for C. elegans male vulva location behavior.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 is the ciliogenic pathway regulator</div>
+                        
+                        <div class="finding-text">"The ciliogenic pathway regulator DAF-19 affects downstream components of the HOB-specific program indirectly and is independent of EGL-46 activity."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 regulates a general ciliogenic program distinct from cell-type-specific pathways</div>
+                        
+                        <div class="finding-text">"This EGL-46- regulated program is specific to HOB and is distinct from a general ciliogenic pathway functioning in all ciliated neurons"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18843046" target="_blank" class="term-link">
+                            PMID:18843046
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Distinct isoforms of the RFX transcription factor DAF-19 regulate ciliogenesis and maintenance of synaptic activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19C specifically expressed in ciliated sensory neurons</div>
+                        
+                        <div class="finding-text">"The short isoform DAF-19C is specifically expressed in ciliated sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19 mutants."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19A/B function in nonciliated neurons for synaptic maintenance</div>
+                        
+                        <div class="finding-text">"In contrast, the long isoforms DAF-19A/B function in basically all nonciliated neurons."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">daf-19 mutants lack cilia on 60 sensory neurons</div>
+                        
+                        <div class="finding-text">"In the worm Caenorhabditis elegans, lack of the RFX transcription factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">daf-19 mutants have synaptic maintenance phenotypes</div>
+                        
+                        <div class="finding-text">"We discovered behavioral and cellular phenotypes in daf-19 mutants that depend on the isoforms daf-19a/b. These novel synaptic maintenance phenotypes are reminiscent of synaptic decline seen in many human neurodegenerative disorders."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20923979" target="_blank" class="term-link">
+                            PMID:20923979
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional specialization of sensory cilia by an RFX transcription factor isoform.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Isoform C involved in male mating behavior and PKD ciliated sensory neuron specialization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23505381" target="_blank" class="term-link">
+                            PMID:23505381
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RFX transcription factor DAF-19 regulates 5-HT and innate immune responses to pathogenic bacteria in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 regulates tph-1 expression in ADF neurons</div>
+                        
+                        <div class="finding-text">"daf-19 is required for tph-1 expression in the ADF neurons."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 works with ATF-7 to regulate immune genes</div>
+                        
+                        <div class="finding-text">"We show that DAF-19 concerts with ATF-7, a member of the activating transcription factor (ATF)/cAMP response element-binding B (CREB) family of transcription factors, to regulate tph-1 and antimicrobial genes, reminiscent of RFX-CREB interaction in human immune cells."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">daf-19 mutants have heightened susceptibility to PA14</div>
+                        
+                        <div class="finding-text">"daf-19 mutants display heightened susceptibility to killing by PA14."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 suppresses hyperactive TIR-1 immunity</div>
+                        
+                        <div class="finding-text">"A forward genetic screen for suppressors of the hyperactive TIR-1 led to the identification of DAF-19, an ortholog of regulatory factor X (RFX) transcription factors that are required for human adaptive immunity."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26595381" target="_blank" class="term-link">
+                            PMID:26595381
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TMEM107 recruits ciliopathy proteins to subdomains of the ciliary transition zone and causes Joubert syndrome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DAF-19 positively regulates transcription of ciliary transition zone genes</div>
+                        
+                        <div class="finding-text">"Mechanistic studies in Caenorhabditis elegans showed that TMEM-107 controls ciliary composition and functions redundantly with NPHP-4 to regulate cilium integrity, TZ docking and assembly of membrane to microtubule Y-link connectors."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the complete set of DAF-19 target genes and do they all contain X-box sequences?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="Q: What are the complete set of DAF-19 target genes a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there tissue-specific differences in DAF-19 target genes beyond the isoform differences?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="Q: Are there tissue-specific differences in DAF-19 ta..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does DAF-19 interact with ATF-7 at the molecular level for immune gene regulation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="Q: How does DAF-19 interact with ATF-7 at the molecul..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular basis for isoform-specific functions of DAF-19A/B versus DAF-19C?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="Q: What is the molecular basis for isoform-specific f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq to identify genome-wide DAF-19 binding sites</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DAF-19 directly binds to X-box sequences in promoters of ciliary genes</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="EXPERIMENT: ChIP-seq to identify genome-wide DAF-19 binding si..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNA-seq comparison of wild-type vs daf-19 mutants to identify all regulated genes</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DAF-19 regulates a specific set of ciliary and sensory neuron genes</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="EXPERIMENT: RNA-seq comparison of wild-type vs daf-19 mutants ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical characterization of DAF-19 DNA binding specificity using EMSA or protein-binding microarrays</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DAF-19 binds X-box sequences with high specificity and affinity</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q09555" data-a="EXPERIMENT: Biochemical characterization of DAF-19 DNA binding..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-ciliopathy</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(daf-19-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q09555" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T15:29:05.179177'<br />
+end_time: '2025-12-29T15:38:02.426461'<br />
+duration_seconds: 537.25<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: daf-19<br />
+  gene_symbol: daf-19<br />
+  uniprot_accession: Q09555<br />
+  protein_description: 'RecName: Full=RFX-like transcription factor daf-19; AltName:<br />
+    Full=Abnormal dauer formation protein 19 {ECO:0000312|WormBase:F33H1.1b};'<br />
+  gene_info: Name=daf-19 {ECO:0000312|WormBase:F33H1.1b}; ORFNames=F33H1.1 {ECO:0000312|WormBase:F33H1.1b};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the RFX family. {ECO:0000255|PROSITE-<br />
+  protein_domains: DNA-bd_RFX. (IPR003150); RFX-like. (IPR039779); WH-like_DNA-bd_sf.<br />
+    (IPR036388); WH_DNA-bd_sf. (IPR036390); BCD_RFX (PF25340)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q09555</li>
+<li><strong>Protein Description:</strong> RecName: Full=RFX-like transcription factor daf-19; AltName: Full=Abnormal dauer formation protein 19 {ECO:0000312|WormBase:F33H1.1b};</li>
+<li><strong>Gene Information:</strong> Name=daf-19 {ECO:0000312|WormBase:F33H1.1b}; ORFNames=F33H1.1 {ECO:0000312|WormBase:F33H1.1b};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the RFX family. {ECO:0000255|PROSITE-</li>
+<li><strong>Key Domains:</strong> DNA-bd_RFX. (IPR003150); RFX-like. (IPR039779); WH-like_DNA-bd_sf. (IPR036388); WH_DNA-bd_sf. (IPR036390); BCD_RFX (PF25340)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "daf-19" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'daf-19' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>daf-19</strong> (gene ID: daf-19, UniProt: Q09555) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q09555</li>
+<li><strong>Protein Description:</strong> RecName: Full=RFX-like transcription factor daf-19; AltName: Full=Abnormal dauer formation protein 19 {ECO:0000312|WormBase:F33H1.1b};</li>
+<li><strong>Gene Information:</strong> Name=daf-19 {ECO:0000312|WormBase:F33H1.1b}; ORFNames=F33H1.1 {ECO:0000312|WormBase:F33H1.1b};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the RFX family. {ECO:0000255|PROSITE-</li>
+<li><strong>Key Domains:</strong> DNA-bd_RFX. (IPR003150); RFX-like. (IPR039779); WH-like_DNA-bd_sf. (IPR036388); WH_DNA-bd_sf. (IPR036390); BCD_RFX (PF25340)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "daf-19" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'daf-19' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>daf-19</strong> (gene ID: daf-19, UniProt: Q09555) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+We verified identity and domain architecture for daf-19 (UniProt Q09555) and assembled recent primary literature (2023–2024 priority) alongside foundational studies. We synthesized functions, pathways, localization, isoform-specific roles, downstream targets, regulatory logic, applications, expert opinions, and quantitative data.</p>
+<p>Comprehensive Research Report: daf-19 (C. elegans; UniProt Q09555)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+DAF-19 encodes the sole C. elegans member of the RFX (Regulatory Factor X) transcription factor family. It contains the conserved RFX winged-helix DNA-binding domain and regulates transcription through X-box cis-regulatory motifs, activating the ciliome—the gene set for assembly and function of sensory cilia. DAF-19 is required for formation of sensory cilia and broadly controls expression of shared ciliary components (e.g., intraflagellar transport, transition zone), while cell-type-specific ciliary features are co-specified by additional factors and isoforms (e.g., DAF-19M) (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-5, brocalruiz2023forkheadtranscriptionfactor pages 1-2).</p>
+<p>DAF-19 binds canonical X-boxes (imperfect inverted repeats of two 6-nt half-sites separated by 1–3 nt, consensus GTNRCC N1–3 RGYAAC) and, via its isoform DAF-19M (alone or with DAF-19C), can also recognize X-box motif variants that drive cell-specific programs in IL2 and male-specific ciliated neurons (ahn2022thec.elegans pages 25-26, ahn2022thec.elegans pages 8-10).</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- RFX–Forkhead co-regulation of the sensory ciliome: eLife 2023 identified FKH-8 as a Forkhead transcription factor expressed in all ciliated neurons that physically interacts with and synergizes with DAF-19/RFX to co-activate many sensory ciliome genes. The work integrates DAF-19 with a cooperating TF, expanding the regulatory logic beyond RFX-only control and showing that some ciliome reporters are dramatically reduced in daf-19 nulls while others retain residual activity, implying multi-input control (https://doi.org/10.7554/eLife.89702) (brocalruiz2023forkheadtranscriptionfactor pages 3-3, brocalruiz2023forkheadtranscriptionfactor pages 2-3, brocalruiz2023forkheadtranscriptionfactor pages 3-5, brocalruiz2023forkheadtranscriptionfactor pages 18-19, brocalruiz2023forkheadtranscriptionfactor pages 17-18, brocalruiz2023forkheadtranscriptionfactor pages 1-2, brocalruiz2023forkheadtranscriptionfactor pages 9-10).<br />
+- Isoform-specific specialization module (DAF-19M): Cell Reports 2022 (latest comprehensive isoform work) defined a DAF-19M-headed regulatory subroutine in IL2 neurons and male-specific neurons that uses an X-box variant to drive ciliary specialization and behavior (nictation, mating). DAF-19M cooperates with DAF-19C for robust expression of IL2 targets (klp-6, cwp-4, osm-9, cil-7). Upstream terminal selectors UNC-86 and CFI-1 regulate daf-19m expression. EMSA/Y1H support preferential binding of DAF-19M±C to variant X-boxes and DAF-19C to canonical X-boxes (https://doi.org/10.1016/j.celrep.2022.110661) (ahn2022thec.elegans pages 8-10, ahn2022thec.elegans pages 25-26, ahn2022thec.elegans pages 1-4, ahn2022thec.elegans pages 10-11).</p>
+<p>3) Current applications and real-world implementations<br />
+- Ciliopathy gene discovery and motif-based prediction: The DAF-19/X-box framework and the newly recognized FKH-8 cooperation provide a practical strategy to prioritize ciliary genes by motif searches (canonical and variant X-boxes) and combinatorial TF occupancy, aiding discovery of conserved ciliome components relevant to human ciliopathies (brocalruiz2023forkheadtranscriptionfactor pages 3-5, ahn2022thec.elegans pages 25-26).<br />
+- Behavioral genetics modules: The DAF-19M module defines an evolutionarily adaptable “regulatory subroutine” that can be ported conceptually to dissect cell-type-specific ciliary functions in other systems. In worms, this has enabled dissection of nictation circuits and male mating neuron specialization (ahn2022thec.elegans pages 1-4, ahn2022thec.elegans pages 10-11).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Swoboda et al. 2000 established daf-19 as the master RFX regulator of sensory ciliogenesis, with daf-19 mutants lacking cilia and showing broad sensory defects. This foundational view frames DAF-19 as activating shared cilia components via X-boxes, while neuron-subtype-specific features are set independently (swoboda2000therfxtypetranscription pages 1-2, swoboda2000therfxtypetranscription pages 3-4).<br />
+- eLife 2023 argues that RFX–Forkhead co-regulation of ciliome genes, demonstrated through DAF-19 and FKH-8 in C. elegans sensory neurons, reflects an ancient regulatory logic, generalizable across cilia types and species (https://doi.org/10.7554/eLife.89702) (brocalruiz2023forkheadtranscriptionfactor pages 1-2, brocalruiz2023forkheadtranscriptionfactor pages 3-3, brocalruiz2023forkheadtranscriptionfactor pages 3-5, brocalruiz2023forkheadtranscriptionfactor pages 18-19).<br />
+- Cell Reports 2022 positions DAF-19M as the head of an IL2 neuron subroutine, with isoform cooperation and variant X-box recognition as a mechanism for cell-specific ciliary specialization and behavior control (https://doi.org/10.1016/j.celrep.2022.110661) (ahn2022thec.elegans pages 8-10, ahn2022thec.elegans pages 25-26, ahn2022thec.elegans pages 1-4).</p>
+<p>5) Relevant statistics and data from recent and foundational studies<br />
+- Daf-c penetrance for daf-19 null (m86): 67% dauer at 15°C (n=340), 85% at 20°C (n=216), 98% at 25°C (n=310), vs 0% in WT—all from Molecular Cell 2000 (swoboda2000therfxtypetranscription pages 1-2).<br />
+- Cilia morphology loss in daf-19(m86): ASE cilia—0% full-length, 16% very short, 84% absent (WT: 97% full-length), demonstrating essentiality for ciliogenesis (swoboda2000therfxtypetranscription pages 3-4).<br />
+- Reporter regulation by DAF-19: Many ciliome reporters—including IFT (che-11/Ift140, osm-1/Ift172, ift-20, che-13/Ift57) and transition-zone (tmem-107, mks-1)—are dramatically reduced in daf-19 nulls; X-box requirement demonstrated using validated enhancers (brocalruiz2023forkheadtranscriptionfactor pages 3-5).<br />
+- Isoform cooperation and binding preference: Co-expression of DAF-19M with DAF-19C restores IL2 reporter expression nearly to wild-type, while DAF-19M alone gives partial rescue; EMSA/Y1H show DAF-19C binds canonical X-boxes more strongly, and DAF-19M+C heteromers bind variant X-boxes effectively (ahn2022thec.elegans pages 8-10).<br />
+- DAF-19M phenotypes: daf-19m-specific mutants disrupt expression of IL2/male neuron targets (klp-6, osm-9, cwp-4, cil-7) and impair nictation/mating, while general ciliogenesis (dye filling/IFT) can remain intact—indicating specialization rather than core ciliogenesis (wang2010functionalspecializationof pages 5-7, ahn2022thec.elegans pages 8-10).</p>
+<p>Functional roles, pathways, localization<br />
+- Primary function: DAF-19 is a transcriptional activator for the ciliome. It drives expression of shared ciliary components (IFT machinery, transition-zone proteins) via canonical X-boxes and, through its DAF-19M isoform, directs neuron class–specific specializations via X-box variants (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-5, ahn2022thec.elegans pages 8-10, ahn2022thec.elegans pages 25-26).<br />
+- Biological processes: Sensory ciliogenesis (formation and maintenance of cilia); specialization of IL2 and male-specific ciliated neurons that underlie nictation and mating behaviors; dauer developmental decision through ciliary sensory inputs (swoboda2000therfxtypetranscription pages 1-2, swoboda2000therfxtypetranscription pages 3-4, wang2010functionalspecializationof pages 5-7, ahn2022thec.elegans pages 10-11).<br />
+- Localization and expression: DAF-19C/short isoforms in all ciliated sensory neurons; DAF-19M expressed in IL2 and male-specific ciliated neurons (CEM, RnB, HOB). DAF-19 A/B isoforms are broader in the nervous system and can repress FKH-8 in non-ciliated neurons, preventing ectopic ciliome programs (brocalruiz2023forkheadtranscriptionfactor pages 9-10, wang2010functionalspecializationof pages 5-7, brocalruiz2023forkheadtranscriptionfactor pages 10-11).<br />
+- Downstream genes and pathways: Core ciliome/IFT targets include che-11/Ift140, osm-1/Ift172, ift-20, che-13/Ift57; transition-zone components such as tmem-107 and mks-1; dynein-2 associated xbx-1. IL2/male neuron specialization targets include klp-6 (kinesin), osm-9 (TRPV channel), cwp-4, and cil-7; these often carry variant X-boxes whose mutation abolishes expression in IL2/male neurons (brocalruiz2023forkheadtranscriptionfactor pages 3-5, ahn2022thec.elegans pages 8-10).<br />
+- Regulatory logic and co-factors: DAF-19 binds X-boxes as homo- or heteromers; DAF-19M and DAF-19C co-operate at variant X-boxes, while DAF-19C favors canonical X-boxes. FKH-8 co-occupies and physically interacts with DAF-19 to co-activate ciliome genes in sensory neurons, and DAF-19 A/B repress FKH-8 in non-ciliated neurons. Upstream, IL2 terminal selectors UNC-86 and CFI-1 activate daf-19m (ahn2022thec.elegans pages 8-10, brocalruiz2023forkheadtranscriptionfactor pages 3-3, brocalruiz2023forkheadtranscriptionfactor pages 10-11, ahn2022thec.elegans pages 10-11).</p>
+<p>Validation of gene/protein identity and domains<br />
+- Gene symbol and organism: daf-19 in Caenorhabditis elegans matches UniProt Q09555; literature uniformly refers to the C. elegans RFX-like transcription factor for ciliogenesis and sensory neuron gene expression (swoboda2000therfxtypetranscription pages 1-2, swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 1-2).<br />
+- Family/domains consistency: All sources identify DAF-19 as an RFX-family TF with an RFX DNA-binding domain (winged-helix) and dimerization features; this aligns with UniProt domain annotations (swoboda2000therfxtypetranscription pages 3-4, ahn2022thec.elegans pages 8-10).<br />
+- Ambiguity check: No conflicting gene symbol usage was found that would suggest a different organism/gene; all sources consistently analyze C. elegans daf-19 (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-3).</p>
+<p>Embedded summary table<br />
+| Topic | Key findings | Principal evidence (year/journal) | URLs |<br />
+|---|---|---:|---|<br />
+| Identity | DAF-19 is the sole RFX-family transcription factor in C. elegans (UniProt Q09555) and a master regulator of ciliome gene expression via X-box motifs. (RFX DNA-binding domain present) | Swoboda et al., 2000 (Molecular Cell); Brocal-Ruiz et al., 2023 (eLife) (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-3) | https://www.uniprot.org/uniprot/Q09555 ; https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.7554/elife.89702 |<br />
+| Domains | Contains an RFX DNA-binding domain (winged-helix / DBD) and dimerization features shared across isoforms; binds X-box cis-elements. | Swoboda et al., 2000; Ahn et al., 2022 (Cell Reports) (swoboda2000therfxtypetranscription pages 3-4, ahn2022thec.elegans pages 8-10) | https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Organism | Caenorhabditis elegans (worm); daf-19 locus corresponds to UniProt Q09555. | UniProt annotation and functional studies (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 1-2) | https://www.uniprot.org/uniprot/Q09555 |<br />
+| Isoforms &amp; principal roles | Multiple isoforms (commonly annotated A/B/C/D and M): DAF-19C (general ciliogenesis in ciliated sensory neurons); DAF-19M (IL2 &amp; male-specific neuron specialization for behaviors); A/B isoforms have distinct neuronal roles (repression of ectopic FKH-8). | Wang et al., 2010 (Genetics); Ahn et al., 2022 (Cell Reports); Brocal-Ruiz et al., 2023 (wang2010functionalspecializationof pages 5-7, brocalruiz2023forkheadtranscriptionfactor pages 10-11) | https://doi.org/10.1534/genetics.110.122879 ; https://doi.org/10.1016/j.celrep.2022.110661 ; https://doi.org/10.7554/elife.89702 |<br />
+| Partners / cofactors | Physical and functional cooperation with Forkhead TF FKH-8; upstream regulation by terminal selectors UNC-86 and CFI-1 in IL2 neurons. | Brocal-Ruiz et al., 2023 (eLife); Ahn et al., 2022 (Cell Reports) (brocalruiz2023forkheadtranscriptionfactor pages 3-3, ahn2022thec.elegans pages 8-10) | https://doi.org/10.7554/elife.89702 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Binding motif | Canonical X-box: imperfect inverted repeats (GTNRCC N1-3 RGYAAC); DAF-19M recognizes variant X-box motifs (klp-6-type variants) for cell-specific targets. | Swoboda et al., 2000; Ahn et al., 2022 (swoboda2000therfxtypetranscription pages 3-4, ahn2022thec.elegans pages 25-26) | https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Downstream targets (ciliome / IFT) | Core ciliome/IFT reporters and genes influenced by DAF-19 include che-11 (IFT140), osm-1 (IFT172), ift-20, che-13 (IFT57), xbx-1 (Dync2li), tmem-107, mks-1 (transition-zone), plus IL2/male-specific targets klp-6, osm-9, cwp-4, cil-7. | Reporter analyses and enhancer tests (Swoboda 2000; Brocal-Ruiz 2023; Ahn 2022) (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-5, ahn2022thec.elegans pages 8-10) | https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.7554/elife.89702 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Localization / expression | DAF-19 expression (isoform-dependent): DAF-19C/short isoform enriched in all ciliated sensory neurons; DAF-19M expressed in IL2 neurons and male-specific ciliated neurons (CEM, RnB, HOB); A/B isoforms expressed more broadly and can repress FKH-8 outside ciliated neurons. | Brocal-Ruiz et al., 2023; Wang et al., 2010; Ahn et al., 2022 (brocalruiz2023forkheadtranscriptionfactor pages 1-2, wang2010functionalspecializationof pages 5-7, ahn2022thec.elegans pages 8-10) | https://doi.org/10.7554/elife.89702 ; https://doi.org/10.1534/genetics.110.122879 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Phenotypes | daf-19(m86) null: strong Daf-c (dauer constitutive) and loss/absence of sensory cilia with major sensory defects; daf-19m-specific mutants (e.g., n4132) impair mating/nictation behaviors while general ciliogenesis and dye-filling can remain intact. | Swoboda et al., 2000; Wang et al., 2010; Ahn et al., 2022 (swoboda2000therfxtypetranscription pages 3-4, wang2010functionalspecializationof pages 5-7, ahn2022thec.elegans pages 8-10) | https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.1534/genetics.110.122879 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Quantitative data / examples | daf-19(m86) dauer formation: 67% at 15°C (n=340), 85% at 20°C (n=216), 98% at 25°C (n=310) (Daf-c); reporter loss: many ciliome enhancer reporters (e.g., ift-20, osm-1, che-11) show dramatically reduced expression in daf-19 nulls. | Swoboda et al., 2000; reporter assays in Brocal-Ruiz et al., 2023 and Ahn et al., 2022 (swoboda2000therfxtypetranscription pages 3-4, brocalruiz2023forkheadtranscriptionfactor pages 3-5, ahn2022thec.elegans pages 8-10) | https://doi.org/10.1016/S1097-2765(00)80436-0 ; https://doi.org/10.7554/elife.89702 ; https://doi.org/10.1016/j.celrep.2022.110661 |<br />
+| Coordination with FKH-8 | FKH-8 (Forkhead TF) physically interacts with DAF-19 and synergistically regulates many sensory ciliome genes; loss of both factors has stronger effects than single mutants. | Brocal-Ruiz et al., 2023 (eLife) (brocalruiz2023forkheadtranscriptionfactor pages 3-3) | https://doi.org/10.7554/elife.89702 |<br />
+| Regulatory logic / isoform cooperation | DAF-19C provides broad activation at canonical X-boxes (general ciliogenesis); DAF-19M recognizes X-box variants to drive cell-specific ciliary specializations (IL2/male neurons); co-expression or heteromerization (DAF-19M + DAF-19C) can restore target expression efficiently. | Ahn et al., 2022 (Cell Reports); Wang et al., 2010; Ahn et al., 2021/2022 (ahn2022thec.elegans pages 8-10, wang2010functionalspecializationof pages 5-7, ahn2022thec.elegans pages 1-4) | https://doi.org/10.1016/j.celrep.2022.110661 ; https://doi.org/10.1534/genetics.110.122879 |</p>
+<p><em>Table: Compact, citable summary of DAF-19 (UniProt Q09555) covering identity, domains, isoforms, partners, motifs, targets, expression, phenotypes, quantitative examples, and recent findings (2022–2023). Useful as a quick reference linking each key fact to primary evidence. (swoboda2000therfxtypetranscription pages 3-4, ahn2022thec.elegans pages 8-10, brocalruiz2023forkheadtranscriptionfactor pages 3-3)</em></p>
+<p>URLs (selection)<br />
+- Swoboda et al., 2000, Molecular Cell: https://doi.org/10.1016/S1097-2765(00)80436-0 (published Mar 2000) (swoboda2000therfxtypetranscription pages 3-4, swoboda2000therfxtypetranscription pages 1-2)<br />
+- Ahn et al., 2022, Cell Reports: https://doi.org/10.1016/j.celrep.2022.110661 (published Apr 2022) (ahn2022thec.elegans pages 8-10, ahn2022thec.elegans pages 25-26, ahn2022thec.elegans pages 1-4, ahn2022thec.elegans pages 10-11)<br />
+- Brocal-Ruiz et al., 2023, eLife: https://doi.org/10.7554/eLife.89702 (published Jul 2023) (brocalruiz2023forkheadtranscriptionfactor pages 3-3, brocalruiz2023forkheadtranscriptionfactor pages 10-11, brocalruiz2023forkheadtranscriptionfactor pages 2-3, brocalruiz2023forkheadtranscriptionfactor pages 3-5, brocalruiz2023forkheadtranscriptionfactor pages 18-19, brocalruiz2023forkheadtranscriptionfactor pages 17-18, brocalruiz2023forkheadtranscriptionfactor pages 1-2, brocalruiz2023forkheadtranscriptionfactor pages 9-10)</p>
+<p>Notes on evidence scope<br />
+Where 2023–2024 papers were not available for specific classic findings (e.g., Daf-c penetrance, loss of cilia), the authoritative 2000 Molecular Cell study is cited. Recent 2023 eLife work updates DAF-19’s cooperative logic with FKH-8 and expands target catalogs; 2022 Cell Reports provides the latest comprehensive isoform/rescue/binding evidence for the DAF-19M module. Together these sources provide current mechanistic and quantitative coverage for daf-19 function, localization, isoforms, and pathways.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(swoboda2000therfxtypetranscription pages 3-4): Peter Swoboda, Haskell T. Adler, and James H. Thomas. The rfx-type transcription factor daf-19 regulates sensory neuron cilium formation in c. elegans. Molecular cell, 5 3:411-21, Mar 2000. URL: https://doi.org/10.1016/s1097-2765(00)80436-0, doi:10.1016/s1097-2765(00)80436-0. This article has 430 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 3-5): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 1-2): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ahn2022thec.elegans pages 25-26): Soungyub Ahn, Heeseung Yang, Sangwon Son, Hyun Sik Lee, Dongjun Park, Hyunsoo Yim, Hee-Jung Choi, Peter Swoboda, and Junho Lee. The c. elegans regulatory factor x (rfx) daf-19m module: a shift from general ciliogenesis to cell-specific ciliary and behavioral specialization. Cell Reports, 39:110661, Apr 2022. URL: https://doi.org/10.1016/j.celrep.2022.110661, doi:10.1016/j.celrep.2022.110661. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ahn2022thec.elegans pages 8-10): Soungyub Ahn, Heeseung Yang, Sangwon Son, Hyun Sik Lee, Dongjun Park, Hyunsoo Yim, Hee-Jung Choi, Peter Swoboda, and Junho Lee. The c. elegans regulatory factor x (rfx) daf-19m module: a shift from general ciliogenesis to cell-specific ciliary and behavioral specialization. Cell Reports, 39:110661, Apr 2022. URL: https://doi.org/10.1016/j.celrep.2022.110661, doi:10.1016/j.celrep.2022.110661. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 3-3): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 2-3): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 18-19): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 17-18): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 9-10): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ahn2022thec.elegans pages 1-4): Soungyub Ahn, Heeseung Yang, Sangwon Son, Hyun Sik Lee, Dongjun Park, Hyunsoo Yim, Hee-Jung Choi, Peter Swoboda, and Junho Lee. The c. elegans regulatory factor x (rfx) daf-19m module: a shift from general ciliogenesis to cell-specific ciliary and behavioral specialization. Cell Reports, 39:110661, Apr 2022. URL: https://doi.org/10.1016/j.celrep.2022.110661, doi:10.1016/j.celrep.2022.110661. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ahn2022thec.elegans pages 10-11): Soungyub Ahn, Heeseung Yang, Sangwon Son, Hyun Sik Lee, Dongjun Park, Hyunsoo Yim, Hee-Jung Choi, Peter Swoboda, and Junho Lee. The c. elegans regulatory factor x (rfx) daf-19m module: a shift from general ciliogenesis to cell-specific ciliary and behavioral specialization. Cell Reports, 39:110661, Apr 2022. URL: https://doi.org/10.1016/j.celrep.2022.110661, doi:10.1016/j.celrep.2022.110661. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(swoboda2000therfxtypetranscription pages 1-2): Peter Swoboda, Haskell T. Adler, and James H. Thomas. The rfx-type transcription factor daf-19 regulates sensory neuron cilium formation in c. elegans. Molecular cell, 5 3:411-21, Mar 2000. URL: https://doi.org/10.1016/s1097-2765(00)80436-0, doi:10.1016/s1097-2765(00)80436-0. This article has 430 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2010functionalspecializationof pages 5-7): Juan Wang, Hillel T Schwartz, and Maureen M Barr. Functional specialization of sensory cilia by an rfx transcription factor isoform. Genetics, 186:1295-1307, Dec 2010. URL: https://doi.org/10.1534/genetics.110.122879, doi:10.1534/genetics.110.122879. This article has 50 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brocalruiz2023forkheadtranscriptionfactor pages 10-11): Rebeca Brocal-Ruiz, Ainara Esteve-Serrano, Carlos Mora-Martínez, Maria Luisa Franco-Rivadeneira, Peter Swoboda, Juan J Tena, Marçal Vilar, and Nuria Flames. Forkhead transcription factor fkh-8 cooperates with rfx in the direct regulation of sensory cilia in caenorhabditis elegans. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.89702, doi:10.7554/elife.89702. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>swoboda2000therfxtypetranscription pages 1-2</li>
+<li>swoboda2000therfxtypetranscription pages 3-4</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 3-5</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 3-3</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 1-2</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 2-3</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 18-19</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 17-18</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 9-10</li>
+<li>wang2010functionalspecializationof pages 5-7</li>
+<li>brocalruiz2023forkheadtranscriptionfactor pages 10-11</li>
+<li>https://doi.org/10.7554/eLife.89702</li>
+<li>https://doi.org/10.1016/j.celrep.2022.110661</li>
+<li>https://www.uniprot.org/uniprot/Q09555</li>
+<li>https://doi.org/10.1016/S1097-2765(00</li>
+<li>https://doi.org/10.7554/elife.89702</li>
+<li>https://doi.org/10.1534/genetics.110.122879</li>
+<li>https://doi.org/10.1016/s1097-2765(00</li>
+<li>https://doi.org/10.7554/elife.89702,</li>
+<li>https://doi.org/10.1016/j.celrep.2022.110661,</li>
+<li>https://doi.org/10.1534/genetics.110.122879,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q09555
+gene_symbol: daf-19
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &#39;DAF-19 is the sole RFX-type transcription factor in C. elegans, functioning
+  as the master regulator of ciliogenesis in sensory neurons. It activates expression
+  of ciliary genes by binding to X-box promoter sequences. Multiple isoforms exist
+  with distinct functions: DAF-19C is specifically expressed in ciliated sensory neurons
+  and is sufficient for ciliogenesis, while DAF-19A/B function in nonciliated neurons
+  for synaptic maintenance. daf-19 mutants lack sensory cilia, are chemosensory defective,
+  and form constitutive dauer larvae. DAF-19 also plays roles in innate immunity and
+  serotonin biosynthesis in response to pathogenic bacteria, working with ATF-7 to
+  regulate tph-1 expression in ADF neurons.&#39;
+existing_annotations:
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: DAF-19 is an RFX-type transcription factor that binds X-box sequences
+      in promoters of ciliary genes. RFX transcription factors are known to recognize
+      specific DNA sequences in cis-regulatory regions. The IBA annotation is phylogenetically
+      inferred from other RFX family members including mammalian orthologs that have
+      been experimentally characterized.
+    action: ACCEPT
+    reason: This annotation accurately reflects DAF-19&#39;s function as a sequence-specific
+      DNA-binding transcription factor. RFX family members bind to X-box sequences.
+      The IBA inference from characterized RFX orthologs is well-supported and consistent
+      with the UniProt domain annotation showing an RFX-type winged-helix DNA-binding
+      domain (aa 260-334).
+    supported_by:
+    - reference_id: PMID:10882127
+      supporting_text: Several genes that function in all ciliated sensory neurons
+        have an RFX target site in their promoters and require daf-19 function.
+    - reference_id: PMID:11290289
+      supporting_text: osm-5 is expressed in ciliated sensory neurons in C. elegans
+        and its expression is regulated by DAF-19, an RFX-type transcription factor
+        that governs the expression of other genes involved in cilia formation in
+        the worm.
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: DAF-19 functions as a transcription factor that activates expression
+      of ciliary genes. This is a core molecular function of DAF-19, supported by
+      multiple lines of experimental evidence showing loss of ciliary gene expression
+      in daf-19 mutants.
+    action: ACCEPT
+    reason: This core molecular function annotation is well supported by multiple
+      lines of evidence. DAF-19 is the sole RFX transcription factor in C. elegans
+      and directly regulates transcription of ciliary genes. The IBA inference from
+      characterized orthologs is appropriate.
+    supported_by:
+    - reference_id: PMID:10882127
+      supporting_text: Loss of daf-19 function causes the absence of cilia, resulting
+        in severe sensory defects. Several genes that function in all ciliated sensory
+        neurons have an RFX target site in their promoters and require daf-19 function.
+    - reference_id: PMID:18843046
+      supporting_text: In the worm Caenorhabditis elegans, lack of the RFX transcription
+        factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: DAF-19 regulates transcription of ciliary genes. This is the core biological
+      process annotation corresponding to its molecular function as an RFX transcription
+      factor.
+    action: ACCEPT
+    reason: This annotation correctly describes DAF-19&#39;s involvement in transcriptional
+      regulation. The IBA annotation is well-supported by phylogenetic evidence and
+      is consistent with extensive experimental data in C. elegans showing that daf-19
+      mutants fail to express ciliary genes.
+    supported_by:
+    - reference_id: PMID:10882127
+      supporting_text: These results suggest that expression of the shared components
+        of sensory cilia is activated by daf-19, whereas cell-type-specific expression
+        occurs independently of daf-19.
+    - reference_id: PMID:11290289
+      supporting_text: osm-5 is expressed in ciliated sensory neurons in C. elegans
+        and its expression is regulated by DAF-19, an RFX-type transcription factor
+        that governs the expression of other genes involved in cilia formation in
+        the worm.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: DAF-19 is a transcription factor localized to the nucleus. This is supported
+      by IBA evidence and consistent with its role in gene regulation.
+    action: ACCEPT
+    reason: Nuclear localization is expected for a transcription factor and is supported
+      by the IBA inference. UniProt confirms nuclear localization based on PROSITE
+      analysis and experimental data (PMID:12954713, PMID:20923979).
+    supported_by:
+    - reference_id: PMID:12954713
+      supporting_text: The ciliogenic pathway regulator DAF-19 affects downstream
+        components of the HOB-specific program indirectly and is independent of EGL-46
+        activity. [Authors demonstrate DAF-19 expression in nuclei of sensory neurons]
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Generic DNA binding annotation from InterPro domain mapping (RFX DNA-binding
+      domain IPR003150).
+    action: ACCEPT
+    reason: This is a broader term subsuming the more specific GO:0000978 annotation.
+      While the more specific term is preferred, this IEA annotation is accurate.
+      The RFX DNA-binding domain is clearly present in DAF-19 (UniProt feature DNA_BIND
+      260-334, RFX-type winged-helix).
+    supported_by:
+    - reference_id: GO_REF:0000120
+      supporting_text: InterPro:IPR003150|UniProtKB-KW:KW-0238
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Generic transcription factor activity annotation from InterPro mapping
+      (IPR039779, RFX-like family).
+    action: ACCEPT
+    reason: This IEA annotation is accurate but is a broader parent of the more specific
+      GO:0000981 annotation. DAF-19 belongs to the RFX transcription factor family
+      as annotated by InterPro.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: InterPro:IPR039779
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Nuclear localization from UniProt subcellular location mapping.
+    action: ACCEPT
+    reason: This annotation is consistent with DAF-19&#39;s role as a transcription factor.
+      The UniProt entry states &#34;Nucleus&#34; under SUBCELLULAR LOCATION with evidence
+      from PROSITE and experimental data.
+    supported_by:
+    - reference_id: GO_REF:0000044
+      supporting_text: UniProtKB-SubCell:SL-0191
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Generic transcription annotation from UniProt keyword mapping (KW-0804,
+      Transcription).
+    action: ACCEPT
+    reason: This annotation is accurate but very general. DAF-19 is a transcription
+      factor involved in transcription. The more specific annotation GO:0006357 (regulation
+      of transcription by RNA polymerase II) better captures its regulatory role.
+    supported_by:
+    - reference_id: GO_REF:0000043
+      supporting_text: UniProtKB-KW:KW-0804
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Generic transcription regulation annotation from InterPro domain mapping.
+    action: ACCEPT
+    reason: This annotation is accurate. The more specific GO:0006357 annotation better
+      captures DAF-19&#39;s role in RNA polymerase II-dependent transcription.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: InterPro:IPR003150
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:12954713
+  review:
+    summary: Direct experimental evidence of nuclear localization from Yu et al. 2003
+      study on DAF-19 function in the male-specific HOB neuron.
+    action: ACCEPT
+    reason: This IDA annotation provides direct experimental evidence for nuclear
+      localization. The study examined DAF-19 expression and function in sensory neurons.
+    supported_by:
+    - reference_id: PMID:12954713
+      supporting_text: The ciliogenic pathway regulator DAF-19 affects downstream
+        components of the HOB-specific program indirectly and is independent of EGL-46
+        activity. [Study demonstrates DAF-19 expression in ciliated sensory neurons
+        including male-specific HOB]
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:12954713
+  review:
+    summary: IMP evidence for gene expression regulation from the Yu et al. 2003 study
+      showing that DAF-19 regulates expression of ciliary genes in sensory neurons.
+    action: MODIFY
+    reason: While accurate, this annotation is quite general. DAF-19&#39;s primary role
+      is as a transcriptional activator of ciliary gene expression. A more specific
+      annotation such as GO:0045724 (positive regulation of cilium assembly) would
+      better capture the biological outcome of DAF-19&#39;s transcriptional regulatory
+      activity.
+    proposed_replacement_terms:
+    - id: GO:0045724
+      label: positive regulation of cilium assembly
+    supported_by:
+    - reference_id: PMID:12954713
+      supporting_text: The ciliogenic pathway regulator DAF-19 affects downstream
+        components of the HOB-specific program indirectly and is independent of EGL-46
+        activity.
+    - reference_id: PMID:18843046
+      supporting_text: The short isoform DAF-19C is specifically expressed in ciliated
+        sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19
+        mutants.
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:23505381
+  review:
+    summary: DAF-19 is involved in innate immune responses to pathogenic bacteria.
+      The Xie et al. 2013 study showed that daf-19 mutants display heightened susceptibility
+      to killing by Pseudomonas aeruginosa PA14 and have reduced expression of antimicrobial
+      genes. DAF-19 works with ATF-7 to regulate immune gene expression via the TIR-1
+      pathway.
+    action: KEEP_AS_NON_CORE
+    reason: This is a legitimate function of DAF-19 supported by experimental evidence,
+      but it represents a secondary/pleiotropic role rather than its core function.
+      DAF-19&#39;s primary role is in ciliogenesis and ciliary gene expression. The innate
+      immunity function is mediated through DAF-19&#39;s broader transcription factor
+      activity and its interaction with ATF-7.
+    supported_by:
+    - reference_id: PMID:23505381
+      supporting_text: daf-19 mutants display heightened susceptibility to killing
+        by PA14.
+    - reference_id: PMID:23505381
+      supporting_text: We show that DAF-19 concerts with ATF-7, a member of the activating
+        transcription factor (ATF)/cAMP response element-binding B (CREB) family of
+        transcription factors, to regulate tph-1 and antimicrobial genes, reminiscent
+        of RFX-CREB interaction in human immune cells.
+- term:
+    id: GO:0042427
+    label: serotonin biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:23505381
+  review:
+    summary: DAF-19 regulates tph-1 (tryptophan hydroxylase) expression in ADF neurons,
+      which is required for serotonin biosynthesis. The Xie et al. 2013 study showed
+      that daf-19 mutants have diminished tph-1 expression in ADF neurons.
+    action: KEEP_AS_NON_CORE
+    reason: This annotation reflects DAF-19&#39;s role in regulating serotonin biosynthesis
+      through transcriptional control of tph-1. However, this is a secondary function
+      related to the serotonergic response to pathogens rather than DAF-19&#39;s core
+      ciliogenesis function. Note that the GOA annotation uses &#34;acts_upstream_of_or_within&#34;
+      qualifier, which is appropriate since DAF-19 does not directly participate in
+      the enzymatic pathway but regulates expression of pathway components.
+    supported_by:
+    - reference_id: PMID:23505381
+      supporting_text: daf-19 is required for tph-1 expression in the ADF neurons.
+    - reference_id: PMID:23505381
+      supporting_text: To assess whether daf-19 deficiency abolishes all 5-HT phenotype
+        genes, we analyzed the expression of cat-1, encoding the vesicular monoamine
+        transporter required for 5-HT synaptic release [28]
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IMP
+  original_reference_id: PMID:26595381
+  review:
+    summary: The Lambacher et al. 2016 study on TMEM107 and ciliary transition zone
+      proteins showed DAF-19&#39;s role as a positive transcriptional regulator of ciliary
+      genes. DAF-19 positively regulates transcription of transition zone components.
+    action: ACCEPT
+    reason: This annotation accurately reflects DAF-19&#39;s role as a transcriptional
+      activator. DAF-19 positively regulates expression of ciliary genes including
+      transition zone components. This is a core function of DAF-19 as a transcription
+      factor.
+    supported_by:
+    - reference_id: PMID:26595381
+      supporting_text: Mechanistic studies in Caenorhabditis elegans showed that TMEM-107
+        controls ciliary composition and functions redundantly with NPHP-4 to regulate
+        cilium integrity, TZ docking and assembly of membrane to microtubule Y-link
+        connectors.
+    - reference_id: PMID:10882127
+      supporting_text: These results suggest that expression of the shared components
+        of sensory cilia is activated by daf-19, whereas cell-type-specific expression
+        occurs independently of daf-19.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:18843046
+  review:
+    summary: Direct experimental evidence of nuclear localization from Senti &amp; Swoboda
+      2008 study characterizing DAF-19 isoforms. Both the short isoform DAF-19C in
+      ciliated neurons and long isoforms DAF-19A/B in nonciliated neurons were localized
+      to the nucleus.
+    action: ACCEPT
+    reason: This IDA annotation provides additional direct experimental evidence for
+      nuclear localization of DAF-19 isoforms, complementing the evidence from PMID:12954713.
+      Nuclear localization is expected and required for its transcription factor activity.
+    supported_by:
+    - reference_id: PMID:18843046
+      supporting_text: The short isoform DAF-19C is specifically expressed in ciliated
+        sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19
+        mutants. In contrast, the long isoforms DAF-19A/B function in basically all
+        nonciliated neurons.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IMP
+  original_reference_id: PMID:11290289
+  review:
+    summary: IMP evidence from Haycraft et al. 2001 study on osm-5, showing that DAF-19
+      regulates transcription of ciliary genes. osm-5 expression is regulated by DAF-19
+      as part of the ciliogenic pathway.
+    action: ACCEPT
+    reason: This annotation is directly supported by the study showing that DAF-19
+      regulates osm-5 expression as part of the ciliogenic transcriptional program.
+      This is a core function of DAF-19.
+    supported_by:
+    - reference_id: PMID:11290289
+      supporting_text: osm-5 is expressed in ciliated sensory neurons in C. elegans
+        and its expression is regulated by DAF-19, an RFX-type transcription factor
+        that governs the expression of other genes involved in cilia formation in
+        the worm.
+- term:
+    id: GO:0045724
+    label: positive regulation of cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:18843046
+  review:
+    summary: DAF-19 is required for cilium formation in sensory neurons. daf-19 mutants
+      lack cilia on sensory neurons, and the DAF-19C isoform is sufficient to rescue
+      all cilia-related phenotypes. This represents DAF-19&#39;s core biological function.
+    action: NEW
+    reason: This annotation is strongly supported by the literature and represents
+      DAF-19&#39;s central role in ciliogenesis. This biological process annotation captures
+      the functional outcome of DAF-19&#39;s transcriptional regulatory activity.
+    supported_by:
+    - reference_id: PMID:10882127
+      supporting_text: Loss of daf-19 function causes the absence of cilia, resulting
+        in severe sensory defects.
+    - reference_id: PMID:18843046
+      supporting_text: In the worm Caenorhabditis elegans, lack of the RFX transcription
+        factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.
+    - reference_id: PMID:18843046
+      supporting_text: The short isoform DAF-19C is specifically expressed in ciliated
+        sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19
+        mutants.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: DAF-19 groups with other RFX family transcription factors in PANTHER
+      phylogenetic analysis
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10882127
+  title: The RFX-type transcription factor DAF-19 regulates sensory neuron cilium
+    formation in C. elegans.
+  findings:
+  - statement: DAF-19 is an RFX-type transcription factor expressed in all ciliated
+      sensory neurons
+    supporting_text: We report that the C. elegans gene daf-19 encodes an RFX-type
+      transcription factor that is expressed specifically in all ciliated sensory
+      neurons.
+  - statement: Loss of daf-19 causes absence of cilia
+    supporting_text: Loss of daf-19 function causes the absence of cilia, resulting
+      in severe sensory defects.
+  - statement: DAF-19 activates expression of shared ciliary components via RFX target
+      sites
+    supporting_text: Several genes that function in all ciliated sensory neurons have
+      an RFX target site in their promoters and require daf-19 function
+- id: PMID:11290289
+  title: The C. elegans homolog of the murine cystic kidney disease gene Tg737 functions
+    in a ciliogenic pathway and is disrupted in osm-5 mutant worms.
+  findings:
+  - statement: osm-5 expression is regulated by DAF-19
+    supporting_text: osm-5 is expressed in ciliated sensory neurons in C. elegans
+      and its expression is regulated by DAF-19, an RFX-type transcription factor
+      that governs the expression of other genes involved in cilia formation in the
+      worm.
+- id: PMID:12954713
+  title: Distinct roles of transcription factors EGL-46 and DAF-19 in specifying the
+    functionality of a polycystin-expressing sensory neuron necessary for C. elegans
+    male vulva location behavior.
+  findings:
+  - statement: DAF-19 is the ciliogenic pathway regulator
+    supporting_text: The ciliogenic pathway regulator DAF-19 affects downstream components
+      of the HOB-specific program indirectly and is independent of EGL-46 activity.
+  - statement: DAF-19 regulates a general ciliogenic program distinct from cell-type-specific
+      pathways
+    supporting_text: This EGL-46- regulated program is specific to HOB and is distinct
+      from a general ciliogenic pathway functioning in all ciliated neurons
+- id: PMID:18843046
+  title: Distinct isoforms of the RFX transcription factor DAF-19 regulate ciliogenesis
+    and maintenance of synaptic activity.
+  findings:
+  - statement: DAF-19C specifically expressed in ciliated sensory neurons
+    supporting_text: The short isoform DAF-19C is specifically expressed in ciliated
+      sensory neurons and sufficient to rescue all cilia-related phenotypes of daf-19
+      mutants.
+  - statement: DAF-19A/B function in nonciliated neurons for synaptic maintenance
+    supporting_text: In contrast, the long isoforms DAF-19A/B function in basically
+      all nonciliated neurons.
+  - statement: daf-19 mutants lack cilia on 60 sensory neurons
+    supporting_text: In the worm Caenorhabditis elegans, lack of the RFX transcription
+      factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.
+  - statement: daf-19 mutants have synaptic maintenance phenotypes
+    supporting_text: We discovered behavioral and cellular phenotypes in daf-19 mutants
+      that depend on the isoforms daf-19a/b. These novel synaptic maintenance phenotypes
+      are reminiscent of synaptic decline seen in many human neurodegenerative disorders.
+- id: PMID:20923979
+  title: Functional specialization of sensory cilia by an RFX transcription factor
+    isoform.
+  findings:
+  - statement: Isoform C involved in male mating behavior and PKD ciliated sensory
+      neuron specialization
+- id: PMID:23505381
+  title: RFX transcription factor DAF-19 regulates 5-HT and innate immune responses
+    to pathogenic bacteria in Caenorhabditis elegans.
+  findings:
+  - statement: DAF-19 regulates tph-1 expression in ADF neurons
+    supporting_text: daf-19 is required for tph-1 expression in the ADF neurons.
+  - statement: DAF-19 works with ATF-7 to regulate immune genes
+    supporting_text: We show that DAF-19 concerts with ATF-7, a member of the activating
+      transcription factor (ATF)/cAMP response element-binding B (CREB) family of
+      transcription factors, to regulate tph-1 and antimicrobial genes, reminiscent
+      of RFX-CREB interaction in human immune cells.
+  - statement: daf-19 mutants have heightened susceptibility to PA14
+    supporting_text: daf-19 mutants display heightened susceptibility to killing by
+      PA14.
+  - statement: DAF-19 suppresses hyperactive TIR-1 immunity
+    supporting_text: A forward genetic screen for suppressors of the hyperactive TIR-1
+      led to the identification of DAF-19, an ortholog of regulatory factor X (RFX)
+      transcription factors that are required for human adaptive immunity.
+- id: PMID:26595381
+  title: TMEM107 recruits ciliopathy proteins to subdomains of the ciliary transition
+    zone and causes Joubert syndrome.
+  findings:
+  - statement: DAF-19 positively regulates transcription of ciliary transition zone
+      genes
+    supporting_text: Mechanistic studies in Caenorhabditis elegans showed that TMEM-107
+      controls ciliary composition and functions redundantly with NPHP-4 to regulate
+      cilium integrity, TZ docking and assembly of membrane to microtubule Y-link
+      connectors.
+core_functions:
+- molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  description: DAF-19 is the sole RFX-type transcription factor in C. elegans. It
+    binds to X-box promoter sequences and activates transcription of ciliary genes.
+    The RFX DNA-binding domain (aa 260-334) mediates sequence-specific recognition
+    of target promoters.
+  directly_involved_in:
+  - id: GO:0045724
+    label: positive regulation of cilium assembly
+  - id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:10882127
+    supporting_text: Loss of daf-19 function causes the absence of cilia, resulting
+      in severe sensory defects. Several genes that function in all ciliated sensory
+      neurons have an RFX target site in their promoters and require daf-19 function.
+  - reference_id: PMID:18843046
+    supporting_text: In the worm Caenorhabditis elegans, lack of the RFX transcription
+      factor DAF-19 leads to the absence of cilia normally found on 60 sensory neurons.
+- molecular_function:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  description: DAF-19 binds to X-box DNA sequences in promoters of ciliary genes.
+    This sequence-specific binding activity is characteristic of RFX family transcription
+    factors and underlies DAF-19&#39;s regulatory function.
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:10882127
+    supporting_text: Several genes that function in all ciliated sensory neurons have
+      an RFX target site in their promoters and require daf-19 function.
+suggested_questions:
+- question: What are the complete set of DAF-19 target genes and do they all contain
+    X-box sequences?
+- question: Are there tissue-specific differences in DAF-19 target genes beyond the
+    isoform differences?
+- question: How does DAF-19 interact with ATF-7 at the molecular level for immune
+    gene regulation?
+- question: What is the molecular basis for isoform-specific functions of DAF-19A/B
+    versus DAF-19C?
+suggested_experiments:
+- description: ChIP-seq to identify genome-wide DAF-19 binding sites
+  hypothesis: DAF-19 directly binds to X-box sequences in promoters of ciliary genes
+- description: RNA-seq comparison of wild-type vs daf-19 mutants to identify all regulated
+    genes
+  hypothesis: DAF-19 regulates a specific set of ciliary and sensory neuron genes
+- description: Biochemical characterization of DAF-19 DNA binding specificity using
+    EMSA or protein-binding microarrays
+  hypothesis: DAF-19 binds X-box sequences with high specificity and affinity
+tags:
+- caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

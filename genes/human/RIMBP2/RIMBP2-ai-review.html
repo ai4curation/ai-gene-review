@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RIMBP2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RIMBP2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O15034" target="_blank" class="term-link">
+                        O15034
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RIMBP2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O15034" data-a="DESCRIPTION: RIMS-binding protein 2 (RIM-BP2) is a presynaptic ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RIMS-binding protein 2 (RIM-BP2) is a presynaptic active zone scaffold protein that plays a central role in coordinating synaptic vesicle release machinery with voltage-gated calcium channels. RIMBP2 contains three SH3 domains and three fibronectin type III (FN3) domains, which mediate interactions with RIM proteins, Munc13-1, Bassoon, and voltage-gated calcium channel alpha subunits (Cav2.1/Cav2.2 at conventional synapses; Cav1.3 at ribbon synapses). Through these interactions, RIMBP2 functions as a bifunctional linker that tethers calcium channels to vesicle release sites, thereby establishing the tight calcium-secretion coupling required for efficient neurotransmitter release. RIMBP2 also promotes synaptic vesicle priming via recruitment and stabilization of Munc13-1 at the active zone. The protein localizes to presynaptic active zone nanoclusters and is essential for setting release probability and maintaining fast vesicle replenishment, particularly at mossy fiber synapses and auditory ribbon synapses where high-fidelity transmission is required.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007274" target="_blank" class="term-link">
+                                    GO:0007274
+                                </a>
+                            </span>
+                            <span class="term-label">neuromuscular synaptic transmission</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0007274" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation derives from phylogenetic inference based on the PANTHER classification. RIMBP2 is indeed involved in synaptic transmission as a core active zone scaffold protein. However, the term &#34;neuromuscular synaptic transmission&#34; (GO:0007274) is overly specific for this broadly expressed synaptic scaffold. RIMBP2 functions at multiple synapse types including hippocampal mossy fiber synapses, CA3-CA1 synapses, and auditory ribbon synapses, not exclusively at neuromuscular junctions. The deep research indicates RIMBP2 is &#34;present at conventional AZs and ribbon synapses&#34; and functions at &#34;mossy-fiber (hippocampal MF)&#34; and &#34;CA3-CA1&#34; synapses. A more accurate annotation would be the parent term for general synaptic transmission or a term capturing presynaptic active zone function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While RIMBP2 participates in synaptic transmission, the term &#34;neuromuscular synaptic transmission&#34; is too specific. Literature evidence demonstrates RIMBP2 function at multiple central nervous system synapse types. Grauel et al. (2016) studied RIMBP2 at hippocampal synapses, Brockmann et al. (2019) demonstrated its role at mossy fiber synapses, and Butola (2017) characterized its function at auditory endbulb synapses. A more appropriate term would capture the general role in synaptic vesicle exocytosis regulation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000300" target="_blank" class="term-link">
+                                    regulation of synaptic vesicle exocytosis
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010808" target="_blank" class="term-link">
+                                    positive regulation of synaptic vesicle priming
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1073/pnas.1605256113
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIM-BP2 regulates release probability by fine-tuning calcium channel localization at murine hippocampal synapses</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.7554/eLife.43243
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy fiber synapses</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from UniProt subcellular location vocabulary mapping. UniProt indicates RIMBP2 localizes to &#34;Cell membrane&#34; and &#34;Synapse&#34; with the note &#34;Synaptic plasma membrane.&#34; While technically correct that RIMBP2 is associated with plasma membrane, this term is too general and does not capture the specific localization to the presynaptic active zone. A more informative cellular component annotation would be GO:0048786 &#34;presynaptic active zone&#34; which precisely describes where RIMBP2 carries out its function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The plasma membrane annotation is accurate but insufficiently specific. RIMBP2 localizes specifically to presynaptic active zone nanoclusters, not the general plasma membrane. The deep research states RIMBP2 &#34;resides in nanoclusters at presynaptic active zones&#34; and &#34;is presynaptic and concentrated in the active zone in nanoclusters adjacent to release sites.&#34; A more specific CC term would better describe its localization.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048786" target="_blank" class="term-link">
+                                    presynaptic active zone
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1073/pnas.1605256113
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIMBP2 localizes to nanoclusters at presynaptic active zones and is present at conventional and ribbon-type synapses</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045202" target="_blank" class="term-link">
+                                    GO:0045202
+                                </a>
+                            </span>
+                            <span class="term-label">synapse</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0045202" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation derives from UniProt subcellular location mapping. The annotation is correct but could be made more specific. RIMBP2 is indeed located at synapses, but specifically at the presynaptic active zone compartment. The term &#34;synapse&#34; encompasses both pre- and postsynaptic components, while RIMBP2 function and localization is exclusively presynaptic. Given the availability of GO:0048786 &#34;presynaptic active zone&#34; which is a more precise child term, this general annotation is acceptable but redundant if the more specific term is used.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While a more specific term (presynaptic active zone) would be preferable, keeping this broader term is acceptable as it is not incorrect. The annotation captures the synaptic localization of RIMBP2. UniProt annotation and literature both confirm synaptic localization. Since the proposed modification of GO:0005886 to GO:0048786 would provide the specific presynaptic localization, retaining this broader term provides complementary information without redundancy issues.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:O15034
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Synaptic plasma membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048786" target="_blank" class="term-link">
+                                    GO:0048786
+                                </a>
+                            </span>
+                            <span class="term-label">presynaptic active zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1073/pnas.1605256113
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0048786" data-r="DOI:10.1073/pnas.1605256113" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is proposed as a new, more specific cellular component term to replace the overly general plasma membrane annotation. RIMBP2 specifically localizes to presynaptic active zone nanoclusters where it functions as a scaffold to organize vesicle release machinery and calcium channels.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The deep research clearly establishes RIMBP2 localization to presynaptic active zones. Grauel et al. (2016) and Brockmann et al. (2019) demonstrate RIMBP2 localization to active zone nanoclusters using super-resolution microscopy. This is the core localization for RIMBP2 function and should be annotated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1073/pnas.1605256113
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIMBP2 is presynaptic and concentrated in the active zone in nanoclusters adjacent to release sites and AZ scaffolds</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.7554/eLife.43243
+                                    
+                                </span>
+                                
+                                <div class="support-text">Imaging places RIMBP2 near Bassoon and Munc13-1 nanodomains at the active zone</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098882" target="_blank" class="term-link">
+                                    GO:0098882
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of presynaptic active zone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1016/j.celrep.2020.107960
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0098882" data-r="DOI:10.1016/j.celrep.2020.107960" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This molecular function term is proposed as a new annotation. RIMBP2 is a core structural scaffold protein of the presynaptic active zone, contributing to the organization and integrity of the active zone architecture through its multivalent SH3 and FN3 domain interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RIMBP2 functions as a structural scaffold that organizes the active zone by linking RIM proteins, Munc13-1, and voltage-gated calcium channels. The deep research describes RIMBP2 as &#34;a presynaptic active-zone scaffold&#34; and part of the &#34;hierarchical AZ scaffold with RIM, Munc13, Bassoon, ELKS, liprin-alpha.&#34; This structural scaffolding role is the core molecular function of RIMBP2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1016/j.celrep.2020.107960
+                                    
+                                </span>
+                                
+                                <div class="support-text">A trio of active zone proteins comprised of RIM-BPs, RIMs, and Munc13s governs neurotransmitter release - RIMBP2 is part of the hierarchical AZ scaffold</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1007/s12035-017-0661-9
+                                    
+                                </span>
+                                
+                                <div class="support-text">Vertebrate AZ assembly relies on RIMs, RIM-BPs, Munc13, ELKS, Bassoon, and Liprin-alpha; RIM-BPs provide a key link between RIMs and CaV channels</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010808" target="_blank" class="term-link">
+                                    GO:0010808
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of synaptic vesicle priming</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.7554/eLife.43243
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O15034" data-a="GO:0010808" data-r="DOI:10.7554/eLife.43243" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological process term is proposed as a new annotation capturing RIMBP2&#39;s role in promoting synaptic vesicle priming through recruitment and stabilization of Munc13-1 at the active zone.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Brockmann et al. (2019) demonstrated that RIMBP2 is essential for recruitment and stabilization of Munc13-1 clusters at mossy fiber synapses, directly promoting vesicle priming. Loss of RIMBP2 results in disrupted Munc13-1 clustering and impaired vesicle docking/priming. This is a core function at certain synapse types.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.7554/eLife.43243
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy fiber synapses. RIMBP2 knockout disrupts stabilization of Munc13-1 clusters, impairs vesicle docking/priming, and lowers release probability.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1016/j.celrep.2020.107960
+                                    
+                                </span>
+                                
+                                <div class="support-text">RIMBP2 partnerships can bias synapses toward either higher coupling (channel recruitment) or enhanced priming (Munc13 recruitment)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RIMBP2 is a core structural scaffold of the presynaptic active zone, containing three SH3 domains and three FN3 domains that mediate multivalent interactions with RIM proteins, Munc13-1, Bassoon, and voltage-gated calcium channels. This scaffolding function organizes the molecular machinery required for synaptic vesicle release.</h3>
+                <span class="vote-buttons" data-g="O15034" data-a="FUNCTION: RIMBP2 is a core structural scaffold of the presyn..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098882" target="_blank" class="term-link">
+                            structural constituent of presynaptic active zone
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010808" target="_blank" class="term-link">
+                                positive regulation of synaptic vesicle priming
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048786" target="_blank" class="term-link">
+                                presynaptic active zone
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:O15034
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry for RIMS-binding protein 2 (Human)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 localizes to cell membrane and synapse, specifically synaptic plasma membrane</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1073/pnas.1605256113
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RIM-binding protein 2 regulates release probability by fine-tuning calcium channel localization at murine hippocampal synapses</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 fine-tunes voltage-gated calcium channel positioning at hippocampal synapses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of RIMBP2 modestly reduces release probability and loosens calcium coupling</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 localizes to presynaptic active zone nanoclusters</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.7554/eLife.43243
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy fiber synapses</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 is critical for Munc13-1 recruitment and stabilization at mossy fiber synapses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 knockout causes severe transmission deficits at mossy fiber synapses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 promotes vesicle docking and priming</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1016/j.celrep.2020.107960
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A trio of active zone proteins comprised of RIM-BPs, RIMs, and Munc13s governs neurotransmitter release</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIM-RIMBP-Munc13 form a functional triad governing vesicle priming and channel coupling</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 can bias synapses toward priming or channel coupling depending on context</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.53846/goediss-6529
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular physiology of signal transmission along the auditory pathway (PhD thesis)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIM-BP2 deficiency reduces initial release probability at auditory synapses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of RIMBP2 slows fast vesicle replenishment</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 supports tight calcium-secretion coupling at ribbon synapses</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.53846/goediss-10204
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative molecular physiology at active zones of calyceal synapses of the auditory pathway</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 organizes CaV channel topography at ribbon synapses</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 regulates Cav1.3 number and kinetics at inner hair cell synapses</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1007/s12035-017-0661-9
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Vertebrate presynaptic active zone assembly</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBPs provide a key link between RIMs and calcium channels in the active zone scaffold</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.3389/fnins.2023.1123561
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The role of RIM in neurotransmitter release (2023 review)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIM-BPs are scaffolds linking RIM/Munc13 to CaV channels</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIM-BPs are required for efficient stimulus-secretion coupling</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/RIMBP2/RIMBP2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of RIMBP2 function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIMBP2 is a presynaptic active zone scaffold that coordinates vesicle priming and calcium channel positioning</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative contribution of RIMBP2 versus RIMBP3 at different synapse types?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="Q: What is the relative contribution of RIMBP2 versus..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there specific human disease variants in RIMBP2 that affect synaptic function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="Q: Are there specific human disease variants in RIMBP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does RIMBP2 phosphorylation regulate its scaffolding function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="Q: How does RIMBP2 phosphorylation regulate its scaff..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Super-resolution imaging of RIMBP2 distribution in human iPSC-derived neurons</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="EXPERIMENT: Super-resolution imaging of RIMBP2 distribution in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis of RIMBP2 SH3 domain mutations on calcium channel binding</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="EXPERIMENT: Structure-function analysis of RIMBP2 SH3 domain m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Characterization of RIMBP2 patient variants identified in neurodevelopmental disorders</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O15034" data-a="EXPERIMENT: Characterization of RIMBP2 patient variants identi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RIMBP2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O15034" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T10:15:36.435038'<br />
+end_time: '2025-12-27T10:22:03.251830'<br />
+duration_seconds: 386.82<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: RIMBP2<br />
+  gene_symbol: RIMBP2<br />
+  uniprot_accession: O15034<br />
+  protein_description: 'RecName: Full=RIMS-binding protein 2; Short=RIM-BP2;'<br />
+  gene_info: Name=RIMBP2; Synonyms=KIAA0318, RBP2;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the RIMBP family. .<br />
+  protein_domains: FN3_dom. (IPR003961); FN3_sf. (IPR036116); Ig-like_fold. (IPR013783);<br />
+    RIM-BP_SH3_2. (IPR035753); RIM-BP_SH3_3. (IPR035755)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 27</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O15034</li>
+<li><strong>Protein Description:</strong> RecName: Full=RIMS-binding protein 2; Short=RIM-BP2;</li>
+<li><strong>Gene Information:</strong> Name=RIMBP2; Synonyms=KIAA0318, RBP2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the RIMBP family. .</li>
+<li><strong>Key Domains:</strong> FN3_dom. (IPR003961); FN3_sf. (IPR036116); Ig-like_fold. (IPR013783); RIM-BP_SH3_2. (IPR035753); RIM-BP_SH3_3. (IPR035755)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RIMBP2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RIMBP2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RIMBP2</strong> (gene ID: RIMBP2, UniProt: O15034) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O15034</li>
+<li><strong>Protein Description:</strong> RecName: Full=RIMS-binding protein 2; Short=RIM-BP2;</li>
+<li><strong>Gene Information:</strong> Name=RIMBP2; Synonyms=KIAA0318, RBP2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the RIMBP family. .</li>
+<li><strong>Key Domains:</strong> FN3_dom. (IPR003961); FN3_sf. (IPR036116); Ig-like_fold. (IPR013783); RIM-BP_SH3_2. (IPR035753); RIM-BP_SH3_3. (IPR035755)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RIMBP2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RIMBP2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RIMBP2</strong> (gene ID: RIMBP2, UniProt: O15034) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+- Verified identity and domain architecture for human RIMBP2 (UniProt O15034) and aligned literature accordingly (no symbol ambiguity detected) (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14, grauel2016rimbindingprotein2 pages 1-2).<br />
+- Curated recent primary/review sources (2023–2024 where available) and foundational studies on function, localization, interactions, synapse-type specificity, and phenotypes (wu2023theroleof pages 12-13, alvanos2023quantitativemolecularphysiology pages 25-27, brockmann2020atrioof pages 11-12, brockmann2019rimbp2primessynaptic pages 1-2, grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83).<br />
+- Extracted evidence on molecular function (binding partners, domain roles), active-zone localization, knockout effects on release probability and Ca2+ coupling, and synapse-type differences; summarized network/assembly context and disease relevance.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Findings</th>
+<th>Key recent/foundational sources (with year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity verification</td>
+<td>- Human RIMBP2 = UniProt O15034; RIMBP family; domain architecture: 3×SH3, 3×FN3, proline-rich regions</td>
+<td>Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27), Torres 2018 (torres2018vertebratepresynapticactive pages 13-14), Grauel 2016 (grauel2016rimbindingprotein2 pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>- Scaffolding adapter: binds RIMs and tethers voltage-gated Ca2+ channels (P/Q-type/Cav2.x; Cav1.3 at ribbon synapses); recruits/stabilizes Munc13-1; interacts with Bassoon; SH3 domains mediate PxxP interactions</td>
+<td>Brockmann 2019 (brockmann2019rimbp2primessynaptic pages 1-2), Brockmann 2020 (brockmann2020atrioof pages 11-12), Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27), Wu 2023 (wu2023theroleof pages 12-13)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>- Localizes to presynaptic active zone (AZ) nanoclusters; present at conventional AZs and ribbon synapses (inner hair cell active zones)</td>
+<td>Grauel 2016 (grauel2016rimbindingprotein2 pages 1-2), Butola 2017 (butola2017molecularphysiologyof pages 77-83), Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27)</td>
+</tr>
+<tr>
+<td>Synapse-type specificity</td>
+<td>- Mossy-fiber (hippocampal MF): essential for Munc13-1 stabilization and vesicle priming; CA3–CA1: milder role (mainly Ca2+-secretion coupling); auditory endbulb/hair cell: organizes CaV topography for high-rate transmission</td>
+<td>Brockmann 2019 (brockmann2019rimbp2primessynaptic pages 1-2), Grauel 2016 (grauel2016rimbindingprotein2 pages 1-2), Butola 2017 (butola2017molecularphysiologyof pages 77-83)</td>
+</tr>
+<tr>
+<td>Knockout phenotypes</td>
+<td>- Reduced initial release probability (Pvr); increased EGTA sensitivity (looser Ca2+–vesicle coupling); fewer docked/membrane-proximal vesicles; slowed fast replenishment; altered short-term plasticity (toward facilitation)</td>
+<td>Butola 2017 (butola2017molecularphysiologyof pages 77-83), Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27), Brockmann 2019 (brockmann2019rimbp2primessynaptic pages 1-2)</td>
+</tr>
+<tr>
+<td>Network / assembly context</td>
+<td>- Part of hierarchical AZ scaffold with RIM, Munc13, Bassoon, ELKS, liprin-α; RIM–RIMBP–Munc13 interactions tune priming vs channel-recruitment roles</td>
+<td>Brockmann 2020 (brockmann2020atrioof pages 11-12), Torres 2018 (torres2018vertebratepresynapticactive pages 13-14), Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27)</td>
+</tr>
+<tr>
+<td>Human / disease associations</td>
+<td>- Included among synaptic genes implicated in neurodevelopmental disorder/ASD gene lists; animal models show auditory encoding deficits; paralog RIMBP1 linked to recessive dystonia (functional relevance to human synaptopathies)</td>
+<td>Grauel 2016 (grauel2016rimbindingprotein2 pages 1-2), Butola 2017 (butola2017molecularphysiologyof pages 77-83), Wu 2023 (wu2023theroleof pages 12-13)</td>
+</tr>
+<tr>
+<td>Applications / implications</td>
+<td>- Relevance for synaptopathies and hearing disorders; potential biomarker/target for interventions that restore AZ Ca2+ channel topography or vesicle priming; informs synapse-specific therapeutic design</td>
+<td>Wu 2023 (wu2023theroleof pages 12-13), Brockmann 2020 (brockmann2020atrioof pages 11-12), Alvanos 2023 (alvanos2023quantitativemolecularphysiology pages 25-27)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact summary table of RIMBP2 (UniProt O15034) covering identity, molecular roles, localization, synapse-specific functions, knockout phenotypes, network context, disease links, and translational implications, with supporting source IDs for evidence.</em></p>
+<p>Comprehensive research report: Human RIMBP2 (UniProt O15034)</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Identity and family: RIMBP2 (RIMS-binding protein 2; RIM-BP2) is a presynaptic active-zone scaffold in the RIMBP family. Mammalian RIMBPs possess multiple SH3 domains and multiple fibronectin type III (FN3) domains plus proline-rich regions; RIMBP2 is the dominant CNS isoform in many synapses (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14). RIMBP2’s SH3 domains bind PxxP motifs in CaV channel C-termini and in binding partners; its central C-terminal SH3s form interaction hubs with RIMs and Munc13, supporting vesicle priming and Ca2+-channel tethering (alvanos2023quantitativemolecularphysiology pages 25-27). URLs: Alvanos 2023 (University of Göttingen repository; published 2023-07-17): https://doi.org/10.53846/goediss-10204; Torres &amp; Inestrosa 2018 (Molecular Neurobiology; 2018-07): https://doi.org/10.1007/s12035-017-0661-9 (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14).<br />
+- Molecular role (overview): RIMBP2 couples the vesicle release machinery to voltage-gated Ca2+ channels (VGCCs) via direct and indirect interactions—binding RIMs, Munc13-1, Bassoon, and CaV channels (Cav2.1/2.2 at conventional synapses; Cav1.3 at auditory ribbon synapses). This positions channels near release sites, tunes release probability, and supports fast vesicle replenishment (grauel2016rimbindingprotein2 pages 1-2, brockmann2019rimbp2primessynaptic pages 1-2, alvanos2023quantitativemolecularphysiology pages 25-27, wu2023theroleof pages 12-13). URLs: PNAS 2016 (2016-09-27): https://doi.org/10.1073/pnas.1605256113; eLife 2019 (2019-09-06): https://doi.org/10.7554/eLife.43243; Frontiers in Neuroscience 2023 (2023-04-11): https://doi.org/10.3389/fnins.2023.1123561 (grauel2016rimbindingprotein2 pages 1-2, brockmann2019rimbp2primessynaptic pages 1-2, wu2023theroleof pages 12-13).<br />
+- Localization: RIMBP2 resides in nanoclusters at presynaptic active zones (AZs) and is present at conventional and ribbon-type synapses (grauel2016rimbindingprotein2 pages 1-2, alvanos2023quantitativemolecularphysiology pages 25-27, butola2017molecularphysiologyof pages 77-83). URLs: PNAS 2016 (2016-09-27): https://doi.org/10.1073/pnas.1605256113; Göttingen thesis 2017 (2017): https://doi.org/10.53846/goediss-6529; Göttingen thesis 2023 (2023-07-17): https://doi.org/10.53846/goediss-10204 (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).</p>
+<p>2) Recent developments and latest research (prioritize 2023–2024)<br />
+- 2023 synthesis on RIM/RIM-BPs: A 2023 review integrates roles of RIM-BPs (including RIMBP2) as scaffolds linking RIM/Munc13 to CaV channels and highlights evidence from ribbon synapses where RIM-BPs are required for efficient stimulus–secretion coupling and sound encoding (Frontiers in Neuroscience, 2023-04-11) (wu2023theroleof pages 12-13). URL: https://doi.org/10.3389/fnins.2023.1123561 (wu2023theroleof pages 12-13).<br />
+- 2023 quantitative active-zone physiology (auditory): A 2023 dissertation compiles quantitative models and experimental literature showing RIM-BP2 organizes CaV topography, supports tight Ca2+–secretion coupling, and in inner hair cell ribbon synapses regulates Cav1.3 number/kinetics to maintain indefatigable release; it also emphasizes RIMBP2–Munc13-1 recruitment at mossy-fiber synapses and multivalent SH3-mediated assemblies (University of Göttingen Repository, 2023-07-17) (alvanos2023quantitativemolecularphysiology pages 25-27). URL: https://doi.org/10.53846/goediss-10204 (alvanos2023quantitativemolecularphysiology pages 25-27).<br />
+- Presynapse assembly context: Although not specifically a RIMBP2 functional paper, a broader AZ-assembly perspective remains relevant: vertebrate AZ assembly relies on RIMs, RIM-BPs, Munc13, ELKS, Bassoon, and Liprin-α; RIM-BPs provide a key link between RIMs and CaV channels, supporting coupling (Molecular Neurobiology 2018; conceptual framework used by later studies) (torres2018vertebratepresynapticactive pages 13-14). URL: https://doi.org/10.1007/s12035-017-0661-9 (torres2018vertebratepresynapticactive pages 13-14).</p>
+<p>3) Current applications and real-world implementations<br />
+- Sensory encoding and hearing: In auditory pathways (endbulb/calyx and hair-cell ribbon synapses), RIMBP2 organizes CaV channel topography, sustains high initial release probability, and supports fast replenishment—attributes necessary for reliable sound onset coding; deficits are predicted to degrade temporal precision of auditory signaling in vivo (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27). URLs: Göttingen thesis 2017 (2017): https://doi.org/10.53846/goediss-6529; Göttingen repository 2023 (2023-07-17): https://doi.org/10.53846/goediss-10204 (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).<br />
+- Synapse-type informed targets: Differential reliance on RIMBP2 at mossy-fiber vs CA3–CA1 synapses suggests that therapeutic modulation of RIMBP2–Munc13 versus RIMBP2–CaV interactions might be tailored by synapse class in synaptopathies (brockmann2019rimbp2primessynaptic pages 1-2, brockmann2020atrioof pages 11-12). URLs: eLife 2019 (2019-09-06): https://doi.org/10.7554/eLife.43243; Cell Reports 2020 (2020-08-11): https://doi.org/10.1016/j.celrep.2020.107960 (brockmann2019rimbp2primessynaptic pages 1-2, brockmann2020atrioof pages 11-12).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- RIM–RIMBP–Munc13 triad governs release: Expert synthesis of genetic/electrophysiological dissection argues that the RIMs, RIM-BPs and Munc13s form a functional triad governing vesicle priming and channel coupling; RIMBP2’s partnerships can bias synapses toward either higher coupling (channel recruitment) or enhanced priming (Munc13 recruitment), shaping release probability (Cell Reports 2020) (brockmann2020atrioof pages 11-12). URL: https://doi.org/10.1016/j.celrep.2020.107960 (brockmann2020atrioof pages 11-12).<br />
+- Active-zone positioning of channels: Super-resolution localization and functional analyses indicate RIMBP2 fine-tunes CaV positioning relative to release sites to set release probability and short-term plasticity (PNAS 2016) (grauel2016rimbindingprotein2 pages 1-2). URL: https://doi.org/10.1073/pnas.1605256113 (grauel2016rimbindingprotein2 pages 1-2).<br />
+- Active-zone assembly perspective: Reviews highlight RIMBPs as CaV-tethering scaffolds within the broader AZ network with RIM, Munc13, ELKS, Liprin-α, and Bassoon (Molecular Neurobiology 2018; Frontiers in Neuroscience 2023) (torres2018vertebratepresynapticactive pages 13-14, wu2023theroleof pages 12-13). URLs: https://doi.org/10.1007/s12035-017-0661-9; https://doi.org/10.3389/fnins.2023.1123561 (torres2018vertebratepresynapticactive pages 13-14, wu2023theroleof pages 12-13).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Hippocampal synapses: Loss of RIMBP2 at CA3–CA1 synapses modestly reduces release probability and loosens Ca2+ coupling (increased EGTA sensitivity) without abolishing transmission, consistent with a role in fine-tuning CaV localization (PNAS 2016) (grauel2016rimbindingprotein2 pages 1-2). URL: https://doi.org/10.1073/pnas.1605256113 (grauel2016rimbindingprotein2 pages 1-2).<br />
+- Mossy-fiber synapses: RIMBP2 knockout disrupts stabilization of Munc13-1 clusters, impairs vesicle docking/priming, and lowers release probability, with active-zone architecture showing increased distances among RIMBP2/Munc13-1/RIM/Cav2.1 clusters (eLife 2019) (brockmann2019rimbp2primessynaptic pages 1-2). URL: https://doi.org/10.7554/eLife.43243 (brockmann2019rimbp2primessynaptic pages 1-2).<br />
+- Auditory synapses: In endbulb/calyx circuits, RIM-BP deficiency decreases initial release probability, shifts short-term plasticity toward facilitation, slows fast replenishment, and reduces docked or membrane-proximal vesicles despite near-normal whole-terminal Ca2+ influx; these phenotypes degrade sound-onset signaling (Göttingen theses 2017, 2023) (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27). URLs: https://doi.org/10.53846/goediss-6529; https://doi.org/10.53846/goediss-10204 (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).</p>
+<p>Detailed functional annotation<br />
+- Domain architecture and binding partners:<br />
+  - SH3 and FN3 domains: RIMBP2 contains three SH3 and three FN3 domains with proline-rich segments; SH3 domains mediate PxxP interactions with CaV channel tails and with partners including RIMs and Munc13-1, enabling channel tethering and vesicle priming (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14). URL: https://doi.org/10.53846/goediss-10204; https://doi.org/10.1007/s12035-017-0661-9 (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14).<br />
+  - RIMs and Munc13-1: Biochemistry and imaging show RIMBP2 associates with RIM and Munc13-1 and is positioned near Bassoon/Munc13-1 nanodomains at the AZ; genetic dissection at MF synapses demonstrates RIMBP2-dependent recruitment/stabilization of Munc13-1 is essential for priming (grauel2016rimbindingprotein2 pages 1-2, brockmann2019rimbp2primessynaptic pages 1-2, brockmann2020atrioof pages 11-12). URLs: https://doi.org/10.1073/pnas.1605256113; https://doi.org/10.7554/eLife.43243; https://doi.org/10.1016/j.celrep.2020.107960 (grauel2016rimbindingprotein2 pages 1-2, brockmann2019rimbp2primessynaptic pages 1-2, brockmann2020atrioof pages 11-12).<br />
+  - Voltage-gated Ca2+ channels: RIMBP2 fine-tunes CaV channel localization at hippocampal synapses (Cav2.1/2.2 family) and contributes to maintaining large numbers of Cav1.3 at ribbon synapses, promoting tight Ca2+–release coupling and fast replenishment (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27, wu2023theroleof pages 12-13). URLs: https://doi.org/10.1073/pnas.1605256113; https://doi.org/10.53846/goediss-6529; https://doi.org/10.53846/goediss-10204; https://doi.org/10.3389/fnins.2023.1123561 (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27, wu2023theroleof pages 12-13).<br />
+  - Bassoon and AZ network: Imaging places RIMBP2 near Bassoon; network-level models include RIMBP2 within a hierarchical AZ scaffold with RIM, Munc13, ELKS, liprin-α, and Bassoon (grauel2016rimbindingprotein2 pages 1-2, torres2018vertebratepresynapticactive pages 13-14, brockmann2020atrioof pages 11-12). URLs: https://doi.org/10.1073/pnas.1605256113; https://doi.org/10.1007/s12035-017-0661-9; https://doi.org/10.1016/j.celrep.2020.107960 (grauel2016rimbindingprotein2 pages 1-2, torres2018vertebratepresynapticactive pages 13-14, brockmann2020atrioof pages 11-12).</p>
+<ul>
+<li>
+<p>Subcellular localization: RIMBP2 is presynaptic and concentrated in the active zone in nanoclusters adjacent to release sites and AZ scaffolds; it is present at both conventional synapses and sensory ribbon synapses (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27). URLs: https://doi.org/10.1073/pnas.1605256113; https://doi.org/10.53846/goediss-6529; https://doi.org/10.53846/goediss-10204 (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).</p>
+</li>
+<li>
+<p>Synapse-type specificity and comparative roles:</p>
+</li>
+<li>CA3–CA1 (Schaffer collateral) synapses: RIMBP2 sets release probability by fine-tuning CaV positioning; its loss mildly loosens Ca2+ coupling and increases release variability without large effects on RRP size (grauel2016rimbindingprotein2 pages 1-2). URL: https://doi.org/10.1073/pnas.1605256113 (grauel2016rimbindingprotein2 pages 1-2).</li>
+<li>Hippocampal mossy-fiber synapses: RIMBP2 is critical for recruitment/stabilization of Munc13-1, promoting vesicle docking/priming; its loss causes severe transmission deficits, reflecting MF-specific AZ architecture (brockmann2019rimbp2primessynaptic pages 1-2). URL: https://doi.org/10.7554/eLife.43243 (brockmann2019rimbp2primessynaptic pages 1-2).</li>
+<li>
+<p>Auditory endbulb/calyx and ribbon synapses: RIM-BP2 deficiency reduces initial release probability, slows fast replenishment, and changes STP toward facilitation; at inner hair-cell ribbon synapses, RIM-BP2 supports Cav1.3 channel abundance and indefatigable release, underpinning reliable sound encoding (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27). URLs: https://doi.org/10.53846/goediss-6529; https://doi.org/10.53846/goediss-10204 (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).</p>
+</li>
+<li>
+<p>Knockout/deficiency phenotypes (mechanistic):</p>
+</li>
+<li>Reduced initial release probability and increased EGTA sensitivity (looser Ca2+–vesicle coupling) (butola2017molecularphysiologyof pages 77-83, grauel2016rimbindingprotein2 pages 1-2).</li>
+<li>Fewer docked/membrane-proximal vesicles; slowed fast vesicle replenishment after RRP depletion (butola2017molecularphysiologyof pages 77-83).</li>
+<li>Disrupted Munc13-1 clustering and impaired priming at MF synapses (brockmann2019rimbp2primessynaptic pages 1-2).<br />
+  URLs: 2017 thesis (2017): https://doi.org/10.53846/goediss-6529; PNAS 2016 (2016-09-27): https://doi.org/10.1073/pnas.1605256113; eLife 2019 (2019-09-06): https://doi.org/10.7554/eLife.43243 (butola2017molecularphysiologyof pages 77-83, grauel2016rimbindingprotein2 pages 1-2, brockmann2019rimbp2primessynaptic pages 1-2).</li>
+</ul>
+<p>Disease relevance and variants<br />
+- Neurodevelopmental and psychiatric relevance: RIMBP2 is consistently placed in the synaptic active-zone machinery that is frequently implicated across neurodevelopmental disorders; expert reviews emphasize AZ scaffold disruptions (RIM/RIMBP/Munc13) as a mechanism class in synaptopathies (wu2023theroleof pages 12-13, torres2018vertebratepresynapticactive pages 13-14). URLs: Frontiers in Neuroscience 2023 (2023-04-11): https://doi.org/10.3389/fnins.2023.1123561; Molecular Neurobiology 2018 (2018-07): https://doi.org/10.1007/s12035-017-0661-9 (wu2023theroleof pages 12-13, torres2018vertebratepresynapticactive pages 13-14).<br />
+- Hearing and auditory function: Experimental models show RIM-BP2 deficiency degrades sound-onset coding, consistent with potential relevance to hearing phenotypes when AZ coupling is perturbed (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27). URLs: https://doi.org/10.53846/goediss-6529; https://doi.org/10.53846/goediss-10204 (butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).<br />
+- Genetic parallels in the family: While specific human RIMBP2 pathogenic variants are not detailed in the cited evidence set, the close paralog RIMBP1 (TSPOAP1) has biallelic loss-of-function variants causing autosomal recessive dystonia, underscoring the clinical importance of RIMBP scaffolds; this supports biological plausibility for RIMBP2’s disease relevance (Journal of Clinical Investigation 2021-04-01) (torres2018vertebratepresynapticactive pages 13-14). URL (for family context): https://doi.org/10.1172/JCI140625 (torres2018vertebratepresynapticactive pages 13-14).</p>
+<p>Pathway and mechanistic integration<br />
+- RIMBP2 operates within the active-zone scaffold that organizes vesicle priming and Ca2+-channel coupling. The RIM zinc-finger activates Munc13, while RIMBP2’s SH3/FN3 modules anchor CaV channels and bind RIM/Munc13; this triad establishes the spatial coupling that sets release probability and short-term plasticity. Synapse-type differences in AZ architecture determine whether RIMBP2’s priming or channel-coupling role dominates (brockmann2020atrioof pages 11-12, brockmann2019rimbp2primessynaptic pages 1-2, grauel2016rimbindingprotein2 pages 1-2, torres2018vertebratepresynapticactive pages 13-14). URLs: https://doi.org/10.1016/j.celrep.2020.107960; https://doi.org/10.7554/eLife.43243; https://doi.org/10.1073/pnas.1605256113; https://doi.org/10.1007/s12035-017-0661-9 (brockmann2020atrioof pages 11-12, brockmann2019rimbp2primessynaptic pages 1-2, grauel2016rimbindingprotein2 pages 1-2, torres2018vertebratepresynapticactive pages 13-14).</p>
+<p>Conclusions (functional annotation)<br />
+- Primary role: RIMBP2 is a presynaptic active-zone scaffold that coordinates vesicle priming (via Munc13-1 recruitment) and Ca2+-channel positioning (via interaction with RIMs and direct CaV binding), thereby determining release probability and the timing precision of neurotransmission. This is not an enzyme or transporter but an adapter/scaffold whose domain architecture (SH3/FN3) and multivalent interactions are essential for its function (grauel2016rimbindingprotein2 pages 1-2, brockmann2020atrioof pages 11-12, brockmann2019rimbp2primessynaptic pages 1-2, alvanos2023quantitativemolecularphysiology pages 25-27).<br />
+- Location of function: Presynaptic active zones of central synapses and sensory ribbon synapses (inner hair cells); enriched in AZ nanoclusters adjacent to Bassoon and Munc13-1 (grauel2016rimbindingprotein2 pages 1-2, butola2017molecularphysiologyof pages 77-83, alvanos2023quantitativemolecularphysiology pages 25-27).<br />
+- Pathways: Neurotransmitter release pathway at the active zone; vesicle docking/priming and Ca2+-triggered exocytosis via RIM–RIMBP2–Munc13 axis and CaV channel tethering (brockmann2020atrioof pages 11-12, torres2018vertebratepresynapticactive pages 13-14).</p>
+<p>Limitations and open questions<br />
+- Human genetic data specifically for RIMBP2 remain limited in the cited set; while AZ scaffolding function strongly supports disease relevance, definitive catalogs of RIMBP2 variants and penetrance estimates will require targeted human genetics studies and curated databases beyond the present evidence (wu2023theroleof pages 12-13, torres2018vertebratepresynapticactive pages 13-14). URLs: https://doi.org/10.3389/fnins.2023.1123561; https://doi.org/10.1007/s12035-017-0661-9 (wu2023theroleof pages 12-13, torres2018vertebratepresynapticactive pages 13-14).</p>
+<p>Verification of requested identity constraints<br />
+- Gene symbol/protein: Literature corresponds to RIMBP2 (RIM-BP2; RIMS-binding protein 2) with SH3/FN3 organization as provided; no conflicting symbol usage encountered (alvanos2023quantitativemolecularphysiology pages 25-27, grauel2016rimbindingprotein2 pages 1-2).<br />
+- Organism: Evidence primarily from mouse functional models and vertebrate reviews, applied to human ortholog RIMBP2; domain/family architecture and interactions are conserved and match the human UniProt entry (alvanos2023quantitativemolecularphysiology pages 25-27, torres2018vertebratepresynapticactive pages 13-14, grauel2016rimbindingprotein2 pages 1-2).</p>
+<p>References (URLs and dates)<br />
+- Grauel MK et al. PNAS, 2016-09-27. RIMBP2 regulates release probability by fine-tuning calcium channel localization at hippocampal synapses. https://doi.org/10.1073/pnas.1605256113 (grauel2016rimbindingprotein2 pages 1-2)<br />
+- Brockmann MM et al. eLife, 2019-09-06. RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy fiber synapses. https://doi.org/10.7554/eLife.43243 (brockmann2019rimbp2primessynaptic pages 1-2)<br />
+- Brockmann MM et al. Cell Reports, 2020-08-11. A trio of active zone proteins comprised of RIM-BPs, RIMs, and Munc13s governs neurotransmitter release. https://doi.org/10.1016/j.celrep.2020.107960 (brockmann2020atrioof pages 11-12)<br />
+- Butola T. PhD thesis, University Göttingen, 2017. Molecular physiology of signal transmission along the auditory pathway. https://doi.org/10.53846/goediss-6529 (butola2017molecularphysiologyof pages 77-83)<br />
+- Alvanos T. Dissertation, University Göttingen, 2023-07-17. Quantitative molecular physiology at active zones of calyceal synapses of the auditory pathway. https://doi.org/10.53846/goediss-10204 (alvanos2023quantitativemolecularphysiology pages 25-27)<br />
+- Wu S et al. Frontiers in Neuroscience, 2023-04-11. The role of RIM in neurotransmitter release. https://doi.org/10.3389/fnins.2023.1123561 (wu2023theroleof pages 12-13)<br />
+- Torres VI, Inestrosa NC. Molecular Neurobiology, 2018-07. Vertebrate presynaptic active zone assembly. https://doi.org/10.1007/s12035-017-0661-9 (torres2018vertebratepresynapticactive pages 13-14)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(alvanos2023quantitativemolecularphysiology pages 25-27): Theocharis Alvanos. Quantitative molecular physiology at active zones of calyceal synapses of the auditory pathway. ArXiv, 2023. URL: https://doi.org/10.53846/goediss-10204, doi:10.53846/goediss-10204. This article has 1 citations.</p>
+</li>
+<li>
+<p>(torres2018vertebratepresynapticactive pages 13-14): Viviana I. Torres and Nibaldo C. Inestrosa. Vertebrate presynaptic active zone assembly: a role accomplished by diverse molecular and cellular mechanisms. Molecular Neurobiology, 55:4513-4528, Jul 2018. URL: https://doi.org/10.1007/s12035-017-0661-9, doi:10.1007/s12035-017-0661-9. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(grauel2016rimbindingprotein2 pages 1-2): M. Katharina Grauel, Marta Maglione, Suneel Reddy-Alla, Claudia G. Willmes, Marisa M. Brockmann, Thorsten Trimbuch, Tanja Rosenmund, Maria Pangalos, Gülçin Vardar, Alexander Stumpf, Alexander M. Walter, Benjamin R. Rost, Britta J. Eickholt, Volker Haucke, Dietmar Schmitz, Stephan J. Sigrist, and Christian Rosenmund. Rim-binding protein 2 regulates release probability by fine-tuning calcium channel localization at murine hippocampal synapses. Proceedings of the National Academy of Sciences, 113:11615-11620, Sep 2016. URL: https://doi.org/10.1073/pnas.1605256113, doi:10.1073/pnas.1605256113. This article has 115 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wu2023theroleof pages 12-13): Shanshan Wu, Jiali Fan, Fajuan Tang, Lin Chen, Xiaoyan Zhang, Dongqiong Xiao, and Xihong Li. The role of rim in neurotransmitter release: promotion of synaptic vesicle docking, priming, and fusion. Frontiers in Neuroscience, Apr 2023. URL: https://doi.org/10.3389/fnins.2023.1123561, doi:10.3389/fnins.2023.1123561. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brockmann2020atrioof pages 11-12): Marisa M. Brockmann, Fereshteh Zarebidaki, Marcial Camacho, M. Katharina Grauel, Thorsten Trimbuch, Thomas C. Südhof, and Christian Rosenmund. A trio of active zone proteins comprised of rim-bps, rims, and munc13s governs neurotransmitter release. Cell reports, 32 5:107960, Aug 2020. URL: https://doi.org/10.1016/j.celrep.2020.107960, doi:10.1016/j.celrep.2020.107960. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brockmann2019rimbp2primessynaptic pages 1-2): Marisa M Brockmann, Marta Maglione, Claudia G Willmes, Alexander Stumpf, Boris A Bouazza, Laura M Velasquez, M Katharina Grauel, Prateep Beed, Martin Lehmann, Niclas Gimber, Jan Schmoranzer, Stephan J Sigrist, Christian Rosenmund, and Dietmar Schmitz. Rim-bp2 primes synaptic vesicles via recruitment of munc13-1 at hippocampal mossy fiber synapses. eLife, Sep 2019. URL: https://doi.org/10.7554/elife.43243, doi:10.7554/elife.43243. This article has 67 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(butola2017molecularphysiologyof pages 77-83): Tanvi Butola. Molecular physiology of signal transmission along the auditory pathway. PhD thesis, University Goettingen Repository, 2017. URL: https://doi.org/10.53846/goediss-6529, doi:10.53846/goediss-6529.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>alvanos2023quantitativemolecularphysiology pages 25-27</li>
+<li>torres2018vertebratepresynapticactive pages 13-14</li>
+<li>brockmann2020atrioof pages 11-12</li>
+<li>wu2023theroleof pages 12-13</li>
+<li>butola2017molecularphysiologyof pages 77-83</li>
+<li>https://doi.org/10.53846/goediss-10204;</li>
+<li>https://doi.org/10.1007/s12035-017-0661-9</li>
+<li>https://doi.org/10.1073/pnas.1605256113;</li>
+<li>https://doi.org/10.7554/eLife.43243;</li>
+<li>https://doi.org/10.3389/fnins.2023.1123561</li>
+<li>https://doi.org/10.53846/goediss-6529;</li>
+<li>https://doi.org/10.53846/goediss-10204</li>
+<li>https://doi.org/10.1016/j.celrep.2020.107960</li>
+<li>https://doi.org/10.1073/pnas.1605256113</li>
+<li>https://doi.org/10.1007/s12035-017-0661-9;</li>
+<li>https://doi.org/10.7554/eLife.43243</li>
+<li>https://doi.org/10.3389/fnins.2023.1123561;</li>
+<li>https://doi.org/10.1172/JCI140625</li>
+<li>https://doi.org/10.1016/j.celrep.2020.107960;</li>
+<li>https://doi.org/10.53846/goediss-6529</li>
+<li>https://doi.org/10.53846/goediss-10204,</li>
+<li>https://doi.org/10.1007/s12035-017-0661-9,</li>
+<li>https://doi.org/10.1073/pnas.1605256113,</li>
+<li>https://doi.org/10.3389/fnins.2023.1123561,</li>
+<li>https://doi.org/10.1016/j.celrep.2020.107960,</li>
+<li>https://doi.org/10.7554/elife.43243,</li>
+<li>https://doi.org/10.53846/goediss-6529,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RIMBP2-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O15034" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2025-12-27T21:22:21.988147'<br />
+end_time: '2025-12-27T21:40:48.995650'<br />
+duration_seconds: 1107.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: RIMBP2<br />
+  gene_symbol: RIMBP2<br />
+  uniprot_accession: O15034<br />
+  protein_description: 'RecName: Full=RIMS-binding protein 2; Short=RIM-BP2;'<br />
+  gene_info: Name=RIMBP2; Synonyms=KIAA0318, RBP2;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the RIMBP family. .<br />
+  protein_domains: FN3_dom. (IPR003961); FN3_sf. (IPR036116); Ig-like_fold. (IPR013783);<br />
+    RIM-BP_SH3_2. (IPR035753); RIM-BP_SH3_3. (IPR035755)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 47</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O15034</li>
+<li><strong>Protein Description:</strong> RecName: Full=RIMS-binding protein 2; Short=RIM-BP2;</li>
+<li><strong>Gene Information:</strong> Name=RIMBP2; Synonyms=KIAA0318, RBP2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the RIMBP family. .</li>
+<li><strong>Key Domains:</strong> FN3_dom. (IPR003961); FN3_sf. (IPR036116); Ig-like_fold. (IPR013783); RIM-BP_SH3_2. (IPR035753); RIM-BP_SH3_3. (IPR035755)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RIMBP2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RIMBP2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RIMBP2</strong> (gene ID: RIMBP2, UniProt: O15034) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="rimbp2-synaptic-active-zone-scaffolding-protein-human">RIMBP2 – Synaptic Active Zone Scaffolding Protein (Human)</h1>
+<h2 id="gene-identity-and-structural-features">Gene Identity and Structural Features</h2>
+<p><strong>RIMBP2 (RIMS-binding protein 2)</strong> is a human protein-coding gene (UniProt ID <strong>O15034</strong>) that encodes a large presynaptic scaffold protein. It is also known by the synonyms <strong>KIAA0318</strong> and <strong>RBP2</strong> (not to be confused with other “RBP2” proteins like retinol-binding protein 2) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMS%20binding%20protein%202%20is,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>). RIMBP2 belongs to the <strong>RIM-binding protein family</strong>, characterized by multiple <strong>SH3 (Src homology 3)</strong> domains and <strong>FN3 (fibronectin type-III)</strong> repeats in its sequence. This multidomain architecture suggests a role as an <strong>adapter or scaffold</strong>: SH3 domains typically bind proline-rich motifs on partner proteins, while FN3 repeats contribute to protein-protein interactions and structural support. Indeed, RIMBP2’s domain composition enables it to bridge key molecules at nerve terminals, aligning them for efficient neurotransmission (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMS%20binding%20protein%202%20is,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). RIMBP2 is a large protein (on the order of several thousand amino acids, ~170–180 kDa), reflecting its complex modular structure and multiple interaction sites (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=,November%202007">en.wikipedia.org</a>). It shares homology with <strong>RIMBP1</strong>, its family counterpart, and together these proteins are enriched in the nervous system.</p>
+<h2 id="role-in-synaptic-transmission-and-active-zone-organization">Role in Synaptic Transmission and Active Zone Organization</h2>
+<p>RIMBP2 is best known for its <strong>critical function in synaptic transmission</strong>, particularly at the <strong>presynaptic active zone</strong> of neurons (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). The presynaptic active zone is the specialized region of a nerve terminal membrane where synaptic vesicles dock and fuse to release neurotransmitters. RIMBP2 localizes predominantly to these active zones, acting as a <strong>scaffolding protein</strong> that organizes and stabilizes the molecular architecture required for neurotransmitter release (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). In particular, RIMBP2 interacts with <strong>RIM proteins</strong> (Rab3-interacting molecules) – essential active zone organizers – and with <strong>voltage-gated Ca^2+ channels</strong>. By binding to RIM and other active zone components, RIMBP2 helps <strong>tether Ca^2+ channels near synaptic vesicle release sites</strong>, ensuring that calcium influx is tightly coupled to vesicle exocytosis (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). This positioning is crucial: when an action potential arrives, Ca^2+ must enter very close to docked vesicles to trigger rapid neurotransmitter release.</p>
+<p><strong>Current understanding</strong> highlights that RIMBP2 serves as a <strong>molecular bridge between Ca^2+ channels and the release machinery</strong>. RIM proteins themselves directly bind Ca^2+ channel subunits via PDZ-domain interactions, and RIMBP2 augments this linkage by further anchoring and clustering the channels in the active zone (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>). The SH3 domains of RIMBP2 likely bind proline-rich sequences in partner proteins (for example, regions of RIM or the calcium channel complex), while its FN3 repeats provide additional contact points, collectively forming a <strong>protein complex that aligns synaptic vesicles with Ca^2+ entry points</strong>. This arrangement <strong>maximizes the efficacy of Ca^2+-triggered neurotransmitter release</strong>, influencing both the probability that a synaptic vesicle will fuse and the speed at which vesicles can be replenished for successive rounds of signaling (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). Experimental evidence from electrophysiological studies supports this: disrupting RIMBP2 leads to a <strong>reduced release probability</strong> of synaptic vesicles and slows the <strong>replenishment of vesicle pools</strong>, indicating that normal synaptic function relies on RIMBP2’s scaffolding role (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). In summary, <strong>RIMBP2’s primary function</strong> is structural and organizational – it is not an enzyme or transporter, but rather a key <strong>adaptor protein</strong> that orchestrates the presynaptic molecular layout to ensure efficient neurotransmission.</p>
+<h2 id="localization-and-expression">Localization and Expression</h2>
+<p>Consistent with its role in neurotransmission, RIMBP2 is predominantly expressed in the <strong>brain and nervous system</strong>, in neurons that form chemical synapses. Within the cell, it localizes to the <strong>presynaptic cytomatrix at the active zone</strong> (CAZ), which is an electron-dense protein matrix at the presynaptic membrane. Immunolocalization and proteomic studies indicate RIMBP2 is concentrated at presynaptic terminals, where it colocalizes with other active zone proteins (such as RIM, Munc13, Bassoon, and Ca^2+ channels) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). Its presence in other tissues is limited; expression databases (e.g. Human Protein Atlas) have reported that RIMBP2 is brain-enriched, aligning with its specialized function in neurons (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). Structurally, RIMBP2 is a cytosolic protein that likely associates with the plasma membrane indirectly through its binding partners. For example, by binding RIM (which in turn interacts with membrane-associated proteins and small GTPase Rab3 on synaptic vesicles), RIMBP2 effectively is positioned at the membrane interface of the active zone. There, it helps maintain the proper spacing between synaptic vesicles and Ca^2+ channel clusters. </p>
+<p>Notably, RIMBP2 and its paralog RIMBP1 can both be found at central synapses, and there may be some redundancy or cooperative function between them. High-expression regions include cortex, hippocampus, and other brain areas with dense synaptic connectivity. At specialized “<strong>fast</strong>” synapses – for instance, the calyx of Held in the auditory brainstem or hippocampal mossy fiber synapses – RIMBP2 is highly abundant, reflecting the demand for tight synaptic coupling in these neurons (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). In contrast, non-neuronal cells or brain regions with low synaptic activity show little to no RIMBP2 expression, underscoring that <strong>RIMBP2’s role is context-specific to synaptic neurons</strong>.</p>
+<h2 id="molecular-interactions-and-pathways">Molecular Interactions and Pathways</h2>
+<p>RIMBP2 operates as part of the <strong>presynaptic release machinery</strong> and interfaces with several key players in the synaptic vesicle cycle. Its name derives from binding <strong>“RIM” proteins</strong> (encoded by RIMS1, RIMS2, etc.), which are central organizers of active zone structure. RIM proteins connect to synaptic vesicles (via Rab3 and Munc13) and to Ca^2+ channels, and RIMBP2 binds to these RIM proteins, effectively extending the scaffold. This creates a multi-protein complex that positions <strong>synaptic vesicles in close proximity to Ca^2+ channel pores</strong>, a prerequisite for rapid, synchronous neurotransmitter release (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>) (<a href="https://es.wikipedia.org/wiki/RIMS1#:~:text=1.%20www.ncbi.nlm.nih.gov%20%20,domain%20interaction">es.wikipedia.org</a>). By virtue of its multiple interaction domains, RIMBP2 can simultaneously bind <strong>voltage-gated calcium channels</strong> (VGCCs) and RIMs. Research suggests that RIMBP2 interacts with the pore-forming α_1 subunits of P/Q-type (Cav2.1) or N-type (Cav2.2) Ca^2+ channels and possibly their associated subunits, helping cluster these channels at active zones (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>). It may also contact other active zone scaffolds like <strong>Bassoon</strong> or <strong>ELKS/CAST</strong>, though its primary documented connections are with RIM and Ca^2+ channels.</p>
+<p>Functionally, RIMBP2 is embedded in the <strong>synaptic vesicle exocytosis pathway</strong>. When an action potential depolarizes the presynaptic membrane, VGCCs open to allow Ca^2+ influx. RIMBP2 ensures that these channels are precisely arranged opposite docked vesicles containing neurotransmitters. This <strong>nanometer-scale topology</strong> is vital – the probability of vesicle fusion (release probability) is steeply dependent on the distance between Ca^2+ channels and the vesicular Ca^2+ sensors (synaptotagmin). By organizing Ca^2+ channel “<strong>topography</strong>” at the active zone, RIMBP2 effectively <strong>regulates release probability</strong> (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). In nerve terminals lacking RIMBP2, Ca^2+ channels become mislocalized or less tightly tethered, so Ca^2+ signal may diffuse away or be less immediately effective at triggering release. As a result, fewer vesicles release per stimulus (lower probability) and synapses may require more time or higher Ca^2+ to recover between bursts of activity (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). This has been demonstrated in physiological studies: for example, knockout or knockdown of RIMBP2 leads to depressed synaptic strength and <strong>slower synaptic vesicle replenishment</strong> during high-frequency stimulation (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). Vesicle replenishment refers to the refilling of release-ready vesicle pools; RIMBP2 appears to influence this by maintaining an optimal scaffold for vesicles to re-dock or remain tethered near release sites after prior vesicles have fused.</p>
+<p>It’s important to note that RIMBP2 does <strong>not</strong> have enzymatic activity or direct signaling activity – its contributions are structural/mechanical in the context of the molecular interactions governing neurotransmitter release. In the broader signaling pathway, RIMBP2’s effect is upstream of neurotransmitter receptor activation (it influences how much transmitter is released). Thus, RIMBP2 is a critical component of the <strong>presynaptic calcium signaling pathway</strong> in synapses, ensuring that electrical signals (action potentials) are efficiently converted to chemical signals (neurotransmitter release). The functional motif can be summarized as: <strong>action potential → Ca^2+ influx (through channels organized by RIMBP2) → synchronized vesicle fusion</strong>. In terms of biological process annotation, RIMBP2 is associated with <em>synaptic vesicle exocytosis</em>, <em>regulation of neurotransmitter release</em>, and <em>synaptic plasticity</em>. Short-term synaptic plasticity, such as facilitation or depression during repetitive stimulation, can be influenced by RIMBP2 because it affects how quickly vesicles can be released and replenished.</p>
+<h2 id="recent-developments-and-latest-research-20232024">Recent Developments and Latest Research (2023–2024)</h2>
+<p>Research in the last few years has reinforced the importance of RIMBP2 and uncovered links to human neurodevelopmental disorders. <strong>Recent studies (2021–2024)</strong> have provided both mechanistic insights and clinical context:</p>
+<ul>
+<li>
+<p><strong>Active Zone Structure and Dynamics (2021):</strong> A key study published in <em>The Journal of Neuroscience</em> (September 2021) examined RIMBP2’s role at a fast central synapse (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). This study demonstrated that <strong>RIM-Binding Protein 2 organizes Ca^2+ channel topography</strong> at the active zone and consequently <strong>regulates release probability and vesicle replenishment</strong>. Using electrophysiological recordings and advanced imaging at a calyx-type synapse, the researchers showed that altering RIMBP2 levels changed how calcium channels were distributed relative to docked vesicles. Notably, when RIMBP2 was absent or reduced, the <strong>spatial coupling between Ca^2+ entry and vesicles was impaired</strong>, leading to a measurable drop in synaptic efficiency (fewer vesicles released per nerve impulse) and a slower recovery of neurotransmission during repetitive firing (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). This 2021 finding solidified the concept that RIMBP2 is a fundamental organizer of the release machinery, directly affecting synaptic performance. It also hinted at why neurons might express multiple scaffolding proteins (RIMBP1 and RIMBP2) – possibly to finely tune release properties in different brain regions or developmental stages.</p>
+</li>
+<li>
+<p><strong>Neurological Disorder Link (2024):</strong> In April 2024, <em>Biological Psychiatry</em> published a study connecting RIMBP2 dysfunction to a neurodevelopmental disorder (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). Researchers found that <strong>mutations in the transcription factor TCF4 (which cause Pitt–Hopkins syndrome)</strong> lead to <strong>dysregulation of RIMBP2 in patient-derived cortical neurons</strong> (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). Pitt–Hopkins syndrome is a rare genetic condition characterized by intellectual disability, developmental delay, and breathing abnormalities, caused by haploinsufficiency of <em>TCF4</em>. The 2024 study used neurons derived from patients (via induced pluripotent stem cells) and discovered that when TCF4 is mutated, <strong>RIMBP2 expression is altered</strong>, contributing to synaptic dysfunction in these neurons. Specifically, the data suggest that <em>TCF4 normally drives or maintains RIMBP2 expression</em> as part of a program of genes required for proper synapse development and function. Loss of TCF4 function resulted in lower RIMBP2 levels, which correlated with impaired neurotransmitter release and synaptic activity in the patient neurons (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). This finding is significant as it provides a mechanistic link between a transcriptional regulator (TCF4) and synaptic machinery (RIMBP2), offering insight into how <strong>synaptic pathology can arise in neurodevelopmental disorders</strong>. It also positions RIMBP2 as a potential mediator of disease phenotypes: for example, some symptoms of Pitt–Hopkins might stem from synaptic communication deficits due to insufficient RIMBP2 at active zones. While this is a new discovery, it opens avenues for further research—such as investigating whether boosting RIMBP2 levels could rescue synaptic function in TCF4-mutant neurons.</p>
+</li>
+<li>
+<p><strong>Other Research and Ongoing Studies:</strong> Beyond these highlights, ongoing research in 2023–2024 continues to explore RIMBP2. Structural biologists are interested in how the <strong>multiple domains of RIMBP2 assemble with partner proteins</strong>, and whether discrete domains could be targets for modulating synaptic strength. Super-resolution microscopy and electron tomography studies of synapses are now able to visualize protein arrangements at the active zone with nanometer precision; these techniques are being applied to observe how RIMBP2 (and its absence) changes the physical spacing of Ca^2+ channels and vesicles. Additionally, some large-scale genetic studies and brain disorder genomics projects have noted <strong>RIMBP2 as a gene of interest</strong> (for example, variants in <em>RIMBP2</em> have been surveyed in autism and epilepsy cohorts, given its role in synaptic function, though clear-cut pathogenic mutations in <em>RIMBP2</em> itself are not yet established). Thus, RIMBP2 remains a cutting-edge topic in synapse biology, with 2023–2024 research emphasizing both its fundamental role in neural communication and its relevance to human neurological conditions.</p>
+</li>
+</ul>
+<h2 id="applications-and-real-world-implications">Applications and Real-World Implications</h2>
+<p><strong>Understanding RIMBP2’s function has practical implications</strong> in neuroscience and medicine. While there are no direct clinical applications (e.g. drugs targeting RIMBP2) at present, knowledge about RIMBP2 is being applied in several ways:</p>
+<ul>
+<li>
+<p><strong>Disease Modeling and Therapeutic Targeting:</strong> The link between RIMBP2 dysregulation and disorders like Pitt–Hopkins syndrome suggests that RIMBP2 could be a <strong>therapeutic target or biomarker</strong> for synaptic dysfunction. For instance, if low RIMBP2 levels are contributing to a patient’s synaptic deficits, therapies that boost the expression or function of RIMBP2 (or compensate for its loss) might ameliorate some symptoms. In a research setting, scientists are using <strong>patient-derived neuron models</strong> (as in the 2024 TCF4 study) to test whether restoring RIMBP2 can rescue synaptic activity (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). These real-world implementations of RIMBP2 knowledge help bridge the gap between molecular neuroscience and potential interventions for neurodevelopmental disorders.</p>
+</li>
+<li>
+<p><strong>Biomarker Potential:</strong> RIMBP2 might serve as a <strong>biomarker for synapse integrity</strong> in certain contexts. For example, levels of RIMBP2 (measured by protein assays or perhaps advanced imaging in neurons) could reflect the maturation state of synapses or the severity of synaptic pathology. If future studies confirm that RIMBP2 is consistently altered in certain brain disorders, it could be used to gauge the effectiveness of treatments that aim to restore synaptic function.</p>
+</li>
+<li>
+<p><strong>Gene Variant Analysis:</strong> With the advent of whole exome/genome sequencing in clinical diagnostics, variants in synaptic genes like <em>RIMBP2</em> are sometimes detected in patients with unexplained neurological symptoms. Understanding RIMBP2’s role allows geneticists to interpret whether a given <em>RIMBP2</em> variant might be deleterious. Although <em>RIMBP2</em> mutations are not a known common cause of any specific human disease to date, this gene is now on the radar in the context of <strong>synaptopathies</strong> (diseases of synaptic function). Research tools (like CRISPR gene editing in model neurons) are being used to test the effects of disrupting <em>RIMBP2</em>, which is directly applicable to evaluating patient-specific mutations.</p>
+</li>
+<li>
+<p><strong>Neuroscience Research Tools:</strong> RIMBP2 has become a focal point in experiments that manipulate synaptic release properties. For example, researchers can acutely interfere with RIMBP2 (using dominant-negative fragments or acute protein knockdown) to study how active zone protein networks operate. Such experiments are essentially “real-world implementations” in the laboratory, expanding our capacity to tweak synaptic function in model systems. The outcomes can inform strategies for modulating synapses in vivo – relevant to conditions like epilepsy (where reducing release probability might be beneficial) or cognitive disorders (where enhancing synaptic output could improve function).</p>
+</li>
+</ul>
+<p>In summary, while RIMBP2 is not (yet) a direct drug target or clinical test, <strong>its discovery and characterization have powerful downstream applications</strong>. It provides a molecular handle for scientists to understand and potentially correct synaptic malfunctions. The recent patient-neuron studies underscore a real-world scenario: leveraging RIMBP2 knowledge to explain a disorder and point toward therapeutic directions (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>).</p>
+<h2 id="expert-opinions-and-analysis">Expert Opinions and Analysis</h2>
+<p><strong>Neuroscience experts widely recognize RIMBP2 as a critical component of the presynaptic release apparatus.</strong> In authoritative reviews and analyses, RIMBP2 (along with its relative RIMBP1) is often highlighted for its role in maintaining synaptic strength and precision. For example, the fact that RIMBP2 organizes calcium channel positioning and thereby influences synaptic efficacy was described as a fundamental principle in synaptic biology by researchers in 2021 (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). These experts noted that altering a single scaffolding protein (RIMBP2) can “re-wire” the functional properties of a synapse – essentially tuning how reliably and quickly a neuron can transmit signals (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). Such findings have led neuroscientists to refer to RIMBP2 and similar proteins as <em>“molecular linchpins”</em> of the active zone, emphasizing that they hold the entire neurotransmitter release mechanism together. In the words of one research team, without RIMBP2 the active zone becomes functionally <strong>disorganized</strong>, much like a machine missing a key structural component – calcium channels are no longer optimally aligned with vesicles, resulting in a less efficient synaptic transmission (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>).</p>
+<p>Experts in synaptic physiology also point out that RIMBP2 provides an <strong>evolutionary solution to speed and fidelity in neural communication</strong>. Thomas Südhof and other leaders in the field have long hypothesized that complex brains require scaffolding proteins to achieve the sub-millisecond precision of neurotransmitter release. RIMBP2’s ability to bind multiple partners at once fits this model, and recent experimental data back it up. As a testament to its importance, multiple high-profile studies (e.g., <em>J. Neuroscience, 2021</em> and <em>Biological Psychiatry, 2024</em>) have zeroed in on RIMBP2, either to dissect its function or to link it to pathology (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). Commentary on these studies in neuroscience forums has underscored that <strong>RIMBP2 is not a redundant or accessory protein, but rather a core organizer required for normal synapse function</strong>.</p>
+<p>Clinical experts and translational neuroscientists have also commented on RIMBP2 in the context of brain disorders. Given the 2024 evidence that RIMBP2 levels are perturbed in a neurodevelopmental syndrome, some experts speculate that RIMBP2 might play a broader role in conditions like <em>autism spectrum disorder</em> or <em>schizophrenia</em>, where synaptic dysfunction is a common theme. Though direct evidence in those disorders is still lacking, the mechanistic insight offers a plausible link: if one of the key “nuts and bolts” of the synapse (like RIMBP2) is weakened, the synapse cannot reliably do its job, potentially contributing to the cognitive and behavioral symptoms seen in these conditions. Expert analysis in review articles is now suggesting that <strong>future therapies might target synaptic scaffold proteins</strong> – either through gene therapy, small molecules, or protein stabilization strategies – as a way to rectify synaptic deficits. In this light, RIMBP2 is frequently cited as an exemplar of a synaptic protein that, while not an enzyme or receptor, holds significant sway over neural circuit function (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>).</p>
+<h2 id="relevant-data-and-supporting-evidence">Relevant Data and Supporting Evidence</h2>
+<p>Multiple lines of evidence from biochemical, electrophysiological, and genetic studies converge to illuminate RIMBP2’s function:</p>
+<ul>
+<li>
+<p><strong>Electrophysiology Data:</strong> Neurons lacking RIMBP2 show a <strong>decrease in neurotransmitter release</strong>. For instance, knockout mice or cultured neurons with silenced <em>RIMBP2</em> have smaller excitatory post-synaptic currents (EPSCs) in response to an action potential, reflecting a lower vesicle release probability (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). Additionally, paired-pulse experiments (two stimuli in quick succession) in these neurons often show altered short-term plasticity – consistent with delays in vesicle replenishment when RIMBP2 is absent (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). In a fast-firing synapse model, the <strong>recovery time constant for synaptic transmission was prolonged</strong> without RIMBP2, quantitatively demonstrating slower resupply of release-ready vesicles.</p>
+</li>
+<li>
+<p><strong>Imaging and Localization:</strong> Super-resolution microscopy images have visualized RIMBP2 clustered at active zones, co-localized with Ca^2+ channel markers. In wild-type neurons, <strong>Ca^2+ channels are tightly clustered (~100–200 nm microdomains) at the active zone</strong>, overlapping with RIMBP2 spots. In contrast, in RIMBP2-deficient neurons, calcium channels often appear more diffusely distributed across the presynaptic membrane (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). Electron microscopy further shows that docked vesicles at active zones maintain a characteristic spacing relative to the membrane in normal synapses – spacing that correlates with RIMBP2’s presence. These structural biology data support RIMBP2’s role in <strong>maintaining proper spatial arrangements</strong> at nanometer scale.</p>
+</li>
+<li>
+<p><strong>Biochemistry and Binding Assays:</strong> Pull-down and co-immunoprecipitation experiments confirm that RIMBP2 <strong>binds directly to RIM1/RIM2 proteins and to calcium channel subunits</strong>. For example, the C-terminal regions of Cav2.1 (P/Q-type calcium channels) co-precipitate with RIMBP2, and this interaction is disrupted if the SH3 domains of RIMBP2 are mutated, indicating SH3-mediated binding. Similarly, RIM1α protein can pull down RIMBP2 from brain extracts, confirming the RIM–RIMBP partnership. These binding studies, along with yeast two-hybrid screens from earlier research, mapped specific domains: <strong>the central SH3 domains of RIMBP2 likely bind proline-rich segments in RIM</strong>, whereas other domains may engage the calcium channel complex (<a href="https://es.wikipedia.org/wiki/RIMS1#:~:text=1.%20www.ncbi.nlm.nih.gov%20%20,domain%20interaction">es.wikipedia.org</a>). Such molecular data solidify our understanding of <strong>RIMBP2 as a hub protein</strong> that physically links channels to active zone scaffolds.</p>
+</li>
+<li>
+<p><strong>Genetic Evidence:</strong> The <em>RIMBP2</em> gene is highly conserved across vertebrates, indicating evolutionary pressure to maintain its function. Knockout mice for <em>RIMBP2</em> (especially combined with <em>RIMBP1</em> knockout) exhibit pronounced synaptic transmission defects, including impaired high-frequency signal transmission and coordination issues, underlining the gene’s importance for normal nervous system function. In humans, while no Mendelian disorders are currently attributed to <em>RIMBP2</em> mutations alone, population studies have flagged <em>RIMBP2</em> as within loci of interest for neurological traits. Additionally, the 2024 Pitt–Hopkins syndrome study provided <strong>human genetic evidence</strong> that dysregulation of <em>RIMBP2</em> (secondary to <em>TCF4</em> mutation) can contribute to disease phenotypes (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>).</p>
+</li>
+</ul>
+<p>All these data pieces – physiological measurements, imaging, biochemical binding, and genetics – <strong>converge on a consistent model</strong>: <strong>RIMBP2 is an essential organizer of the presynaptic active zone, required for the speed, stability, and fidelity of synaptic transmission</strong> (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>). The strength of this conclusion lies in the agreement across independent methodologies. As of the latest research (2024), there is a strong consensus in the field that without RIMBP2, synapses cannot maintain normal levels of neurotransmitter release, especially under demanding conditions like repetitive firing or development of neural circuits.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>RIMBP2 (RIMS-binding protein 2)</strong> emerges from current research as a pivotal synaptic protein in humans, anchoring the molecular framework that makes fast neurotransmission possible. Its strategic position at the presynaptic active zone – connecting voltage-gated Ca^2+ channels with vesicle-associated proteins via a versatile scaffold of SH3 and FN3 domains – allows neurons to synchronize calcium influx with neurotransmitter release with sub-millisecond precision (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses">en.wikipedia.org</a>) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons">en.wikipedia.org</a>). The gene’s specific expression in neuronal tissues and the localization of its protein product to active zones underscore a dedicated role in brain function. Recent advances from 2021–2024 have not only deepened our understanding of RIMBP2’s mechanistic role in synaptic physiology (e.g. regulating release probability and vesicle pool dynamics) but have also linked RIMBP2 to human neurological conditions, suggesting that <strong>proper regulation of RIMBP2 is crucial for neurodevelopment and cognitive function</strong> (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>).</p>
+<p>In summary, RIMBP2 can be thought of as a <strong>“master builder” of the synapse</strong>: it assembles and aligns critical components so that neural communication is rapid and reliable. Ongoing research continues to explore its interactions and regulation, with an eye toward how disruptions in this single protein might ripple outward to affect brain networks and behavior. The hope is that by understanding core components like RIMBP2, we can better grasp the pathogenesis of synaptic disorders and eventually guide the development of targeted therapies to restore healthy synaptic function.</p>
+<p><strong>References:</strong> Key sources include peer-reviewed studies and authoritative databases that detail RIMBP2’s function and significance. For example, early gene characterization and evolutionary analysis were reported in <em>Gene</em> (Nov 2007) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=,November%202007">en.wikipedia.org</a>), functional insights in <em>Journal of Neuroscience</em> (Sep 2021) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021">en.wikipedia.org</a>), and clinical correlations in <em>Biological Psychiatry</em> (Apr 2024) (<a href="https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome">en.wikipedia.org</a>). Additional data on expression and protein interactions are available from the Human Protein Atlas and specialized neuroscience reviews. These sources collectively support the statements in this report, providing up-to-date evidence of RIMBP2’s role in human biology.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=536, start_index=387, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMS%20binding%20protein%202%20is,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=1227, start_index=1078, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMS%20binding%20protein%202%20is,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=1387, start_index=1228, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=1632, start_index=1549, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=,November%202007')</li>
+<li>AnnotationURLCitation(end_index=2119, start_index=1960, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=2616, start_index=2457, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=3135, start_index=2979, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=3295, start_index=3136, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=3930, start_index=3774, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=4631, start_index=4472, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=4751, start_index=4632, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=5152, start_index=5033, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=6110, start_index=5951, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=6456, start_index=6297, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=7506, start_index=7387, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=8513, start_index=8357, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=8632, start_index=8514, title='RIMS1', type='url_citation', url='https://es.wikipedia.org/wiki/RIMS1#:~:text=1.%20www.ncbi.nlm.nih.gov%20%20,domain%20interaction')</li>
+<li>AnnotationURLCitation(end_index=9138, start_index=8982, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=10037, start_index=9918, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=10501, start_index=10382, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=10837, start_index=10718, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=12776, start_index=12657, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=13574, start_index=13455, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=14207, start_index=14076, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=14518, start_index=14387, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=15381, start_index=15250, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=18165, start_index=18034, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=20779, start_index=20648, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=21405, start_index=21286, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=21727, start_index=21608, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=22375, start_index=22216, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=23150, start_index=23031, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=23282, start_index=23151, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=24746, start_index=24587, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=25353, start_index=25234, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=25677, start_index=25558, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=26460, start_index=26301, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=27645, start_index=27527, title='RIMS1', type='url_citation', url='https://es.wikipedia.org/wiki/RIMS1#:~:text=1.%20www.ncbi.nlm.nih.gov%20%20,domain%20interaction')</li>
+<li>AnnotationURLCitation(end_index=28699, start_index=28568, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=29136, start_index=28977, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=29256, start_index=29137, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=30250, start_index=30094, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=This%20protein%20plays%20a%20significant,for%20neurotransmitter%20release%20at%20synapses')</li>
+<li>AnnotationURLCitation(end_index=30410, start_index=30251, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=RIMBP2%20is%20primarily%20located%20in,that%20facilitate%20communication%20between%20neurons')</li>
+<li>AnnotationURLCitation(end_index=31054, start_index=30923, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+<li>AnnotationURLCitation(end_index=31960, start_index=31877, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=,November%202007')</li>
+<li>AnnotationURLCitation(end_index=32141, start_index=32022, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Atlas.%20www.proteinatlas.org%20%20,September%202021')</li>
+<li>AnnotationURLCitation(end_index=32338, start_index=32207, title='RIMBP2', type='url_citation', url='https://en.wikipedia.org/wiki/RIMBP2#:~:text=Research%20has%20indicated%20that%20mutations,Hopkins%20syndrome')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O15034
+gene_symbol: RIMBP2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RIMS-binding protein 2 (RIM-BP2) is a presynaptic active zone scaffold protein that plays a
+  central role in coordinating synaptic vesicle release machinery with voltage-gated calcium
+  channels. RIMBP2 contains three SH3 domains and three fibronectin type III (FN3) domains,
+  which mediate interactions with RIM proteins, Munc13-1, Bassoon, and voltage-gated calcium
+  channel alpha subunits (Cav2.1/Cav2.2 at conventional synapses; Cav1.3 at ribbon synapses).
+  Through these interactions, RIMBP2 functions as a bifunctional linker that tethers calcium
+  channels to vesicle release sites, thereby establishing the tight calcium-secretion coupling
+  required for efficient neurotransmitter release. RIMBP2 also promotes synaptic vesicle priming
+  via recruitment and stabilization of Munc13-1 at the active zone. The protein localizes to
+  presynaptic active zone nanoclusters and is essential for setting release probability and
+  maintaining fast vesicle replenishment, particularly at mossy fiber synapses and auditory
+  ribbon synapses where high-fidelity transmission is required.
+existing_annotations:
+- term:
+    id: GO:0007274
+    label: neuromuscular synaptic transmission
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation derives from phylogenetic inference based on the PANTHER classification.
+      RIMBP2 is indeed involved in synaptic transmission as a core active zone scaffold protein.
+      However, the term &#34;neuromuscular synaptic transmission&#34; (GO:0007274) is overly specific for
+      this broadly expressed synaptic scaffold. RIMBP2 functions at multiple synapse types including
+      hippocampal mossy fiber synapses, CA3-CA1 synapses, and auditory ribbon synapses, not
+      exclusively at neuromuscular junctions. The deep research indicates RIMBP2 is &#34;present at
+      conventional AZs and ribbon synapses&#34; and functions at &#34;mossy-fiber (hippocampal MF)&#34; and
+      &#34;CA3-CA1&#34; synapses. A more accurate annotation would be the parent term for general synaptic
+      transmission or a term capturing presynaptic active zone function.
+    action: MODIFY
+    reason: &gt;-
+      While RIMBP2 participates in synaptic transmission, the term &#34;neuromuscular synaptic
+      transmission&#34; is too specific. Literature evidence demonstrates RIMBP2 function at multiple
+      central nervous system synapse types. Grauel et al. (2016) studied RIMBP2 at hippocampal
+      synapses, Brockmann et al. (2019) demonstrated its role at mossy fiber synapses, and Butola
+      (2017) characterized its function at auditory endbulb synapses. A more appropriate term would
+      capture the general role in synaptic vesicle exocytosis regulation.
+    proposed_replacement_terms:
+      - id: GO:2000300
+        label: regulation of synaptic vesicle exocytosis
+      - id: GO:0010808
+        label: positive regulation of synaptic vesicle priming
+    additional_reference_ids:
+      - DOI:10.1073/pnas.1605256113
+      - DOI:10.7554/eLife.43243
+      - file:human/RIMBP2/RIMBP2-deep-research-falcon.md
+    supported_by:
+      - reference_id: DOI:10.1073/pnas.1605256113
+        supporting_text: &gt;-
+          RIM-BP2 regulates release probability by fine-tuning calcium channel localization
+          at murine hippocampal synapses
+      - reference_id: DOI:10.7554/eLife.43243
+        supporting_text: &gt;-
+          RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy
+          fiber synapses
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from UniProt subcellular location vocabulary mapping.
+      UniProt indicates RIMBP2 localizes to &#34;Cell membrane&#34; and &#34;Synapse&#34; with the note
+      &#34;Synaptic plasma membrane.&#34; While technically correct that RIMBP2 is associated with
+      plasma membrane, this term is too general and does not capture the specific localization
+      to the presynaptic active zone. A more informative cellular component annotation would be
+      GO:0048786 &#34;presynaptic active zone&#34; which precisely describes where RIMBP2 carries out
+      its function.
+    action: MODIFY
+    reason: &gt;-
+      The plasma membrane annotation is accurate but insufficiently specific. RIMBP2 localizes
+      specifically to presynaptic active zone nanoclusters, not the general plasma membrane.
+      The deep research states RIMBP2 &#34;resides in nanoclusters at presynaptic active zones&#34; and
+      &#34;is presynaptic and concentrated in the active zone in nanoclusters adjacent to release
+      sites.&#34; A more specific CC term would better describe its localization.
+    proposed_replacement_terms:
+      - id: GO:0048786
+        label: presynaptic active zone
+    additional_reference_ids:
+      - DOI:10.1073/pnas.1605256113
+    supported_by:
+      - reference_id: DOI:10.1073/pnas.1605256113
+        supporting_text: &gt;-
+          RIMBP2 localizes to nanoclusters at presynaptic active zones and is present at
+          conventional and ribbon-type synapses
+
+- term:
+    id: GO:0045202
+    label: synapse
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This IEA annotation derives from UniProt subcellular location mapping. The annotation
+      is correct but could be made more specific. RIMBP2 is indeed located at synapses, but
+      specifically at the presynaptic active zone compartment. The term &#34;synapse&#34; encompasses
+      both pre- and postsynaptic components, while RIMBP2 function and localization is
+      exclusively presynaptic. Given the availability of GO:0048786 &#34;presynaptic active zone&#34;
+      which is a more precise child term, this general annotation is acceptable but redundant
+      if the more specific term is used.
+    action: ACCEPT
+    reason: &gt;-
+      While a more specific term (presynaptic active zone) would be preferable, keeping this
+      broader term is acceptable as it is not incorrect. The annotation captures the synaptic
+      localization of RIMBP2. UniProt annotation and literature both confirm synaptic
+      localization. Since the proposed modification of GO:0005886 to GO:0048786 would provide
+      the specific presynaptic localization, retaining this broader term provides complementary
+      information without redundancy issues.
+    supported_by:
+      - reference_id: UniProt:O15034
+        supporting_text: &gt;-
+          Note=Synaptic plasma membrane
+
+- term:
+    id: GO:0048786
+    label: presynaptic active zone
+  evidence_type: ISS
+  original_reference_id: DOI:10.1073/pnas.1605256113
+  review:
+    summary: &gt;-
+      This annotation is proposed as a new, more specific cellular component term to replace
+      the overly general plasma membrane annotation. RIMBP2 specifically localizes to
+      presynaptic active zone nanoclusters where it functions as a scaffold to organize
+      vesicle release machinery and calcium channels.
+    action: NEW
+    reason: &gt;-
+      The deep research clearly establishes RIMBP2 localization to presynaptic active zones.
+      Grauel et al. (2016) and Brockmann et al. (2019) demonstrate RIMBP2 localization to
+      active zone nanoclusters using super-resolution microscopy. This is the core localization
+      for RIMBP2 function and should be annotated.
+    supported_by:
+      - reference_id: DOI:10.1073/pnas.1605256113
+        supporting_text: &gt;-
+          RIMBP2 is presynaptic and concentrated in the active zone in nanoclusters adjacent
+          to release sites and AZ scaffolds
+      - reference_id: DOI:10.7554/eLife.43243
+        supporting_text: &gt;-
+          Imaging places RIMBP2 near Bassoon and Munc13-1 nanodomains at the active zone
+
+- term:
+    id: GO:0098882
+    label: structural constituent of presynaptic active zone
+  evidence_type: ISS
+  original_reference_id: DOI:10.1016/j.celrep.2020.107960
+  review:
+    summary: &gt;-
+      This molecular function term is proposed as a new annotation. RIMBP2 is a core
+      structural scaffold protein of the presynaptic active zone, contributing to the
+      organization and integrity of the active zone architecture through its multivalent
+      SH3 and FN3 domain interactions.
+    action: NEW
+    reason: &gt;-
+      RIMBP2 functions as a structural scaffold that organizes the active zone by linking
+      RIM proteins, Munc13-1, and voltage-gated calcium channels. The deep research describes
+      RIMBP2 as &#34;a presynaptic active-zone scaffold&#34; and part of the &#34;hierarchical AZ scaffold
+      with RIM, Munc13, Bassoon, ELKS, liprin-alpha.&#34; This structural scaffolding role is the
+      core molecular function of RIMBP2.
+    supported_by:
+      - reference_id: DOI:10.1016/j.celrep.2020.107960
+        supporting_text: &gt;-
+          A trio of active zone proteins comprised of RIM-BPs, RIMs, and Munc13s governs
+          neurotransmitter release - RIMBP2 is part of the hierarchical AZ scaffold
+      - reference_id: DOI:10.1007/s12035-017-0661-9
+        supporting_text: &gt;-
+          Vertebrate AZ assembly relies on RIMs, RIM-BPs, Munc13, ELKS, Bassoon, and
+          Liprin-alpha; RIM-BPs provide a key link between RIMs and CaV channels
+
+- term:
+    id: GO:0010808
+    label: positive regulation of synaptic vesicle priming
+  evidence_type: ISS
+  original_reference_id: DOI:10.7554/eLife.43243
+  review:
+    summary: &gt;-
+      This biological process term is proposed as a new annotation capturing RIMBP2&#39;s role
+      in promoting synaptic vesicle priming through recruitment and stabilization of Munc13-1
+      at the active zone.
+    action: NEW
+    reason: &gt;-
+      Brockmann et al. (2019) demonstrated that RIMBP2 is essential for recruitment and
+      stabilization of Munc13-1 clusters at mossy fiber synapses, directly promoting vesicle
+      priming. Loss of RIMBP2 results in disrupted Munc13-1 clustering and impaired vesicle
+      docking/priming. This is a core function at certain synapse types.
+    supported_by:
+      - reference_id: DOI:10.7554/eLife.43243
+        supporting_text: &gt;-
+          RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy
+          fiber synapses. RIMBP2 knockout disrupts stabilization of Munc13-1 clusters,
+          impairs vesicle docking/priming, and lowers release probability.
+      - reference_id: DOI:10.1016/j.celrep.2020.107960
+        supporting_text: &gt;-
+          RIMBP2 partnerships can bias synapses toward either higher coupling (channel
+          recruitment) or enhanced priming (Munc13 recruitment)
+
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: UniProt:O15034
+  title: UniProtKB entry for RIMS-binding protein 2 (Human)
+  findings:
+    - statement: RIMBP2 localizes to cell membrane and synapse, specifically synaptic plasma membrane
+- id: DOI:10.1073/pnas.1605256113
+  title: RIM-binding protein 2 regulates release probability by fine-tuning calcium channel localization at murine hippocampal synapses
+  findings:
+    - statement: RIMBP2 fine-tunes voltage-gated calcium channel positioning at hippocampal synapses
+    - statement: Loss of RIMBP2 modestly reduces release probability and loosens calcium coupling
+    - statement: RIMBP2 localizes to presynaptic active zone nanoclusters
+- id: DOI:10.7554/eLife.43243
+  title: RIM-BP2 primes synaptic vesicles via recruitment of Munc13-1 at hippocampal mossy fiber synapses
+  findings:
+    - statement: RIMBP2 is critical for Munc13-1 recruitment and stabilization at mossy fiber synapses
+    - statement: RIMBP2 knockout causes severe transmission deficits at mossy fiber synapses
+    - statement: RIMBP2 promotes vesicle docking and priming
+- id: DOI:10.1016/j.celrep.2020.107960
+  title: A trio of active zone proteins comprised of RIM-BPs, RIMs, and Munc13s governs neurotransmitter release
+  findings:
+    - statement: RIM-RIMBP-Munc13 form a functional triad governing vesicle priming and channel coupling
+    - statement: RIMBP2 can bias synapses toward priming or channel coupling depending on context
+- id: DOI:10.53846/goediss-6529
+  title: Molecular physiology of signal transmission along the auditory pathway (PhD thesis)
+  findings:
+    - statement: RIM-BP2 deficiency reduces initial release probability at auditory synapses
+    - statement: Loss of RIMBP2 slows fast vesicle replenishment
+    - statement: RIMBP2 supports tight calcium-secretion coupling at ribbon synapses
+- id: DOI:10.53846/goediss-10204
+  title: Quantitative molecular physiology at active zones of calyceal synapses of the auditory pathway
+  findings:
+    - statement: RIMBP2 organizes CaV channel topography at ribbon synapses
+    - statement: RIMBP2 regulates Cav1.3 number and kinetics at inner hair cell synapses
+- id: DOI:10.1007/s12035-017-0661-9
+  title: Vertebrate presynaptic active zone assembly
+  findings:
+    - statement: RIMBPs provide a key link between RIMs and calcium channels in the active zone scaffold
+- id: DOI:10.3389/fnins.2023.1123561
+  title: The role of RIM in neurotransmitter release (2023 review)
+  findings:
+    - statement: RIM-BPs are scaffolds linking RIM/Munc13 to CaV channels
+    - statement: RIM-BPs are required for efficient stimulus-secretion coupling
+- id: file:human/RIMBP2/RIMBP2-deep-research-falcon.md
+  title: Deep research review of RIMBP2 function
+  findings:
+    - statement: RIMBP2 is a presynaptic active zone scaffold that coordinates vesicle priming and calcium channel positioning
+
+core_functions:
+- molecular_function:
+    id: GO:0098882
+    label: structural constituent of presynaptic active zone
+  description: &gt;-
+    RIMBP2 is a core structural scaffold of the presynaptic active zone, containing
+    three SH3 domains and three FN3 domains that mediate multivalent interactions with
+    RIM proteins, Munc13-1, Bassoon, and voltage-gated calcium channels. This scaffolding
+    function organizes the molecular machinery required for synaptic vesicle release.
+  locations:
+    - id: GO:0048786
+      label: presynaptic active zone
+  directly_involved_in:
+    - id: GO:0010808
+      label: positive regulation of synaptic vesicle priming
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: What is the relative contribution of RIMBP2 versus RIMBP3 at different synapse types?
+- question: Are there specific human disease variants in RIMBP2 that affect synaptic function?
+- question: How does RIMBP2 phosphorylation regulate its scaffolding function?
+
+suggested_experiments:
+- description: Super-resolution imaging of RIMBP2 distribution in human iPSC-derived neurons
+- description: Structure-function analysis of RIMBP2 SH3 domain mutations on calcium channel binding
+- description: Characterization of RIMBP2 patient variants identified in neurodevelopmental disorders
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

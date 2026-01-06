@@ -182,9 +182,12 @@ def run_deep_research(
             # Provide default for protein_family if not available
             protein_family = uniprot_context.get('protein_family') or "Not specified in UniProt"
             cmd.extend(["--var", f"protein_family={protein_family}"])
+            # Provide default for protein_domains if not available
             if uniprot_context.get('protein_domains'):
                 domains_str = '; '.join(uniprot_context['protein_domains'])
-                cmd.extend(["--var", f"protein_domains={domains_str}"])
+            else:
+                domains_str = "Not specified in UniProt"
+            cmd.extend(["--var", f"protein_domains={domains_str}"])
     else:
         # For perplexity-lite, use direct query with perplexity provider
         query = (

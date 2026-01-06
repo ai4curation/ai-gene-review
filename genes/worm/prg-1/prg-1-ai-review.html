@@ -1,0 +1,3563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>prg-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>prg-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P90786" target="_blank" class="term-link">
+                        P90786
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "prg-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P90786" data-a="DESCRIPTION: PRG-1 is the main Piwi-class Argonaute protein in ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PRG-1 is the main Piwi-class Argonaute protein in C. elegans, functioning as the central effector of the piRNA (21U-RNA) pathway. PRG-1 binds 21U-RNAs and localizes to P granules throughout the germline, where it functions in germline surveillance to recognize and silence foreign sequences including transposons. The PRG-1/piRNA pathway triggers gene silencing by recruiting RNA-dependent RNA polymerases to produce secondary 22G-RNAs that associate with WAGO Argonautes. PRG-1 is essential for fertility, and prg-1 mutants show a mortal germline phenotype with transgenerational decline in fertility. PRG-2, the other C. elegans Piwi protein, has little or no detectable function.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from other Piwi family members. In C. elegans, PRG-1 is primarily localized to cytoplasmic P granules rather than the nucleus (PMID:18501605, PMID:18571452). While some Piwi proteins in other organisms have nuclear functions, the experimental evidence in C. elegans shows PRG-1 localizing to P granules, which are perinuclear cytoplasmic structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The experimental evidence from C. elegans studies shows PRG-1 localizes to P granules, which are cytoplasmic structures (PMID:18501605, PMID:18571452). While the IBA inference is reasonable given nuclear localization of some Piwi proteins in other species, it does not reflect the actual localization of PRG-1 in C. elegans.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PRG-1 is localized to P granules in germ cells entering spermatogenesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The PRG-1 protein is expressed throughout development and localizes to nuage-like structures called P granules</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031047" target="_blank" class="term-link">
+                                    GO:0031047
+                                </a>
+                            </span>
+                            <span class="term-label">regulatory ncRNA-mediated gene silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0031047" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 functions in piRNA-mediated gene silencing in C. elegans. The PRG-1/21U-RNA complex triggers gene silencing of non-self sequences by recruiting RNA-dependent RNA polymerases to produce WAGO-associated 22G-RNAs. This is a core function of the piRNA pathway (PMID:18571452).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures the core function of PRG-1 in regulatory ncRNA-mediated gene silencing. PRG-1 binds 21U-RNAs (piRNAs) and uses them to silence target genes, particularly foreign sequences and transposons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">21U-RNAs are the piRNAs of C. elegans and link this class of small RNAs and their associated Piwi Argonaute to the maintenance of temperature-dependent fertility</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004521" target="_blank" class="term-link">
+                                    GO:0004521
+                                </a>
+                            </span>
+                            <span class="term-label">RNA endonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0004521" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on sequence similarity to other Argonaute/Piwi proteins that have slicer activity. PRG-1 contains PAZ and Piwi domains characteristic of Argonaute proteins. The Piwi domain has RNase H-like fold associated with endonuclease activity in many Argonautes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PRG-1 has the domain architecture of a slicer-competent Argonaute, direct experimental evidence for RNA endonuclease activity of C. elegans PRG-1 is not established in the available literature. The primary mechanism of piRNA-mediated silencing in C. elegans appears to involve recruitment of secondary siRNA pathways rather than direct target cleavage. This annotation is plausible but lacks direct experimental validation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034587" target="_blank" class="term-link">
+                                    GO:0034587
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034587" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 is required for 21U-RNA (piRNA) accumulation in C. elegans. Loss of prg-1 causes a marked reduction in 21U-RNA levels (PMID:18501605, PMID:18571452). However, it is unclear if PRG-1 directly participates in piRNA processing or if it stabilizes mature piRNAs after processing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PRG-1 is clearly involved in piRNA biogenesis/metabolism. The 21U-RNAs depend on PRG-1 activity for their accumulation (PMID:18571452). Whether this represents direct processing activity or stabilization of mature 21U-RNAs, the functional involvement in piRNA pathway is well established.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">depend on PRG-1 activity for their accumulation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">prg-1 activity is required for the presence of the small RNAs called 21U-RNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007283" target="_blank" class="term-link">
+                                    GO:0007283
+                                </a>
+                            </span>
+                            <span class="term-label">spermatogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0007283" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 has a well-documented role in spermatogenesis. PRG-1 is localized to P granules in germ cells entering spermatogenesis and is required for successful spermatogenesis (PMID:18501605). Loss of prg-1 causes defects in sperm activation and fertilization. This is also supported by experimental evidence (IMP from PMID:9851978).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The role of PRG-1 in spermatogenesis is well-established by multiple studies. While PRG-1 also affects oogenesis, spermatogenesis defects are prominent in prg-1 mutants.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PRG-1 is localized to P granules in germ cells entering spermatogenesis and is required for successful spermatogenesis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">prg-1 mutant sperm exhibit extensive defects in activation and fertilization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                    GO:0043186
+                                </a>
+                            </span>
+                            <span class="term-label">P granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0043186" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> P granule localization is a core characteristic of PRG-1. This is experimentally demonstrated by IDA evidence from PMID:18501605 and PMID:18571452.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> P granule localization is one of the best-characterized features of PRG-1 and is confirmed by multiple experimental studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The PRG-1 protein is expressed throughout development and localizes to nuage-like structures called P granules</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PRG-1 is localized to P granules in germ cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034584" target="_blank" class="term-link">
+                                    GO:0034584
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034584" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 binds 21U-RNAs, which are the piRNAs of C. elegans (PMID:18571452). This is the core molecular function of PRG-1 as a Piwi Argonaute protein. The more specific C. elegans term GO:0034583 (21U-RNA binding) is supported by experimental IPI evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> piRNA binding is the central molecular function of PRG-1. The IBA annotation is appropriate as the general piRNA binding term, complementing the more specific 21U-RNA binding term that has direct experimental support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">21U-RNAs are the piRNAs of C. elegans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domains (PAZ and Piwi domains). This is a very general term that is subsumed by more specific RNA binding annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this term is too general to be informative. More specific annotations such as piRNA binding (GO:0034584) and 21U-RNA binding (GO:0034583) better capture PRG-1&#39;s molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro and UniProt keywords. RNA binding is a valid general annotation for PRG-1, but more specific piRNA/21U-RNA binding annotations exist.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA binding is a valid molecular function annotation for PRG-1. While more specific terms (piRNA binding, 21U-RNA binding) are available and preferred, this general annotation from automated methods is not incorrect.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 localizes to P granules, which are cytoplasmic structures. The more specific P granule annotation is preferred, but cytoplasm is not wrong.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with P granule localization. This general term is acceptable alongside the more specific P granule annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007279" target="_blank" class="term-link">
+                                    GO:0007279
+                                </a>
+                            </span>
+                            <span class="term-label">pole cell formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0007279" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pole cell formation is defined as the formation of cells at the posterior pole of the insect blastula that are precursors to germ cells. This is a Drosophila-specific process that does not occur in C. elegans. C. elegans has a different mechanism of germ cell specification.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an erroneous ARBA machine learning annotation. Pole cell formation (GO:0007279) is explicitly defined as an insect process occurring in blastula stage, which is not applicable to C. elegans developmental biology. C. elegans germ cell specification occurs through different mechanisms.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009994" target="_blank" class="term-link">
+                                    GO:0009994
+                                </a>
+                            </span>
+                            <span class="term-label">oocyte differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0009994" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PRG-1 is required for fertility and functions in the germline, which includes oogenesis. The prg-1 mutants have fertility defects that are temperature-dependent (PMID:18571452).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PRG-1 is required for fertility and germline maintenance, its primary function is in piRNA-mediated gene silencing rather than oocyte differentiation per se. The fertility defects may be secondary to dysregulated gene expression from loss of piRNA-mediated silencing rather than a direct role in oocyte differentiation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010526" target="_blank" class="term-link">
+                                    GO:0010526
+                                </a>
+                            </span>
+                            <span class="term-label">transposable element silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0010526" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The piRNA pathway is a major transposon defense mechanism. PRG-1 and 21U-RNAs function in germline surveillance to recognize and silence foreign sequences including transposons.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transposable element silencing is a well-established function of the piRNA pathway. PRG-1 as the main Piwi Argonaute in C. elegans plays a key role in this process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProt keyword mapping. Argonaute proteins with slicer activity have RNA endonuclease (hydrolase) activity. However, direct evidence for PRG-1 catalytic activity is limited.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general. If PRG-1 has catalytic activity, it would be more appropriately annotated with RNA endonuclease activity. The hydrolase activity term does not add informative value.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031047" target="_blank" class="term-link">
+                                    GO:0031047
+                                </a>
+                            </span>
+                            <span class="term-label">regulatory ncRNA-mediated gene silencing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0031047" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of IBA annotation above. This IEA annotation from UniProt keywords also captures the core function of PRG-1 in gene silencing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the same core function as the IBA annotation above. Both appropriately describe PRG-1&#39;s role in regulatory ncRNA-mediated gene silencing. Duplicate annotations with different evidence codes are acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034584" target="_blank" class="term-link">
+                                    GO:0034584
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034584" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of IBA annotation above. piRNA binding is a core molecular function of PRG-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation supports the IBA annotation for piRNA binding. Duplicate annotations from different sources are acceptable and reinforce the annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034587" target="_blank" class="term-link">
+                                    GO:0034587
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034587" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of IBA annotation above. PRG-1 is required for 21U-RNA accumulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IEA annotation supports the IBA annotation. PRG-1&#39;s role in piRNA metabolism is well established.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140991" target="_blank" class="term-link">
+                                    GO:0140991
+                                </a>
+                            </span>
+                            <span class="term-label">piRNA-mediated gene silencing by mRNA destabilization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0140991" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term describes cytoplasmic post-transcriptional gene silencing where piRNAs direct mRNA cleavage by PIWI endonuclease activity. In C. elegans, the piRNA pathway primarily triggers gene silencing through production of secondary 22G-RNAs rather than direct mRNA cleavage by PRG-1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PRG-1 is involved in gene silencing, the mechanism in C. elegans appears to primarily involve triggering secondary siRNA production (22G-RNAs via WAGO pathway) rather than direct mRNA destabilization by PRG-1 itself. The parent term GO:0031047 (regulatory ncRNA-mediated gene silencing) is more appropriate.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031047" target="_blank" class="term-link">
+                                    regulatory ncRNA-mediated gene silencing
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007276" target="_blank" class="term-link">
+                                    GO:0007276
+                                </a>
+                            </span>
+                            <span class="term-label">gamete generation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18571452
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PRG-1 and 21U-RNAs interact to form the piRNA complex requir...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0007276" data-r="PMID:18571452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation. PRG-1 is required for fertility and the maintenance of gamete production across generations (PMID:18571452).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IMP annotation is well-supported. PRG-1 mutants show temperature-dependent fertility defects, and the PRG-1/piRNA complex is required for fertility maintenance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">link this class of small RNAs and their associated Piwi Argonaute to the maintenance of temperature-dependent fertility</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034583" target="_blank" class="term-link">
+                                    GO:0034583
+                                </a>
+                            </span>
+                            <span class="term-label">21U-RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18571452
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PRG-1 and 21U-RNAs interact to form the piRNA complex requir...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034583" data-r="PMID:18571452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation with IPI evidence. PRG-1 physically interacts with 21U-RNAs, which are the C. elegans piRNAs (PMID:18571452).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific molecular function annotation for PRG-1 and is directly supported by experimental evidence showing PRG-1/21U-RNA interaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an abundant class of 21 nucleotide small RNAs (21U-RNAs) are expressed in the C. elegans germline, interact with the C. elegans Piwi family member PRG-1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034585" target="_blank" class="term-link">
+                                    GO:0034585
+                                </a>
+                            </span>
+                            <span class="term-label">21U-RNA metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18571452
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PRG-1 and 21U-RNAs interact to form the piRNA complex requir...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0034585" data-r="PMID:18571452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation. PRG-1 is required for 21U-RNA accumulation (PMID:18571452, PMID:18501605).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PRG-1 activity is clearly required for 21U-RNA presence/accumulation, as demonstrated by mutant phenotype analysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">depend on PRG-1 activity for their accumulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042078" target="_blank" class="term-link">
+                                    GO:0042078
+                                </a>
+                            </span>
+                            <span class="term-label">germ-line stem cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18571452
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PRG-1 and 21U-RNAs interact to form the piRNA complex requir...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0042078" data-r="PMID:18571452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation from PMID:18571452 and also PMID:9851978. PRG-1 affects germline stem cell proliferation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PRG-1&#39;s role in germline stem cell division is supported by experimental evidence. The original Piwi paper (PMID:9851978) showed C. elegans piwi expression affects GSC-equivalent cell proliferation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link">
+                                        PMID:9851978
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decreasing C. elegans piwi expression reduces the proliferation of GSC-equivalent cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                    GO:0043186
+                                </a>
+                            </span>
+                            <span class="term-label">P granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18501605
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A C. elegans Piwi, PRG-1, regulates 21U-RNAs during spermato...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0043186" data-r="PMID:18501605" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for P granule localization from immunofluorescence studies (PMID:18501605).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> P granule localization is directly demonstrated by immunofluorescence in this study. This is a core cellular localization for PRG-1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                                        PMID:18501605
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PRG-1 is localized to P granules in germ cells entering spermatogenesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                    GO:0043186
+                                </a>
+                            </span>
+                            <span class="term-label">P granule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18571452
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PRG-1 and 21U-RNAs interact to form the piRNA complex requir...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0043186" data-r="PMID:18571452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for P granule localization from PMID:18571452. This is independent confirmation of the localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> P granule localization is directly demonstrated experimentally. Multiple IDA annotations from independent studies reinforce this core localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                        PMID:18571452
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The PRG-1 protein is expressed throughout development and localizes to nuage-like structures called P granules</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007283" target="_blank" class="term-link">
+                                    GO:0007283
+                                </a>
+                            </span>
+                            <span class="term-label">spermatogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9851978
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel class of evolutionarily conserved genes defined by p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0007283" data-r="PMID:9851978" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation. Early characterization showed prg-1 affects spermatogenesis in C. elegans.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IMP annotation is supported by mutant phenotype analysis showing spermatogenesis defects.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042078" target="_blank" class="term-link">
+                                    GO:0042078
+                                </a>
+                            </span>
+                            <span class="term-label">germ-line stem cell division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9851978
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel class of evolutionarily conserved genes defined by p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0042078" data-r="PMID:9851978" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported annotation from the foundational Piwi paper showing C. elegans piwi affects germline stem cell proliferation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is directly supported by the experimental findings in the paper.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link">
+                                        PMID:9851978
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decreasing C. elegans piwi expression reduces the proliferation of GSC-equivalent cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045840" target="_blank" class="term-link">
+                                    GO:0045840
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of mitotic nuclear division</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9851978
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel class of evolutionarily conserved genes defined by p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P90786" data-a="GO:0045840" data-r="PMID:9851978" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation based on early characterization showing prg-1 affects germline cell proliferation. The reduced proliferation of GSC-equivalent cells upon piwi knockdown suggests a positive regulatory role in cell division.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PRG-1 affects germline cell division, this annotation represents a downstream consequence of PRG-1&#39;s primary function in piRNA-mediated gene silencing rather than a direct role in mitotic regulation. The effect on cell division is likely indirect through the piRNA pathway&#39;s role in maintaining germline integrity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PRG-1 is the main Piwi Argonaute that binds 21U-RNAs (piRNAs) in C. elegans. This is the core molecular function that enables piRNA-mediated gene silencing.</h3>
+                <span class="vote-buttons" data-g="P90786" data-a="FUNCTION: PRG-1 is the main Piwi Argonaute that binds 21U-RN..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034583" target="_blank" class="term-link">
+                            21U-RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031047" target="_blank" class="term-link">
+                                regulatory ncRNA-mediated gene silencing
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010526" target="_blank" class="term-link">
+                                transposable element silencing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                P granule
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                PMID:18571452
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">an abundant class of 21 nucleotide small RNAs (21U-RNAs) are expressed in the C. elegans germline, interact with the C. elegans Piwi family member PRG-1</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>General piRNA binding activity - 21U-RNAs are the piRNAs of C. elegans.</h3>
+                <span class="vote-buttons" data-g="P90786" data-a="FUNCTION: General piRNA binding activity - 21U-RNAs are the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034584" target="_blank" class="term-link">
+                            piRNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034585" target="_blank" class="term-link">
+                                21U-RNA metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043186" target="_blank" class="term-link">
+                                P granule
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                                PMID:18571452
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">21U-RNAs are the piRNAs of C. elegans</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA correctly predicted piRNA binding, piRNA processing, and transposable element silencing but incorrectly applied pole cell formation (an insect-specific process) to C. elegans.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18501605" target="_blank" class="term-link">
+                            PMID:18501605
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A C. elegans Piwi, PRG-1, regulates 21U-RNAs during spermatogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PRG-1 is localized to P granules in germ cells entering spermatogenesis and is required for successful spermatogenesis. Loss of prg-1 causes reduced expression of spermatogenesis transcripts and sperm activation/fertilization defects. PRG-1 is required for 21U-RNA presence.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18571452" target="_blank" class="term-link">
+                            PMID:18571452
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PRG-1 and 21U-RNAs interact to form the piRNA complex required for fertility in C. elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">21U-RNAs are the piRNAs of C. elegans and interact with PRG-1. PRG-1 localizes to P granules throughout development. 21U-RNA accumulation depends on PRG-1 activity. The PRG-1/21U-RNA complex is required for temperature-dependent fertility maintenance.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9851978" target="_blank" class="term-link">
+                            PMID:9851978
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel class of evolutionarily conserved genes defined by piwi are essential for stem cell self-renewal.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Foundational paper establishing the Piwi gene family. Showed that C. elegans piwi (prg-1) expression affects proliferation of GSC-equivalent cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PRG-1 have direct slicer (RNA endonuclease) activity, or does it function primarily through recruitment of secondary siRNA pathways?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P90786" data-a="Q: Does PRG-1 have direct slicer (RNA endonuclease) a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise mechanism by which PRG-1 contributes to 21U-RNA accumulation - direct processing, stabilization, or both?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P90786" data-a="Q: What is the precise mechanism by which PRG-1 contr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro slicer assay with purified PRG-1 to determine if it has direct RNA endonuclease activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PRG-1 may have catalytic slicer activity similar to other Piwi proteins, or may lack this activity if the C. elegans piRNA pathway operates primarily through secondary siRNA recruitment.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P90786" data-a="EXPERIMENT: In vitro slicer assay with purified PRG-1 to deter..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural analysis of PRG-1 catalytic site to assess DDH motif integrity and predicted catalytic competence.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Analysis of the catalytic residues in the Piwi domain will reveal whether PRG-1 has the conserved DDH motif required for endonuclease activity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P90786" data-a="EXPERIMENT: Structural analysis of PRG-1 catalytic site to ass..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-p-granules</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P90786
+gene_symbol: prg-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: PRG-1 is the main Piwi-class Argonaute protein in C. elegans, functioning
+  as the central effector of the piRNA (21U-RNA) pathway. PRG-1 binds 21U-RNAs and
+  localizes to P granules throughout the germline, where it functions in germline
+  surveillance to recognize and silence foreign sequences including transposons. The
+  PRG-1/piRNA pathway triggers gene silencing by recruiting RNA-dependent RNA polymerases
+  to produce secondary 22G-RNAs that associate with WAGO Argonautes. PRG-1 is essential
+  for fertility, and prg-1 mutants show a mortal germline phenotype with transgenerational
+  decline in fertility. PRG-2, the other C. elegans Piwi protein, has little or no
+  detectable function.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on phylogenetic inference from other Piwi family
+      members. In C. elegans, PRG-1 is primarily localized to cytoplasmic P granules
+      rather than the nucleus (PMID:18501605, PMID:18571452). While some Piwi proteins
+      in other organisms have nuclear functions, the experimental evidence in C. elegans
+      shows PRG-1 localizing to P granules, which are perinuclear cytoplasmic structures.
+    action: REMOVE
+    reason: The experimental evidence from C. elegans studies shows PRG-1 localizes
+      to P granules, which are cytoplasmic structures (PMID:18501605, PMID:18571452).
+      While the IBA inference is reasonable given nuclear localization of some Piwi
+      proteins in other species, it does not reflect the actual localization of PRG-1
+      in C. elegans.
+    supported_by:
+    - reference_id: PMID:18501605
+      supporting_text: PRG-1 is localized to P granules in germ cells entering spermatogenesis
+    - reference_id: PMID:18571452
+      supporting_text: The PRG-1 protein is expressed throughout development and localizes
+        to nuage-like structures called P granules
+- term:
+    id: GO:0031047
+    label: regulatory ncRNA-mediated gene silencing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PRG-1 functions in piRNA-mediated gene silencing in C. elegans. The PRG-1/21U-RNA
+      complex triggers gene silencing of non-self sequences by recruiting RNA-dependent
+      RNA polymerases to produce WAGO-associated 22G-RNAs. This is a core function
+      of the piRNA pathway (PMID:18571452).
+    action: ACCEPT
+    reason: This annotation accurately captures the core function of PRG-1 in regulatory
+      ncRNA-mediated gene silencing. PRG-1 binds 21U-RNAs (piRNAs) and uses them to
+      silence target genes, particularly foreign sequences and transposons.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: 21U-RNAs are the piRNAs of C. elegans and link this class of
+        small RNAs and their associated Piwi Argonaute to the maintenance of temperature-dependent
+        fertility
+- term:
+    id: GO:0004521
+    label: RNA endonuclease activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: IBA annotation based on sequence similarity to other Argonaute/Piwi proteins
+      that have slicer activity. PRG-1 contains PAZ and Piwi domains characteristic
+      of Argonaute proteins. The Piwi domain has RNase H-like fold associated with
+      endonuclease activity in many Argonautes.
+    action: UNDECIDED
+    reason: While PRG-1 has the domain architecture of a slicer-competent Argonaute,
+      direct experimental evidence for RNA endonuclease activity of C. elegans PRG-1
+      is not established in the available literature. The primary mechanism of piRNA-mediated
+      silencing in C. elegans appears to involve recruitment of secondary siRNA pathways
+      rather than direct target cleavage. This annotation is plausible but lacks direct
+      experimental validation.
+- term:
+    id: GO:0034587
+    label: piRNA processing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PRG-1 is required for 21U-RNA (piRNA) accumulation in C. elegans. Loss
+      of prg-1 causes a marked reduction in 21U-RNA levels (PMID:18501605, PMID:18571452).
+      However, it is unclear if PRG-1 directly participates in piRNA processing or
+      if it stabilizes mature piRNAs after processing.
+    action: ACCEPT
+    reason: PRG-1 is clearly involved in piRNA biogenesis/metabolism. The 21U-RNAs
+      depend on PRG-1 activity for their accumulation (PMID:18571452). Whether this
+      represents direct processing activity or stabilization of mature 21U-RNAs, the
+      functional involvement in piRNA pathway is well established.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: depend on PRG-1 activity for their accumulation
+    - reference_id: PMID:18501605
+      supporting_text: prg-1 activity is required for the presence of the small RNAs
+        called 21U-RNAs
+- term:
+    id: GO:0007283
+    label: spermatogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PRG-1 has a well-documented role in spermatogenesis. PRG-1 is localized
+      to P granules in germ cells entering spermatogenesis and is required for successful
+      spermatogenesis (PMID:18501605). Loss of prg-1 causes defects in sperm activation
+      and fertilization. This is also supported by experimental evidence (IMP from
+      PMID:9851978).
+    action: ACCEPT
+    reason: The role of PRG-1 in spermatogenesis is well-established by multiple studies.
+      While PRG-1 also affects oogenesis, spermatogenesis defects are prominent in
+      prg-1 mutants.
+    supported_by:
+    - reference_id: PMID:18501605
+      supporting_text: PRG-1 is localized to P granules in germ cells entering spermatogenesis
+        and is required for successful spermatogenesis
+    - reference_id: PMID:18501605
+      supporting_text: prg-1 mutant sperm exhibit extensive defects in activation
+        and fertilization
+- term:
+    id: GO:0043186
+    label: P granule
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: P granule localization is a core characteristic of PRG-1. This is experimentally
+      demonstrated by IDA evidence from PMID:18501605 and PMID:18571452.
+    action: ACCEPT
+    reason: P granule localization is one of the best-characterized features of PRG-1
+      and is confirmed by multiple experimental studies.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: The PRG-1 protein is expressed throughout development and localizes
+        to nuage-like structures called P granules
+    - reference_id: PMID:18501605
+      supporting_text: PRG-1 is localized to P granules in germ cells
+- term:
+    id: GO:0034584
+    label: piRNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: PRG-1 binds 21U-RNAs, which are the piRNAs of C. elegans (PMID:18571452).
+      This is the core molecular function of PRG-1 as a Piwi Argonaute protein. The
+      more specific C. elegans term GO:0034583 (21U-RNA binding) is supported by experimental
+      IPI evidence.
+    action: ACCEPT
+    reason: piRNA binding is the central molecular function of PRG-1. The IBA annotation
+      is appropriate as the general piRNA binding term, complementing the more specific
+      21U-RNA binding term that has direct experimental support.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: 21U-RNAs are the piRNAs of C. elegans
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro domains (PAZ and Piwi domains). This is
+      a very general term that is subsumed by more specific RNA binding annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While technically correct, this term is too general to be informative.
+      More specific annotations such as piRNA binding (GO:0034584) and 21U-RNA binding
+      (GO:0034583) better capture PRG-1&#39;s molecular function.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from InterPro and UniProt keywords. RNA binding is a valid
+      general annotation for PRG-1, but more specific piRNA/21U-RNA binding annotations
+      exist.
+    action: ACCEPT
+    reason: RNA binding is a valid molecular function annotation for PRG-1. While
+      more specific terms (piRNA binding, 21U-RNA binding) are available and preferred,
+      this general annotation from automated methods is not incorrect.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: PRG-1 localizes to P granules, which are cytoplasmic structures. The
+      more specific P granule annotation is preferred, but cytoplasm is not wrong.
+    action: ACCEPT
+    reason: Cytoplasmic localization is consistent with P granule localization. This
+      general term is acceptable alongside the more specific P granule annotation.
+- term:
+    id: GO:0007279
+    label: pole cell formation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Pole cell formation is defined as the formation of cells at the posterior
+      pole of the insect blastula that are precursors to germ cells. This is a Drosophila-specific
+      process that does not occur in C. elegans. C. elegans has a different mechanism
+      of germ cell specification.
+    action: REMOVE
+    reason: This is an erroneous ARBA machine learning annotation. Pole cell formation
+      (GO:0007279) is explicitly defined as an insect process occurring in blastula
+      stage, which is not applicable to C. elegans developmental biology. C. elegans
+      germ cell specification occurs through different mechanisms.
+- term:
+    id: GO:0009994
+    label: oocyte differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: PRG-1 is required for fertility and functions in the germline, which
+      includes oogenesis. The prg-1 mutants have fertility defects that are temperature-dependent
+      (PMID:18571452).
+    action: KEEP_AS_NON_CORE
+    reason: While PRG-1 is required for fertility and germline maintenance, its primary
+      function is in piRNA-mediated gene silencing rather than oocyte differentiation
+      per se. The fertility defects may be secondary to dysregulated gene expression
+      from loss of piRNA-mediated silencing rather than a direct role in oocyte differentiation.
+- term:
+    id: GO:0010526
+    label: transposable element silencing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: The piRNA pathway is a major transposon defense mechanism. PRG-1 and
+      21U-RNAs function in germline surveillance to recognize and silence foreign
+      sequences including transposons.
+    action: ACCEPT
+    reason: Transposable element silencing is a well-established function of the piRNA
+      pathway. PRG-1 as the main Piwi Argonaute in C. elegans plays a key role in
+      this process.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation from UniProt keyword mapping. Argonaute proteins with
+      slicer activity have RNA endonuclease (hydrolase) activity. However, direct
+      evidence for PRG-1 catalytic activity is limited.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term is too general. If PRG-1 has catalytic activity, it would be
+      more appropriately annotated with RNA endonuclease activity. The hydrolase activity
+      term does not add informative value.
+- term:
+    id: GO:0031047
+    label: regulatory ncRNA-mediated gene silencing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Duplicate of IBA annotation above. This IEA annotation from UniProt keywords
+      also captures the core function of PRG-1 in gene silencing.
+    action: ACCEPT
+    reason: This annotation captures the same core function as the IBA annotation
+      above. Both appropriately describe PRG-1&#39;s role in regulatory ncRNA-mediated
+      gene silencing. Duplicate annotations with different evidence codes are acceptable.
+- term:
+    id: GO:0034584
+    label: piRNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Duplicate of IBA annotation above. piRNA binding is a core molecular
+      function of PRG-1.
+    action: ACCEPT
+    reason: This IEA annotation supports the IBA annotation for piRNA binding. Duplicate
+      annotations from different sources are acceptable and reinforce the annotation.
+- term:
+    id: GO:0034587
+    label: piRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Duplicate of IBA annotation above. PRG-1 is required for 21U-RNA accumulation.
+    action: ACCEPT
+    reason: This IEA annotation supports the IBA annotation. PRG-1&#39;s role in piRNA
+      metabolism is well established.
+- term:
+    id: GO:0140991
+    label: piRNA-mediated gene silencing by mRNA destabilization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: This term describes cytoplasmic post-transcriptional gene silencing where
+      piRNAs direct mRNA cleavage by PIWI endonuclease activity. In C. elegans, the
+      piRNA pathway primarily triggers gene silencing through production of secondary
+      22G-RNAs rather than direct mRNA cleavage by PRG-1.
+    action: MODIFY
+    reason: While PRG-1 is involved in gene silencing, the mechanism in C. elegans
+      appears to primarily involve triggering secondary siRNA production (22G-RNAs
+      via WAGO pathway) rather than direct mRNA destabilization by PRG-1 itself. The
+      parent term GO:0031047 (regulatory ncRNA-mediated gene silencing) is more appropriate.
+    proposed_replacement_terms:
+    - id: GO:0031047
+      label: regulatory ncRNA-mediated gene silencing
+- term:
+    id: GO:0007276
+    label: gamete generation
+  evidence_type: IMP
+  original_reference_id: PMID:18571452
+  review:
+    summary: Experimentally supported annotation. PRG-1 is required for fertility
+      and the maintenance of gamete production across generations (PMID:18571452).
+    action: ACCEPT
+    reason: This IMP annotation is well-supported. PRG-1 mutants show temperature-dependent
+      fertility defects, and the PRG-1/piRNA complex is required for fertility maintenance.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: link this class of small RNAs and their associated Piwi Argonaute
+        to the maintenance of temperature-dependent fertility
+- term:
+    id: GO:0034583
+    label: 21U-RNA binding
+  evidence_type: IPI
+  original_reference_id: PMID:18571452
+  review:
+    summary: Experimentally supported annotation with IPI evidence. PRG-1 physically
+      interacts with 21U-RNAs, which are the C. elegans piRNAs (PMID:18571452).
+    action: ACCEPT
+    reason: This is the most specific molecular function annotation for PRG-1 and
+      is directly supported by experimental evidence showing PRG-1/21U-RNA interaction.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: an abundant class of 21 nucleotide small RNAs (21U-RNAs) are
+        expressed in the C. elegans germline, interact with the C. elegans Piwi family
+        member PRG-1
+- term:
+    id: GO:0034585
+    label: 21U-RNA metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:18571452
+  review:
+    summary: Experimentally supported annotation. PRG-1 is required for 21U-RNA accumulation
+      (PMID:18571452, PMID:18501605).
+    action: ACCEPT
+    reason: PRG-1 activity is clearly required for 21U-RNA presence/accumulation,
+      as demonstrated by mutant phenotype analysis.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: depend on PRG-1 activity for their accumulation
+- term:
+    id: GO:0042078
+    label: germ-line stem cell division
+  evidence_type: IMP
+  original_reference_id: PMID:18571452
+  review:
+    summary: Experimentally supported annotation from PMID:18571452 and also PMID:9851978.
+      PRG-1 affects germline stem cell proliferation.
+    action: ACCEPT
+    reason: PRG-1&#39;s role in germline stem cell division is supported by experimental
+      evidence. The original Piwi paper (PMID:9851978) showed C. elegans piwi expression
+      affects GSC-equivalent cell proliferation.
+    supported_by:
+    - reference_id: PMID:9851978
+      supporting_text: Decreasing C. elegans piwi expression reduces the proliferation
+        of GSC-equivalent cells
+- term:
+    id: GO:0043186
+    label: P granule
+  evidence_type: IDA
+  original_reference_id: PMID:18501605
+  review:
+    summary: Direct experimental evidence for P granule localization from immunofluorescence
+      studies (PMID:18501605).
+    action: ACCEPT
+    reason: P granule localization is directly demonstrated by immunofluorescence
+      in this study. This is a core cellular localization for PRG-1.
+    supported_by:
+    - reference_id: PMID:18501605
+      supporting_text: PRG-1 is localized to P granules in germ cells entering spermatogenesis
+- term:
+    id: GO:0043186
+    label: P granule
+  evidence_type: IDA
+  original_reference_id: PMID:18571452
+  review:
+    summary: Direct experimental evidence for P granule localization from PMID:18571452.
+      This is independent confirmation of the localization.
+    action: ACCEPT
+    reason: P granule localization is directly demonstrated experimentally. Multiple
+      IDA annotations from independent studies reinforce this core localization.
+    supported_by:
+    - reference_id: PMID:18571452
+      supporting_text: The PRG-1 protein is expressed throughout development and localizes
+        to nuage-like structures called P granules
+- term:
+    id: GO:0007283
+    label: spermatogenesis
+  evidence_type: IMP
+  original_reference_id: PMID:9851978
+  review:
+    summary: Experimentally supported annotation. Early characterization showed prg-1
+      affects spermatogenesis in C. elegans.
+    action: ACCEPT
+    reason: This IMP annotation is supported by mutant phenotype analysis showing
+      spermatogenesis defects.
+- term:
+    id: GO:0042078
+    label: germ-line stem cell division
+  evidence_type: IMP
+  original_reference_id: PMID:9851978
+  review:
+    summary: Experimentally supported annotation from the foundational Piwi paper
+      showing C. elegans piwi affects germline stem cell proliferation.
+    action: ACCEPT
+    reason: This annotation is directly supported by the experimental findings in
+      the paper.
+    supported_by:
+    - reference_id: PMID:9851978
+      supporting_text: Decreasing C. elegans piwi expression reduces the proliferation
+        of GSC-equivalent cells
+- term:
+    id: GO:0045840
+    label: positive regulation of mitotic nuclear division
+  evidence_type: IMP
+  original_reference_id: PMID:9851978
+  review:
+    summary: Annotation based on early characterization showing prg-1 affects germline
+      cell proliferation. The reduced proliferation of GSC-equivalent cells upon piwi
+      knockdown suggests a positive regulatory role in cell division.
+    action: KEEP_AS_NON_CORE
+    reason: While PRG-1 affects germline cell division, this annotation represents
+      a downstream consequence of PRG-1&#39;s primary function in piRNA-mediated gene
+      silencing rather than a direct role in mitotic regulation. The effect on cell
+      division is likely indirect through the piRNA pathway&#39;s role in maintaining
+      germline integrity.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA correctly predicted piRNA binding, piRNA processing, and transposable
+      element silencing but incorrectly applied pole cell formation (an insect-specific
+      process) to C. elegans.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:18501605
+  title: A C. elegans Piwi, PRG-1, regulates 21U-RNAs during spermatogenesis.
+  findings:
+  - statement: PRG-1 is localized to P granules in germ cells entering spermatogenesis
+      and is required for successful spermatogenesis. Loss of prg-1 causes reduced
+      expression of spermatogenesis transcripts and sperm activation/fertilization
+      defects. PRG-1 is required for 21U-RNA presence.
+- id: PMID:18571452
+  title: PRG-1 and 21U-RNAs interact to form the piRNA complex required for fertility
+    in C. elegans.
+  findings:
+  - statement: 21U-RNAs are the piRNAs of C. elegans and interact with PRG-1. PRG-1
+      localizes to P granules throughout development. 21U-RNA accumulation depends
+      on PRG-1 activity. The PRG-1/21U-RNA complex is required for temperature-dependent
+      fertility maintenance.
+- id: PMID:9851978
+  title: A novel class of evolutionarily conserved genes defined by piwi are essential
+    for stem cell self-renewal.
+  findings:
+  - statement: Foundational paper establishing the Piwi gene family. Showed that C.
+      elegans piwi (prg-1) expression affects proliferation of GSC-equivalent cells.
+core_functions:
+- molecular_function:
+    id: GO:0034583
+    label: 21U-RNA binding
+  description: PRG-1 is the main Piwi Argonaute that binds 21U-RNAs (piRNAs) in C.
+    elegans. This is the core molecular function that enables piRNA-mediated gene
+    silencing.
+  locations:
+  - id: GO:0043186
+    label: P granule
+  directly_involved_in:
+  - id: GO:0031047
+    label: regulatory ncRNA-mediated gene silencing
+  - id: GO:0010526
+    label: transposable element silencing
+  supported_by:
+  - reference_id: PMID:18571452
+    supporting_text: an abundant class of 21 nucleotide small RNAs (21U-RNAs) are
+      expressed in the C. elegans germline, interact with the C. elegans Piwi family
+      member PRG-1
+- molecular_function:
+    id: GO:0034584
+    label: piRNA binding
+  description: General piRNA binding activity - 21U-RNAs are the piRNAs of C. elegans.
+  locations:
+  - id: GO:0043186
+    label: P granule
+  directly_involved_in:
+  - id: GO:0034585
+    label: 21U-RNA metabolic process
+  supported_by:
+  - reference_id: PMID:18571452
+    supporting_text: 21U-RNAs are the piRNAs of C. elegans
+suggested_questions:
+- question: Does PRG-1 have direct slicer (RNA endonuclease) activity, or does it
+    function primarily through recruitment of secondary siRNA pathways?
+- question: What is the precise mechanism by which PRG-1 contributes to 21U-RNA accumulation
+    - direct processing, stabilization, or both?
+suggested_experiments:
+- description: In vitro slicer assay with purified PRG-1 to determine if it has direct
+    RNA endonuclease activity.
+  hypothesis: PRG-1 may have catalytic slicer activity similar to other Piwi proteins,
+    or may lack this activity if the C. elegans piRNA pathway operates primarily through
+    secondary siRNA recruitment.
+- description: Structural analysis of PRG-1 catalytic site to assess DDH motif integrity
+    and predicted catalytic competence.
+  hypothesis: Analysis of the catalytic residues in the Piwi domain will reveal whether
+    PRG-1 has the conserved DDH motif required for endonuclease activity.
+tags:
+- caeel-p-granules
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

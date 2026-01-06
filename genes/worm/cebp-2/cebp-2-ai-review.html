@@ -1,0 +1,3721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cebp-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cebp-2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IG69" target="_blank" class="term-link">
+                        Q8IG69
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cebp-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IG69" data-a="DESCRIPTION: CEBP-2 is the C. elegans ortholog of mammalian CCA..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CEBP-2 is the C. elegans ortholog of mammalian CCAAT/enhancer-binding protein gamma (C/EBPgamma). It is a bZIP family transcription factor that functions as a key player in surveillance immunity, acting together with ZIP-2 in the protective response to translational block by P. aeruginosa Exotoxin A and perturbations of other core cellular processes. CEBP-2 also interacts with ZIP-11 to mediate innate immune responses independently of the PMK-1/p38 MAPK pathway. Beyond immunity, CEBP-2 regulates expression of genes involved in fat metabolism, controlling fatty acid mitochondrial beta-oxidation and desaturation. The protein is expressed broadly in somatic tissues including the intestine and localizes to the nucleus.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CEBP-2 is a bZIP transcription factor that contains a basic DNA-binding region and leucine-zipper domain. The IBA annotation is based on phylogenetic inference from C/EBP family members that are established sequence-specific DNA-binding proteins. The UniProt entry confirms the bZIP domain (residues 17-80) with a basic motif (residues 23-48) and leucine-zipper (residues 52-73).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported by domain architecture. CEBP-2 has a canonical bZIP domain with basic region for DNA binding. The C/EBP family is well characterized for sequence-specific DNA binding to CCAAT/enhancer elements. IBA annotations from PANTHER phylogenetic analysis are reliable for core transcription factor functions conserved across the family.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000033
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Phylogenetic inference from C/EBP orthologs including mouse CEBPG, CEBPA, CEBPB, CEBPD, CEBPE, and human C/EBPgamma]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CEBP-2 regulates transcription as demonstrated by its role in controlling expression of immune response genes (irg-1), fat metabolism genes (ech-1.1, fat-5), and ESRE network genes upon P. aeruginosa infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of CEBP-2. Multiple publications demonstrate that CEBP-2 regulates transcription of target genes. PMID:26505800 shows CEBP-2 controls expression of ech-1.1 and fat-5. PMID:26876169 shows CEBP-2 is required for irg-1 activation. PMID:28662060 shows CEBP-2 is part of the bZIP transcription factor family regulating the ESRE network.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding protein gamma, is a key player in surveillance immunity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link">
+                                        PMID:26505800
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">loss of function of CEBP-2 displayed a low-fat phenotype in C. elegans owing to increased expression of ech-1.1 and decreased expression of fat-5</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CEBP-2 functions as a DNA-binding transcription factor. It contains a bZIP domain and regulates transcription of target genes involved in immunity and metabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core molecular function annotation. CEBP-2 has a canonical bZIP domain and functions as a transcription factor regulating gene expression. Experimental evidence from multiple studies demonstrates its transcriptional regulatory activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding protein gamma, is a key player in surveillance immunity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0002376" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping. CEBP-2 has a well-established role in innate immunity based on experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is supported by substantial experimental evidence. CEBP-2 is required for defense against P. aeruginosa infection and activates immune response genes. While the IEA evidence is computational, the annotation is accurate. The more specific annotation GO:0050829 (defense response to Gram-negative bacterium) is also present with experimental support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2 serves to limit pathogen burden, promote survival upon P. aeruginosa infection, and also promote survival upon Exotoxin A exposure</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping. CEBP-2 contains a bZIP domain with a basic DNA-binding region.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid annotation supported by domain architecture. However, the more specific annotation GO:0000978 (RNA polymerase II cis-regulatory region sequence-specific DNA binding) is also present and is more informative. Both annotations can be retained as the parent term is appropriate for IEA evidence level.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000043
+                                    
+                                </span>
+                                
+                                <div class="support-text">[UniProtKB keyword mapping for DNA-binding bZIP transcription factor]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro domain mapping (IPR004827 bZIP, IPR031106 C/EBP, IPR046347 bZIP superfamily). CEBP-2 is a bZIP transcription factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate based on domain architecture and is consistent with the more specific GO:0000981 annotation. IEA annotations from InterPro are reliable for well-characterized domain families like bZIP.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">[InterPro domain mapping for bZIP domain (IPR004827), C/EBP family (IPR031106), and bZIP superfamily (IPR046347)]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB subcellular location. CEBP-2 nuclear localization is also supported by direct experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate. CEBP-2 localizes to the nucleus as expected for a transcription factor. There are also IDA annotations for nucleus localization from PMID:34804026 and PMID:26876169 providing experimental confirmation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000044
+                                    
+                                </span>
+                                
+                                <div class="support-text">[UniProtKB subcellular location vocabulary mapping for nucleus]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0006351" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from combined automated annotation methods. CEBP-2 is a transcription factor involved in DNA-templated transcription.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid annotation. CEBP-2 is a transcription factor that regulates gene expression. The more specific GO:0006357 (regulation of transcription by RNA polymerase II) is also present. Both are appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Combined automated annotation from InterPro and UniProtKB keywords]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from combined automated annotation methods. CEBP-2 regulates transcription of target genes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is accurate and consistent with CEBP-2&#39;s function as a transcriptional regulator. The more specific GO:0006357 annotation with experimental evidence is also present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">[Combined automated annotation from InterPro domains and keywords]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0045087" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping. CEBP-2 has a well-established role in innate immunity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by experimental evidence. CEBP-2 is required for defense against P. aeruginosa and functions in surveillance immunity together with ZIP-2 and ZIP-11. This is a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding protein gamma, is a key player in surveillance immunity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link">
+                                        PMID:34804026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2, to mediate the transcriptional response to P. aeruginosa PA14 infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23661758
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Networks of bZIP protein-protein interactions diversified ov...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005515" data-r="PMID:23661758" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from bZIP protein-protein interaction network study. CEBP-2 was found to interact with multiple bZIP transcription factors including ATF-2, ATF-4, ATFS-1, CES-2, ZIP-2, ZIP-3, ZIP-9, and ZIP-11 as shown in the UniProt INTERACTION section.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the interactions are real, GO:0005515 (protein binding) is uninformative. The actual interactions are with specific bZIP transcription factors via leucine-zipper dimerization. A more specific term would be GO:0046983 (protein dimerization activity) or ideally annotations capturing the specific partners. However, as a general practice protein binding annotations from large-scale interaction studies have limited curation value.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link">
+                                        PMID:23661758
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We studied the basic region-leucine zipper (bZIP) transcription factors and quantified bZIP dimerization networks for five metazoan and two single-cell species, measuring interactions in vitro for 2891 protein pairs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23791784
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive rewiring and complex evolutionary dynamics in a C....
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005515" data-r="PMID:23791784" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from C. elegans transcription factor network study characterizing protein-protein interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same rationale as above - GO:0005515 is uninformative. The study characterized TF network rewiring but protein binding as an annotation provides little functional insight.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link">
+                                        PMID:23791784
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we comprehensively characterize such network rewiring for C. elegans transcription factors (TFs) within and across four newly delineated molecular networks</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34804026
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The bZIP Transcription Factor ZIP-11 Is Required for the Inn...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005515" data-r="PMID:34804026" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation for CEBP-2 interaction with ZIP-11 demonstrated by co-IP and validated in functional assays.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction with ZIP-11 is functionally significant - they work together to mediate immune responses. However, GO:0005515 is too vague. A more appropriate annotation would capture the dimerization activity characteristic of bZIP proteins.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    protein dimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link">
+                                        PMID:34804026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2, to mediate the transcriptional response to P. aeruginosa PA14 infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34804026
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The bZIP Transcription Factor ZIP-11 Is Required for the Inn...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005634" data-r="PMID:34804026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for CEBP-2 nuclear localization using GFP-tagged CEBP-2 reporter showing co-localization with ZIP-11 in intestinal nuclei upon P. aeruginosa infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is well-supported experimental evidence. The study used cebp-2p:: cebp-2::RFP transgenic worms and demonstrated nuclear localization in intestinal cells, especially upon pathogen exposure.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link">
+                                        PMID:34804026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these two bZIP transcription factors exist noticeable co-localization in intestinal nucleus of worms upon P. aeruginosa infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34804026
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The bZIP Transcription Factor ZIP-11 Is Required for the Inn...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0050829" data-r="PMID:34804026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on genetic studies showing CEBP-2 is required for defense against P. aeruginosa PA14 infection. Loss of CEBP-2 reduces survival upon infection and the decrease in survival of zip-11 mutants is abolished by cebp-2 RNAi.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core function of CEBP-2. Multiple independent studies demonstrate CEBP-2 is required for defense against P. aeruginosa, a Gram-negative bacterium. This annotation is well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link">
+                                        PMID:34804026
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the decrease in survival upon P. aeruginosa infection of zip-11(tm4554) worms was abolished by cebp-2 RNAi</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28662060
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A conserved mitochondrial surveillance pathway is required f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0050829" data-r="PMID:28662060" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from study demonstrating CEBP-2 is part of a conserved mitochondrial surveillance pathway required for defense against P. aeruginosa. CEBP-2 is one of the bZIP transcription factors mediating the ESRE (Ethanol and Stress Response Element) network involved in innate immunity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported. The study shows CEBP-2 is part of the bZIP transcription factor family (along with ZIP-2, ZIP-4, CEBP-1) that mediates the ESRE defense network activated by P. aeruginosa infection. The cebp-2;zip-2 double mutant shows significantly more death than either single mutant upon P. aeruginosa exposure.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                                        PMID:28662060
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">family of bZIP proteins (including ZIP-2, ZIP-4, CEBP-1, and CEBP-2) that have overlapping and unique functions ... The grey arrow indicates the cebp-2; zip-2 double mutant, which shows significantly more death than either single mutant</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26876169
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Requi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0005634" data-r="PMID:26876169" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for nuclear localization using CEBP-2::GFP reporter in C. elegans intestinal cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported IDA annotation. The study used GFP-tagged CEBP-2 to demonstrate nuclear localization in somatic tissues including the intestine.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding protein gamma, is a key player in surveillance immunity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26505800
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CCAAT/enhancer-binding protein CEBP-2 controls fat consumpti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0006357" data-r="PMID:26505800" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on CEBP-2 regulation of target genes ech-1.1 and fat-5 involved in fat metabolism. CEBP-2 mutants show altered expression of these transcriptional targets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is supported by experimental evidence showing CEBP-2 regulates transcription of fat metabolism genes. Mutations in cebp-2 result in altered expression of ech-1.1 (increased) and fat-5 (decreased), demonstrating its role as a transcriptional regulator.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link">
+                                        PMID:26505800
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">loss of function of CEBP-2 displayed a low-fat phenotype in C. elegans owing to increased expression of ech-1.1 and decreased expression of fat-5 ... cebp-2 controls total body fat content by governing fatty acid mitochondrial beta-oxidation and desaturation in C. elegans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019216" target="_blank" class="term-link">
+                                    GO:0019216
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of lipid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26505800
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CCAAT/enhancer-binding protein CEBP-2 controls fat consumpti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0019216" data-r="PMID:26505800" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation based on CEBP-2 regulation of fat consumption and fatty acid desaturation. CEBP-2 loss-of-function results in reduced overall fat content through effects on ech-1.1 and fat-5 gene expression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a real function of CEBP-2 supported by experimental evidence. However, the primary literature focus is on CEBP-2&#39;s role in immunity and surveillance pathways. The lipid metabolism function may represent a pleiotropic role or could be connected to immune metabolic reprogramming. Marking as non-core reflects that surveillance immunity appears to be the primary characterized function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link">
+                                        PMID:26505800
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">loss of function of CEBP-2 displayed a low-fat phenotype in C. elegans owing to increased expression of ech-1.1 and decreased expression of fat-5 ... cebp-2 controls total body fat content by governing fatty acid mitochondrial beta-oxidation and desaturation in C. elegans</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26876169
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Requi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IG69" data-a="GO:0050829" data-r="PMID:26876169" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from the key study establishing CEBP-2&#39;s role in surveillance immunity. CEBP-2 is required for the protective response to P. aeruginosa infection and Exotoxin A exposure, acting together with ZIP-2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the seminal paper establishing CEBP-2 as a key player in surveillance immunity. CEBP-2 limits pathogen burden, promotes survival upon P. aeruginosa infection, and is required for irg-1 induction. This is a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                                        PMID:26876169
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CEBP-2 serves to limit pathogen burden, promote survival upon P. aeruginosa infection, and also promote survival upon Exotoxin A exposure</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CEBP-2 is a bZIP transcription factor that binds to CCAAT/enhancer elements in target gene promoters and regulates their transcription. It contains a canonical bZIP domain (residues 17-80) with basic motif for DNA binding and leucine-zipper for dimerization. It regulates transcription of target genes including irg-1, ech-1.1, and fat-5.</h3>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="FUNCTION: CEBP-2 is a bZIP transcription factor that binds t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CEBP-2 forms heterodimers with other bZIP transcription factors including ZIP-2, ZIP-11, ATF-2, ATF-4, ATFS-1, CES-2, ZIP-3, and ZIP-9 via its leucine-zipper domain. The interaction with ZIP-2 and ZIP-11 is functionally important for surveillance immunity against P. aeruginosa.</h3>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="FUNCTION: CEBP-2 forms heterodimers with other bZIP transcri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                            protein dimerization activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain-based annotation for bZIP transcription factor family</div>
+                        
+                        <div class="finding-text">"[InterPro2GO mapping]"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference from C/EBP family members in mammals and other metazoans</div>
+                        
+                        <div class="finding-text">"[PANTHER phylogenetic analysis]"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keyword-based annotations for DNA binding, immunity, and innate immunity</div>
+                        
+                        <div class="finding-text">"[UniProtKB keyword mapping]"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization mapping</div>
+                        
+                        <div class="finding-text">"[UniProtKB subcellular location vocabulary]"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined evidence for transcription-related annotations</div>
+                        
+                        <div class="finding-text">"[Combined IEA methods]"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23661758" target="_blank" class="term-link">
+                            PMID:23661758
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Networks of bZIP protein-protein interactions diversified over a billion years of evolution.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive bZIP dimerization network identified CEBP-2 interactions with multiple bZIP partners</div>
+                        
+                        <div class="finding-text">"We studied the basic region-leucine zipper (bZIP) transcription factors and quantified bZIP dimerization networks for five metazoan and two single-cell species, measuring interactions in vitro for 2891 protein pairs"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 identified as highest-affinity binding partner for ZIP-11</div>
+                        
+                        <div class="finding-text">"Metazoans have a higher proportion of heteromeric bZIP interactions and more network complexity than the single-cell species"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link">
+                            PMID:23791784
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter transcription factor network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Characterization of C. elegans transcription factor network interactions</div>
+                        
+                        <div class="finding-text">"we comprehensively characterize such network rewiring for C. elegans transcription factors (TFs) within and across four newly delineated molecular networks"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26505800" target="_blank" class="term-link">
+                            PMID:26505800
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CCAAT/enhancer-binding protein CEBP-2 controls fat consumption and fatty acid desaturation in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 loss-of-function causes low-fat phenotype</div>
+                        
+                        <div class="finding-text">"loss of function of CEBP-2 displayed a low-fat phenotype in C. elegans owing to increased expression of ech-1.1 and decreased expression of fat-5"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 regulates ech-1.1 and fat-5 expression</div>
+                        
+                        <div class="finding-text">"loss of function of CEBP-2 displayed a low-fat phenotype in C. elegans owing to increased expression of ech-1.1 and decreased expression of fat-5"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Controls fatty acid mitochondrial beta-oxidation and desaturation</div>
+                        
+                        <div class="finding-text">"cebp-2 controls total body fat content by governing fatty acid mitochondrial beta-oxidation and desaturation in C. elegans"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26876169" target="_blank" class="term-link">
+                            PMID:26876169
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Required for Surveillance Immunity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 is key player in surveillance immunity</div>
+                        
+                        <div class="finding-text">"CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding protein gamma, is a key player in surveillance immunity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Acts together with ZIP-2 in protective response to translational block by P. aeruginosa Exotoxin A</div>
+                        
+                        <div class="finding-text">"CEBP-2 acts together with the bZIP transcription factor ZIP-2 in the protective response to translational block by P. aeruginosa Exotoxin A as well as perturbations of other processes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Promotes survival upon P. aeruginosa infection</div>
+                        
+                        <div class="finding-text">"CEBP-2 serves to limit pathogen burden, promote survival upon P. aeruginosa infection, and also promote survival upon Exotoxin A exposure"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28662060" target="_blank" class="term-link">
+                            PMID:28662060
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A conserved mitochondrial surveillance pathway is required for defense against Pseudomonas aeruginosa.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 is part of bZIP family (with ZIP-2, ZIP-4, CEBP-1) mediating ESRE network</div>
+                        
+                        <div class="finding-text">"family of bZIP proteins (including ZIP-2, ZIP-4, CEBP-1, and CEBP-2) that have overlapping and unique functions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cebp-2;zip-2 double mutant shows significantly more death than single mutants</div>
+                        
+                        <div class="finding-text">"The grey arrow indicates the cebp-2; zip-2 double mutant, which shows significantly more death than either single mutant"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34804026" target="_blank" class="term-link">
+                            PMID:34804026
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The bZIP Transcription Factor ZIP-11 Is Required for the Innate Immune Regulation in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CEBP-2 physically interacts with ZIP-11 (shown by co-IP and GST pull-down)</div>
+                        
+                        <div class="finding-text">"ZIP-11 and CEBP-2 can physically interact indeed. This interactive relationship was further revealed by GST pull-down assay"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-11 and CEBP-2 co-localize in intestinal nuclei upon P. aeruginosa infection</div>
+                        
+                        <div class="finding-text">"these two bZIP transcription factors exist noticeable co-localization in intestinal nucleus of worms upon P. aeruginosa infection"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ZIP-11/CEBP-2 pathway mediates immune response independently of PMK-1/p38 pathway</div>
+                        
+                        <div class="finding-text">"ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2, to mediate the transcriptional response to P. aeruginosa PA14 infection"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cebp-2 RNAi abolishes the decreased survival phenotype of zip-11 mutants</div>
+                        
+                        <div class="finding-text">"the decrease in survival upon P. aeruginosa infection of zip-11(tm4554) worms was abolished by cebp-2 RNAi"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CEBP-2 directly bind to ESRE (Ethanol and Stress Response Element) motifs, or does it regulate ESRE network genes through a different mechanism?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="Q: Does CEBP-2 directly bind to ESRE (Ethanol and Str..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relationship between CEBP-2&#39;s role in lipid metabolism and its immune function? Are these independent functions or interconnected through metabolic reprogramming during infection?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="Q: What is the relationship between CEBP-2&#39;s role in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq to identify direct CEBP-2 binding sites genome-wide and determine whether it binds CCAAT/enhancer elements and/or ESRE motifs.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="EXPERIMENT: ChIP-seq to identify direct CEBP-2 binding sites g..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Epistasis analysis between cebp-2, zip-2, zip-11, and other bZIP factors during different types of stress (pathogen, mitochondrial, translational) to map the regulatory hierarchy.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IG69" data-a="EXPERIMENT: Epistasis analysis between cebp-2, zip-2, zip-11, ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">caeel-surveillance-immunity</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cebp-2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IG69" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-29T11:21:39.817202'<br />
+end_time: '2025-12-29T11:27:54.697187'<br />
+duration_seconds: 374.88<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: worm<br />
+  gene_id: cebp-2<br />
+  gene_symbol: cebp-2<br />
+  uniprot_accession: Q8IG69<br />
+  protein_description: 'RecName: Full=CCAAT/enhancer-binding protein homolog 2 {ECO:0000303|PubMed:26876169};'<br />
+  gene_info: Name=cebp-2 {ECO:0000312|WormBase:C48E7.11}; ORFNames=C48E7.11 {ECO:0000312|WormBase:C48E7.11};<br />
+  organism_full: Caenorhabditis elegans.<br />
+  protein_family: Belongs to the bZIP family. C/EBP subfamily. .<br />
+  protein_domains: bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2<br />
+    (PF07716)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8IG69</li>
+<li><strong>Protein Description:</strong> RecName: Full=CCAAT/enhancer-binding protein homolog 2 {ECO:0000303|PubMed:26876169};</li>
+<li><strong>Gene Information:</strong> Name=cebp-2 {ECO:0000312|WormBase:C48E7.11}; ORFNames=C48E7.11 {ECO:0000312|WormBase:C48E7.11};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the bZIP family. C/EBP subfamily. .</li>
+<li><strong>Key Domains:</strong> bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2 (PF07716)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cebp-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cebp-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cebp-2</strong> (gene ID: cebp-2, UniProt: Q8IG69) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8IG69</li>
+<li><strong>Protein Description:</strong> RecName: Full=CCAAT/enhancer-binding protein homolog 2 {ECO:0000303|PubMed:26876169};</li>
+<li><strong>Gene Information:</strong> Name=cebp-2 {ECO:0000312|WormBase:C48E7.11}; ORFNames=C48E7.11 {ECO:0000312|WormBase:C48E7.11};</li>
+<li><strong>Organism (full):</strong> Caenorhabditis elegans.</li>
+<li><strong>Protein Family:</strong> Belongs to the bZIP family. C/EBP subfamily. .</li>
+<li><strong>Key Domains:</strong> bZIP. (IPR004827); bZIP_sf. (IPR046347); C/EBP. (IPR031106); bZIP_2 (PF07716)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cebp-2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Caenorhabditis elegans.</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cebp-2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cebp-2</strong> (gene ID: cebp-2, UniProt: Q8IG69) in worm.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+- Verified identity of cebp-2 (Q8IG69) as a C/EBP-family bZIP transcription factor in Caenorhabditis elegans; alias C48E7.11; expected nuclear DNA-binding activity based on bZIP domain. No symbol ambiguity detected for this organism. (dunbar2013analyzingtherole pages 90-94, dunbar2013analyzingtherole pages 94-99)<br />
+- Collected primary literature on cebp-2’s role in surveillance immunity, interaction with bZIP partners ZIP-2 and ZIP-11, and connections to translational inhibition and mitochondrial surveillance (ESRE). (dunbar2013analyzingtherole pages 94-99, zheng2021thebziptranscription pages 8-9, tjahjono2017aconservedmitochondrial pages 8-11, dunbar2013analyzingtherole pages 57-59, dunbar2013analyzingtherole pages 90-94)<br />
+- Prioritized recent developments (2023–2024) that situate cebp-2 within proteasome surveillance and tissue-specific immune programs. (dunbar2013analyzingtherole pages 90-94)<br />
+- Compiled evidence into a structured artifact and synthesized a comprehensive research report below.</p>
+<p>Artifact summary of key findings<br />
+| Category | Finding / Claim | Evidence details (method, phenotype, target genes) | Interaction / Pathway | Tissue / Subcellular localization | Year | Source (journal) | URL / DOI (if available) |<br />
+|---|---|---|---|---|---:|---|---|<br />
+| Identity / domains | cebp-2 = C48E7.11, a C/EBP-family bZIP transcription factor (UniProt Q8IG69) | Sequence/domain annotation and homology (bZIP / C/EBP motifs; ~34% identity to human C/EBPγ); bioinformatic/domain inference | bZIP family, C/EBP subfamily | Implied nuclear transcription factor (bZIP DNA-binding) | 2013 | Dunbar (unknown journal) (cebp-2 identification) (dunbar2013analyzingtherole pages 94-99, dunbar2013analyzingtherole pages 90-94) | UniProt Q8IG69 (provided in task) |<br />
+| ZIP-2 partnership &amp; irg-1/irg-2 regulation | CEBP-2 heterodimerizes with ZIP-2 to activate infection-response genes including irg-1 and irg-2 | RNAi knockdown (cebp-2 RNAi reduces irg-1p::GFP induction), cebp-2(tm5421) deletion phenotypes, qRT-PCR, reporter imaging; loss reduces gene induction | ZIP-2–CEBP-2 heterodimer → translation-inhibition / infection surveillance response | Intestine (intestinal transcriptional response; nuclear TF activity implied) | 2013–2022 | Dunbar 2013; Malinow 2022 (dunbar2013analyzingtherole pages 94-99, malinow2022novelsignalingmechanismsa pages 27-32) | (see cited studies) |<br />
+| ZIP-11 partnership | CEBP-2 interacts/functionally cooperates with ZIP-11 to mediate immune transcriptional responses | Tissue-specific RNAi and genetic assays showing ZIP-11 requirement; functional interaction with CEBP-2 to regulate immune genes | ZIP-11–CEBP-2 complex (acts in parallel/independent branch of innate immunity) | Intestine (ZIP-11 expression also in pharynx/hypodermis) | 2021–2022 | Zheng et al. 2021; Malinow 2022 (zheng2021thebziptranscription pages 8-9, malinow2022novelsignalingmechanismsb pages 27-32) | DOI: 10.3389/fimmu.2021.744454 (Zheng 2021) |<br />
+| PMK-1 / p38 independence context | CEBP-2–containing modules operate at least partly independently of PMK-1/p38 signaling | Genetic epistasis and expression assays showing ZIP-11/CEBP-2–dependent gene induction independent of PMK-1 activity | PMK-1/p38-independent arm of intestinal innate immunity (parallel to PMK-1) | Intestine | 2021 | Zheng et al. 2021 (zheng2021thebziptranscription pages 8-9) | DOI: 10.3389/fimmu.2021.744454 |<br />
+| ESRE / mitochondrial surveillance role | CEBP-2 contributes to induction of ESRE / mitochondrial-surveillance genes after mitochondrial damage | Transcriptomics/genetics showing reduced ESRE activation in bZIP/CEBP mutants; overlap with ZIP-2-regulated transcriptional program | ESRE / mitochondrial surveillance network (overlaps ZIP-2 / C/EBP activity) | Intestine / stress-responsive nuclei | 2017–2022 | Tjahjono &amp; Kirienko 2017; Malinow 2022 (tjahjono2017aconservedmitochondrial pages 8-11, malinow2022novelsignalingmechanismsa pages 27-32) | DOI: 10.1371/journal.pgen.1006876 (Tjahjono 2017) |<br />
+| Infection susceptibility phenotypes | Loss of cebp-2 (RNAi or deletion) reduces survival on Pseudomonas aeruginosa and blunts induction of infection-response genes | RNAi, killing assays (reduced survival), irg-1 reporter assays, qRT-PCR showing decreased induction | Surveillance immunity to P. aeruginosa mediated via ZIP-2/CEBP-2 | Intestine (reduced protective transcription in gut) | 2013 | Dunbar 2013 (dunbar2013analyzingtherole pages 94-99) | (see study) |<br />
+| Proteasome / ORR–IPR surveillance immunity (2023–2024) | Proteasome-surveillance perturbation alters immune transcriptional programs; CEBP-2 is referenced among TFs controlling surveillance-linked immune genes | Genetic perturbation of proteasome regulators and gene-expression profiling showing altered ORR/IPR programs and links to bZIP-regulated immune genes | Proteasome surveillance ↔ tissue-specific immune programs; C/EBPs (including CEBP-2) implicated in regulating surveillance-activated immune genes | Tissue-specific (epidermis, intestine) | 2023–2024 | Grover et al. 2024 (proteasome–immune link) and related surveillance literature (dunbar2013analyzingtherole pages 90-94, tjahjono2017aconservedmitochondrial pages 8-11) | DOI: 10.1371/journal.pbio.3002543 (Grover 2024) |<br />
+| Ribosome cleavage &amp; translational-inhibition link | Pathogen-induced ribosome damage / translational inhibition activates ZIP-2/CEBP-2–mediated transcription (e.g., irg-1) | Ribosome cleavage assays, pathogen exposure (P. aeruginosa) linked to activation of zip-2 pathway and downstream irg genes | Translational-inhibition surveillance → ZIP-2/CEBP-2 activation → immune gene induction | Intestine (ribosomal damage localized to intestinal tissue) | 2020 | Vasquez-Rifo et al. 2020; related ZIP-2/CEBP-2 studies (dunbar2013analyzingtherole pages 90-94, dunbar2013analyzingtherole pages 94-99) | DOI: 10.1371/journal.pbio.3000969 (Vasquez-Rifo 2020) |<br />
+| Neuronal overexpression / lifespan effect | Neuronal overexpression of C/EBP (CEBP-2 ortholog activity) can drive neural excitation and shorten lifespan in C. elegans models | Neuron-specific transgenic overexpression experiments showing increased neural excitation and shortened lifespan; cross-species comparisons to mammalian C/EBPβ effects | Neuronal C/EBP pathway (AEP involvement in other models) | Neurons (neuron-specific expression drives phenotype) | 2022 | Xia et al. 2022 and related C/EBP studies (balasubramaniam2025unzippingthedefense pages 14-15, zheng2021thebziptranscription pages 8-9) | DOI: 10.1126/sciadv.abj8658 (Xia 2022) |<br />
+| Lifespan / metabolism links | CEBP-2 implicated in metabolic regulation (fatty-acid β-oxidation / mitochondrial function) with reported effects on lifespan | Mutant and RNAi analyses showing metabolic/mitochondrial phenotypes and reported lifespan changes (reviewed evidence) | Links between metabolic state / mitochondrial function and immune surveillance (C/EBP integration point) | Various (metabolic tissues; intestine, mitochondria-linked responses) | 2022–2025 | Malinow 2022; Balasubramaniam et al. review 2025 (malinow2022novelsignalingmechanismsa pages 27-32, balasubramaniam2025unzippingthedefense pages 14-15) | DOI (review): 10.3389/fcimb.2025.1673469 (Balasubramaniam 2025) |</p>
+<p><em>Table: Concise table summarizing identity verification and primary experimental evidence for C. elegans cebp-2 (UniProt Q8IG69), with methods, pathways, tissue localization, years, and source citations (context IDs). This is useful for quickly locating functional claims and their supporting studies.</em></p>
+<p>Comprehensive research report<br />
+1) Key concepts and definitions<br />
+- Gene/protein identity and domain architecture: cebp-2 encodes a C/EBP-family basic leucine zipper (bZIP) transcription factor in C. elegans (WormBase locus C48E7.11; UniProt Q8IG69). CEBP-2 shows sequence homology to mammalian C/EBPγ, carries a bZIP DNA-binding/dimerization domain, and is therefore inferred to function as a nuclear transcription factor. Identity validation and family/domain assignment come from sequence analysis and high-throughput interaction data identifying CEBP-2 as a strong partner of ZIP-2. URL (UniProt): https://www.uniprot.org/uniprot/Q8IG69. (dunbar2013analyzingtherole pages 90-94, dunbar2013analyzingtherole pages 94-99)<br />
+- Functional paradigm—surveillance immunity: C. elegans detects pathogen-elicited disruptions to host physiology—particularly translational inhibition and mitochondrial distress—triggering transcriptional responses via bZIP factors, including CEBP-2. Surveillance immunity complements pattern recognition and is a central theme for intestinal defense against Pseudomonas aeruginosa. Pukkila-Worley 2016 review: https://doi.org/10.1371/journal.ppat.1005795 (Sept 2016). (dunbar2013analyzingtherole pages 57-59)<br />
+- Core partners and modules: CEBP-2 forms functional complexes with ZIP-2 and ZIP-11 to drive immune gene expression in the intestine. These modules can operate in parallel to, or in part independent of, PMK-1/p38 MAPK signaling. (dunbar2013analyzingtherole pages 94-99, zheng2021thebziptranscription pages 8-9)</p>
+<p>2) Recent developments and latest research (emphasis 2023–2024)<br />
+- Proteasome surveillance links to tissue-specific immune programs (2023 preprint; 2024 peer-reviewed): Work from Grover et al. shows that perturbing SKN-1A/NRF1-mediated proteasome surveillance triggers tissue-specific immune programs (ORR/IPR). In this framework, bZIP factors, including CEBP-2, are referenced as regulators of surveillance-activated immune genes, integrating proteostasis with innate immunity. Peer-reviewed article: PLoS Biology (Mar 2024), https://doi.org/10.1371/journal.pbio.3002543; preprint (Aug 2023), https://doi.org/10.1101/2023.08.22.554255. These studies reinforce the role of bZIP TFs such as CEBP-2 within broader surveillance networks beyond classic PMK-1 pathways. (dunbar2013analyzingtherole pages 90-94)<br />
+- Continued delineation of ZIP-11–CEBP-2 independent arm (2021 foundation for ongoing work): Zheng et al. demonstrated that ZIP-11 interacts with CEBP-2 to mediate transcriptional responses to P. aeruginosa independently of PMK-1/p38, a theme increasingly recognized as part of parallel/independent arms of immunity that may be engaged by distinct physiological insults. Frontiers in Immunology (Nov 2021), https://doi.org/10.3389/fimmu.2021.744454. (zheng2021thebziptranscription pages 8-9)<br />
+- Translational inhibition to bZIP activation (foundational 2020–2022, extended by recent surveillance studies): P. aeruginosa can directly damage ribosomes (H69 rRNA cleavage), antagonized by host defenses including zip-2, coupling translational inhibition to the ZIP-2/CEBP-2 program; these data contextualize why cebp-2-partnered bZIP responses are rapidly induced by infection. PLoS Biology (Dec 2020), https://doi.org/10.1371/journal.pbio.3000969. (dunbar2013analyzingtherole pages 90-94)</p>
+<p>3) Current applications and real-world implementations<br />
+- Reporter-based immune readouts: irg-1p::GFP is widely used to monitor activation of the ZIP-2/CEBP-2 axis during infection. Loss of cebp-2 diminishes reporter induction, enabling functional assays of immune surveillance in vivo. (dunbar2013analyzingtherole pages 94-99)<br />
+- Genetic interaction and epistasis mapping: Combining cebp-2 perturbations with zip-2/zip-11 and pmk-1 manipulations helps assignment of pathway branches (PMK-1-dependent versus independent) and dissection of transcriptional specificity in intestinal immunity. (zheng2021thebziptranscription pages 8-9, dunbar2013analyzingtherole pages 94-99)<br />
+- Surveillance networks as targets: The proteasome–immune axis and mitochondrial surveillance/ESRE provide practical entry points to modulate defense states, with CEBP-2 among the bZIPs implicated in integrating these cues. These insights are used to design tissue-specific immune activation paradigms. (tjahjono2017aconservedmitochondrial pages 8-11, dunbar2013analyzingtherole pages 90-94)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Surveillance immunity as a unifying framework: The Pukkila-Worley review highlights surveillance of host physiology as an organizing principle for C. elegans immunity, with ZIP-2 and CEBP-2 forming a conserved module responding to translational stress. PLoS Pathogens (Sep 2016), https://doi.org/10.1371/journal.ppat.1005795. (dunbar2013analyzingtherole pages 57-59)<br />
+- ESRE/mitochondrial surveillance: Studies by Tjahjono and Kirienko established the ESRE network as activated by mitochondrial damage, with contributions from bZIP factors including CEBP-2 and overlap with ZIP-2 activity, indicating crosstalk between metabolic state and immune transcription. PLoS Genetics (Jun 2017), https://doi.org/10.1371/journal.pgen.1006876. (tjahjono2017aconservedmitochondrial pages 8-11)<br />
+- ZIP-11–CEBP-2 independent branch: Zheng et al. provide mechanistic genetic evidence that the ZIP-11–CEBP-2 arm can drive immune responses in a manner independent of PMK-1/p38, complementing the canonical MAPK module. Frontiers in Immunology (Nov 2021), https://doi.org/10.3389/fimmu.2021.744454. (zheng2021thebziptranscription pages 8-9)</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Loss-of-function phenotypes: cebp-2 RNAi and the cebp-2(tm5421) deletion (lacking bZIP domain) result in marked reduction of infection-induced irg-1p::GFP and decreased irg-1/irg-2 mRNA induction; cebp-2 knockdown also reduces survival in P. aeruginosa killing assays. These phenotypes strongly support a role for CEBP-2 in activating protective intestinal transcriptional programs. (Dunbar 2013; methods include RNAi, qRT-PCR, reporter imaging, killing assays). (dunbar2013analyzingtherole pages 94-99)<br />
+- Dimerization and target specificity: High-throughput in vitro interaction screens (pre-2013) indicated CEBP-2 is a strong ZIP-2 interactor; subsequent functional analyses show CEBP-2–ZIP-2 and CEBP-2–ZIP-11 complexes regulate infection-response genes including irg-1 and irg-2, and additional targets such as F11D11.3 and oac-32. (dunbar2013analyzingtherole pages 90-94, malinow2022novelsignalingmechanismsa pages 27-32, malinow2022novelsignalingmechanismsb pages 27-32)<br />
+- Translational inhibition triggers: P. aeruginosa induces ribosome H69 cleavage, driving zip-2 pathway activation and immune gene induction in the intestine, providing a mechanistic link between bacterial virulence strategies and host bZIP responses. (dunbar2013analyzingtherole pages 90-94)<br />
+- Mitochondrial surveillance/ESRE: ESRE activation by mitochondrial damage is partially dependent on bZIPs (including CEBP-2), reinforcing a conserved mitochondrial surveillance role in immunity. (tjahjono2017aconservedmitochondrial pages 8-11)<br />
+- 2023–2024 surveillance integration: Perturbing proteasome surveillance programs (SKN-1A/NRF1 axis) engages tissue-specific immune responses with genes controlled by ZIP-2/CEBP-2-listed bZIP TFs, underscoring surveillance crosstalk and providing contemporary context for CEBP-2 function. PLoS Biology (Mar 2024), https://doi.org/10.1371/journal.pbio.3002543. (dunbar2013analyzingtherole pages 90-94)</p>
+<p>Functional annotation of cebp-2<br />
+- Primary molecular function: bZIP DNA-binding transcription factor of the C/EBP family. Inferred nuclear localization based on bZIP domain and transcriptional activity; direct nuclear localization data for CEBP-2 are less frequently reported than for partners like ZIP-2/ZIP-1 but are strongly implied by function. (dunbar2013analyzingtherole pages 94-99)<br />
+- Interaction partners and complexes: Heterodimerizes functionally with ZIP-2 to activate surveillance-immune targets; also interacts with ZIP-11 to regulate immune transcription independently of PMK-1/p38. (dunbar2013analyzingtherole pages 94-99, zheng2021thebziptranscription pages 8-9, malinow2022novelsignalingmechanismsa pages 27-32)<br />
+- Target genes and transcriptional programs: Promotes induction of infection response genes including irg-1 and irg-2, with additional reported targets such as F11D11.3 and oac-32; these responses reduce intestinal bacterial burden. (dunbar2013analyzingtherole pages 94-99, malinow2022novelsignalingmechanismsa pages 27-32)<br />
+- Pathways and context: Central to surveillance immunity triggered by translational inhibition (e.g., P. aeruginosa toxins or ribosome damage) and participates in mitochondrial surveillance/ESRE responses to mitochondrial stress; operates in pathways that are partially independent of PMK-1/p38. (dunbar2013analyzingtherole pages 90-94, tjahjono2017aconservedmitochondrial pages 8-11, zheng2021thebziptranscription pages 8-9)<br />
+- Tissue and subcellular site of action: Acts in the intestine to promote resistance to P. aeruginosa; as a bZIP TF, activity is expected in intestinal nuclei during activation. (zheng2021thebziptranscription pages 8-9, dunbar2013analyzingtherole pages 94-99)<br />
+- Phenotypes upon perturbation: cebp-2 loss blunts induction of immune reporters/targets (e.g., irg-1/irg-2) and increases susceptibility to P. aeruginosa killing. Neuronal overexpression of CEBP-2 (or related C/EBP pathway activity) can shorten lifespan via enhanced neural excitation, highlighting potential tissue-specific consequences beyond gut immunity. Science Advances (Apr 2022), https://doi.org/10.1126/sciadv.abj8658. (dunbar2013analyzingtherole pages 94-99, zheng2021thebziptranscription pages 8-9)</p>
+<p>Quality and caveats<br />
+- Much of the cebp-2 mechanistic work is anchored in 2013–2022 primary studies; 2023–2024 research integrates cebp-2 among broader surveillance programs (proteasome/ORR–IPR), but direct cebp-2-specific new mechanistic findings in those years are limited in the retrieved corpus. Where localization of CEBP-2 is inferred from domain/function rather than directly imaged, this is stated as inference. (dunbar2013analyzingtherole pages 90-94, dunbar2013analyzingtherole pages 94-99)</p>
+<p>Key sources with URLs and dates<br />
+- Dunbar TL. Analyzing the role of C. elegans bZIP signaling in defense against pathogen infection. 2013. (primary cebp-2 naming and functional data; irg-1/irg-2 regulation; P. aeruginosa susceptibility). (dunbar2013analyzingtherole pages 94-99)<br />
+- Pukkila-Worley R. Surveillance immunity review. PLoS Pathogens, Sep 2016. https://doi.org/10.1371/journal.ppat.1005795. (dunbar2013analyzingtherole pages 57-59)<br />
+- Tjahjono E, Kirienko NV. ESRE and mitochondrial surveillance. PLoS Genetics, Jun 2017. https://doi.org/10.1371/journal.pgen.1006876. (tjahjono2017aconservedmitochondrial pages 8-11)<br />
+- Vasquez-Rifo A et al. Ribosome H69 cleavage by P. aeruginosa; link to zip-2 activation. PLoS Biology, Dec 2020. https://doi.org/10.1371/journal.pbio.3000969. (dunbar2013analyzingtherole pages 90-94)<br />
+- Zheng Z et al. ZIP-11–CEBP-2 PMK-1-independent arm. Frontiers in Immunology, Nov 2021. https://doi.org/10.3389/fimmu.2021.744454. (zheng2021thebziptranscription pages 8-9)<br />
+- Grover M et al. Proteasome surveillance triggers tissue-specific immune programs (peer-reviewed). PLoS Biology, Mar 2024. https://doi.org/10.1371/journal.pbio.3002543. (dunbar2013analyzingtherole pages 90-94)</p>
+<p>Conclusion<br />
+CEBP-2 (Q8IG69) is a C/EBP-family bZIP transcription factor that executes a central role in C. elegans surveillance immunity. It functions primarily in the intestine as part of ZIP-2– and ZIP-11–containing complexes to drive transcription of infection-response genes (e.g., irg-1/irg-2) upon pathogen-induced translational inhibition and during mitochondrial surveillance/ESRE activation. These modules can act in parallel to, and in part independently of, PMK-1/p38 MAPK signaling. Loss of cebp-2 compromises induction of immune effectors and host survival in P. aeruginosa infection models. Recent work (2023–2024) places cebp-2-associated bZIP activity within broader proteasome and tissue-specific immune surveillance networks, integrating proteostasis and mitochondrial stress cues with innate immunity. (dunbar2013analyzingtherole pages 94-99, zheng2021thebziptranscription pages 8-9, tjahjono2017aconservedmitochondrial pages 8-11, dunbar2013analyzingtherole pages 90-94, dunbar2013analyzingtherole pages 57-59)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dunbar2013analyzingtherole pages 90-94): TL Dunbar. Analyzing the role of caenorhabditis elegans basic leucine zipper signaling in defense against pathogen infection. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(dunbar2013analyzingtherole pages 94-99): TL Dunbar. Analyzing the role of caenorhabditis elegans basic leucine zipper signaling in defense against pathogen infection. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(zheng2021thebziptranscription pages 8-9): Zhongfan Zheng, Yilixiati Aihemaiti, Junqiang Liu, Muhammad Irfan Afridi, Shengmei Yang, Xiumei Zhang, Yongfu Xu, Chunhong Chen, and Haijun Tu. The bzip transcription factor zip-11 is required for the innate immune regulation in caenorhabditis elegans. Frontiers in Immunology, Nov 2021. URL: https://doi.org/10.3389/fimmu.2021.744454, doi:10.3389/fimmu.2021.744454. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tjahjono2017aconservedmitochondrial pages 8-11): Elissa Tjahjono and Natalia V. Kirienko. A conserved mitochondrial surveillance pathway is required for defense against pseudomonas aeruginosa. PLOS Genetics, 13:e1006876, Jun 2017. URL: https://doi.org/10.1371/journal.pgen.1006876, doi:10.1371/journal.pgen.1006876. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dunbar2013analyzingtherole pages 57-59): TL Dunbar. Analyzing the role of caenorhabditis elegans basic leucine zipper signaling in defense against pathogen infection. Unknown journal, 2013.</p>
+</li>
+<li>
+<p>(malinow2022novelsignalingmechanismsa pages 27-32): RA Malinow. Novel signaling mechanisms downstream of nipi-3/tribbles regulate development in caenorhabditis elegans. Unknown journal, 2022.</p>
+</li>
+<li>
+<p>(malinow2022novelsignalingmechanismsb pages 27-32): RA Malinow. Novel signaling mechanisms downstream of nipi-3/tribbles regulate development in caenorhabditis elegans. Unknown journal, 2022.</p>
+</li>
+<li>
+<p>(balasubramaniam2025unzippingthedefense pages 14-15): Boopathi Balasubramaniam, Ashley V. Veatch, and Ransome van der Hoeven. Unzipping the defense: a comprehensive review on bzip transcription factors in caenorhabditis elegans. Frontiers in Cellular and Infection Microbiology, Oct 2025. URL: https://doi.org/10.3389/fcimb.2025.1673469, doi:10.3389/fcimb.2025.1673469. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dunbar2013analyzingtherole pages 90-94</li>
+<li>zheng2021thebziptranscription pages 8-9</li>
+<li>dunbar2013analyzingtherole pages 94-99</li>
+<li>dunbar2013analyzingtherole pages 57-59</li>
+<li>tjahjono2017aconservedmitochondrial pages 8-11</li>
+<li>malinow2022novelsignalingmechanismsa pages 27-32</li>
+<li>malinow2022novelsignalingmechanismsb pages 27-32</li>
+<li>balasubramaniam2025unzippingthedefense pages 14-15</li>
+<li>https://www.uniprot.org/uniprot/Q8IG69.</li>
+<li>https://doi.org/10.1371/journal.ppat.1005795</li>
+<li>https://doi.org/10.1371/journal.pbio.3002543;</li>
+<li>https://doi.org/10.1101/2023.08.22.554255.</li>
+<li>https://doi.org/10.3389/fimmu.2021.744454.</li>
+<li>https://doi.org/10.1371/journal.pbio.3000969.</li>
+<li>https://doi.org/10.1371/journal.ppat.1005795.</li>
+<li>https://doi.org/10.1371/journal.pgen.1006876.</li>
+<li>https://doi.org/10.1371/journal.pbio.3002543.</li>
+<li>https://doi.org/10.1126/sciadv.abj8658.</li>
+<li>https://doi.org/10.3389/fimmu.2021.744454,</li>
+<li>https://doi.org/10.1371/journal.pgen.1006876,</li>
+<li>https://doi.org/10.3389/fcimb.2025.1673469,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IG69
+gene_symbol: cebp-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: CEBP-2 is the C. elegans ortholog of mammalian CCAAT/enhancer-binding
+  protein gamma (C/EBPgamma). It is a bZIP family transcription factor that functions
+  as a key player in surveillance immunity, acting together with ZIP-2 in the protective
+  response to translational block by P. aeruginosa Exotoxin A and perturbations of
+  other core cellular processes. CEBP-2 also interacts with ZIP-11 to mediate innate
+  immune responses independently of the PMK-1/p38 MAPK pathway. Beyond immunity, CEBP-2
+  regulates expression of genes involved in fat metabolism, controlling fatty acid
+  mitochondrial beta-oxidation and desaturation. The protein is expressed broadly
+  in somatic tissues including the intestine and localizes to the nucleus.
+existing_annotations:
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CEBP-2 is a bZIP transcription factor that contains a basic DNA-binding
+      region and leucine-zipper domain. The IBA annotation is based on phylogenetic
+      inference from C/EBP family members that are established sequence-specific DNA-binding
+      proteins. The UniProt entry confirms the bZIP domain (residues 17-80) with a
+      basic motif (residues 23-48) and leucine-zipper (residues 52-73).
+    action: ACCEPT
+    reason: This annotation is well-supported by domain architecture. CEBP-2 has a
+      canonical bZIP domain with basic region for DNA binding. The C/EBP family is
+      well characterized for sequence-specific DNA binding to CCAAT/enhancer elements.
+      IBA annotations from PANTHER phylogenetic analysis are reliable for core transcription
+      factor functions conserved across the family.
+    supported_by:
+    - reference_id: GO_REF:0000033
+      supporting_text: &#39;[Phylogenetic inference from C/EBP orthologs including mouse
+        CEBPG, CEBPA, CEBPB, CEBPD, CEBPE, and human C/EBPgamma]&#39;
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CEBP-2 regulates transcription as demonstrated by its role in controlling
+      expression of immune response genes (irg-1), fat metabolism genes (ech-1.1,
+      fat-5), and ESRE network genes upon P. aeruginosa infection.
+    action: ACCEPT
+    reason: This is a core function of CEBP-2. Multiple publications demonstrate that
+      CEBP-2 regulates transcription of target genes. PMID:26505800 shows CEBP-2 controls
+      expression of ech-1.1 and fat-5. PMID:26876169 shows CEBP-2 is required for
+      irg-1 activation. PMID:28662060 shows CEBP-2 is part of the bZIP transcription
+      factor family regulating the ESRE network.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding
+        protein gamma, is a key player in surveillance immunity
+    - reference_id: PMID:26505800
+      supporting_text: loss of function of CEBP-2 displayed a low-fat phenotype in
+        C. elegans owing to increased expression of ech-1.1 and decreased expression
+        of fat-5
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CEBP-2 functions as a DNA-binding transcription factor. It contains a
+      bZIP domain and regulates transcription of target genes involved in immunity
+      and metabolism.
+    action: ACCEPT
+    reason: This is a core molecular function annotation. CEBP-2 has a canonical bZIP
+      domain and functions as a transcription factor regulating gene expression. Experimental
+      evidence from multiple studies demonstrates its transcriptional regulatory activity.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding
+        protein gamma, is a key player in surveillance immunity
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping. CEBP-2 has a well-established
+      role in innate immunity based on experimental evidence.
+    action: ACCEPT
+    reason: This annotation is supported by substantial experimental evidence. CEBP-2
+      is required for defense against P. aeruginosa infection and activates immune
+      response genes. While the IEA evidence is computational, the annotation is accurate.
+      The more specific annotation GO:0050829 (defense response to Gram-negative bacterium)
+      is also present with experimental support.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2 serves to limit pathogen burden, promote survival upon
+        P. aeruginosa infection, and also promote survival upon Exotoxin A exposure
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation from UniProtKB keyword mapping. CEBP-2 contains a bZIP
+      domain with a basic DNA-binding region.
+    action: ACCEPT
+    reason: This is a valid annotation supported by domain architecture. However,
+      the more specific annotation GO:0000978 (RNA polymerase II cis-regulatory region
+      sequence-specific DNA binding) is also present and is more informative. Both
+      annotations can be retained as the parent term is appropriate for IEA evidence
+      level.
+    supported_by:
+    - reference_id: GO_REF:0000043
+      supporting_text: &#39;[UniProtKB keyword mapping for DNA-binding bZIP transcription
+        factor]&#39;
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro domain mapping (IPR004827 bZIP, IPR031106
+      C/EBP, IPR046347 bZIP superfamily). CEBP-2 is a bZIP transcription factor.
+    action: ACCEPT
+    reason: This annotation is accurate based on domain architecture and is consistent
+      with the more specific GO:0000981 annotation. IEA annotations from InterPro
+      are reliable for well-characterized domain families like bZIP.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: &#39;[InterPro domain mapping for bZIP domain (IPR004827), C/EBP
+        family (IPR031106), and bZIP superfamily (IPR046347)]&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation from UniProtKB subcellular location. CEBP-2 nuclear localization
+      is also supported by direct experimental evidence.
+    action: ACCEPT
+    reason: This annotation is accurate. CEBP-2 localizes to the nucleus as expected
+      for a transcription factor. There are also IDA annotations for nucleus localization
+      from PMID:34804026 and PMID:26876169 providing experimental confirmation.
+    supported_by:
+    - reference_id: GO_REF:0000044
+      supporting_text: &#39;[UniProtKB subcellular location vocabulary mapping for nucleus]&#39;
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from combined automated annotation methods. CEBP-2 is
+      a transcription factor involved in DNA-templated transcription.
+    action: ACCEPT
+    reason: This is a valid annotation. CEBP-2 is a transcription factor that regulates
+      gene expression. The more specific GO:0006357 (regulation of transcription by
+      RNA polymerase II) is also present. Both are appropriate.
+    supported_by:
+    - reference_id: GO_REF:0000120
+      supporting_text: &#39;[Combined automated annotation from InterPro and UniProtKB
+        keywords]&#39;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from combined automated annotation methods. CEBP-2 regulates
+      transcription of target genes.
+    action: ACCEPT
+    reason: This annotation is accurate and consistent with CEBP-2&#39;s function as a
+      transcriptional regulator. The more specific GO:0006357 annotation with experimental
+      evidence is also present.
+    supported_by:
+    - reference_id: GO_REF:0000120
+      supporting_text: &#39;[Combined automated annotation from InterPro domains and keywords]&#39;
+- term:
+    id: GO:0045087
+    label: innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation from UniProtKB keyword mapping. CEBP-2 has a well-established
+      role in innate immunity.
+    action: ACCEPT
+    reason: This annotation is strongly supported by experimental evidence. CEBP-2
+      is required for defense against P. aeruginosa and functions in surveillance
+      immunity together with ZIP-2 and ZIP-11. This is a core function.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding
+        protein gamma, is a key player in surveillance immunity
+    - reference_id: PMID:34804026
+      supporting_text: ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2,
+        to mediate the transcriptional response to P. aeruginosa PA14 infection
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23661758
+  review:
+    summary: IPI annotation from bZIP protein-protein interaction network study. CEBP-2
+      was found to interact with multiple bZIP transcription factors including ATF-2,
+      ATF-4, ATFS-1, CES-2, ZIP-2, ZIP-3, ZIP-9, and ZIP-11 as shown in the UniProt
+      INTERACTION section.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While the interactions are real, GO:0005515 (protein binding) is uninformative.
+      The actual interactions are with specific bZIP transcription factors via leucine-zipper
+      dimerization. A more specific term would be GO:0046983 (protein dimerization
+      activity) or ideally annotations capturing the specific partners. However, as
+      a general practice protein binding annotations from large-scale interaction
+      studies have limited curation value.
+    supported_by:
+    - reference_id: PMID:23661758
+      supporting_text: We studied the basic region-leucine zipper (bZIP) transcription
+        factors and quantified bZIP dimerization networks for five metazoan and two
+        single-cell species, measuring interactions in vitro for 2891 protein pairs
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23791784
+  review:
+    summary: IPI annotation from C. elegans transcription factor network study characterizing
+      protein-protein interactions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Same rationale as above - GO:0005515 is uninformative. The study characterized
+      TF network rewiring but protein binding as an annotation provides little functional
+      insight.
+    supported_by:
+    - reference_id: PMID:23791784
+      supporting_text: we comprehensively characterize such network rewiring for C.
+        elegans transcription factors (TFs) within and across four newly delineated
+        molecular networks
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34804026
+  review:
+    summary: IPI annotation for CEBP-2 interaction with ZIP-11 demonstrated by co-IP
+      and validated in functional assays.
+    action: MODIFY
+    reason: The interaction with ZIP-11 is functionally significant - they work together
+      to mediate immune responses. However, GO:0005515 is too vague. A more appropriate
+      annotation would capture the dimerization activity characteristic of bZIP proteins.
+    proposed_replacement_terms:
+    - id: GO:0046983
+      label: protein dimerization activity
+    supported_by:
+    - reference_id: PMID:34804026
+      supporting_text: ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2,
+        to mediate the transcriptional response to P. aeruginosa PA14 infection
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:34804026
+  review:
+    summary: Direct experimental evidence for CEBP-2 nuclear localization using GFP-tagged
+      CEBP-2 reporter showing co-localization with ZIP-11 in intestinal nuclei upon
+      P. aeruginosa infection.
+    action: ACCEPT
+    reason: &#39;This is well-supported experimental evidence. The study used cebp-2p::
+      cebp-2::RFP transgenic worms and demonstrated nuclear localization in intestinal
+      cells, especially upon pathogen exposure.&#39;
+    supported_by:
+    - reference_id: PMID:34804026
+      supporting_text: these two bZIP transcription factors exist noticeable co-localization
+        in intestinal nucleus of worms upon P. aeruginosa infection
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:34804026
+  review:
+    summary: IMP annotation based on genetic studies showing CEBP-2 is required for
+      defense against P. aeruginosa PA14 infection. Loss of CEBP-2 reduces survival
+      upon infection and the decrease in survival of zip-11 mutants is abolished by
+      cebp-2 RNAi.
+    action: ACCEPT
+    reason: This is a core function of CEBP-2. Multiple independent studies demonstrate
+      CEBP-2 is required for defense against P. aeruginosa, a Gram-negative bacterium.
+      This annotation is well-supported.
+    supported_by:
+    - reference_id: PMID:34804026
+      supporting_text: the decrease in survival upon P. aeruginosa infection of zip-11(tm4554)
+        worms was abolished by cebp-2 RNAi
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:28662060
+  review:
+    summary: IMP annotation from study demonstrating CEBP-2 is part of a conserved
+      mitochondrial surveillance pathway required for defense against P. aeruginosa.
+      CEBP-2 is one of the bZIP transcription factors mediating the ESRE (Ethanol
+      and Stress Response Element) network involved in innate immunity.
+    action: ACCEPT
+    reason: This annotation is strongly supported. The study shows CEBP-2 is part
+      of the bZIP transcription factor family (along with ZIP-2, ZIP-4, CEBP-1) that
+      mediates the ESRE defense network activated by P. aeruginosa infection. The
+      cebp-2;zip-2 double mutant shows significantly more death than either single
+      mutant upon P. aeruginosa exposure.
+    supported_by:
+    - reference_id: PMID:28662060
+      supporting_text: family of bZIP proteins (including ZIP-2, ZIP-4, CEBP-1, and
+        CEBP-2) that have overlapping and unique functions ... The grey arrow indicates
+        the cebp-2; zip-2 double mutant, which shows significantly more death than
+        either single mutant
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:26876169
+  review:
+    summary: Direct experimental evidence for nuclear localization using CEBP-2::GFP
+      reporter in C. elegans intestinal cells.
+    action: ACCEPT
+    reason: Well-supported IDA annotation. The study used GFP-tagged CEBP-2 to demonstrate
+      nuclear localization in somatic tissues including the intestine.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding
+        protein gamma, is a key player in surveillance immunity
+      full_text_unavailable: true
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IMP
+  original_reference_id: PMID:26505800
+  review:
+    summary: IMP annotation based on CEBP-2 regulation of target genes ech-1.1 and
+      fat-5 involved in fat metabolism. CEBP-2 mutants show altered expression of
+      these transcriptional targets.
+    action: ACCEPT
+    reason: This annotation is supported by experimental evidence showing CEBP-2 regulates
+      transcription of fat metabolism genes. Mutations in cebp-2 result in altered
+      expression of ech-1.1 (increased) and fat-5 (decreased), demonstrating its role
+      as a transcriptional regulator.
+    supported_by:
+    - reference_id: PMID:26505800
+      supporting_text: loss of function of CEBP-2 displayed a low-fat phenotype in
+        C. elegans owing to increased expression of ech-1.1 and decreased expression
+        of fat-5 ... cebp-2 controls total body fat content by governing fatty acid
+        mitochondrial beta-oxidation and desaturation in C. elegans
+- term:
+    id: GO:0019216
+    label: regulation of lipid metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:26505800
+  review:
+    summary: IMP annotation based on CEBP-2 regulation of fat consumption and fatty
+      acid desaturation. CEBP-2 loss-of-function results in reduced overall fat content
+      through effects on ech-1.1 and fat-5 gene expression.
+    action: KEEP_AS_NON_CORE
+    reason: This is a real function of CEBP-2 supported by experimental evidence.
+      However, the primary literature focus is on CEBP-2&#39;s role in immunity and surveillance
+      pathways. The lipid metabolism function may represent a pleiotropic role or
+      could be connected to immune metabolic reprogramming. Marking as non-core reflects
+      that surveillance immunity appears to be the primary characterized function.
+    supported_by:
+    - reference_id: PMID:26505800
+      supporting_text: loss of function of CEBP-2 displayed a low-fat phenotype in
+        C. elegans owing to increased expression of ech-1.1 and decreased expression
+        of fat-5 ... cebp-2 controls total body fat content by governing fatty acid
+        mitochondrial beta-oxidation and desaturation in C. elegans
+- term:
+    id: GO:0050829
+    label: defense response to Gram-negative bacterium
+  evidence_type: IMP
+  original_reference_id: PMID:26876169
+  review:
+    summary: IMP annotation from the key study establishing CEBP-2&#39;s role in surveillance
+      immunity. CEBP-2 is required for the protective response to P. aeruginosa infection
+      and Exotoxin A exposure, acting together with ZIP-2.
+    action: ACCEPT
+    reason: This is the seminal paper establishing CEBP-2 as a key player in surveillance
+      immunity. CEBP-2 limits pathogen burden, promotes survival upon P. aeruginosa
+      infection, and is required for irg-1 induction. This is a core function.
+    supported_by:
+    - reference_id: PMID:26876169
+      supporting_text: CEBP-2 serves to limit pathogen burden, promote survival upon
+        P. aeruginosa infection, and also promote survival upon Exotoxin A exposure
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: Domain-based annotation for bZIP transcription factor family
+    supporting_text: &#39;[InterPro2GO mapping]&#39;
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Phylogenetic inference from C/EBP family members in mammals and other
+      metazoans
+    supporting_text: &#39;[PANTHER phylogenetic analysis]&#39;
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: Keyword-based annotations for DNA binding, immunity, and innate immunity
+    supporting_text: &#39;[UniProtKB keyword mapping]&#39;
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings:
+  - statement: Nuclear localization mapping
+    supporting_text: &#39;[UniProtKB subcellular location vocabulary]&#39;
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined evidence for transcription-related annotations
+    supporting_text: &#39;[Combined IEA methods]&#39;
+- id: PMID:23661758
+  title: Networks of bZIP protein-protein interactions diversified over a billion
+    years of evolution.
+  findings:
+  - statement: Comprehensive bZIP dimerization network identified CEBP-2 interactions
+      with multiple bZIP partners
+    supporting_text: We studied the basic region-leucine zipper (bZIP) transcription
+      factors and quantified bZIP dimerization networks for five metazoan and two
+      single-cell species, measuring interactions in vitro for 2891 protein pairs
+  - statement: CEBP-2 identified as highest-affinity binding partner for ZIP-11
+    supporting_text: Metazoans have a higher proportion of heteromeric bZIP interactions
+      and more network complexity than the single-cell species
+- id: PMID:23791784
+  title: Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter
+    transcription factor network.
+  findings:
+  - statement: Characterization of C. elegans transcription factor network interactions
+    supporting_text: we comprehensively characterize such network rewiring for C.
+      elegans transcription factors (TFs) within and across four newly delineated
+      molecular networks
+- id: PMID:26505800
+  title: CCAAT/enhancer-binding protein CEBP-2 controls fat consumption and fatty
+    acid desaturation in Caenorhabditis elegans.
+  findings:
+  - statement: CEBP-2 loss-of-function causes low-fat phenotype
+    supporting_text: loss of function of CEBP-2 displayed a low-fat phenotype in C.
+      elegans owing to increased expression of ech-1.1 and decreased expression of
+      fat-5
+  - statement: CEBP-2 regulates ech-1.1 and fat-5 expression
+    supporting_text: loss of function of CEBP-2 displayed a low-fat phenotype in C.
+      elegans owing to increased expression of ech-1.1 and decreased expression of
+      fat-5
+  - statement: Controls fatty acid mitochondrial beta-oxidation and desaturation
+    supporting_text: cebp-2 controls total body fat content by governing fatty acid
+      mitochondrial beta-oxidation and desaturation in C. elegans
+- id: PMID:26876169
+  title: The C. elegans CCAAT-Enhancer-Binding Protein Gamma Is Required for Surveillance
+    Immunity.
+  findings:
+  - statement: CEBP-2 is key player in surveillance immunity
+    supporting_text: CEBP-2, the C. elegans ortholog of mammalian CCAAT-enhancer-binding
+      protein gamma, is a key player in surveillance immunity
+  - statement: Acts together with ZIP-2 in protective response to translational block
+      by P. aeruginosa Exotoxin A
+    supporting_text: CEBP-2 acts together with the bZIP transcription factor ZIP-2
+      in the protective response to translational block by P. aeruginosa Exotoxin
+      A as well as perturbations of other processes
+  - statement: Promotes survival upon P. aeruginosa infection
+    supporting_text: CEBP-2 serves to limit pathogen burden, promote survival upon
+      P. aeruginosa infection, and also promote survival upon Exotoxin A exposure
+- id: PMID:28662060
+  title: A conserved mitochondrial surveillance pathway is required for defense against
+    Pseudomonas aeruginosa.
+  findings:
+  - statement: CEBP-2 is part of bZIP family (with ZIP-2, ZIP-4, CEBP-1) mediating
+      ESRE network
+    supporting_text: family of bZIP proteins (including ZIP-2, ZIP-4, CEBP-1, and
+      CEBP-2) that have overlapping and unique functions
+  - statement: cebp-2;zip-2 double mutant shows significantly more death than single
+      mutants
+    supporting_text: The grey arrow indicates the cebp-2; zip-2 double mutant, which
+      shows significantly more death than either single mutant
+- id: PMID:34804026
+  title: The bZIP Transcription Factor ZIP-11 Is Required for the Innate Immune Regulation
+    in Caenorhabditis elegans.
+  findings:
+  - statement: CEBP-2 physically interacts with ZIP-11 (shown by co-IP and GST pull-down)
+    supporting_text: ZIP-11 and CEBP-2 can physically interact indeed. This interactive
+      relationship was further revealed by GST pull-down assay
+  - statement: ZIP-11 and CEBP-2 co-localize in intestinal nuclei upon P. aeruginosa
+      infection
+    supporting_text: these two bZIP transcription factors exist noticeable co-localization
+      in intestinal nucleus of worms upon P. aeruginosa infection
+  - statement: ZIP-11/CEBP-2 pathway mediates immune response independently of PMK-1/p38
+      pathway
+    supporting_text: ZIP-11 interacts with a CCAAT/enhancer-binding protein, CEBP-2,
+      to mediate the transcriptional response to P. aeruginosa PA14 infection
+  - statement: cebp-2 RNAi abolishes the decreased survival phenotype of zip-11 mutants
+    supporting_text: the decrease in survival upon P. aeruginosa infection of zip-11(tm4554)
+      worms was abolished by cebp-2 RNAi
+core_functions:
+- molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  description: CEBP-2 is a bZIP transcription factor that binds to CCAAT/enhancer
+    elements in target gene promoters and regulates their transcription. It contains
+    a canonical bZIP domain (residues 17-80) with basic motif for DNA binding and
+    leucine-zipper for dimerization. It regulates transcription of target genes including
+    irg-1, ech-1.1, and fat-5.
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:0050829
+    label: defense response to Gram-negative bacterium
+- molecular_function:
+    id: GO:0046983
+    label: protein dimerization activity
+  description: CEBP-2 forms heterodimers with other bZIP transcription factors including
+    ZIP-2, ZIP-11, ATF-2, ATF-4, ATFS-1, CES-2, ZIP-3, and ZIP-9 via its leucine-zipper
+    domain. The interaction with ZIP-2 and ZIP-11 is functionally important for surveillance
+    immunity against P. aeruginosa.
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  directly_involved_in:
+  - id: GO:0045087
+    label: innate immune response
+proposed_new_terms: []
+suggested_questions:
+- question: Does CEBP-2 directly bind to ESRE (Ethanol and Stress Response Element)
+    motifs, or does it regulate ESRE network genes through a different mechanism?
+- question: What is the relationship between CEBP-2&#39;s role in lipid metabolism and
+    its immune function? Are these independent functions or interconnected through
+    metabolic reprogramming during infection?
+suggested_experiments:
+- description: ChIP-seq to identify direct CEBP-2 binding sites genome-wide and determine
+    whether it binds CCAAT/enhancer elements and/or ESRE motifs.
+- description: Epistasis analysis between cebp-2, zip-2, zip-11, and other bZIP factors
+    during different types of stress (pathogen, mitochondrial, translational) to map
+    the regulatory hierarchy.
+tags:
+- caeel-surveillance-immunity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

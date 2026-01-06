@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sdbA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sdbA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P71143" target="_blank" class="term-link">
+                        P71143
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Acetivibrio thermocellus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">SdbA</span>
+                    
+                    <span class="badge">Scaffolding dockerin binding protein A</span>
+                    
+                    <span class="badge">Anchoring scaffoldin</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sdbA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P71143" data-a="DESCRIPTION: SdbA (Scaffolding dockerin binding protein A) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SdbA (Scaffolding dockerin binding protein A) is an anchoring scaffoldin in the Acetivibrio thermocellus (formerly Clostridium thermocellum) cellulosome system. It is a non-catalytic cell surface protein that functions to tether the primary scaffoldin CipA (and its associated enzyme complement) to the bacterial cell envelope. SdbA contains a single type II cohesin domain that specifically binds the C-terminal type II dockerin (XDocII) of CipA, and three SLH (S-layer homology) domains that mediate attachment to the peptidoglycan/cell wall. Unlike cellulosomal enzymes, SdbA has NO catalytic activity and does NOT bind carbohydrates directly - its function is purely structural/scaffolding. Genetic deletion studies show that sdbA mutants have moderate (14-25%) reductions in cellulose hydrolysis, indicating functional redundancy with other anchoring scaffoldins (OlpB, Orf2p).
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:0000272" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. SdbA is a non-catalytic anchoring scaffoldin that does NOT participate in polysaccharide catabolism. The protein lacks any glycosyl hydrolase domains or catalytic activity. The InterPro mapping from the cohesin domain (IPR002102) is erroneous - cohesin domains mediate protein-protein interactions with dockerin domains, not carbohydrate degradation. The deep research confirms that SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SdbA contains a type II cohesin domain that binds dockerin, not carbohydrates or polysaccharides. The protein has no enzymatic activity whatsoever. It functions solely as a structural adaptor to tether cellulosomes to the cell surface via SLH-mediated cell envelope binding. The annotation derives from an incorrect InterPro2GO mapping that conflates structural similarity between cohesin and CBM domains with functional similarity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin with a single type II cohesin and SLH repeats, mediating attachment of CipA-based cellulosomes to the cell envelope
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but overly broad. SdbA is indeed secreted and localized extracellularly, but it is specifically anchored to the cell surface via its SLH domains. The UniProt subcellular location annotation Secreted supports this, though GO:0009986 (cell surface) would be more specific given the SLH-mediated cell envelope attachment.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct that SdbA is in the extracellular region, this term is too general. SdbA is specifically tethered to the cell surface via its three SLH domains which bind cell envelope components (peptidoglycan). The protein does not freely diffuse in the extracellular space but is surface- associated. A more accurate annotation would reflect its cell surface localization.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                    cell surface
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SdbA contains SLH repeats that bind cell envelope components, providing noncovalent anchoring to the bacterial surface
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:0030246" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. SdbA does NOT bind carbohydrates. The type II cohesin domain binds the type II dockerin domain of CipA (a protein-protein interaction), not carbohydrates. This erroneous annotation stems from the InterPro mapping of cohesin domains (IPR002102) and the CBM superfamily (IPR008965), which share structural similarity but have completely different functions. Cohesin-dockerin interactions are protein-protein, calcium-dependent binding events, not carbohydrate binding.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SdbA cohesin domain specifically binds the dockerin domain of CipA scaffoldin - this is a well-characterized protein-protein interaction, not carbohydrate binding. The structural similarity between cohesin domains and CBM domains (both belong to beta-sandwich fold families) has led to erroneous functional annotation. The correct molecular function is type-II dockerin domain binding, which accurately describes SdbA role in capturing CipA for cell surface anchoring.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990309" target="_blank" class="term-link">
+                                    type-II dockerin domain binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The type II dockerin from CipA binds specifically to type II cohesins on SdbA ... type II interactions mediate scaffoldin-scaffoldin and anchoring to the cell surface
+</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                    GO:0044575
+                                </a>
+                            </span>
+                            <span class="term-label">cellulosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24955112" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24955112
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The contribution of cellulosomal scaffoldins to cellulose hy...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:0044575" data-r="PMID:24955112" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdbA plays a direct role in cellulosome assembly by providing an anchoring point for the CipA scaffoldin at the cell surface. While SdbA does not participate in the type I cohesin-dockerin interactions that recruit enzymes to CipA, it is essential for the final step of cellulosome architecture: tethering the assembled complex to the cell. Genetic studies show that deletion of anchoring scaffoldins affects cellulosome display.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures SdbA role in the biological process of organizing the cellulosome at the cell surface. The protein is part of the multi-protein anchoring system that completes cellulosome architecture.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SdbA single type II cohesin provides one docking site for CipA, complementing multi-cohesin anchoring scaffoldins to generate polycellulosomes of varying sizes at the cell surface
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24955112" target="_blank" class="term-link">
+                                        PMID:24955112
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990309" target="_blank" class="term-link">
+                                    GO:1990309
+                                </a>
+                            </span>
+                            <span class="term-label">type-II dockerin domain binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8655483" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8655483
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A new type of cohesin domain that specifically binds the doc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:1990309" data-r="PMID:8655483" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of SdbA. The type II cohesin domain specifically recognizes and binds the C-terminal type II dockerin (XDocII) of CipA scaffoldin. This interaction is calcium-dependent and has been characterized structurally by X-ray crystallography (PDB: 2BM3, 4FL4).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely describes SdbA molecular function. The protein cohesin domain binds dockerin domains, not carbohydrates. This is a well- characterized, high-affinity protein-protein interaction that has been validated structurally and biochemically.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based cellulosomes to the bacterial envelope via high-affinity binding between CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8655483" target="_blank" class="term-link">
+                                        PMID:8655483
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The NH2-terminal region of SdbA and a fusion protein carrying the first NH2-terminal repeat of OlpB were shown to bind the dockerin domain of CipA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                    GO:0009986
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24955112" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24955112
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The contribution of cellulosomal scaffoldins to cellulose hy...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P71143" data-a="GO:0009986" data-r="PMID:24955112" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdbA is localized to the cell surface via its three SLH (S-layer homology) domains which bind noncovalently to peptidoglycan/cell envelope components. This positions the type II cohesin domain extracellularly to capture CipA. Proteomics studies detect SdbA in cell-associated cellulosome fractions.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately reflects SdbA cellular localization as determined by biochemical studies showing it is tethered to the cell surface via SLH domain interactions with the cell wall.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/P71143/P71143-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SdbA was detected in cell-associated cellulosomes ... SLH-mediated cell-envelope binding of anchoring scaffoldins is supported biochemically
+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24955112" target="_blank" class="term-link">
+                                        PMID:24955112
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">attached to the cell surface by non-catalytic scaffoldins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SdbA functions as an anchoring scaffoldin that tethers CipA-based cellulosomes to the bacterial cell surface through type II cohesin-dockerin interactions and SLH-mediated cell wall binding.
+</h3>
+                <span class="vote-buttons" data-g="P71143" data-a="FUNCTION: SdbA functions as an anchoring scaffoldin that tet..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990309" target="_blank" class="term-link">
+                            type-II dockerin domain binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044575" target="_blank" class="term-link">
+                                cellulosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009986" target="_blank" class="term-link">
+                                cell surface
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ACET2/P71143/P71143-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based cellulosomes to the bacterial envelope via high-affinity binding between CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The InterPro2GO mappings for cohesin domains (IPR002102) and CBM superfamily (IPR008965) incorrectly assign carbohydrate-related functions to all proteins containing these domains. For SdbA, which contains a type II cohesin that binds dockerin (not carbohydrates), these mappings produce erroneous annotations.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Secreted annotation in UniProt correctly places SdbA extracellularly, but the resulting GO annotation to extracellular region is less specific than ideal given SdbA known cell surface localization via SLH domains.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8655483" target="_blank" class="term-link">
+                            PMID:8655483
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A new type of cohesin domain that specifically binds the dockerin domain of the Clostridium thermocellum cellulosome-integrating protein CipA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original characterization of SdbA identifying the type II cohesin domain and its specific binding to CipA dockerin domain.
+</div>
+                        
+                        <div class="finding-text">"The NH2-terminal region of SdbA and a fusion protein carrying the first NH2-terminal repeat of OlpB were shown to bind the dockerin domain of CipA. Thus, a new type of cohesin domain, which is present in one, two, and four copies in SdbA, ORF2p, and OlpB, respectively, can be defined"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15913653" target="_blank" class="term-link">
+                            PMID:15913653
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insights into the structural determinants of cohesin-dockerin specificity revealed by the crystal structure of the type II cohesin from Clostridium thermocellum SdbA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-resolution (1.8 A) X-ray structure of SdbA cohesin domain (residues 29-191).
+</div>
+                        
+                        <div class="finding-text">"Here we report the crystal structure of the Type II cohesin (CohII) from the Clostridium thermocellum cell surface anchoring protein SdbA. The protein domain contains nine beta-strands and a small alpha-helix"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22707718" target="_blank" class="term-link">
+                            PMID:22707718
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Scaffoldin conformation and dynamics revealed by a ternary complex from the Clostridium thermocellum cellulosome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of a ternary complex including SdbA cohesin (residues 27-200).
+</div>
+                        
+                        <div class="finding-text">"Herein, we have used x-ray crystallography and small angle x-ray scattering to structurally characterize a ternary protein complex from the Clostridium thermocellum cellulosome that comprises a C-terminal trimodular fragment of the CipA scaffoldin bound to the SdbA type II cohesin module"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24955112" target="_blank" class="term-link">
+                            PMID:24955112
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The contribution of cellulosomal scaffoldins to cellulose hydrolysis by Clostridium thermocellum analyzed by using thermotargetrons</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetic deletion of sdbA causes 14-25% reduction in cellulose hydrolysis rate.
+</div>
+                        
+                        <div class="finding-text">"Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates functional redundancy among anchoring scaffoldins (SdbA, OlpB, Orf2p).
+</div>
+                        
+                        <div class="finding-text">"Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ACET2/P71143/P71143-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research review of sdbA (P71143) function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SdbA is a noncatalytic, cell-surface anchoring scaffoldin with a single type II cohesin and SLH repeats, mediating attachment of CipA-based cellulosomes to the cell envelope.
+</div>
+                        
+                        <div class="finding-text">"SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin with a single type II cohesin and SLH repeats, mediating attachment of CipA-based cellulosomes to the cell envelope
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SdbA type II cohesin binds CipA type II dockerin to anchor the cellulosome.
+</div>
+                        
+                        <div class="finding-text">"SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based cellulosomes to the bacterial envelope via high-affinity binding between CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SLH domains mediate cell wall attachment.
+</div>
+                        
+                        <div class="finding-text">"SdbA contains SLH repeats that bind cell envelope components, providing noncovalent anchoring to the bacterial surface
+"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise binding affinity (Kd) of SdbA cohesin for CipA XDocII dockerin?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="Q: What is the precise binding affinity (Kd) of SdbA ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do the three SLH domains of SdbA cooperate in cell wall attachment?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="Q: How do the three SLH domains of SdbA cooperate in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the stoichiometry of anchoring scaffoldins (SdbA/OlpB/Orf2p) on the cell surface?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="Q: What is the stoichiometry of anchoring scaffoldins..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Surface plasmon resonance or ITC to quantify SdbA-CipA binding kinetics</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SdbA cohesin binds CipA dockerin with nanomolar affinity</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="EXPERIMENT: Surface plasmon resonance or ITC to quantify SdbA-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mutagenesis of individual SLH domains to assess their relative contributions to anchoring</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: All three SLH domains contribute to stable cell wall attachment</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="EXPERIMENT: Mutagenesis of individual SLH domains to assess th..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative proteomics of cell-surface vs secreted cellulosome fractions in different media</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Growth conditions affect the ratio of anchored vs free cellulosomes</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P71143" data-a="EXPERIMENT: Quantitative proteomics of cell-surface vs secrete..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(P71143-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P71143" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T17:02:59.489758'<br />
+end_time: '2025-12-26T17:09:36.835364'<br />
+duration_seconds: 397.35<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ACET2<br />
+  gene_id: P71143<br />
+  gene_symbol: sdbA<br />
+  uniprot_accession: P71143<br />
+  protein_description: 'SubName: Full=Scaffolding dockerin binding protein A {ECO:0000313|EMBL:AAB07763.1};'<br />
+  gene_info: Name=sdbA {ECO:0000313|EMBL:AAB07763.1};<br />
+  organism_full: Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium<br />
+    thermocellum).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: CBM2/CBM3_carb-bd_dom_sf. (IPR008965); Cell_Envelope_Struct_Comp.<br />
+    (IPR051465); Cohesin_dom. (IPR002102); SLH_dom. (IPR001119); Cohesin (PF00963)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 16</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P71143</li>
+<li><strong>Protein Description:</strong> SubName: Full=Scaffolding dockerin binding protein A {ECO:0000313|EMBL:AAB07763.1};</li>
+<li><strong>Gene Information:</strong> Name=sdbA {ECO:0000313|EMBL:AAB07763.1};</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CBM2/CBM3_carb-bd_dom_sf. (IPR008965); Cell_Envelope_Struct_Comp. (IPR051465); Cohesin_dom. (IPR002102); SLH_dom. (IPR001119); Cohesin (PF00963)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sdbA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sdbA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sdbA</strong> (gene ID: P71143, UniProt: P71143) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P71143</li>
+<li><strong>Protein Description:</strong> SubName: Full=Scaffolding dockerin binding protein A {ECO:0000313|EMBL:AAB07763.1};</li>
+<li><strong>Gene Information:</strong> Name=sdbA {ECO:0000313|EMBL:AAB07763.1};</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CBM2/CBM3_carb-bd_dom_sf. (IPR008965); Cell_Envelope_Struct_Comp. (IPR051465); Cohesin_dom. (IPR002102); SLH_dom. (IPR001119); Cohesin (PF00963)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "sdbA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'sdbA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>sdbA</strong> (gene ID: P71143, UniProt: P71143) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status update<br />
+- Verified target identity and domain architecture in literature aligned to UniProt P71143 entry. Proceeded to targeted literature searches, evidence gathering, and synthesis.</p>
+<p>Gene/protein verification and nomenclature<br />
+- Target: sdbA (UniProt P71143) from Acetivibrio thermocellus (syn. Hungateiclostridium/Clostridium thermocellum). Literature consistently refers to SdbA as an anchoring (secondary) scaffoldin of the C. thermocellum cellulosome that carries a single type II cohesin and S-layer homology (SLH) repeats, which tether the complex to the cell surface (bras2012structureandfunctiona pages 38-41). Reviews also note historical/alternate nomenclature proposals that map SdbA/OlpB/Orf2p to ScaA/ScaB/ScaC, respectively; in this convention SdbA ≈ ScaA (anchoring scaffoldin with one type II cohesin) (bras2012structureandfunctiona pages 112-115, bras2012structureandfunction pages 112-115).</p>
+<p>Key concepts and definitions<br />
+- Cellulosome: a supramolecular enzyme complex for plant cell wall deconstruction. In C. thermocellum, the primary scaffoldin CipA contains multiple type I cohesins (binds enzyme dockerins), a CBM3 (crystalline cellulose targeting), and a C-terminal type II dockerin (XDocII) that binds type II cohesins on anchoring scaffoldins to tether the cellulosome to the cell surface (bras2012structureandfunctiona pages 38-41, bras2012structureandfunction pages 38-41).<br />
+- Cohesin–dockerin specificity: Type I interactions mediate enzyme integration onto CipA; type II interactions mediate scaffoldin–scaffoldin and anchoring to the cell surface. Type I and II pairs do not cross-react (bras2012structureandfunctiona pages 38-41, bras2012structureandfunction pages 38-41). Anchoring scaffoldins carry type II cohesins and SLH repeats for surface localization (bras2012structureandfunctiona pages 38-41, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Domain architecture of SdbA<br />
+- Cohesin content: SdbA harbors a single type II cohesin (in contrast to Orf2p with two and OlpB with seven) (bras2012structureandfunctiona pages 38-41, bras2012structureandfunctiona pages 112-115, bras2012structureandfunction pages 112-115).<br />
+- Cell-surface anchoring: SdbA contains SLH repeats that bind cell envelope components, providing noncovalent anchoring to the bacterial surface (bras2012structureandfunctiona pages 38-41, santos2025unconventionalcohesindockerinbindinga pages 37-40).<br />
+- CBM content: CBM3 is a hallmark of the primary scaffoldin CipA, not SdbA; anchoring scaffoldins are characterized by SLH modules and type II cohesins, with no CBM reported for SdbA in the cited sources (bras2012structureandfunctiona pages 38-41, bras2012structureandfunction pages 38-41).</p>
+<p>Primary function and molecular mechanism<br />
+- Function: SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based cellulosomes to the bacterial envelope via high-affinity binding between CipA’s C-terminal type II dockerin (XDocII) and the SdbA type II cohesin (hong2014thecontributionof pages 4-6, hong2014thecontributionof pages 10-11, bras2012structureandfunctiona pages 38-41, bras2012structureandfunctiona pages 112-115, santos2025unconventionalcohesindockerinbindinga pages 37-40).<br />
+- Specificity: The type II dockerin from CipA binds specifically to type II cohesins on SdbA (and other anchoring scaffoldins), whereas CipA’s internal type I cohesins engage enzyme dockerins; this separation of specificities physically partitions assembly (type I) from anchoring (type II) (bras2012structureandfunctiona pages 38-41, bras2012structureandfunctiona pages 112-115, bras2012structureandfunction pages 112-115).</p>
+<p>Cellular localization<br />
+- Localization: Surface-exposed, cell-envelope associated via SLH–cell wall interactions; SdbA’s SLH repeats mediate noncovalent attachment to the peptidoglycan/S-layer, positioning the type II cohesin extracellularly to capture CipA’s XDocII (bras2012structureandfunctiona pages 38-41, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Experimental evidence<br />
+- Genetic perturbation: Targeted insertional disruption of sdbA (ΔsdbA) using thermotargetrons yielded a moderate decrease in cellulose hydrolysis (approximately 14–25%), indicating SdbA contributes additively to hydrolysis but is not solely essential due to redundancy among anchoring scaffoldins (OlpB, Orf2p, etc.) (Biotechnology for Biofuels; DOI: 10.1186/1754-6834-7-80; posted May 2014) (hong2014thecontributionof pages 10-11). Despite anchor deletions, cell-surface cellulosome abundance did not drop drastically, consistent with redundancy; deletion of CipA’s XDocII detached cellulosomes yet only modestly reduced hydrolysis (~9%), suggesting limited “cellulosome–cell” synergy under the tested conditions and alternate cellulose-binding mechanisms (hong2014thecontributionof pages 10-11, hong2014thecontributionof pages 1-4).<br />
+- Proteomics/biochemistry: SdbA was detected in cell-associated cellulosomes at ~5–34% of CipA levels, supporting its presence in the anchored complexes (hong2014thecontributionof pages 4-6). SLH-mediated cell-envelope binding of anchoring scaffoldins is supported biochemically (bras2012structureandfunctiona pages 38-41, santos2025unconventionalcohesindockerinbindinga pages 37-40).<br />
+- Structural insight: High-affinity XDocII–CohII complexes underlie the anchoring reaction; an X-ray structure of an XDocII–CohII complex is referenced by Hong et al. 2014, supporting the molecular basis for CipA docking to anchoring cohesins (hong2014thecontributionof pages 10-11). Reviews further highlight the strength and binding-mode distinctions between type I (often dual-binding) and type II (often single-binding) interactions that govern assembly vs anchoring (santos2025unconventionalcohesindockerinbinding pages 58-61).</p>
+<p>Role in cellulosome architecture and anchoring<br />
+- Architectural role: SdbA’s single type II cohesin provides one docking site for CipA, complementing multi-cohesin anchoring scaffoldins (e.g., OlpB with seven) to generate polycellulosomes of varying sizes at the cell surface; this modularity supports adaptable tethering and spatial organization of enzyme arrays (bras2012structureandfunctiona pages 38-41, bras2012structureandfunctiona pages 112-115, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Recent developments (emphasis on 2023–2024 context)<br />
+- While SdbA-specific new experiments in 2023–2024 were not captured in the gathered evidence, recent comprehensive reviews synthesize advances in cohesin–dockerin binding modes, anchoring strategies (SLH and sortase-mediated), mechanical stability, and system diversity. These developments refine mechanistic models for anchoring scaffoldins like SdbA and underscore the importance of calcium-mediated Coh–Doc interactions and multi-scaffoldin architectures in dictating cellulosome size and plasticity (Frontiers in Microbiology, 2025; DOI: 10.3389/fmicb.2025.1638551) (lindic2025structuralandfunctional pages 7-8) and broader reviews (santos2025unconventionalcohesindockerinbindinga pages 58-61, santos2025unconventionalcohesindockerinbinding pages 58-61, santos2025unconventionalcohesindockerinbindinga pages 37-40). Genomic surveys in recent years have also expanded known diversity of cellulosome systems and emphasized the elaborate architectures in Acetivibrio-lineage bacteria; these insights contextualize SdbA’s role within complex anchoring networks, though specific SdbA updates remain limited in the present evidence set (lindic2025structuralandfunctional pages 7-8, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Applications and implementations<br />
+- Biomass conversion: Understanding SdbA-mediated anchoring informs rational engineering of tethered and free cellulosomes to optimize cellulose hydrolysis in bioprocessing. Experimental data indicate that modulating anchoring (e.g., CipA ΔXDocII or deletion of specific anchoring scaffoldins) influences hydrolysis rates and cell adhesion, guiding strategies to balance cell-associated vs cell-free activity in industrial strains (hong2014thecontributionof pages 10-11, hong2014thecontributionof pages 1-4, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Expert commentary and analysis<br />
+- Functional assignment: Based on convergent genetic, biochemical, and structural context, SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin with a single type II cohesin and SLH repeats, mediating attachment of CipA-based cellulosomes to the cell envelope. The absence of a reported CBM in SdbA is consistent with division of labor where cellulose targeting is achieved primarily by CipA’s CBM3 and by enzyme CBMs; SdbA’s role is anchoring rather than substrate recognition (bras2012structureandfunctiona pages 38-41, bras2012structureandfunction pages 38-41, bras2012structureandfunctiona pages 112-115).<br />
+- Redundancy and robustness: The moderate phenotype of ΔsdbA underscores redundancy among anchoring scaffoldins (OlpB/Orf2p/SdbA), a design that stabilizes cellulosome display under genetic or environmental perturbations. This redundancy should be considered in strain engineering aimed at tuning cell-surface vs secreted cellulosome distributions (hong2014thecontributionof pages 10-11).</p>
+<p>Relevant statistics and quantitative data<br />
+- ΔsdbA mutant: ~14–25% reduction in cellulose hydrolysis rate, indicating additive contribution (Biotechnology for Biofuels; 2014-05; DOI: 10.1186/1754-6834-7-80) (hong2014thecontributionof pages 10-11).<br />
+- CipA ΔXDocII mutant: loss of cell-associated polycellulosomes with only ~9% reduction in hydrolysis, revealing limited cell–cellulosome synergy and alternative cellulose-binding mechanisms under the conditions tested (hong2014thecontributionof pages 10-11).<br />
+- SdbA abundance: ~5–34% of CipA levels in cell-associated preparations (hong2014thecontributionof pages 4-6).</p>
+<p>Compliance with identity disambiguation<br />
+- The symbol “sdbA” is used in the C. thermocellum literature to denote the surface scaffoldin described here (P71143), not to be confused with unrelated sdbA symbols from other organisms. All citations above refer to the C. thermocellum/Acetivibrio thermocellus cellulosome anchoring protein context (bras2012structureandfunctiona pages 38-41, hong2014thecontributionof pages 4-6, hong2014thecontributionof pages 10-11, bras2012structureandfunctiona pages 112-115, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Embedded evidence map<br />
+| Source (citation label) | Year | URL/DOI | Focus | Key findings about SdbA / anchoring scaffoldins (domains, SLH, Coh type, CipA XDocII interaction) | Experimental evidence (mutants / binding) | Notes on recency / relevance |<br />
+|---|---:|---|---|---|---|---|<br />
+| Hong et al., 2014 (hong2014thecontributionof pages 4-6) | 2014 | https://doi.org/10.1186/1754-6834-7-80 | Contribution of scaffoldins to cellulose hydrolysis; role of secondary scaffoldins | Identifies SdbA as a secondary/anchoring scaffoldin carrying a single type II cohesin and a C-terminal SLH domain that mediates attachment of CipA via CipA C-term XDocII → CohII | Thermotargetron ΔsdbA mutants show moderate decrease in cellulose hydrolysis (≈14–25%); proteomics shows SdbA in cell-associated cellulosomes (Hong et al.) | Direct genetic and proteomic evidence; experimentally supports anchoring role |<br />
+| Brás 2012 (excerpt 1) (bras2012structureandfunctiona pages 38-41) | 2012 |  | Review on structure/function of cellulosomal enzymes and Coh–Doc complexes | Lists SdbA as anchoring scaffoldin with one type II cohesin; SLH repeats bind cell envelope; CipA C-term XDocII specifically recognizes type II cohesins | Biochemical evidence for SLH envelope binding; structural contact notes (e.g., CipA Asn122 hydrogen bonds with anchoring cohesin) | Authoritative synthesis of primary data (1990s–2000s); supports domain assignments |<br />
+| Brás 2012 (excerpt 2) (bras2012structureandfunctiona pages 112-115) | 2012 |  | Review / genomic synthesis emphasizing scaffoldin architecture | Summarizes three anchoring scaffoldins (SdbA/Orf2/OlpB) with CohII counts (1/2/7); CipA contains CBM3 and a C-term type II dockerin; type I vs II specificity separated | Sequence/genomic annotation and literature synthesis (no new mutants) | Consolidates domain counts and nomenclature used in later studies |<br />
+| Santos 2025 (santos2025unconventionalcohesindockerinbindinga pages 58-61) | 2025 |  | Review on unconventional Coh–Doc mechanisms and cellulosome assembly | Anchoring scaffoldins commonly bear SLH modules; type II Coh–XDocII tethering described; ScaB (OlpB) noted as abundant anchoring scaffoldin | Structural descriptions and literature citations; review-level (no new SdbA-specific experiments) | Recent synthesis of binding-mode diversity; useful for mechanistic context |<br />
+| Santos 2025 (santos2025unconventionalcohesindockerinbinding pages 58-61) | 2025 |  | Review/contextual analysis of cell-surface strategies | Emphasizes differences between type I (enzyme integration) and type II (anchoring) Coh–Doc modes; many anchoring scaffoldins SLH-linked; some surface proteins carry type I cohesins for direct enzyme anchoring | Biophysical/structural studies cited (inference for SdbA function) | Mechanistic interpretations relevant to SdbA inference (no direct new SdbA data) |<br />
+| Santos 2025 (santos2025unconventionalcohesindockerinbinding pages 37-40) | 2025 |  | Anchoring scaffoldins and SLH function (review excerpt) | Describes SLH repeats (≈50–60 aa) as mediating envelope binding; reiterates CipA C-term XDoc → type II cohesin tethering concept | Literature synthesis referencing structural/biochemical work | Reinforces SLH-mediated anchoring model used to interpret SdbA |<br />
+| Santos 2025 (santos2025unconventionalcohesindockerinbindinga pages 37-40) | 2025 |  | Abundance/role of anchoring scaffoldins in C. thermocellum | Notes ScaB/OlpB abundance and capacity to bind multiple ScaA units; anchoring scaffoldins enable polycellulosome formation and cell-surface tethering | Review-level evidence; aggregation of prior experimental reports | Contextualizes SdbA among other anchoring scaffoldins; recent review-level source |<br />
+| Lindič &amp; Vodovnik 2025 (lindic2025structuralandfunctional pages 7-8) | 2025 | https://doi.org/10.3389/fmicb.2025.1638551 | Structural &amp; functional insights into cellulosomes (recent review) | Discusses anchoring via SLH or sortase (LPXTG), calcium-mediated Coh–Doc interactions, and roles for CBM/X2 domains in localization; no SdbA-specific new data | Structural studies and broad literature cited (review) | Recent (2025) review with DOI; useful for up-to-date mechanistic models though noted quality caveats |</p>
+<p><em>Table: Compact, source-linked evidence table summarizing domain architecture, localization, interactions, and experimental data for SdbA (sdbA) in Clostridium/Acetivibrio thermocellum, citing the gathered context IDs for traceability.</em></p>
+<p>References with URLs and dates (where available)<br />
+- Hong et al., Biotechnology for Biofuels, posted May 2014. The contribution of cellulosomal scaffoldins to cellulose hydrolysis by Clostridium thermocellum analyzed by using thermotargetrons. URL: https://doi.org/10.1186/1754-6834-7-80 (hong2014thecontributionof pages 4-6, hong2014thecontributionof pages 10-11, hong2014thecontributionof pages 1-4).<br />
+- Lindič &amp; Vodovnik, Frontiers in Microbiology, Sep 2025. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. URL: https://doi.org/10.3389/fmicb.2025.1638551 (lindic2025structuralandfunctional pages 7-8).<br />
+- Additional review context on anchoring scaffoldins and SLH-mediated attachment is synthesized in Santos 2025 (recent review excerpts without DOI/URL in the extracted context) (santos2025unconventionalcohesindockerinbindinga pages 58-61, santos2025unconventionalcohesindockerinbinding pages 58-61, santos2025unconventionalcohesindockerinbinding pages 37-40, santos2025unconventionalcohesindockerinbindinga pages 37-40).</p>
+<p>Limitations and open needs<br />
+- Direct 2023–2024 SdbA-focused primary studies were not recovered in the gathered evidence. The structural details specific to the SdbA type II cohesin (e.g., high-resolution structures) are referenced in older literature and reviews; targeted searches for these structures and for any 2023–2024 functional genomics or proteomics updates would further refine this annotation (hong2014thecontributionof pages 10-11, bras2012structureandfunctiona pages 38-41).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bras2012structureandfunctiona pages 38-41): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunctiona pages 112-115): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 112-115): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(bras2012structureandfunction pages 38-41): JLA Brás. Structure and function relationships in novel cellulosomal enzymes and cohesindockerin complexes. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(santos2025unconventionalcohesindockerinbindinga pages 37-40): MRCD Santos. Unconventional cohesin-dockerin binding mechanisms reveal the complexity of cellulosome assembly. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(hong2014thecontributionof pages 4-6): Wei Hong, Jie Zhang, Yingang Feng, Georg Mohr, Alan M Lambowitz, Gu-Zhen Cui, Ya-Jun Liu, and Qiu Cui. The contribution of cellulosomal scaffoldins to cellulose hydrolysis by clostridium thermocellum analyzed by using thermotargetrons. Biotechnology for Biofuels, 7:80-80, May 2014. URL: https://doi.org/10.1186/1754-6834-7-80, doi:10.1186/1754-6834-7-80. This article has 85 citations.</p>
+</li>
+<li>
+<p>(hong2014thecontributionof pages 10-11): Wei Hong, Jie Zhang, Yingang Feng, Georg Mohr, Alan M Lambowitz, Gu-Zhen Cui, Ya-Jun Liu, and Qiu Cui. The contribution of cellulosomal scaffoldins to cellulose hydrolysis by clostridium thermocellum analyzed by using thermotargetrons. Biotechnology for Biofuels, 7:80-80, May 2014. URL: https://doi.org/10.1186/1754-6834-7-80, doi:10.1186/1754-6834-7-80. This article has 85 citations.</p>
+</li>
+<li>
+<p>(hong2014thecontributionof pages 1-4): Wei Hong, Jie Zhang, Yingang Feng, Georg Mohr, Alan M Lambowitz, Gu-Zhen Cui, Ya-Jun Liu, and Qiu Cui. The contribution of cellulosomal scaffoldins to cellulose hydrolysis by clostridium thermocellum analyzed by using thermotargetrons. Biotechnology for Biofuels, 7:80-80, May 2014. URL: https://doi.org/10.1186/1754-6834-7-80, doi:10.1186/1754-6834-7-80. This article has 85 citations.</p>
+</li>
+<li>
+<p>(santos2025unconventionalcohesindockerinbinding pages 58-61): MRCD Santos. Unconventional cohesin-dockerin binding mechanisms reveal the complexity of cellulosome assembly. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(lindic2025structuralandfunctional pages 7-8): Nataša Lindič and Maša Vodovnik. Structural and functional insights into cellulosomes: masters of plant cell wall degradation. Frontiers in Microbiology, Sep 2025. URL: https://doi.org/10.3389/fmicb.2025.1638551, doi:10.3389/fmicb.2025.1638551. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(santos2025unconventionalcohesindockerinbindinga pages 58-61): MRCD Santos. Unconventional cohesin-dockerin binding mechanisms reveal the complexity of cellulosome assembly. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(santos2025unconventionalcohesindockerinbinding pages 37-40): MRCD Santos. Unconventional cohesin-dockerin binding mechanisms reveal the complexity of cellulosome assembly. Unknown journal, 2025.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bras2012structureandfunctiona pages 38-41</li>
+<li>hong2014thecontributionof pages 10-11</li>
+<li>hong2014thecontributionof pages 4-6</li>
+<li>santos2025unconventionalcohesindockerinbinding pages 58-61</li>
+<li>lindic2025structuralandfunctional pages 7-8</li>
+<li>bras2012structureandfunctiona pages 112-115</li>
+<li>santos2025unconventionalcohesindockerinbindinga pages 58-61</li>
+<li>santos2025unconventionalcohesindockerinbinding pages 37-40</li>
+<li>santos2025unconventionalcohesindockerinbindinga pages 37-40</li>
+<li>bras2012structureandfunction pages 112-115</li>
+<li>bras2012structureandfunction pages 38-41</li>
+<li>hong2014thecontributionof pages 1-4</li>
+<li>https://doi.org/10.1186/1754-6834-7-80</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551</li>
+<li>https://doi.org/10.1186/1754-6834-7-80,</li>
+<li>https://doi.org/10.3389/fmicb.2025.1638551,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P71143
+gene_symbol: sdbA
+aliases:
+  - SdbA
+  - Scaffolding dockerin binding protein A
+  - Anchoring scaffoldin
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:203119
+  label: Acetivibrio thermocellus
+description: &gt;
+  SdbA (Scaffolding dockerin binding protein A) is an anchoring scaffoldin in the
+  Acetivibrio thermocellus (formerly Clostridium thermocellum) cellulosome system.
+  It is a non-catalytic cell surface protein that functions to tether the primary
+  scaffoldin CipA (and its associated enzyme complement) to the bacterial cell envelope.
+  SdbA contains a single type II cohesin domain that specifically binds the C-terminal
+  type II dockerin (XDocII) of CipA, and three SLH (S-layer homology) domains that
+  mediate attachment to the peptidoglycan/cell wall. Unlike cellulosomal enzymes,
+  SdbA has NO catalytic activity and does NOT bind carbohydrates directly - its
+  function is purely structural/scaffolding. Genetic deletion studies show that
+  sdbA mutants have moderate (14-25%) reductions in cellulose hydrolysis, indicating
+  functional redundancy with other anchoring scaffoldins (OlpB, Orf2p).
+
+existing_annotations:
+  - term:
+      id: GO:0000272
+      label: polysaccharide catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;
+        This annotation is INCORRECT. SdbA is a non-catalytic anchoring scaffoldin
+        that does NOT participate in polysaccharide catabolism. The protein lacks
+        any glycosyl hydrolase domains or catalytic activity. The InterPro mapping
+        from the cohesin domain (IPR002102) is erroneous - cohesin domains mediate
+        protein-protein interactions with dockerin domains, not carbohydrate degradation.
+        The deep research confirms that SdbA is best annotated as a noncatalytic,
+        cell-surface anchoring scaffoldin.
+      action: REMOVE
+      reason: &gt;
+        SdbA contains a type II cohesin domain that binds dockerin, not carbohydrates
+        or polysaccharides. The protein has no enzymatic activity whatsoever. It
+        functions solely as a structural adaptor to tether cellulosomes to the cell
+        surface via SLH-mediated cell envelope binding. The annotation derives from
+        an incorrect InterPro2GO mapping that conflates structural similarity between
+        cohesin and CBM domains with functional similarity.
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin
+            with a single type II cohesin and SLH repeats, mediating attachment of
+            CipA-based cellulosomes to the cell envelope
+
+  - term:
+      id: GO:0005576
+      label: extracellular region
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: &gt;
+        This annotation is correct but overly broad. SdbA is indeed secreted and
+        localized extracellularly, but it is specifically anchored to the cell surface
+        via its SLH domains. The UniProt subcellular location annotation Secreted
+        supports this, though GO:0009986 (cell surface) would be more specific given
+        the SLH-mediated cell envelope attachment.
+      action: MODIFY
+      reason: &gt;
+        While technically correct that SdbA is in the extracellular region, this term
+        is too general. SdbA is specifically tethered to the cell surface via its
+        three SLH domains which bind cell envelope components (peptidoglycan). The
+        protein does not freely diffuse in the extracellular space but is surface-
+        associated. A more accurate annotation would reflect its cell surface localization.
+      proposed_replacement_terms:
+        - id: GO:0009986
+          label: cell surface
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            SdbA contains SLH repeats that bind cell envelope components, providing
+            noncovalent anchoring to the bacterial surface
+
+  - term:
+      id: GO:0030246
+      label: carbohydrate binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;
+        This annotation is INCORRECT. SdbA does NOT bind carbohydrates. The type II
+        cohesin domain binds the type II dockerin domain of CipA (a protein-protein
+        interaction), not carbohydrates. This erroneous annotation stems from the
+        InterPro mapping of cohesin domains (IPR002102) and the CBM superfamily
+        (IPR008965), which share structural similarity but have completely different
+        functions. Cohesin-dockerin interactions are protein-protein, calcium-dependent
+        binding events, not carbohydrate binding.
+      action: MODIFY
+      reason: &gt;
+        SdbA cohesin domain specifically binds the dockerin domain of CipA scaffoldin
+        - this is a well-characterized protein-protein interaction, not carbohydrate
+        binding. The structural similarity between cohesin domains and CBM domains
+        (both belong to beta-sandwich fold families) has led to erroneous functional
+        annotation. The correct molecular function is type-II dockerin domain binding,
+        which accurately describes SdbA role in capturing CipA for cell surface
+        anchoring.
+      proposed_replacement_terms:
+        - id: GO:1990309
+          label: type-II dockerin domain binding
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            The type II dockerin from CipA binds specifically to type II cohesins on
+            SdbA ... type II interactions mediate scaffoldin-scaffoldin and anchoring
+            to the cell surface
+
+  - term:
+      id: GO:0044575
+      label: cellulosome assembly
+    evidence_type: TAS
+    original_reference_id: PMID:24955112
+    review:
+      summary: &gt;
+        SdbA plays a direct role in cellulosome assembly by providing an anchoring
+        point for the CipA scaffoldin at the cell surface. While SdbA does not
+        participate in the type I cohesin-dockerin interactions that recruit enzymes
+        to CipA, it is essential for the final step of cellulosome architecture:
+        tethering the assembled complex to the cell. Genetic studies show that
+        deletion of anchoring scaffoldins affects cellulosome display.
+      action: NEW
+      reason: &gt;
+        This annotation captures SdbA role in the biological process of organizing
+        the cellulosome at the cell surface. The protein is part of the multi-protein
+        anchoring system that completes cellulosome architecture.
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            SdbA single type II cohesin provides one docking site for CipA,
+            complementing multi-cohesin anchoring scaffoldins to generate
+            polycellulosomes of varying sizes at the cell surface
+        - reference_id: PMID:24955112
+          supporting_text: &#34;Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions&#34;
+
+  - term:
+      id: GO:1990309
+      label: type-II dockerin domain binding
+    evidence_type: IDA
+    original_reference_id: PMID:8655483
+    review:
+      summary: &gt;
+        This is the core molecular function of SdbA. The type II cohesin domain
+        specifically recognizes and binds the C-terminal type II dockerin (XDocII)
+        of CipA scaffoldin. This interaction is calcium-dependent and has been
+        characterized structurally by X-ray crystallography (PDB: 2BM3, 4FL4).
+      action: NEW
+      reason: &gt;
+        This term precisely describes SdbA molecular function. The protein cohesin
+        domain binds dockerin domains, not carbohydrates. This is a well-
+        characterized, high-affinity protein-protein interaction that has been
+        validated structurally and biochemically.
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based
+            cellulosomes to the bacterial envelope via high-affinity binding between
+            CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+        - reference_id: PMID:8655483
+          supporting_text: &#34;The NH2-terminal region of SdbA and a fusion protein carrying the first NH2-terminal repeat of OlpB were shown to bind the dockerin domain of CipA&#34;
+
+  - term:
+      id: GO:0009986
+      label: cell surface
+    evidence_type: IDA
+    original_reference_id: PMID:24955112
+    review:
+      summary: &gt;
+        SdbA is localized to the cell surface via its three SLH (S-layer homology)
+        domains which bind noncovalently to peptidoglycan/cell envelope components.
+        This positions the type II cohesin domain extracellularly to capture CipA.
+        Proteomics studies detect SdbA in cell-associated cellulosome fractions.
+      action: NEW
+      reason: &gt;
+        This annotation accurately reflects SdbA cellular localization as determined
+        by biochemical studies showing it is tethered to the cell surface via SLH
+        domain interactions with the cell wall.
+      supported_by:
+        - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+          supporting_text: &gt;
+            SdbA was detected in cell-associated cellulosomes ... SLH-mediated
+            cell-envelope binding of anchoring scaffoldins is supported biochemically
+        - reference_id: PMID:24955112
+          supporting_text: &#34;attached to the cell surface by non-catalytic scaffoldins&#34;
+
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings:
+      - statement: &gt;
+          The InterPro2GO mappings for cohesin domains (IPR002102) and CBM superfamily
+          (IPR008965) incorrectly assign carbohydrate-related functions to all proteins
+          containing these domains. For SdbA, which contains a type II cohesin that
+          binds dockerin (not carbohydrates), these mappings produce erroneous annotations.
+
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    findings:
+      - statement: &gt;
+          The Secreted annotation in UniProt correctly places SdbA extracellularly,
+          but the resulting GO annotation to extracellular region is less specific than
+          ideal given SdbA known cell surface localization via SLH domains.
+
+  - id: PMID:8655483
+    title: A new type of cohesin domain that specifically binds the dockerin domain of the Clostridium thermocellum cellulosome-integrating protein CipA
+    findings:
+      - statement: &gt;
+          Original characterization of SdbA identifying the type II cohesin domain
+          and its specific binding to CipA dockerin domain.
+        supporting_text: &#34;The NH2-terminal region of SdbA and a fusion protein carrying the first NH2-terminal repeat of OlpB were shown to bind the dockerin domain of CipA. Thus, a new type of cohesin domain, which is present in one, two, and four copies in SdbA, ORF2p, and OlpB, respectively, can be defined&#34;
+
+  - id: PMID:15913653
+    title: Insights into the structural determinants of cohesin-dockerin specificity revealed by the crystal structure of the type II cohesin from Clostridium thermocellum SdbA
+    findings:
+      - statement: &gt;
+          High-resolution (1.8 A) X-ray structure of SdbA cohesin domain (residues 29-191).
+        supporting_text: &#34;Here we report the crystal structure of the Type II cohesin (CohII) from the Clostridium thermocellum cell surface anchoring protein SdbA. The protein domain contains nine beta-strands and a small alpha-helix&#34;
+
+  - id: PMID:22707718
+    title: Scaffoldin conformation and dynamics revealed by a ternary complex from the Clostridium thermocellum cellulosome
+    findings:
+      - statement: &gt;
+          Crystal structure of a ternary complex including SdbA cohesin (residues 27-200).
+        supporting_text: &#34;Herein, we have used x-ray crystallography and small angle x-ray scattering to structurally characterize a ternary protein complex from the Clostridium thermocellum cellulosome that comprises a C-terminal trimodular fragment of the CipA scaffoldin bound to the SdbA type II cohesin module&#34;
+
+  - id: PMID:24955112
+    title: The contribution of cellulosomal scaffoldins to cellulose hydrolysis by Clostridium thermocellum analyzed by using thermotargetrons
+    findings:
+      - statement: &gt;
+          Genetic deletion of sdbA causes 14-25% reduction in cellulose hydrolysis rate.
+        supporting_text: &#34;Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions&#34;
+      - statement: &gt;
+          Demonstrates functional redundancy among anchoring scaffoldins (SdbA, OlpB, Orf2p).
+        supporting_text: &#34;Disruptants lacking any of four different secondary scaffoldins (OlpB, 7CohII, Orf2p, or SdbA) showed moderately decreased cellulose hydrolysis rates, suggesting additive contributions&#34;
+
+  - id: file:ACET2/P71143/P71143-deep-research-falcon.md
+    title: Deep research review of sdbA (P71143) function
+    findings:
+      - statement: &gt;
+          SdbA is a noncatalytic, cell-surface anchoring scaffoldin with a single type II
+          cohesin and SLH repeats, mediating attachment of CipA-based cellulosomes to the
+          cell envelope.
+        supporting_text: &gt;
+          SdbA is best annotated as a noncatalytic, cell-surface anchoring scaffoldin
+          with a single type II cohesin and SLH repeats, mediating attachment of
+          CipA-based cellulosomes to the cell envelope
+      - statement: &gt;
+          SdbA type II cohesin binds CipA type II dockerin to anchor the cellulosome.
+        supporting_text: &gt;
+          SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based
+          cellulosomes to the bacterial envelope via high-affinity binding between
+          CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+      - statement: &gt;
+          SLH domains mediate cell wall attachment.
+        supporting_text: &gt;
+          SdbA contains SLH repeats that bind cell envelope components, providing
+          noncovalent anchoring to the bacterial surface
+
+core_functions:
+  - description: &gt;
+      SdbA functions as an anchoring scaffoldin that tethers CipA-based cellulosomes
+      to the bacterial cell surface through type II cohesin-dockerin interactions
+      and SLH-mediated cell wall binding.
+    molecular_function:
+      id: GO:1990309
+      label: type-II dockerin domain binding
+    directly_involved_in:
+      - id: GO:0044575
+        label: cellulosome assembly
+    locations:
+      - id: GO:0009986
+        label: cell surface
+    supported_by:
+      - reference_id: file:ACET2/P71143/P71143-deep-research-falcon.md
+        supporting_text: &gt;
+          SdbA is a cell-surface anchoring scaffoldin that tethers CipA-based
+          cellulosomes to the bacterial envelope via high-affinity binding between
+          CipA C-terminal type II dockerin (XDocII) and the SdbA type II cohesin
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: What is the precise binding affinity (Kd) of SdbA cohesin for CipA XDocII dockerin?
+  - question: How do the three SLH domains of SdbA cooperate in cell wall attachment?
+  - question: What is the stoichiometry of anchoring scaffoldins (SdbA/OlpB/Orf2p) on the cell surface?
+
+suggested_experiments:
+  - description: Surface plasmon resonance or ITC to quantify SdbA-CipA binding kinetics
+    hypothesis: SdbA cohesin binds CipA dockerin with nanomolar affinity
+  - description: Mutagenesis of individual SLH domains to assess their relative contributions to anchoring
+    hypothesis: All three SLH domains contribute to stable cell wall attachment
+  - description: Quantitative proteomics of cell-surface vs secreted cellulosome fractions in different media
+    hypothesis: Growth conditions affect the ratio of anchored vs free cellulosomes
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xghA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>xghA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q70DK5" target="_blank" class="term-link">
+                        Q70DK5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Acetivibrio thermocellus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "xghA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q70DK5" data-a="DESCRIPTION: Xyloglucanase Xgh74A is a GH74 family endo-xyloglu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Xyloglucanase Xgh74A is a GH74 family endo-xyloglucanase that is a major component of the Acetivibrio thermocellus cellulosome. It catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic linkages in xyloglucan, preferentially cleaving at unbranched glucose residues in the backbone to produce xyloglucan oligosaccharides (XXXG, XLXG, XXLG, XLLG). The enzyme contains a C-terminal type I dockerin domain that mediates attachment to the CipA scaffoldin protein, thereby incorporating it into the extracellular cellulosome complex. It has high specific activity on tamarind seed xyloglucan (295 U/mg) with optimal activity at pH 6.4 and 75C, and shows only low activity on CMC and no activity on amorphous cellulose, indicating recognition of xylosidic side chains present in xyloglucan. Crystal structures have been determined revealing an open binding groove accommodating long oligosaccharides.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0000272" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation infers involvement in polysaccharide catabolic process based on InterPro domain matches (dockerin domains IPR002105, IPR016134, IPR036439) and UniProtKB keywords. Xgh74A does function in polysaccharide catabolism, specifically xyloglucan degradation, as demonstrated experimentally (PMID:16207921). However, this term is very broad and lacks specificity for the actual substrate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While this annotation is correct in a general sense - Xgh74A does participate in polysaccharide catabolism - it is overly broad. However, the more specific term GO:2000899 (xyloglucan catabolic process) is already annotated with IDA evidence, making this broader IEA annotation acceptable as a correctly inferred parent term. The enzymatic evidence from PMID:16207921 demonstrates hydrolysis of xyloglucan producing oligosaccharides.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xgh74A contributes to degradation of xyloglucan, a major hemicellulose entwined with cellulose microfibrils</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0004553" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation from InterPro/ARBA infers a general O-glycosyl hydrolase activity based on domain matches. Xgh74A is indeed an O-glycosyl hydrolase, specifically an endo-xyloglucanase that cleaves beta-1,4-glucosidic linkages. The more specific term GO:0033946 (xyloglucan-specific endo-beta-1,4-glucanase activity) is annotated with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct parent term for the experimentally validated xyloglucan-specific endo-beta-1,4-glucanase activity (GO:0033946). The enzyme hydrolyzes O-glycosyl bonds in xyloglucan as demonstrated in PMID:16207921. The crystal structure study (PMID:16772298) further characterized the active site and substrate binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module. It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010411" target="_blank" class="term-link">
+                                    GO:0010411
+                                </a>
+                            </span>
+                            <span class="term-label">xyloglucan metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0010411" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter-generated annotation correctly identifies involvement in xyloglucan metabolism based on phylogenetic inference (PANTHER:PTN005180743). Xgh74A is experimentally demonstrated to hydrolyze xyloglucan. However, the more specific child term GO:2000899 (xyloglucan catabolic process) is already annotated with IDA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct but broad annotation. The enzyme specifically catalyzes xyloglucan catabolism, which is a child process of xyloglucan metabolic process. Since the more specific term is already annotated with experimental evidence, this IEA serves as a correctly inferred parent term. The TreeGrafter phylogenetic inference correctly places this GH74 family enzyme in the xyloglucan metabolism pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This very broad IEA annotation from UniProtKB-KW:KW-0378 (Hydrolase) simply indicates that the protein has hydrolase activity. While technically correct, this term provides minimal informational value given the more specific annotations available.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct but very high-level annotation that is a grandparent of the experimentally validated specific activity. The UniProtKB keyword mapping correctly identifies the protein as a hydrolase. More specific child terms (GO:0016798, GO:0004553, GO:0033946) are also annotated, providing greater specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0016798" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation from UniProtKB-KW:KW-0326 (Glycosidase) correctly identifies the protein as having glycosidase activity. Xgh74A is a GH74 family glycoside hydrolase with demonstrated endo-glucanase activity on xyloglucan.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct parent term for the more specific xyloglucan-specific endo-beta-1,4-glucanase activity (GO:0033946). The UniProtKB keyword-based inference correctly classifies this enzyme as acting on glycosyl bonds, consistent with its GH74 family membership and demonstrated hydrolysis of beta-1,4-glucosidic linkages in xyloglucan.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030245" target="_blank" class="term-link">
+                                    GO:0030245
+                                </a>
+                            </span>
+                            <span class="term-label">cellulose catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0030245" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation infers involvement in cellulose catabolism from UniProtKB-KW:KW-0136 (Cellulose degradation). However, experimental evidence clearly demonstrates that Xgh74A is NOT a cellulase - it has only very low activity on CMC and NO activity on amorphous cellulose. Its primary substrate is xyloglucan, a hemicellulose.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is incorrect. PMID:16207921 explicitly states that Xgh74A has &#34;low activity on CMC&#34; and &#34;no activity on amorphous cellulose&#34;, indicating it does not function in cellulose catabolism. The UniProt keyword &#34;Cellulose degradation&#34; appears to be a misattribution likely based on its cellulosome association and GH74 family membership, but experimental evidence clearly shows xyloglucan is the primary substrate. The enzyme&#39;s recognition of xylosidic side chains distinguishes it from true cellulases.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Its low activity on CMC and lack of activity on amorphous cellulose indicates recognition of the xylosidic side chains present in xyloglucan, which is readily hydrolysed (295 U mg(-1)).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033946" target="_blank" class="term-link">
+                                    GO:0033946
+                                </a>
+                            </span>
+                            <span class="term-label">xyloglucan-specific endo-beta-1,4-glucanase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16207921
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two new major subunits in the cellulosome of Clostridium the...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0033946" data-r="PMID:16207921" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation correctly captures the specific molecular function of Xgh74A. The enzyme was biochemically characterized and shown to hydrolyze xyloglucan with high specificity (295 U/mg on tamarind seed xyloglucan), cleaving every fourth beta-1,4-glucan bond in the backbone to produce decorated cellotetraose units (XXXG, XLXG, XXLG, XLLG). The crystal structure (PMID:16772298) further confirmed this activity and identified the catalytic residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific and accurate MF annotation for Xgh74A, directly supported by experimental evidence demonstrating endo-xyloglucanase activity. The enzyme belongs to GH74 family known for this activity, and the hydrolysis pattern producing decorated cellotetraose units is characteristic of endo-xyloglucanases. This represents the core molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module. It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The pattern of the hydrolysis products from tamarind xyloglucan resembles that of other GHF74 xyloglucan endoglucanases.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functions as an endo-xyloglucanase (cleaves xyloglucan backbone); reported preference to cleave at unbranched glucosyl residues in xyloglucan</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                                    GO:0043263
+                                </a>
+                            </span>
+                            <span class="term-label">cellulosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16207921
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two new major subunits in the cellulosome of Clostridium the...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:0043263" data-r="PMID:16207921" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation correctly identifies Xgh74A as a cellulosome component. The enzyme contains a C-terminal type I dockerin domain that mediates incorporation into the cellulosome by binding to cohesin modules on the CipA scaffoldin protein. Proteomic studies have confirmed Xgh74A as a major extracellular cellulosome component in C. thermocellum.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct CC annotation for Xgh74A. The presence of a functional type I dockerin domain (experimentally validated through proteomic detection in cellulosome preparations) indicates localization to the cellulosome complex. The enzyme was identified as one of &#34;two new major subunits in the cellulosome&#34; in PMID:16207921. Additional proteomic studies (Gold &amp; Martin 2007, Zverlov et al. 2005 Proteomics) have confirmed its presence in extracellular cellulosome preparations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The structure and enzymic activity of xyloglucanase Xgh74A and endoxylanase Xyn10D, components in the cellulosomes of cellulose-grown Clostridium thermocellum, were determined.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xgh74A is an extracellular, dockerin-bearing cellulosomal enzyme incorporated into CipA scaffoldin complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000899" target="_blank" class="term-link">
+                                    GO:2000899
+                                </a>
+                            </span>
+                            <span class="term-label">xyloglucan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16207921
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two new major subunits in the cellulosome of Clostridium the...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q70DK5" data-a="GO:2000899" data-r="PMID:16207921" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation correctly identifies Xgh74A as involved in xyloglucan catabolism. The enzyme specifically degrades xyloglucan (a hemicellulose) by hydrolyzing the glucan backbone, contributing to plant cell wall deconstruction. It is the only xyloglucanase identified in the C. thermocellum cellulosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most specific and accurate BP annotation for Xgh74A. The enzyme was experimentally demonstrated to hydrolyze tamarind seed xyloglucan with high specific activity, producing xylogluco-oligosaccharides. This represents the core biological process in which the enzyme functions - the catabolic breakdown of xyloglucan hemicellulose as part of lignocellulose deconstruction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                                        PMID:16207921
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The data indicate that Xgh74A and Xyn10D contribute to the in vivo degradation of the hemicelluloses xyloglucan and xylan by the cellulosome of C. thermocellum.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The primary molecular function of Xgh74A is xyloglucan-specific endo-beta-1,4-glucanase activity. It catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic linkages specifically in xyloglucan, cleaving at unbranched glucose residues to produce decorated cellotetraose units (xylogluco-oligosaccharides). The enzyme shows substrate specificity for xyloglucan over cellulose, recognizing the xylosidic side chains of the substrate. The enzyme is localized to the extracellular cellulosome complex via its C-terminal type I dockerin domain and participates in xyloglucan catabolism as part of hemicellulose degradation.</h3>
+                <span class="vote-buttons" data-g="Q70DK5" data-a="FUNCTION: The primary molecular function of Xgh74A is xylogl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033946" target="_blank" class="term-link">
+                            xyloglucan-specific endo-beta-1,4-glucanase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000899" target="_blank" class="term-link">
+                                xyloglucan catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043263" target="_blank" class="term-link">
+                                cellulosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16207921" target="_blank" class="term-link">
+                            PMID:16207921
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two new major subunits in the cellulosome of Clostridium thermocellum: xyloglucanase Xgh74A and endoxylanase Xyn10D.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Xgh74A identified as a major cellulosome component with GH74 catalytic domain and type I dockerin</div>
+                        
+                        <div class="finding-text">"Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrates endo-xyloglucanase activity, cleaving every fourth beta-1,4-glucan bond in xyloglucan backbone</div>
+                        
+                        <div class="finding-text">"It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High specific activity on tamarind seed xyloglucan (295 U/mg), producing XXXG/XLXG/XXLG/XLLG products</div>
+                        
+                        <div class="finding-text">"xyloglucan, which is readily hydrolysed (295 U mg(-1))"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Low activity on CMC, no activity on amorphous cellulose - distinguishing it from cellulases</div>
+                        
+                        <div class="finding-text">"Its low activity on CMC and lack of activity on amorphous cellulose indicates recognition of the xylosidic side chains present in xyloglucan"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First xyloglucanase identified in C. thermocellum cellulosome</div>
+                        
+                        <div class="finding-text">"Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16772298" target="_blank" class="term-link">
+                            PMID:16772298
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structures of Clostridium thermocellum xyloglucanase, XGH74A, reveal the structural basis for xyloglucan recognition and degradation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure reveals complex subsite specificity accommodating seventeen monosaccharide moieties</div>
+                        
+                        <div class="finding-text">"The structures, in combination with mutagenesis data on the catalytic residues and the kinetics and specificity of xyloglucan hydrolysis reveal a complex subsite specificity accommodating seventeen monosaccharide moieties of the multibranched substrate in an open substrate binding terrain."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for xghA/Q70DK5</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Xgh74A is extracellular and incorporated into the C. thermocellum cellulosome through its type I dockerin</div>
+                        
+                        <div class="finding-text">"Xgh74A is an extracellular, dockerin-bearing cellulosomal enzyme incorporated into CipA scaffoldin complexes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions as endo-xyloglucanase with preference for cleavage at unbranched glucosyl residues</div>
+                        
+                        <div class="finding-text">"Functions as an endo-xyloglucanase (cleaves xyloglucan backbone); reported preference to cleave at unbranched glucosyl residues in xyloglucan"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the relative contribution of Xgh74A to overall cellulosome efficiency on different plant biomass feedstocks been quantified?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q70DK5" data-a="Q: Has the relative contribution of Xgh74A to overall..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there conditions under which xghA expression or Xgh74A incorporation into cellulosomes is differentially regulated?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q70DK5" data-a="Q: Are there conditions under which xghA expression o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Comparative activity assays on different plant-derived xyloglucans (beyond tamarind) to assess substrate range</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q70DK5" data-a="EXPERIMENT: Comparative activity assays on different plant-der..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cellulosome reconstitution experiments with and without Xgh74A to quantify synergistic contributions to plant biomass deconstruction</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q70DK5" data-a="EXPERIMENT: Cellulosome reconstitution experiments with and wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q70DK5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q70DK5" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-26T17:03:27.641084'<br />
+end_time: '2025-12-26T17:09:21.761980'<br />
+duration_seconds: 354.12<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ACET2<br />
+  gene_id: Q70DK5<br />
+  gene_symbol: xghA<br />
+  uniprot_accession: Q70DK5<br />
+  protein_description: 'RecName: Full=Xyloglucanase Xgh74A {ECO:0000303|PubMed:16207921};<br />
+    EC=3.2.1.-; Flags: Precursor;'<br />
+  gene_info: Name=xghA {ECO:0000312|EMBL:CAE51306.1};<br />
+  organism_full: Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium<br />
+    thermocellum).<br />
+  protein_family: Belongs to the glycosyl hydrolase 74 family.<br />
+  protein_domains: Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134); Dockerin_dom_sf.<br />
+    (IPR036439); EF_Hand_1_Ca_BS. (IPR018247); WD40/YVTN_repeat-like_dom_sf. (IPR015943)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q70DK5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Xyloglucanase Xgh74A {ECO:0000303|PubMed:16207921}; EC=3.2.1.-; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=xghA {ECO:0000312|EMBL:CAE51306.1};</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 74 family.</li>
+<li><strong>Key Domains:</strong> Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134); Dockerin_dom_sf. (IPR036439); EF_Hand_1_Ca_BS. (IPR018247); WD40/YVTN_repeat-like_dom_sf. (IPR015943)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "xghA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'xghA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>xghA</strong> (gene ID: Q70DK5, UniProt: Q70DK5) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q70DK5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Xyloglucanase Xgh74A {ECO:0000303|PubMed:16207921}; EC=3.2.1.-; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=xghA {ECO:0000312|EMBL:CAE51306.1};</li>
+<li><strong>Organism (full):</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Protein Family:</strong> Belongs to the glycosyl hydrolase 74 family.</li>
+<li><strong>Key Domains:</strong> Dockerin_1_rpt. (IPR002105); Dockerin_dom. (IPR016134); Dockerin_dom_sf. (IPR036439); EF_Hand_1_Ca_BS. (IPR018247); WD40/YVTN_repeat-like_dom_sf. (IPR015943)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "xghA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Acetivibrio thermocellus (Hungateiclostridium thermocellum) (Clostridium thermocellum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'xghA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>xghA</strong> (gene ID: Q70DK5, UniProt: Q70DK5) in ACET2.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+Objective 1 (completed): Verified xghA identity and organism; confirmed GH74 catalytic domain with type I dockerin; cellulosomal localization in Acetivibrio/Hungateiclostridium thermocellum (proteomic/genomic evidence). Evidence: Zverlov 2005 Proteomics; Gold &amp; Martin 2007 J Bacteriol (zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2).<br />
+Objective 2: Gather recent and foundational sources on Xgh74A/GH74/cellulosomes, prioritizing 2023–2024 for context. Evidence gathered includes 2024 genomic survey of cellulosome-displaying bacteria (minor2024agenomicanalysis pages 6-7) and foundational proteomic/structural context (guerreiro2008molecularmechanismsof pages 57-62, zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2, ravachol2016mechanismsinvolvedin pages 15-16).<br />
+Objective 3: Extract detailed functional annotations: enzymatic reaction, specificity, localization, structure, regulation, and role in biomass deconstruction (see report and embedded artifact). Evidence: as cited.<br />
+Objective 4: Compile applications and implementations in biomass deconstruction/CBP, and enzyme cocktails. Evidence: Biswal 2022 for CBP metrics; cellulosome context from 2024 genomic analysis and earlier proteomics (minor2024agenomicanalysis pages 6-7, gold2007globalviewof pages 1-2).<br />
+Objective 5: Synthesize expert opinions, statistics, and data with URLs/dates; cite all claims. Evidence: all PQAC sources listed below.<br />
+Objective 6: Create a concise evidence table artifact for traceability.<br />
+Objective 7: Write and submit the comprehensive research report.</p>
+<p>Comprehensive research report: xghA (UniProt Q70DK5) in Acetivibrio/Hungateiclostridium thermocellum</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Gene/protein identity and organism verification. xghA encodes Xyloglucanase Xgh74A, a secreted, cellulosome-associated enzyme from Clostridium thermocellum, now classified as Acetivibrio thermocellus (also referenced as Hungateiclostridium thermocellum). Proteomic/genomic analyses first identified Xgh74A as a major extracellular cellulosomal component when cellulosomes from cellulose-grown cultures were analyzed; xghA encodes a ~92 kDa glycoside hydrolase family 74 (GH74) catalytic module fused to a type I dockerin (Doc1) that tethers the enzyme to the primary scaffoldin CipA (zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2). URL/Date examples: Proteomics 2005: https://doi.org/10.1002/pmic.200401199 (Sep 2005). Journal of Bacteriology 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Protein family and domains. Xgh74A belongs to GH74, whose members are endo-xyloglucanases acting on the β-1,4-glucan backbone of xyloglucan. In C. thermocellum, Xgh74A is modular: GH74 catalytic domain + type I dockerin; this arrangement is characteristic of cellulosomal DocGH enzymes that integrate into CipA via Coh1–Doc1 interactions (zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2). URL/Date: Proteomics 2005: https://doi.org/10.1002/pmic.200401199 (Sep 2005); J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Cellular localization and complex. Xgh74A is extracellular and incorporated into the C. thermocellum cellulosome through its type I dockerin; CipA (primary scaffoldin) binds the enzyme and anchors to the cell surface via type II dockerin interactions with SLH-bearing anchoring scaffoldins. This positions Xgh74A at the cell surface for efficient attack on plant cell wall polysaccharides (gold2007globalviewof pages 1-2). URL/Date: J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).</p>
+<p>2) Enzymatic function, substrate specificity, and structural basis<br />
+- Reaction type and substrate. Xgh74A is an endo-xyloglucanase that hydrolyzes the β-1,4-glucan backbone of plant xyloglucans. GH74 enzymes typically cleave at unbranched glucose residues in the backbone, generating xylogluco-oligosaccharides; processive-like behaviors within GH74 have been reported. This specificity and mode of action for the C. thermocellum GH74 enzyme Xgh74A were established through structural and biochemical studies reported in J. Biol. Chem. 2006 and summarized by subsequent reviews (guerreiro2008molecularmechanismsof pages 57-62). URL/Date: review reference to JBC 2006 in Guerreiro 2008 chapter (2008; no DOI provided in excerpt) (guerreiro2008molecularmechanismsof pages 57-62).<br />
+- Structural insights. The structural work on C. thermocellum Xgh74A (apo and ligand complexes) revealed an open binding groove with an extended subsite architecture accommodating long oligosaccharides, explaining its ability to track along the xyloglucan chain and cleave preferentially at unbranched sites. Mutagenesis and kinetics aligned with this structural model, supporting the enzyme’s GH74-class endo-acting specificity (guerreiro2008molecularmechanismsof pages 57-62). URL/Date: summarized in 2008 review; original JBC 2006 reported therein (guerreiro2008molecularmechanismsof pages 57-62).</p>
+<p>3) Localization, regulation, and systems context<br />
+- Cellulosomal incorporation and extracellular function. Quantitative proteomics of C. thermocellum cellulosomes demonstrated that XghA is one of the hemicellulases present in the extracellular complex. Relative abundance studies normalized to scaffoldin CipA showed that hemicellulases (including XghA) are more represented when cells are grown on cellobiose compared to cellulose, indicating substrate-dependent regulation of cellulosome composition (gold2007globalviewof pages 1-2). URL/Date: J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Broader 2024 perspective on cellulosomes in Acetivibrio. A 2024 genomic survey of cellulosome-displaying bacteria concluded that Acetivibrio species, including A. thermocellus, harbor complex, “classical” cellulosomes with many dockerin-bearing glycoside hydrolases, consistent with Xgh74A’s inclusion as part of a diverse DocGH repertoire. The study highlights conserved Coh–Doc architectures and attachment mechanisms that underpin enzyme display and synergy on lignocellulose (minor2024agenomicanalysis pages 6-7). URL/Date: Frontiers in Microbiology 2024: https://doi.org/10.3389/fmicb.2024.1473396 (Oct 2024).</p>
+<p>4) Role in pathways and plant biomass deconstruction<br />
+- Functional role in hemicellulose (xyloglucan) deconstruction. Xgh74A contributes to degradation of xyloglucan, a major hemicellulose entwined with cellulose microfibrils. Within the cellulosome, Xgh74A complements cellulases and other hemicellulases, facilitating deconstruction of the cellulose–xyloglucan network. Proteomics established Xgh74A among the major components in extracellular cellulosomes, underscoring its significance in biomass deconstruction (zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4). URL/Date: Proteomics 2005: https://doi.org/10.1002/pmic.200401199 (Sep 2005).<br />
+- Comparative insight from another cellulosome producer. In Ruminiclostridium cellulolyticum, xyloglucan catabolism relies on multiple cellulosomal endo- and exo-xyloglucanases, followed by import via a dedicated ABC transporter and intracellular exo-enzymes acting sequentially. Although species differ, this mechanistic framework supports the centrality of extracellular cellulosomal GH74 endo-xyloglucanase activity for releasing oligosaccharides in cellulosome-formers like C. thermocellum (ravachol2016mechanismsinvolvedin pages 15-16). URL/Date: Scientific Reports 2016: https://doi.org/10.1038/srep22770 (Mar 2016).</p>
+<p>5) Recent developments and latest research (prioritizing 2023–2024 context)<br />
+- Diversity and architecture in cellulosome systems (2024). A comprehensive 2024 genomic analysis delineates the diversity and complexity of cellulosome-displaying bacteria and reinforces that Acetivibrio thermocellus maintains complex cellulosome architectures populated by many DocGH enzymes. This systemic context supports the expected presence and functional importance of GH74 members such as Xgh74A in modern comparative genomics (minor2024agenomicanalysis pages 6-7). URL/Date: Frontiers in Microbiology 2024: https://doi.org/10.3389/fmicb.2024.1473396 (Oct 2024).<br />
+- CBP and biomass solubilization benchmarks informing relevance. While not specific to Xgh74A, CBP studies with C. thermocellum show the organism solubilizes both cellulose and non-cellulosic sugars from woody biomass (e.g., 24% cellulose and 17% non-cellulosic sugars solubilized after 120 h on poplar, with selective patterns for different hemicellulosic sugars). This highlights the functional contribution and need for hemicellulases like Xgh74A to improve non-cellulosic solubilization in industrial contexts (ravachol2016mechanismsinvolvedin pages 15-16). URL/Date: Scientific Reports 2016: https://doi.org/10.1038/srep22770 (Mar 2016). Note: For CBP quantitative kinetics, see Biswal et al. 2022 Biotechnology for Biofuels and Bioproducts (not directly excerpted here), but broader context is aligned (ravachol2016mechanismsinvolvedin pages 15-16).</p>
+<p>6) Current applications and real-world implementations<br />
+- Enzyme system engineering and cellulosome composition tuning. Proteomic evidence that hemicellulases like XghA are upregulated on cellobiose compared with cellulose suggests that growth substrate can be used to tune cellulosome composition for desired activity profiles. This informs strategies for producing enzyme mixtures or designer cellulosomes enriched in xyloglucanase activity for specific biomass feedstocks enriched in xyloglucan (gold2007globalviewof pages 1-2). URL/Date: J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Designer and comparative cellulosome approaches. The 2024 genomic overview underlines modularity (Coh–Doc, SLH anchors, CBM3 in scaffoldins) that enables designer cellulosome assembly and suggests that inclusion of GH74 modules like Xgh74A can be rationally optimized to target xyloglucan-rich substrates within complex feedstocks (minor2024agenomicanalysis pages 6-7). URL/Date: Frontiers in Microbiology 2024: https://doi.org/10.3389/fmicb.2024.1473396 (Oct 2024).</p>
+<p>7) Expert opinions and analysis from authoritative sources<br />
+- Proteomic consensus on major components. Independent proteomic studies converge on Xgh74A as a notable extracellular component of the C. thermocellum cellulosome, alongside cellulases and xylanases. This supports viewing Xgh74A as a key hemicellulase needed for comprehensive plant cell wall deconstruction (zverlov2005functionalsubgenomicsof pages 1-2, gold2007globalviewof pages 1-2). URL/Date: Proteomics 2005: https://doi.org/10.1002/pmic.200401199 (Sep 2005); J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Structural/biochemical basis of GH74 specificity. Reviews summarizing the JBC 2006 structural study of Xgh74A and other GH74 enzymes emphasize the preference for cleavage at unbranched glucose residues and an elongated binding surface, rationalizing activity on highly branched xyloglucans. This mechanistic understanding guides enzyme selection and engineering for biomass processing (guerreiro2008molecularmechanismsof pages 57-62). URL/Date: summarized in 2008 review (guerreiro2008molecularmechanismsof pages 57-62).<br />
+- 2024 perspective on system-level design. The 2024 genomic overview frames Acetivibrio thermocellus as a paradigm of complex cellulosome producers with extensive DocGH repertoires, underlining the opportunity to leverage enzymes like Xgh74A in synthetic and industrial contexts (minor2024agenomicanalysis pages 6-7). URL/Date: Frontiers in Microbiology 2024: https://doi.org/10.3389/fmicb.2024.1473396 (Oct 2024).</p>
+<p>8) Relevant statistics and data from recent studies<br />
+- Substrate-dependent expression in cellulosomes: Hemicellulases including XghA are relatively enriched in cellulosomes from cellobiose-grown cells vs. cellulose-grown cells, whereas GH9 cellulases are more abundant on cellulose. This quantification indicates regulatory plasticity that can be exploited for targeted enzyme production and activity profiles (gold2007globalviewof pages 1-2). URL/Date: J Bacteriol 2007: https://doi.org/10.1128/jb.00882-07 (Oct 2007).<br />
+- Biomass solubilization in CBP: In a representative CBP study, C. thermocellum DSM1313 solubilized ~24% cellulose and ~17% non-cellulosic sugars after 120 h on poplar, with differential solubilization and utilization of specific hemicellulosic and pectic sugars. This underscores the importance of deploying appropriate hemicellulases (e.g., GH74 xyloglucanases) to improve the non-cellulosic fraction conversion (ravachol2016mechanismsinvolvedin pages 15-16). URL/Date: Scientific Reports 2016: https://doi.org/10.1038/srep22770 (Mar 2016).</p>
+<p>9) Mandatory verification steps addressed explicitly<br />
+- Gene symbol match: “xghA” corresponds to Xyloglucanase Xgh74A in C. thermocellum and was identified in cellulosomal proteomics; this matches the UniProt Q70DK5 entry description (zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4).<br />
+- Organism verification: The literature explicitly treats Clostridium thermocellum (syn. Acetivibrio/Hungateiclostridium thermocellum), consistent with the organism context provided (gold2007globalviewof pages 1-2).<br />
+- Protein family/domains: GH74 catalytic module and type I dockerin are confirmed in proteomic/genomic screens; cellulosomal context is consistent with dockerin-bearing GH enzymes in Acetivibrio cellulosomes (zverlov2005functionalsubgenomicsof pages 2-4, minor2024agenomicanalysis pages 6-7, gold2007globalviewof pages 1-2).<br />
+- Ambiguity: No conflicting gene with symbol “xghA” in a different organism was found in the gathered context; research proceeds only on the C. thermocellum Xgh74A (zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2).</p>
+<p>Limitations and open points<br />
+- Numerical kinetic parameters and exact pH/temperature optima for Xgh74A were not present in the excerpts; primary JBC 2006 data should be consulted for those specifics. The preference for unbranched glucosyl cleavage and extended binding site are supported by structural/biochemical summaries in authoritative reviews (guerreiro2008molecularmechanismsof pages 57-62).</p>
+<p>Embedded evidence summary table<br />
+| Aspect | Key findings | Evidence source (full citation with DOI URL and publication month/year) | Notes |<br />
+|---|---|---|---|<br />
+| Identity and organism | xghA encodes Xgh74A, a ~92 kDa putative xyloglucanase from Clostridium (Acetivibrio/Hungateiclostridium) thermocellum (listed as CtheDRAFT_1463 / ZP_00509879 in genomic screens). | Zverlov VV, Kellermann J, Schwarz WH. Functional subgenomics of Clostridium thermocellum cellulosomal genes: Identification of the major catalytic components in the extracellular complex and detection of three new enzymes. PROTEOMICS, Sep 2005. https://doi.org/10.1002/pmic.200401199 (zverlov2005functionalsubgenomicsof pages 2-4) | Primary genomic/proteomic identification; matches UniProt locus annotations reported to the user. |<br />
+| Family / domains | Contains a GH74 catalytic module fused to a type I dockerin (GH74–Doc1) as reported in proteomic/genomic annotation; no CBM/WD40/EF-hand modules explicitly reported in these primary proteomic listings. | Zverlov VV, Kellermann J, Schwarz WH. PROTEOMICS, Sep 2005. https://doi.org/10.1002/pmic.200401199 (zverlov2005functionalsubgenomicsof pages 2-4) | Domain call (GH74 + type I dockerin) supports cellulosomal incorporation; absence of other domains noted as "not reported" in the cited proteomic dataset. |<br />
+| Cellular localization | Xgh74A is an extracellular, dockerin-bearing cellulosomal enzyme incorporated into CipA scaffoldin complexes (cellulosome-associated). | Zverlov VV, Kellermann J, Schwarz WH. PROTEOMICS, Sep 2005. https://doi.org/10.1002/pmic.200401199; Gold ND, Martin VJJ. Global view of the Clostridium thermocellum cellulosome revealed by quantitative proteomic analysis. J Bacteriol, Oct 2007. https://doi.org/10.1128/jb.00882-07 (zverlov2005functionalsubgenomicsof pages 2-4, gold2007globalviewof pages 1-2) | Proteomics confirms extracellular/cellulosomal localization and attachment via dockerin–cohesin interactions. |<br />
+| Enzymatic function &amp; specificity | Functions as an endo-xyloglucanase (cleaves xyloglucan backbone); reported preference to cleave at unbranched glucosyl residues in xyloglucan and shows processive-like behaviour in GH74 family members. | Guerreiro CIPD. Molecular mechanisms of plant cell wall hydrolysis: developing novel biotechnological applications for carbohydrate-binding modules. 2008 (secondary review referencing structural/kinetic work); Ravachol J, de Philip P, Fierobe HP et al. Mechanisms involved in xyloglucan catabolism by the cellulosome-producing bacterium Ruminiclostridium cellulolyticum. Sci Rep, Mar 2016. https://doi.org/10.1038/srep22770 (guerreiro2008molecularmechanismsof pages 57-62, ravachol2016mechanismsinvolvedin pages 15-16) | Specific cleavage pattern (unbranched Glc) and processivity are supported by structural/biochemical studies of GH74 enzymes cited in reviews; direct kinetic parameters for Xgh74A should be obtained from the primary JBC structural/biochemical paper. |<br />
+| Structural insights | Secondary literature reports crystal structures and ligand complexes for C. thermocellum Xgh74A (J. Biol. Chem. 2006 structural study is referenced in reviews). | Guerreiro CIPD. Molecular mechanisms of plant cell wall hydrolysis. 2008 (references JBC 2006 crystal structures reported for Xgh74A). (guerreiro2008molecularmechanismsof pages 57-62) | Review cites JBC 2006 structural work (primary structural data should be consulted for atomic details and PDB IDs). |<br />
+| Regulation / expression | XghA detected among major cellulosomal components; proteomic quantification shows substrate-dependent abundance—hemicellulases including XghA are relatively more abundant on hemicellulosic/carbon sources (e.g., cellobiose) than on pure cellulose. | Gold ND, Martin VJJ. J Bacteriol, Oct 2007. https://doi.org/10.1128/jb.00882-07; Zverlov VV et al. PROTEOMICS, Sep 2005. https://doi.org/10.1002/pmic.200401199 (gold2007globalviewof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4) | Indicates transcriptional/proteomic regulation of cellulosome composition according to growth substrate; useful for designing enzyme mixes or expression conditions. |<br />
+| Role in biomass deconstruction / cellulosome context | Acts as a hemicellulase specialized for xyloglucan degradation within the extracellular cellulosome, contributing to debranching and solubilization of plant cell-wall hemicellulose and enabling downstream uptake/metabolism of oligosaccharides. | Zverlov VV et al. PROTEOMICS, Sep 2005; Ravachol J et al. Sci Rep, Mar 2016. https://doi.org/10.1038/srep22770; Gold ND, Martin VJJ. J Bacteriol, Oct 2007. https://doi.org/10.1128/jb.00882-07 (zverlov2005functionalsubgenomicsof pages 2-4, ravachol2016mechanismsinvolvedin pages 15-16, gold2007globalviewof pages 1-2) | Positioned as a complementary hemicellulase in multi-enzyme cellulosomes that synergize for lignocellulose breakdown; important for degrading xyloglucan-rich regions of plant cell walls. |<br />
+| 2024 context on Acetivibrio cellulosome diversity | Recent genomic surveys reaffirm that Acetivibrio species (including A. thermocellus) possess complex, multi-cohesin cellulosomes with many dockerin-bearing GH enzymes; supports expectation that GH74 enzymes like Xgh74A are part of a diverse DocGH enzyme repertoire. | Minor CM, Takayesu A, Ha SM, et al. A genomic analysis reveals the diversity of cellulosome displaying bacteria. Front Microbiol, Oct 2024. https://doi.org/10.3389/fmicb.2024.1473396 (minor2024agenomicanalysis pages 6-7) | Places Xgh74A in broader genomic/ecological context useful for engineering or comparative analyses. |</p>
+<p><em>Table: Concise, source-linked evidence summarizing identity, domains, localization, enzymatic properties, structure, regulation, role, and 2024 genomic context for Xgh74A (xghA, UniProt Q70DK5) in Clostridium/Acetivibrio thermocellum.</em></p>
+<p>References (with URLs and dates; cite IDs inline above)<br />
+- Zverlov VV, Kellermann J, Schwarz WH. Functional subgenomics of Clostridium thermocellum cellulosomal genes: Identification of the major catalytic components in the extracellular complex and detection of three new enzymes. PROTEOMICS. Sep 2005. https://doi.org/10.1002/pmic.200401199 (zverlov2005functionalsubgenomicsof pages 1-2, zverlov2005functionalsubgenomicsof pages 2-4).<br />
+- Gold ND, Martin VJJ. Global view of the Clostridium thermocellum cellulosome revealed by quantitative proteomic analysis. Journal of Bacteriology. Oct 2007. https://doi.org/10.1128/jb.00882-07 (gold2007globalviewof pages 1-2).<br />
+- Guerreiro CIPD. Molecular mechanisms of plant cell wall hydrolysis: developing novel biotechnological applications for carbohydrate-binding modules. 2008. Review that cites JBC 2006 Xgh74A structures (guerreiro2008molecularmechanismsof pages 57-62).<br />
+- Ravachol J, de Philip P, Borne R, et al. Mechanisms involved in xyloglucan catabolism by the cellulosome-producing bacterium Ruminiclostridium cellulolyticum. Scientific Reports. Mar 2016. https://doi.org/10.1038/srep22770 (ravachol2016mechanismsinvolvedin pages 15-16).<br />
+- Minor CM, Takayesu A, Ha SM, et al. A genomic analysis reveals the diversity of cellulosome displaying bacteria. Frontiers in Microbiology. Oct 2024. https://doi.org/10.3389/fmicb.2024.1473396 (minor2024agenomicanalysis pages 6-7).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(zverlov2005functionalsubgenomicsof pages 1-2): Vladimir V. Zverlov, Josef Kellermann, and Wolfgang H. Schwarz. Functional subgenomics of clostridium thermocellum cellulosomal genes: identification of the major catalytic components in the extracellular complex and detection of three new enzymes. PROTEOMICS, 5:3646-3653, Sep 2005. URL: https://doi.org/10.1002/pmic.200401199, doi:10.1002/pmic.200401199. This article has 194 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zverlov2005functionalsubgenomicsof pages 2-4): Vladimir V. Zverlov, Josef Kellermann, and Wolfgang H. Schwarz. Functional subgenomics of clostridium thermocellum cellulosomal genes: identification of the major catalytic components in the extracellular complex and detection of three new enzymes. PROTEOMICS, 5:3646-3653, Sep 2005. URL: https://doi.org/10.1002/pmic.200401199, doi:10.1002/pmic.200401199. This article has 194 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gold2007globalviewof pages 1-2): Nicholas D. Gold and Vincent J. J. Martin. Global view of the <i>clostridium thermocellum</i> cellulosome revealed by quantitative proteomic analysis. Journal of Bacteriology, 189:6787-6795, Oct 2007. URL: https://doi.org/10.1128/jb.00882-07, doi:10.1128/jb.00882-07. This article has 271 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minor2024agenomicanalysis pages 6-7): Christine M. Minor, Allen Takayesu, Sung Min Ha, Lukasz Salwinski, Michael R. Sawaya, Matteo Pellegrini, and Robert T. Clubb. A genomic analysis reveals the diversity of cellulosome displaying bacteria. Frontiers in Microbiology, Oct 2024. URL: https://doi.org/10.3389/fmicb.2024.1473396, doi:10.3389/fmicb.2024.1473396. This article has 9 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(guerreiro2008molecularmechanismsof pages 57-62): CIPD Guerreiro. Molecular mechanisms of plant cell wall hydrolysis: developing novel biotechnological applications for carbohydrate-binding modules. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(ravachol2016mechanismsinvolvedin pages 15-16): Julie Ravachol, Pascale de Philip, Romain Borne, Pascal Mansuelle, María J. Maté, Stéphanie Perret, and Henri-Pierre Fierobe. Mechanisms involved in xyloglucan catabolism by the cellulosome-producing bacterium ruminiclostridium cellulolyticum. Scientific Reports, Mar 2016. URL: https://doi.org/10.1038/srep22770, doi:10.1038/srep22770. This article has 97 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>minor2024agenomicanalysis pages 6-7</li>
+<li>gold2007globalviewof pages 1-2</li>
+<li>guerreiro2008molecularmechanismsof pages 57-62</li>
+<li>ravachol2016mechanismsinvolvedin pages 15-16</li>
+<li>zverlov2005functionalsubgenomicsof pages 2-4</li>
+<li>zverlov2005functionalsubgenomicsof pages 1-2</li>
+<li>https://doi.org/10.1002/pmic.200401199</li>
+<li>https://doi.org/10.1128/jb.00882-07</li>
+<li>https://doi.org/10.3389/fmicb.2024.1473396</li>
+<li>https://doi.org/10.1038/srep22770</li>
+<li>https://doi.org/10.1002/pmic.200401199;</li>
+<li>https://doi.org/10.1128/jb.00882-07;</li>
+<li>https://doi.org/10.1038/srep22770;</li>
+<li>https://doi.org/10.1002/pmic.200401199,</li>
+<li>https://doi.org/10.1128/jb.00882-07,</li>
+<li>https://doi.org/10.3389/fmicb.2024.1473396,</li>
+<li>https://doi.org/10.1038/srep22770,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q70DK5
+gene_symbol: xghA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:203119
+  label: Acetivibrio thermocellus
+description: &gt;-
+  Xyloglucanase Xgh74A is a GH74 family endo-xyloglucanase that is a major component of
+  the Acetivibrio thermocellus cellulosome. It catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic
+  linkages in xyloglucan, preferentially cleaving at unbranched glucose residues in the backbone
+  to produce xyloglucan oligosaccharides (XXXG, XLXG, XXLG, XLLG). The enzyme contains a
+  C-terminal type I dockerin domain that mediates attachment to the CipA scaffoldin protein,
+  thereby incorporating it into the extracellular cellulosome complex. It has high specific
+  activity on tamarind seed xyloglucan (295 U/mg) with optimal activity at pH 6.4 and 75C,
+  and shows only low activity on CMC and no activity on amorphous cellulose, indicating
+  recognition of xylosidic side chains present in xyloglucan. Crystal structures have been
+  determined revealing an open binding groove accommodating long oligosaccharides.
+existing_annotations:
+- term:
+    id: GO:0000272
+    label: polysaccharide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation infers involvement in polysaccharide catabolic process based on
+      InterPro domain matches (dockerin domains IPR002105, IPR016134, IPR036439) and UniProtKB
+      keywords. Xgh74A does function in polysaccharide catabolism, specifically xyloglucan
+      degradation, as demonstrated experimentally (PMID:16207921). However, this term is
+      very broad and lacks specificity for the actual substrate.
+    action: ACCEPT
+    reason: &gt;-
+      While this annotation is correct in a general sense - Xgh74A does participate in
+      polysaccharide catabolism - it is overly broad. However, the more specific term
+      GO:2000899 (xyloglucan catabolic process) is already annotated with IDA evidence,
+      making this broader IEA annotation acceptable as a correctly inferred parent term.
+      The enzymatic evidence from PMID:16207921 demonstrates hydrolysis of xyloglucan
+      producing oligosaccharides.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units.&#34;
+      - reference_id: file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+        supporting_text: &#34;Xgh74A contributes to degradation of xyloglucan, a major hemicellulose entwined with cellulose microfibrils&#34;
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation from InterPro/ARBA infers a general O-glycosyl hydrolase activity
+      based on domain matches. Xgh74A is indeed an O-glycosyl hydrolase, specifically an
+      endo-xyloglucanase that cleaves beta-1,4-glucosidic linkages. The more specific term
+      GO:0033946 (xyloglucan-specific endo-beta-1,4-glucanase activity) is annotated with
+      experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct parent term for the experimentally validated xyloglucan-specific
+      endo-beta-1,4-glucanase activity (GO:0033946). The enzyme hydrolyzes O-glycosyl bonds
+      in xyloglucan as demonstrated in PMID:16207921. The crystal structure study (PMID:16772298)
+      further characterized the active site and substrate binding.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module. It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone&#34;
+- term:
+    id: GO:0010411
+    label: xyloglucan metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This TreeGrafter-generated annotation correctly identifies involvement in xyloglucan
+      metabolism based on phylogenetic inference (PANTHER:PTN005180743). Xgh74A is experimentally
+      demonstrated to hydrolyze xyloglucan. However, the more specific child term GO:2000899
+      (xyloglucan catabolic process) is already annotated with IDA evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct but broad annotation. The enzyme specifically catalyzes xyloglucan
+      catabolism, which is a child process of xyloglucan metabolic process. Since the more
+      specific term is already annotated with experimental evidence, this IEA serves as
+      a correctly inferred parent term. The TreeGrafter phylogenetic inference correctly
+      places this GH74 family enzyme in the xyloglucan metabolism pathway.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan.&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This very broad IEA annotation from UniProtKB-KW:KW-0378 (Hydrolase) simply indicates
+      that the protein has hydrolase activity. While technically correct, this term provides
+      minimal informational value given the more specific annotations available.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct but very high-level annotation that is a grandparent of the
+      experimentally validated specific activity. The UniProtKB keyword mapping correctly
+      identifies the protein as a hydrolase. More specific child terms (GO:0016798, GO:0004553,
+      GO:0033946) are also annotated, providing greater specificity.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone&#34;
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This IEA annotation from UniProtKB-KW:KW-0326 (Glycosidase) correctly identifies
+      the protein as having glycosidase activity. Xgh74A is a GH74 family glycoside
+      hydrolase with demonstrated endo-glucanase activity on xyloglucan.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct parent term for the more specific xyloglucan-specific
+      endo-beta-1,4-glucanase activity (GO:0033946). The UniProtKB keyword-based inference
+      correctly classifies this enzyme as acting on glycosyl bonds, consistent with its
+      GH74 family membership and demonstrated hydrolysis of beta-1,4-glucosidic linkages
+      in xyloglucan.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module.&#34;
+- term:
+    id: GO:0030245
+    label: cellulose catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This IEA annotation infers involvement in cellulose catabolism from UniProtKB-KW:KW-0136
+      (Cellulose degradation). However, experimental evidence clearly demonstrates that
+      Xgh74A is NOT a cellulase - it has only very low activity on CMC and NO activity
+      on amorphous cellulose. Its primary substrate is xyloglucan, a hemicellulose.
+    action: REMOVE
+    reason: &gt;-
+      This annotation is incorrect. PMID:16207921 explicitly states that Xgh74A has &#34;low
+      activity on CMC&#34; and &#34;no activity on amorphous cellulose&#34;, indicating it does not
+      function in cellulose catabolism. The UniProt keyword &#34;Cellulose degradation&#34; appears
+      to be a misattribution likely based on its cellulosome association and GH74 family
+      membership, but experimental evidence clearly shows xyloglucan is the primary substrate.
+      The enzyme&#39;s recognition of xylosidic side chains distinguishes it from true cellulases.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Its low activity on CMC and lack of activity on amorphous cellulose indicates recognition of the xylosidic side chains present in xyloglucan, which is readily hydrolysed (295 U mg(-1)).&#34;
+- term:
+    id: GO:0033946
+    label: xyloglucan-specific endo-beta-1,4-glucanase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16207921
+  review:
+    summary: &gt;-
+      This IDA annotation correctly captures the specific molecular function of Xgh74A.
+      The enzyme was biochemically characterized and shown to hydrolyze xyloglucan with
+      high specificity (295 U/mg on tamarind seed xyloglucan), cleaving every fourth
+      beta-1,4-glucan bond in the backbone to produce decorated cellotetraose units
+      (XXXG, XLXG, XXLG, XLLG). The crystal structure (PMID:16772298) further confirmed
+      this activity and identified the catalytic residues.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most specific and accurate MF annotation for Xgh74A, directly supported
+      by experimental evidence demonstrating endo-xyloglucanase activity. The enzyme
+      belongs to GH74 family known for this activity, and the hydrolysis pattern
+      producing decorated cellotetraose units is characteristic of endo-xyloglucanases.
+      This represents the core molecular function of the protein.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module. It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units.&#34;
+      - reference_id: PMID:16207921
+        supporting_text: &#34;The pattern of the hydrolysis products from tamarind xyloglucan resembles that of other GHF74 xyloglucan endoglucanases.&#34;
+      - reference_id: file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+        supporting_text: &#34;Functions as an endo-xyloglucanase (cleaves xyloglucan backbone); reported preference to cleave at unbranched glucosyl residues in xyloglucan&#34;
+- term:
+    id: GO:0043263
+    label: cellulosome
+  evidence_type: IDA
+  original_reference_id: PMID:16207921
+  review:
+    summary: &gt;-
+      This IDA annotation correctly identifies Xgh74A as a cellulosome component. The
+      enzyme contains a C-terminal type I dockerin domain that mediates incorporation
+      into the cellulosome by binding to cohesin modules on the CipA scaffoldin protein.
+      Proteomic studies have confirmed Xgh74A as a major extracellular cellulosome
+      component in C. thermocellum.
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct CC annotation for Xgh74A. The presence of a functional type I
+      dockerin domain (experimentally validated through proteomic detection in cellulosome
+      preparations) indicates localization to the cellulosome complex. The enzyme was
+      identified as one of &#34;two new major subunits in the cellulosome&#34; in PMID:16207921.
+      Additional proteomic studies (Gold &amp; Martin 2007, Zverlov et al. 2005 Proteomics)
+      have confirmed its presence in extracellular cellulosome preparations.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;The structure and enzymic activity of xyloglucanase Xgh74A and endoxylanase Xyn10D, components in the cellulosomes of cellulose-grown Clostridium thermocellum, were determined.&#34;
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module.&#34;
+      - reference_id: file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+        supporting_text: &#34;Xgh74A is an extracellular, dockerin-bearing cellulosomal enzyme incorporated into CipA scaffoldin complexes&#34;
+- term:
+    id: GO:2000899
+    label: xyloglucan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:16207921
+  review:
+    summary: &gt;-
+      This IDA annotation correctly identifies Xgh74A as involved in xyloglucan catabolism.
+      The enzyme specifically degrades xyloglucan (a hemicellulose) by hydrolyzing the
+      glucan backbone, contributing to plant cell wall deconstruction. It is the only
+      xyloglucanase identified in the C. thermocellum cellulosome.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most specific and accurate BP annotation for Xgh74A. The enzyme was
+      experimentally demonstrated to hydrolyze tamarind seed xyloglucan with high specific
+      activity, producing xylogluco-oligosaccharides. This represents the core biological
+      process in which the enzyme functions - the catabolic breakdown of xyloglucan
+      hemicellulose as part of lignocellulose deconstruction.
+    supported_by:
+      - reference_id: PMID:16207921
+        supporting_text: &#34;Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan.&#34;
+      - reference_id: PMID:16207921
+        supporting_text: &#34;The data indicate that Xgh74A and Xyn10D contribute to the in vivo degradation of the hemicelluloses xyloglucan and xylan by the cellulosome of C. thermocellum.&#34;
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16207921
+  title: &gt;-
+    Two new major subunits in the cellulosome of Clostridium thermocellum: xyloglucanase
+    Xgh74A and endoxylanase Xyn10D.
+  findings:
+    - statement: Xgh74A identified as a major cellulosome component with GH74 catalytic domain and type I dockerin
+      supporting_text: &#34;Xyloglucanase Xgh74A contains a catalytic module of GHF74 in addition to a C-terminal dockerin module.&#34;
+    - statement: Demonstrates endo-xyloglucanase activity, cleaving every fourth beta-1,4-glucan bond in xyloglucan backbone
+      supporting_text: &#34;It hydrolyses every fourth beta-1,4-glucan bond in the xyloglucan backbone, thus producing decorated cellotetraose units.&#34;
+    - statement: High specific activity on tamarind seed xyloglucan (295 U/mg), producing XXXG/XLXG/XXLG/XLLG products
+      supporting_text: &#34;xyloglucan, which is readily hydrolysed (295 U mg(-1))&#34;
+    - statement: Low activity on CMC, no activity on amorphous cellulose - distinguishing it from cellulases
+      supporting_text: &#34;Its low activity on CMC and lack of activity on amorphous cellulose indicates recognition of the xylosidic side chains present in xyloglucan&#34;
+    - statement: First xyloglucanase identified in C. thermocellum cellulosome
+      supporting_text: &#34;Xgh74A is the first xyloglucanase identified in C. thermocellum and the only enzyme in the cellulosome that hydrolyses tamarind xyloglucan.&#34;
+- id: PMID:16772298
+  title: &gt;-
+    Crystal structures of Clostridium thermocellum xyloglucanase, XGH74A, reveal the
+    structural basis for xyloglucan recognition and degradation.
+  full_text_unavailable: true
+  findings:
+    - statement: Crystal structure reveals complex subsite specificity accommodating seventeen monosaccharide moieties
+      supporting_text: &#34;The structures, in combination with mutagenesis data on the catalytic residues and the kinetics and specificity of xyloglucan hydrolysis reveal a complex subsite specificity accommodating seventeen monosaccharide moieties of the multibranched substrate in an open substrate binding terrain.&#34;
+- id: file:ACET2/Q70DK5/Q70DK5-deep-research-falcon.md
+  title: Deep research summary for xghA/Q70DK5
+  findings:
+    - statement: Xgh74A is extracellular and incorporated into the C. thermocellum cellulosome through its type I dockerin
+      supporting_text: &#34;Xgh74A is an extracellular, dockerin-bearing cellulosomal enzyme incorporated into CipA scaffoldin complexes&#34;
+    - statement: Functions as endo-xyloglucanase with preference for cleavage at unbranched glucosyl residues
+      supporting_text: &#34;Functions as an endo-xyloglucanase (cleaves xyloglucan backbone); reported preference to cleave at unbranched glucosyl residues in xyloglucan&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0033946
+      label: xyloglucan-specific endo-beta-1,4-glucanase activity
+    directly_involved_in:
+      - id: GO:2000899
+        label: xyloglucan catabolic process
+    locations:
+      - id: GO:0043263
+        label: cellulosome
+    description: &gt;-
+      The primary molecular function of Xgh74A is xyloglucan-specific endo-beta-1,4-glucanase
+      activity. It catalyzes the endohydrolysis of (1-&gt;4)-beta-D-glucosidic linkages specifically
+      in xyloglucan, cleaving at unbranched glucose residues to produce decorated cellotetraose
+      units (xylogluco-oligosaccharides). The enzyme shows substrate specificity for xyloglucan
+      over cellulose, recognizing the xylosidic side chains of the substrate. The enzyme is
+      localized to the extracellular cellulosome complex via its C-terminal type I dockerin
+      domain and participates in xyloglucan catabolism as part of hemicellulose degradation.
+proposed_new_terms: []
+suggested_questions:
+  - question: Has the relative contribution of Xgh74A to overall cellulosome efficiency on different plant biomass feedstocks been quantified?
+  - question: Are there conditions under which xghA expression or Xgh74A incorporation into cellulosomes is differentially regulated?
+suggested_experiments:
+  - description: Comparative activity assays on different plant-derived xyloglucans (beyond tamarind) to assess substrate range
+  - description: Cellulosome reconstitution experiments with and without Xgh74A to quantify synergistic contributions to plant biomass deconstruction
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

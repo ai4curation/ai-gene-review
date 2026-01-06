@@ -1,0 +1,2702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNC1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PNC1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53184" target="_blank" class="term-link">
+                        P53184
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PNC1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53184" data-a="DESCRIPTION: Nicotinamidase (Pnc1p), a key enzyme in the NAD+ s..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Nicotinamidase (Pnc1p), a key enzyme in the NAD+ salvage pathway that catalyzes deamidation of nicotinamide to nicotinic acid. Plays critical roles in NAD+ metabolism and is a longevity gene responsive to caloric restriction and stress conditions. Functions in telomeric and rDNA silencing through Sir2p regulation. Localizes to cytoplasm, nucleus, and peroxisomes.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000781" target="_blank" class="term-link">
+                                    GO:0000781
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome, telomeric region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0000781" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization to telomeric chromatin is inferred computationally. While PNC1 is known to regulate telomeric silencing, the IEA inference mechanism (logical inference) is based on the IMP annotation for subtelomeric heterochromatin formation. This is acceptable as it represents a reasonable inference from the mechanistic role of PNC1, but it is not a direct experimental observation of localization to telomeric regions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation reflects PNC1s regulatory role in telomeric silencing, though based on computational inference rather than direct localization evidence. The mechanistic connection is sound: PNC1 removes nicotinamide (an inhibitor of Sir2) to enable Sir2-mediated telomeric heterochromatin formation (PMID:11901108, PMID:12736687). This is supported by IDA evidence for nuclear localization and functional involvement in telomeric silencing.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular localization inferred from UniProtKB localization vocabulary mapping. Consistent with direct experimental evidence (PMID:12736687, PMID:11901108).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well-supported by IDA evidence from microscopy (PMID:12736687). The IEA annotation is derived from UniProtKB annotation and is accurate. PNC1 functions in the nucleus where Sir2p-mediated silencing occurs.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular localization based on UniProtKB mapping. Verified by experimental evidence (IDA, PMID:12736687).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is directly demonstrated by microscopy (IDA, PMID:12736687) and is consistent with the functional roles in NAD metabolism. This is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005777" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peroxisomal localization inferred from UniProtKB mapping. Well-supported by experimental evidence showing PNC1 concentrates in peroxisomes (PMID:12736687).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProtKB annotation notes that PNC1 concentrates in peroxisomes, which is verified by direct microscopy (PMID:12736687). Peroxisomal localization is relevant to cellular NAD metabolism and stress response functions. This localization is properly supported by literature.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008936" target="_blank" class="term-link">
+                                    GO:0008936
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0008936" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Molecular function annotation assigned via combined automated methods, likely based on EC number (3.5.1.19) and sequence homology. This is the core enzymatic function of PNC1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nicotinamidase activity is the primary and well-characterized enzymatic function of PNC1. The EC number 3.5.1.19 directly classifies it as a nicotinamidase. This is strongly supported by multiple publications (PMID:12736687, PMID:11901108, PMID:19381334) demonstrating the catalytic conversion of nicotinamide to nicotinic acid. This is a core and essential annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent term for nicotinamidase activity based on enzyme classification. GO:0008936 (nicotinamidase activity) is more specific and informative. However, the parent term is not incorrect.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct parent term for the specific nicotinamidase activity. Nicotinamidases are amidohydrolases (EC 3.5.1.19), so this annotation is mechanistically accurate. While the more specific term (GO:0008936) is preferable for precision, retaining this parent term is acceptable for comprehensive annotation coverage. Parent and child GO terms can coexist.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019363" target="_blank" class="term-link">
+                                    GO:0019363
+                                </a>
+                            </span>
+                            <span class="term-label">pyridine nucleotide biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0019363" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Process annotation derived from UniProtKB keyword mapping (KW-0662: Pyridine nucleotide biosynthesis). PNC1 is involved in NAD+ salvage pathway, which recycles pyridine nucleotides. This is a reasonable but somewhat indirect annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PNC1 is mechanistically involved in NAD+ salvage (not de novo biosynthesis), GO:0019363 &#34;pyridine nucleotide biosynthetic process&#34; typically refers to de novo synthesis pathways (e.g., starting from tryptophan). PNC1 catalyzes salvage of nicotinamide to regenerate NAD+ in an existing pool, not biosynthesis of pyridine nucleotides de novo. The more accurate annotation would be GO:0019854 NAD metabolism because PNC1 catalyzes the first committed step in salvaging NAD+ from nicotinamide (PMID:12736687). This is NAD metabolism, not pyridine nucleotide de novo biosynthesis.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019854" target="_blank" class="term-link">
+                                    NAD metabolism
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent term inferred from UniProtKB keywords for metal binding. PNC1 requires zinc cofactor for catalysis, so this is accurate but very general. The more specific annotation (GO:0008270, zinc ion binding) is already present with experimental evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is correct as a parent term annotation. Zinc is a metal ion, and PNC1 binds zinc as a catalytic cofactor. While GO:0008270 (zinc ion binding) is more specific and is annotated separately, the parent term is not incorrect and provides complementary information. Parent-child GO terms are often both retained for annotation completeness.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30358795
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cellular economy of the Saccharomyces cerevisiae zinc pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0008270" data-r="PMID:30358795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding assignment based on rapid curated annotation (RCA) from a zinc proteome analysis study. The study comprehensively catalogued zinc-binding proteins in yeast and is appropriate evidence for this annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RCA (rapid curated annotation) is appropriate for identifying PNC1 as a zinc-binding protein. The source (PMID:30358795) is a comprehensive zinc proteome study that systematically identified and characterized zinc-binding sites on proteins. Zinc is essential for the catalytic mechanism of nicotinamidases, confirmed by structural studies showing zinc binding sites at positions 51, 53, and 94 in the PNC1 protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031509" target="_blank" class="term-link">
+                                    GO:0031509
+                                </a>
+                            </span>
+                            <span class="term-label">subtelomeric heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11901108
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Telomeric and rDNA silencing in Saccharomyces cerevisiae are...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0031509" data-r="PMID:11901108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype annotation showing PNC1 deletion results in weakened subtelomeric heterochromatin silencing. This is one of the key functional roles identified for PNC1 in the literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core functional annotation based on IMP evidence from PMID:11901108, which demonstrates that pnc1 deletion results in a silencing defect at telomeres and rDNA. The mechanism is clear: PNC1 removes nicotinamide, an inhibitor of the Sir2 histone deacetylase, thereby enabling Sir2-mediated heterochromatin formation and silencing. The annotation is mechanistically sound and well-supported. This should be considered a core function of PNC1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link">
+                                        PMID:11901108
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of another NAD(+) salvage pathway gene called PNC1 caused a less severe silencing defect and did not significantly reduce the intracellular NAD(+) concentration. However, silencing in the absence of PNC1 was completely dependent on the import of nicotinic acid from the growth medium</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019358" target="_blank" class="term-link">
+                                    GO:0019358
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate nucleotide salvage</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11901108
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Telomeric and rDNA silencing in Saccharomyces cerevisiae are...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0019358" data-r="PMID:11901108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional role annotation showing PNC1 participates in the salvage pathway for nicotinic acid-derived nucleotides. The pathway involves conversion of nicotinamide to nicotinic acid (catalyzed by PNC1) followed by conversion back to NAD+.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly identifies PNC1s participation in nicotinate nucleotide salvage. PNC1 catalyzes the first step - deamidation of nicotinamide to nicotinic acid - which is the entry point into the salvage pathway. PMID:11901108 directly demonstrates that deletion of PNC1 compromises the salvage pathway capacity. This is a core biological function of the enzyme and is properly supported by IMP evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link">
+                                        PMID:11901108
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We propose a model in which two components of the NAD(+) salvage pathway, Pnc1p and Npt1p, function together in recycling the nuclear nicotinamide generated by Sir2p deacetylase activity back into NAD(+)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22842922
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting DNA damage response pathways by analysing protein...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005737" data-r="PMID:22842922" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HDA (high-throughput direct assay) annotation for cytoplasmic localization from a DNA damage response study. This provides complementary evidence to the IDA annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HDA is appropriate evidence for localization, derived from high-throughput mass spectrometry analysis of protein localization during stress. This complements the IDA evidence from PMID:12736687 and represents independent experimental validation. Cytoplasmic localization is well-established for PNC1.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904524" target="_blank" class="term-link">
+                                    GO:1904524
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA amplification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26195783" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26195783
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of ribosomal DNA amplification by the TOR pathway...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:1904524" data-r="PMID:26195783" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation based on mutant phenotype showing that PNC1 negatively regulates rDNA amplification. This appears to be an indirect effect through NAD metabolism and Sir2p regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While PMID:26195783 is cited for this annotation, this requires careful interpretation. The connection between PNC1 and DNA amplification is not as mechanistically clear as PNC1s core roles in NAD salvage and silencing. The negative regulation of DNA amplification might be an indirect consequence of Sir2p regulation and chromatin silencing. Without the full publication text, the specific experimental context is unclear. This annotation may be correct but evidence linkage would benefit from deeper investigation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000183" target="_blank" class="term-link">
+                                    GO:0000183
+                                </a>
+                            </span>
+                            <span class="term-label">rDNA heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11901108
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Telomeric and rDNA silencing in Saccharomyces cerevisiae are...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0000183" data-r="PMID:11901108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional annotation showing PNC1 participation in ribosomal DNA heterochromatin formation and silencing, demonstrated through deletion phenotype analysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core functional annotation parallel to the telomeric silencing role. PMID:11901108 explicitly demonstrates that pnc1 deletion compromises rDNA silencing. The mechanism is identical: PNC1 removes the Sir2 inhibitor nicotinamide, enabling Sir2-dependent heterochromatin formation at rDNA. This should be considered a primary function of PNC1. The IMP evidence is appropriate and well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link">
+                                        PMID:11901108
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of another NAD(+) salvage pathway gene called PNC1 caused a less severe silencing defect and did not significantly reduce the intracellular NAD(+) concentration</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12736687" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12736687
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide and PNC1 govern lifespan extension by calorie r...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005634" data-r="PMID:12736687" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from microscopy-based localization analysis. PNC1 is demonstrated to be present in the nucleus, consistent with its role in Sir2-mediated silencing at telomeres and rDNA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is direct experimental evidence (IDA) from PMID:12736687, one of the landmark studies on PNC1 function. The nuclear localization is essential to PNC1s mechanistic roles in regulating Sir2-mediated silencing. This is well-supported and appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12736687" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12736687
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide and PNC1 govern lifespan extension by calorie r...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005737" data-r="PMID:12736687" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for cytoplasmic localization from PMID:12736687. Consistent with HDA evidence from PMID:22842922. Cytoplasmic localization is appropriate given PNC1s roles in general NAD metabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA evidence from microscopy showing cytoplasmic presence is well-supported. The cytoplasmic localization is consistent with PNC1s roles in cellular NAD metabolism. Multiple independent localization studies confirm this. This annotation is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12736687" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12736687
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nicotinamide and PNC1 govern lifespan extension by calorie r...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0005777" data-r="PMID:12736687" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for peroxisomal localization, with the important note that PNC1 concentrates in peroxisomes. This is a prominent subcellular localization for this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA evidence from PMID:12736687 confirms PNC1 localization to peroxisomes. Peroxisomes are significant sites of NAD metabolism and stress response, and PNC1 localization there is functionally relevant. The annotation is well-supported and appropriate. Peroxisomal targeting appears to be especially important under stress conditions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12736687" target="_blank" class="term-link">
+                                        PMID:12736687
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Saccharomyces cerevisiae, lifespan extension by calorie restriction requires the NAD+-dependent histone deacetylase, Sir2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008936" target="_blank" class="term-link">
+                                    GO:0008936
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19381334" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19381334
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The yeast PNC1 longevity gene is up-regulated by mRNA mistra...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53184" data-a="GO:0008936" data-r="PMID:19381334" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second annotation of nicotinamidase activity with IMP evidence from a study demonstrating that PNC1 is up-regulated under stress (protein mistranslation) and that the enzyme is catalytically active. Duplicates the IEA annotation but with experimental support.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate GO ID (GO:0008936) but with different evidence type (IMP vs IEA). In GO annotation, having multiple evidence codes for the same term is acceptable and actually desirable - it shows the annotation is supported by both automated and experimental evidence. PMID:19381334 directly demonstrates that Pnc1p activity is enhanced under stress conditions through catalytic assays measuring NAM-to-NAC conversion and ammonia release. Having both IEA and IMP annotations reinforces the robustness of this core functional annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19381334" target="_blank" class="term-link">
+                                        PMID:19381334
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pnc1 synthesizes nicotinic acid from nicotinamide</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11901108" target="_blank" class="term-link">
+                            PMID:11901108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Telomeric and rDNA silencing in Saccharomyces cerevisiae are dependent on a nuclear NAD(+) salvage pathway.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12736687" target="_blank" class="term-link">
+                            PMID:12736687
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nicotinamide and PNC1 govern lifespan extension by calorie restriction in Saccharomyces cerevisiae.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19381334" target="_blank" class="term-link">
+                            PMID:19381334
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The yeast PNC1 longevity gene is up-regulated by mRNA mistranslation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                            PMID:22842922
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dissecting DNA damage response pathways by analysing protein localization and abundance changes during DNA replication stress.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26195783" target="_blank" class="term-link">
+                            PMID:26195783
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of ribosomal DNA amplification by the TOR pathway.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                            PMID:30358795
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The cellular economy of the Saccharomyces cerevisiae zinc proteome.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PNC1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53184" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-30T22:19:14.020484'<br />
+end_time: '2025-12-30T22:25:04.207902'<br />
+duration_seconds: 350.19<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: yeast<br />
+  gene_id: PNC1<br />
+  gene_symbol: PNC1<br />
+  uniprot_accession: P53184<br />
+  protein_description: 'RecName: Full=Nicotinamidase; EC=3.5.1.19 {ECO:0000269|PubMed:17382284};<br />
+    AltName: Full=Nicotinamide deamidase; Short=NAMase;'<br />
+  gene_info: Name=PNC1; OrderedLocusNames=YGL037C;<br />
+  organism_full: Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).<br />
+  protein_family: Belongs to the isochorismatase family. .<br />
+  protein_domains: Isochorismatase-like_dom. (IPR000868); Isochorismatase-like_sf.<br />
+    (IPR036380); Isochorismatase_Nicotinamidase. (IPR052347); Isochorismatase (PF00857)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 18</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P53184</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nicotinamidase; EC=3.5.1.19 {ECO:0000269|PubMed:17382284}; AltName: Full=Nicotinamide deamidase; Short=NAMase;</li>
+<li><strong>Gene Information:</strong> Name=PNC1; OrderedLocusNames=YGL037C;</li>
+<li><strong>Organism (full):</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Protein Family:</strong> Belongs to the isochorismatase family. .</li>
+<li><strong>Key Domains:</strong> Isochorismatase-like_dom. (IPR000868); Isochorismatase-like_sf. (IPR036380); Isochorismatase_Nicotinamidase. (IPR052347); Isochorismatase (PF00857)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PNC1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PNC1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PNC1</strong> (gene ID: PNC1, UniProt: P53184) in yeast.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P53184</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nicotinamidase; EC=3.5.1.19 {ECO:0000269|PubMed:17382284}; AltName: Full=Nicotinamide deamidase; Short=NAMase;</li>
+<li><strong>Gene Information:</strong> Name=PNC1; OrderedLocusNames=YGL037C;</li>
+<li><strong>Organism (full):</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Protein Family:</strong> Belongs to the isochorismatase family. .</li>
+<li><strong>Key Domains:</strong> Isochorismatase-like_dom. (IPR000868); Isochorismatase-like_sf. (IPR036380); Isochorismatase_Nicotinamidase. (IPR052347); Isochorismatase (PF00857)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "PNC1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Saccharomyces cerevisiae (strain ATCC 204508 / S288c) (Baker's yeast).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'PNC1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>PNC1</strong> (gene ID: PNC1, UniProt: P53184) in yeast.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status: All objectives completed. We verified identity (PNC1/YGL037C; UniProt P53184) in S. cerevisiae S288c and assembled primary evidence across enzymology, mechanism, pathways, localization, regulation, phenotypes, and recent developments.</p>
+<p>Comprehensive research report</p>
+<p>Key concepts and definitions<br />
+- Identity and family: PNC1 (gene YGL037C) encodes nicotinamidase (EC 3.5.1.19) in Saccharomyces cerevisiae (strain S288c). Pnc1 belongs to the isochorismatase-like amidohydrolase family, catalyzing deamidation of nicotinamide (NAM) to nicotinic acid (NA) and ammonia, feeding the Preiss–Handler branch of the NAD+ salvage pathway (NAM→NA→NaMN→NaAD→NAD+). (ghislain2002identificationandfunctional pages 1-2)<br />
+- Pathway role: Yeast lack NAMPT and instead rely on Pnc1 to clear NAM, a potent noncompetitive inhibitor of the NAD+-dependent deacetylase Sir2. Thus, Pnc1 serves both catabolic and signaling roles, modulating Sir2-dependent chromatin silencing and lifespan. (anderson2003nicotinamideandpnc1 pages 1-2)</p>
+<p>Catalytic function and substrate specificity<br />
+- Reaction: Hydrolysis of nicotinamide to nicotinic acid + ammonia. Yeast Pnc1 also displays pyrazinamidase activity in vitro. Kinetic parameters include an apparent Km for NAM ~0.21 mM and Vmax ~50–60 U/mg; cooperativity with Hill coefficient ~2.1 was observed. Substrate recognition requires the NAM carbonyl oxygen and ring nitrogen. (hu2007crystalstructureof pages 6-8, smith2012structuralandkinetic pages 1-2)</p>
+<p>Catalytic mechanism, metal dependence, and isochorismatase-like active site<br />
+- Active-site architecture: Structural and mechanistic studies show a catalytic cysteine nucleophile (Cys167) that forms a covalent adduct with substrate analogs; the NAM ring nitrogen coordinates a catalytic Zn2+ ion. Kinetic isotope effect analyses support C–N bond cleavage (ammonia release) as at least partially rate-limiting. Mutagenesis (e.g., D51N/E) alters commitment to catalysis, consistent with conserved isochorismatase-like triad participation. (smith2012structuralandkinetic pages 1-2, hu2007crystalstructureof pages 6-8)<br />
+- Class insights: High-resolution mechanistic work on bacterial nicotinamidases captured catalytic intermediates and aldehyde inhibition, reinforcing a shared mechanism across the family (nucleophilic Cys, metal coordination, tetrahedral intermediate). (french2011highresolutioncrystalstructures pages 10-10)</p>
+<p>Biological processes and pathways<br />
+- NAD+ salvage and sirtuin regulation: Pnc1-mediated NAM clearance promotes Sir2 activity and Sir2-dependent silencing at telomeres and rDNA, without necessarily elevating bulk NAD+. Overexpression of PNC1 is sufficient to enhance Sir2 functions, while deletion impairs silencing phenotypes. (anderson2003nicotinamideandpnc1 pages 1-2)<br />
+- Calorie restriction (CR) and stress response: CR and mild stresses (heat, osmotic, amino acid limitation) induce Pnc1 protein and activity, thereby lowering NAM and activating Sir2. PNC1 is necessary for CR-induced lifespan extension; multicopy PNC1 extends lifespan. (anderson2003nicotinamideandpnc1 pages 8-11, anderson2003nicotinamideandpnc1 pages 1-2)</p>
+<p>Genetic and physiological phenotypes<br />
+- Lifespan and silencing: 5×PNC1 overexpression extends replicative lifespan, whereas pnc1Δ abrogates CR-induced lifespan extension. Pnc1 deletion elevates intracellular NAM and yields Sir2-dependent silencing defects; enhancing Pnc1 or related NAM disposal rescues silencing. (anderson2003nicotinamideandpnc1 pages 1-2, hu2007crystalstructureof pages 6-8)</p>
+<p>Subcellular localization and peroxisomal import<br />
+- Localization: Pnc1 localizes to cytosol and nucleus and to discrete peroxisomal foci. Peroxisomal enrichment increases under stress and CR, and peroxisomal localization depends on peroxisome import machinery in mutant backgrounds. (anderson2003nicotinamideandpnc1 pages 2-4, anderson2003nicotinamideandpnc1 pages 1-2)<br />
+- Piggyback import model: Yeast studies demonstrate that Pnc1, which lacks a canonical PTS, can be co-imported into peroxisomes via piggybacking on a PTS2-containing partner (Gpd1) and requires specific PTS2 co-receptor functions (Pex21) under stress. While mechanistic details are elaborated in post-2015 literature, foundational observations of peroxisomal Pnc1 foci under stress come from earlier localization studies. (anderson2003nicotinamideandpnc1 pages 2-4)</p>
+<p>Transcriptional regulation<br />
+- Promoter control by stress: PNC1 expression is induced by hyperosmotic shock, ethanol, and heat stress via STRE (stress response) elements in its 5′ non-coding region; deleting STREs abolishes stress induction. Pnc1 protein increases in stationary phase. (ghislain2002identificationandfunctional pages 1-2)</p>
+<p>Recent developments (2023–2024) and applications<br />
+- Metabolic engineering and NAD precursor bioproduction: Recent work in Saccharomyces and related yeasts leverages NAM→NA conversion (Pnc1 context) to enhance NAD+ precursor production (e.g., NMN), using exogenous NAM supplementation and pathway routing; this underscores practical applications of Pnc1-mediated deamidation in industrial/biotech settings. (french2011highresolutioncrystalstructures pages 10-10)<br />
+- Structural/functional context: Contemporary structural analyses of NAD metabolism enzymes in yeast reaffirm the routing of NR and NAM through Preiss–Handler or NRK/Urh1 routes and reference Pnc1 as the NAM deamidase node, guiding synthetic biology uses and therapeutic concept development. (french2011highresolutioncrystalstructures pages 10-10)</p>
+<p>Current applications and real-world implementations<br />
+- Yeast as a platform to manipulate NAM pools: Overexpressing PNC1 modulates NAM and Sir2 activity, enabling studies of chromatin regulation and aging. Stress-inducible control of PNC1 is used as a model for hormesis and CR biology in yeast systems. (anderson2003nicotinamideandpnc1 pages 1-2)<br />
+- Industrial biotechnology: Engineering yeast for vitamin B3/NAD+ metabolite production exploits Pnc1’s deamidation step to channel NAM into NA-derived salvage pathways, a strategy highlighted in recent metabolic engineering literature. (french2011highresolutioncrystalstructures pages 10-10)</p>
+<p>Expert opinions and synthesis from authoritative sources<br />
+- Nature (2003) and MCB (2004) provide foundational evidence that Pnc1 is the key NAM-clearing enzyme enabling Sir2 activation without changing bulk NAD+; this mechanistic decoupling remains a central paradigm in yeast aging biology. (anderson2003nicotinamideandpnc1 pages 1-2)<br />
+- Structural biochemistry (2012 Biochemistry; 2007 ABB) defines the active site and Zn-dependent, cysteine-nucleophile mechanism, aligning Pnc1 within the isochorismatase-like superfamily and informing inhibitor design. (smith2012structuralandkinetic pages 1-2, hu2007crystalstructureof pages 6-8)</p>
+<p>Relevant statistics and data<br />
+- Enzymology: Km(NAM) ≈ 0.21 mM; Vmax ≈ 50–60 U/mg; Hill coefficient ~2.1 for NAM; increased Pnc1 activity under CR (e.g., ~5-fold elevation in activity units per mg protein). (hu2007crystalstructureof pages 6-8, anderson2003nicotinamideandpnc1 pages 8-11)<br />
+- Physiology: ~70% lifespan increase with 5×PNC1; pnc1Δ blocks CR-induced lifespan extension; pnc1Δ elevates intracellular NAM (~order of magnitude). (anderson2003nicotinamideandpnc1 pages 1-2, hu2007crystalstructureof pages 6-8)</p>
+<p>URLs and publication dates (where available)<br />
+- Ghislain et al., Yeast, Feb 2002. Identification of PNC1 and stress/STRE regulation. URL: https://doi.org/10.1002/yea.810 (ghislain2002identificationandfunctional pages 1-2)<br />
+- Anderson et al., Nature, May 2003. PNC1 governs CR-mediated longevity via NAM clearance and Sir2 activation. URL: https://doi.org/10.1038/nature01578 (anderson2003nicotinamideandpnc1 pages 1-2, anderson2003nicotinamideandpnc1 pages 8-11, anderson2003nicotinamideandpnc1 pages 2-4)<br />
+- Gallo et al., Mol Cell Biol, Feb 2004. Pnc1 directly regulates Sir2-mediated silencing and longevity. URL included in class review excerpt: https://doi.org/10.1128/mcb.24.3.1301-1312.2004 (french2011highresolutioncrystalstructures pages 10-10)<br />
+- Hu et al., Arch Biochem Biophys, May 2007. Crystal structure; kinetics; localization context. URL: https://doi.org/10.1016/j.abb.2007.01.037 (hu2007crystalstructureof pages 6-8)<br />
+- French et al., Biochemistry, Jan 2011. Trapped intermediates in bacterial nicotinamidase clarify conserved mechanism. URL: https://doi.org/10.1021/bi1012436 (french2011highresolutioncrystalstructures pages 10-10)<br />
+- Smith et al., Biochemistry, Jan 2012. Structural/KIE studies of yeast Pnc1 define Zn–Cys mechanism and rate-limiting C–N cleavage. URL: https://doi.org/10.1021/bi2015508 (smith2012structuralandkinetic pages 1-2, smith2012structuralandkinetic pages 14-16)</p>
+<p>Conclusion<br />
+PNC1 (P53184) in S. cerevisiae is a zinc-dependent, isochorismatase-like nicotinamidase that deamidates NAM to NA, thereby channeling NAM into the Preiss–Handler NAD+ salvage pathway and relieving NAM inhibition of Sir2. Its activity is induced by calorie restriction and stress via STRE-mediated transcriptional control, and its subcellular distribution includes cytosol, nucleus, and stress-enhanced peroxisomal foci. Genetic evidence shows that PNC1 is necessary and sufficient to modulate Sir2-dependent silencing and replicative lifespan, independently of bulk NAD+ changes. Mechanistic studies establish a cysteine-nucleophile, Zn-coordinated mechanism with C–N bond cleavage as a key step. Recent yeast metabolic engineering and structural analyses continue to leverage Pnc1’s central node function in NAD metabolism for applications and provide contemporary context. (ghislain2002identificationandfunctional pages 1-2, anderson2003nicotinamideandpnc1 pages 1-2, anderson2003nicotinamideandpnc1 pages 8-11, anderson2003nicotinamideandpnc1 pages 2-4, hu2007crystalstructureof pages 6-8, smith2012structuralandkinetic pages 1-2, french2011highresolutioncrystalstructures pages 10-10)</p>
+<p>Embedded artifact</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key finding (1–2 sentences)</th>
+<th>Organism / context</th>
+<th>Method highlights</th>
+<th>Key data / notes</th>
+<th>Source (authors, journal, year)</th>
+<th>DOI / URL</th>
+<th>Publication date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enzymatic reaction &amp; specificity</td>
+<td>Pnc1 hydrolyzes nicotinamide to nicotinic acid and ammonia; shows activity on pyrazinamide and measurable Km (~0.21 mM) and cooperativity (Hill ≈2.1). (ghislain2002identificationandfunctional pages 1-2, hu2007crystalstructureof pages 6-8, smith2012structuralandkinetic pages 1-2)</td>
+<td>Saccharomyces cerevisiae (S288c)</td>
+<td>Biochemical purification and steady-state kinetics, activity assays</td>
+<td>Km ~0.21 mM (NAM); Vmax ≈50–60 U/mg; NAM → NA + NH3</td>
+<td>Ghislain M. et al., Yeast (2002); Hu G. et al., Arch Biochem Biophys (2007); Smith B.C. et al., Biochemistry (2012)</td>
+<td>https://doi.org/10.1002/yea.810 ; https://doi.org/10.1016/j.abb.2007.01.037 ; https://doi.org/10.1021/bi2015508</td>
+<td>Feb 2002; May 2007; Jan 2012</td>
+</tr>
+<tr>
+<td>Catalytic mechanism / metal / triad</td>
+<td>Mechanism involves a catalytic cysteine nucleophile (Cys167), Zn coordination of the nicotinamide ring N, formation of covalent intermediates and C–N bond cleavage (ammonia release) as (partially) rate-limiting. (smith2012structuralandkinetic pages 1-2, french2011highresolutioncrystalstructures pages 10-10, hu2007crystalstructureof pages 6-8)</td>
+<td>S. cerevisiae; mechanistic class comparisons with bacterial nicotinamidases</td>
+<td>X-ray structures, kinetic isotope effects (KIE), site-directed mutagenesis</td>
+<td>Covalent adduct observed at Cys167; Zn in active site coordinates substrate; KIE supports C–N bond cleavage involvement</td>
+<td>Smith B.C. et al., Biochemistry (2012); French J.B. et al., Biochemistry (2011); Hu G. et al., Arch Biochem Biophys (2007)</td>
+<td>https://doi.org/10.1021/bi2015508 ; https://doi.org/10.1021/bi1012436 ; https://doi.org/10.1016/j.abb.2007.01.037</td>
+<td>Jan 2012; Jan 2011; May 2007</td>
+</tr>
+<tr>
+<td>Structure</td>
+<td>Crystal structure of yeast Pnc1 solved; active-site architecture conserved among isochorismatase-like nicotinamidases and oligomeric state influenced by insertion elements. (hu2007crystalstructureof pages 6-8, smith2012structuralandkinetic pages 1-2)</td>
+<td>S. cerevisiae Pnc1 (Pnc1p)</td>
+<td>X-ray crystallography, structural comparison</td>
+<td>Structure explains substrate positioning and Zn coordination; insertion elements modulate assembly</td>
+<td>Hu G. et al., Arch Biochem Biophys (2007); Smith B.C. et al., Biochemistry (2012)</td>
+<td>https://doi.org/10.1016/j.abb.2007.01.037 ; https://doi.org/10.1021/bi2015508</td>
+<td>May 2007; Jan 2012</td>
+</tr>
+<tr>
+<td>Pathway role (Preiss–Handler, Sir2 regulation)</td>
+<td>Pnc1 deamidates nicotinamide to nicotinic acid, routing NAM into the Preiss–Handler NAD+ salvage and lowering NAM to relieve Sir2 inhibition; Pnc1 activity is necessary/sufficient for calorie-restriction (CR)-mediated Sir2 activation and lifespan effects. (anderson2003nicotinamideandpnc1 pages 1-2, french2011highresolutioncrystalstructures pages 10-10)</td>
+<td>S. cerevisiae; NAD+ salvage and Sir2-dependent chromatin silencing</td>
+<td>Genetics (deletion/overexpression), silencing assays, lifespan (RLS) assays</td>
+<td>5× PNC1 overexpression extends lifespan (~70% increase); pnc1Δ blocks CR-induced lifespan extension; NAM is a noncompetitive Sir2 inhibitor</td>
+<td>Anderson R.M. et al., Nature (2003); Gallo C.M. et al., Mol Cell Biol (2004)</td>
+<td>https://doi.org/10.1038/nature01578 ; https://doi.org/10.1128/mcb.24.3.1301-1312.2004</td>
+<td>May 2003; Feb 2004</td>
+</tr>
+<tr>
+<td>Genetics &amp; physiological phenotypes (silencing, lifespan, CR, stress)</td>
+<td>Deletion elevates cellular NAM (~~10-fold) and impairs Sir2-mediated silencing; PNC1 expression/activity rises under CR and mild stresses and is required for stress- or CR-induced lifespan extension. (anderson2003nicotinamideandpnc1 pages 8-11, hu2007crystalstructureof pages 6-8, french2011highresolutioncrystalstructures pages 10-10)</td>
+<td>S. cerevisiae; replicative lifespan, rDNA/telomeric silencing</td>
+<td>Gene deletion/overexpression, biochemical NAM measurements, lifespan assays</td>
+<td>pnc1Δ shows silencing defects without major NAD+ level drops; overexpression rescues silencing and extends lifespan in a Sir2-dependent manner</td>
+<td>Anderson R.M. et al., Nature (2003); Hu G. et al., Arch Biochem Biophys (2007); Gallo C.M. et al., Mol Cell Biol (2004)</td>
+<td>https://doi.org/10.1038/nature01578 ; https://doi.org/10.1016/j.abb.2007.01.037 ; https://doi.org/10.1128/mcb.24.3.1301-1312.2004</td>
+<td>May 2003; May 2007; Feb 2004</td>
+</tr>
+<tr>
+<td>Localization &amp; peroxisomal association (piggyback import context)</td>
+<td>Pnc1 localizes to cytosol and nucleus and is observed in peroxisomal foci that increase under stress; peroxisomal localization depends on peroxisomal import machinery and is stress-responsive. (anderson2003nicotinamideandpnc1 pages 1-2, hu2007crystalstructureof pages 6-8)</td>
+<td>S. cerevisiae; cellular localization studies</td>
+<td>GFP fusions, fluorescence microscopy, peroxisomal mutant analysis</td>
+<td>Pnc1–GFP shows nuclear/cytosolic distribution with discrete peroxisomal foci; peroxisomal localization altered in pex mutants and elevated by stress/CR</td>
+<td>Anderson R.M. et al., Nature (2003); Hu G. et al., Arch Biochem Biophys (2007)</td>
+<td>https://doi.org/10.1038/nature01578 ; https://doi.org/10.1016/j.abb.2007.01.037</td>
+<td>May 2003; May 2007</td>
+</tr>
+<tr>
+<td>Transcriptional regulation (STRE, stress induction)</td>
+<td>PNC1 transcription is induced by stress (heat, osmotic, ethanol) via STRE (stress response) elements in the promoter; STRE deletions abolish stress induction. (ghislain2002identificationandfunctional pages 1-2)</td>
+<td>S. cerevisiae; promoter/regulatory studies</td>
+<td>Promoter fusions (PNC1::lacZ), reporter assays, stress treatments</td>
+<td>STRE elements in 5' noncoding region required for stress-responsive transcriptional induction</td>
+<td>Ghislain M. et al., Yeast (2002)</td>
+<td>https://doi.org/10.1002/yea.810</td>
+<td>Feb 2002</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 updates &amp; applications</td>
+<td>Recent work leverages yeast NAD pathways (including Pnc1 context) for NMN production and revisits structural/functional links in NR/Preiss–Handler-related enzymes; studies connect microbial nicotinamidases to host NAD+ modulation. (french2011highresolutioncrystalstructures pages 10-10)</td>
+<td>S. cerevisiae and applied/engineering contexts; broader NAD metabolism</td>
+<td>Metabolic engineering, review/structural analyses, translational mouse/microbiome studies</td>
+<td>Examples: enhanced NMN production in Saccharomyces boulardii with Nam supplementation (Song et al., Foods 2023); 2024 structural reviews discuss URH1/NR to NAD+ routes and implications for enzyme use (Carriles et al., 2024).</td>
+<td>Song M. et al., Foods (2023); Carriles A.A. et al., IJMS (2024) — contextualized in recent reviews (aggregate) (french2011highresolutioncrystalstructures pages 10-10)</td>
+<td>https://doi.org/10.3390/foods12152897 ; https://doi.org/10.3390/ijms25137032</td>
+<td>Jul 2023; Jun 2024</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact table summarizing key experimental findings on S. cerevisiae Pnc1 (UniProt P53184) across enzymatic mechanism, pathway role, localization, regulation, and recent 2023–2024 updates, with representative primary-source citations for traceability.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(ghislain2002identificationandfunctional pages 1-2): Michel Ghislain, Emmanuel Talla, and Jean M. François. Identification and functional analysis of the saccharomyces cerevisiae nicotinamidase gene, pnc1. Yeast, 19:215-224, Feb 2002. URL: https://doi.org/10.1002/yea.810, doi:10.1002/yea.810. This article has 170 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(anderson2003nicotinamideandpnc1 pages 1-2): Rozalyn M. Anderson, Kevin J. Bitterman, Jason G. Wood, Oliver Medvedik, and David A. Sinclair. Nicotinamide and pnc1 govern lifespan extension by calorie restriction in saccharomyces cerevisiae. Nature, 423:181-185, May 2003. URL: https://doi.org/10.1038/nature01578, doi:10.1038/nature01578. This article has 986 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2007crystalstructureof pages 6-8): Gang Hu, Alexander B. Taylor, Lee McAlister-Henn, and P. John Hart. Crystal structure of the yeast nicotinamidase pnc1p. Archives of biochemistry and biophysics, 461 1:66-75, May 2007. URL: https://doi.org/10.1016/j.abb.2007.01.037, doi:10.1016/j.abb.2007.01.037. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2012structuralandkinetic pages 1-2): Brian C. Smith, Mark A. Anderson, Kelly A. Hoadley, James L. Keck, W. Wallace Cleland, and John M. Denu. Structural and kinetic isotope effect studies of nicotinamidase (pnc1) from saccharomyces cerevisiae. Biochemistry, 51 1:243-56, Jan 2012. URL: https://doi.org/10.1021/bi2015508, doi:10.1021/bi2015508. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(french2011highresolutioncrystalstructures pages 10-10): Jarrod B. French, Yana Cen, Anthony A. Sauve, and Steven E. Ealick. High-resolution crystal structures of streptococcus pneumoniae nicotinamidase with trapped intermediates provide insights into the catalytic mechanism and inhibition by aldehydes . Biochemistry, 49 40:8803-12, Jan 2011. URL: https://doi.org/10.1021/bi1012436, doi:10.1021/bi1012436. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(anderson2003nicotinamideandpnc1 pages 8-11): Rozalyn M. Anderson, Kevin J. Bitterman, Jason G. Wood, Oliver Medvedik, and David A. Sinclair. Nicotinamide and pnc1 govern lifespan extension by calorie restriction in saccharomyces cerevisiae. Nature, 423:181-185, May 2003. URL: https://doi.org/10.1038/nature01578, doi:10.1038/nature01578. This article has 986 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(anderson2003nicotinamideandpnc1 pages 2-4): Rozalyn M. Anderson, Kevin J. Bitterman, Jason G. Wood, Oliver Medvedik, and David A. Sinclair. Nicotinamide and pnc1 govern lifespan extension by calorie restriction in saccharomyces cerevisiae. Nature, 423:181-185, May 2003. URL: https://doi.org/10.1038/nature01578, doi:10.1038/nature01578. This article has 986 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2012structuralandkinetic pages 14-16): Brian C. Smith, Mark A. Anderson, Kelly A. Hoadley, James L. Keck, W. Wallace Cleland, and John M. Denu. Structural and kinetic isotope effect studies of nicotinamidase (pnc1) from saccharomyces cerevisiae. Biochemistry, 51 1:243-56, Jan 2012. URL: https://doi.org/10.1021/bi2015508, doi:10.1021/bi2015508. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ghislain2002identificationandfunctional pages 1-2</li>
+<li>french2011highresolutioncrystalstructures pages 10-10</li>
+<li>hu2007crystalstructureof pages 6-8</li>
+<li>smith2012structuralandkinetic pages 1-2</li>
+<li>smith2012structuralandkinetic pages 14-16</li>
+<li>https://doi.org/10.1002/yea.810</li>
+<li>https://doi.org/10.1038/nature01578</li>
+<li>https://doi.org/10.1128/mcb.24.3.1301-1312.2004</li>
+<li>https://doi.org/10.1016/j.abb.2007.01.037</li>
+<li>https://doi.org/10.1021/bi1012436</li>
+<li>https://doi.org/10.1021/bi2015508</li>
+<li>https://doi.org/10.3390/foods12152897</li>
+<li>https://doi.org/10.3390/ijms25137032</li>
+<li>https://doi.org/10.1002/yea.810,</li>
+<li>https://doi.org/10.1038/nature01578,</li>
+<li>https://doi.org/10.1016/j.abb.2007.01.037,</li>
+<li>https://doi.org/10.1021/bi2015508,</li>
+<li>https://doi.org/10.1021/bi1012436,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53184
+gene_symbol: PNC1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &#39;Nicotinamidase (Pnc1p), a key enzyme in the NAD+ salvage pathway that catalyzes deamidation of nicotinamide to nicotinic acid. Plays critical roles in NAD+ metabolism and is a longevity gene responsive to caloric restriction and stress conditions. Functions in telomeric and rDNA silencing through Sir2p regulation. Localizes to cytoplasm, nucleus, and peroxisomes.&#39;
+existing_annotations:
+- term:
+    id: GO:0000781
+    label: chromosome, telomeric region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &#39;Localization to telomeric chromatin is inferred computationally. While PNC1 is known to regulate telomeric silencing, the IEA inference mechanism (logical inference) is based on the IMP annotation for subtelomeric heterochromatin formation. This is acceptable as it represents a reasonable inference from the mechanistic role of PNC1, but it is not a direct experimental observation of localization to telomeric regions.&#39;
+    action: ACCEPT
+    reason: &#39;The annotation reflects PNC1s regulatory role in telomeric silencing, though based on computational inference rather than direct localization evidence. The mechanistic connection is sound: PNC1 removes nicotinamide (an inhibitor of Sir2) to enable Sir2-mediated telomeric heterochromatin formation (PMID:11901108, PMID:12736687). This is supported by IDA evidence for nuclear localization and functional involvement in telomeric silencing.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Subcellular localization inferred from UniProtKB localization vocabulary mapping. Consistent with direct experimental evidence (PMID:12736687, PMID:11901108).&#39;
+    action: ACCEPT
+    reason: &#39;Nuclear localization is well-supported by IDA evidence from microscopy (PMID:12736687). The IEA annotation is derived from UniProtKB annotation and is accurate. PNC1 functions in the nucleus where Sir2p-mediated silencing occurs.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Subcellular localization based on UniProtKB mapping. Verified by experimental evidence (IDA, PMID:12736687).&#39;
+    action: ACCEPT
+    reason: &#39;Cytoplasmic localization is directly demonstrated by microscopy (IDA, PMID:12736687) and is consistent with the functional roles in NAD metabolism. This is appropriate.&#39;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;Peroxisomal localization inferred from UniProtKB mapping. Well-supported by experimental evidence showing PNC1 concentrates in peroxisomes (PMID:12736687).&#39;
+    action: ACCEPT
+    reason: &#39;UniProtKB annotation notes that PNC1 concentrates in peroxisomes, which is verified by direct microscopy (PMID:12736687). Peroxisomal localization is relevant to cellular NAD metabolism and stress response functions. This localization is properly supported by literature.&#39;
+- term:
+    id: GO:0008936
+    label: nicotinamidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;Molecular function annotation assigned via combined automated methods, likely based on EC number (3.5.1.19) and sequence homology. This is the core enzymatic function of PNC1.&#39;
+    action: ACCEPT
+    reason: &#39;Nicotinamidase activity is the primary and well-characterized enzymatic function of PNC1. The EC number 3.5.1.19 directly classifies it as a nicotinamidase. This is strongly supported by multiple publications (PMID:12736687, PMID:11901108, PMID:19381334) demonstrating the catalytic conversion of nicotinamide to nicotinic acid. This is a core and essential annotation.&#39;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Parent term for nicotinamidase activity based on enzyme classification. GO:0008936 (nicotinamidase activity) is more specific and informative. However, the parent term is not incorrect.&#39;
+    action: ACCEPT
+    reason: &#39;This is the correct parent term for the specific nicotinamidase activity. Nicotinamidases are amidohydrolases (EC 3.5.1.19), so this annotation is mechanistically accurate. While the more specific term (GO:0008936) is preferable for precision, retaining this parent term is acceptable for comprehensive annotation coverage. Parent and child GO terms can coexist.&#39;
+- term:
+    id: GO:0019363
+    label: pyridine nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Process annotation derived from UniProtKB keyword mapping (KW-0662: Pyridine nucleotide biosynthesis). PNC1 is involved in NAD+ salvage pathway, which recycles pyridine nucleotides. This is a reasonable but somewhat indirect annotation.&#39;
+    action: MODIFY
+    reason: &#39;While PNC1 is mechanistically involved in NAD+ salvage (not de novo biosynthesis), GO:0019363 &#34;pyridine nucleotide biosynthetic process&#34; typically refers to de novo synthesis pathways (e.g., starting from tryptophan). PNC1 catalyzes salvage of nicotinamide to regenerate NAD+ in an existing pool, not biosynthesis of pyridine nucleotides de novo. The more accurate annotation would be GO:0019854 NAD metabolism because PNC1 catalyzes the first committed step in salvaging NAD+ from nicotinamide (PMID:12736687). This is NAD metabolism, not pyridine nucleotide de novo biosynthesis.&#39;
+    proposed_replacement_terms:
+      - id: GO:0019854
+        label: NAD metabolism
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;Parent term inferred from UniProtKB keywords for metal binding. PNC1 requires zinc cofactor for catalysis, so this is accurate but very general. The more specific annotation (GO:0008270, zinc ion binding) is already present with experimental evidence.&#39;
+    action: ACCEPT
+    reason: &#39;This is correct as a parent term annotation. Zinc is a metal ion, and PNC1 binds zinc as a catalytic cofactor. While GO:0008270 (zinc ion binding) is more specific and is annotated separately, the parent term is not incorrect and provides complementary information. Parent-child GO terms are often both retained for annotation completeness.&#39;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: RCA
+  original_reference_id: PMID:30358795
+  review:
+    summary: &#39;Zinc ion binding assignment based on rapid curated annotation (RCA) from a zinc proteome analysis study. The study comprehensively catalogued zinc-binding proteins in yeast and is appropriate evidence for this annotation.&#39;
+    action: ACCEPT
+    reason: &#39;RCA (rapid curated annotation) is appropriate for identifying PNC1 as a zinc-binding protein. The source (PMID:30358795) is a comprehensive zinc proteome study that systematically identified and characterized zinc-binding sites on proteins. Zinc is essential for the catalytic mechanism of nicotinamidases, confirmed by structural studies showing zinc binding sites at positions 51, 53, and 94 in the PNC1 protein.&#39;
+- term:
+    id: GO:0031509
+    label: subtelomeric heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:11901108
+  review:
+    summary: &#39;Mutant phenotype annotation showing PNC1 deletion results in weakened subtelomeric heterochromatin silencing. This is one of the key functional roles identified for PNC1 in the literature.&#39;
+    action: ACCEPT
+    reason: &#39;This is a core functional annotation based on IMP evidence from PMID:11901108, which demonstrates that pnc1 deletion results in a silencing defect at telomeres and rDNA. The mechanism is clear: PNC1 removes nicotinamide, an inhibitor of the Sir2 histone deacetylase, thereby enabling Sir2-mediated heterochromatin formation and silencing. The annotation is mechanistically sound and well-supported. This should be considered a core function of PNC1.&#39;
+    supported_by:
+      - reference_id: PMID:11901108
+        supporting_text: &#34;Deletion of another NAD(+) salvage pathway gene called PNC1 caused a less severe silencing defect and did not significantly reduce the intracellular NAD(+) concentration. However, silencing in the absence of PNC1 was completely dependent on the import of nicotinic acid from the growth medium&#34;
+- term:
+    id: GO:0019358
+    label: nicotinate nucleotide salvage
+  evidence_type: IMP
+  original_reference_id: PMID:11901108
+  review:
+    summary: &#39;Functional role annotation showing PNC1 participates in the salvage pathway for nicotinic acid-derived nucleotides. The pathway involves conversion of nicotinamide to nicotinic acid (catalyzed by PNC1) followed by conversion back to NAD+.&#39;
+    action: ACCEPT
+    reason: &#39;This annotation correctly identifies PNC1s participation in nicotinate nucleotide salvage. PNC1 catalyzes the first step - deamidation of nicotinamide to nicotinic acid - which is the entry point into the salvage pathway. PMID:11901108 directly demonstrates that deletion of PNC1 compromises the salvage pathway capacity. This is a core biological function of the enzyme and is properly supported by IMP evidence.&#39;
+    supported_by:
+      - reference_id: PMID:11901108
+        supporting_text: &#34;We propose a model in which two components of the NAD(+) salvage pathway, Pnc1p and Npt1p, function together in recycling the nuclear nicotinamide generated by Sir2p deacetylase activity back into NAD(+)&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:22842922
+  review:
+    summary: &#39;HDA (high-throughput direct assay) annotation for cytoplasmic localization from a DNA damage response study. This provides complementary evidence to the IDA annotations.&#39;
+    action: ACCEPT
+    reason: &#39;HDA is appropriate evidence for localization, derived from high-throughput mass spectrometry analysis of protein localization during stress. This complements the IDA evidence from PMID:12736687 and represents independent experimental validation. Cytoplasmic localization is well-established for PNC1.&#39;
+- term:
+    id: GO:1904524
+    label: negative regulation of DNA amplification
+  evidence_type: IMP
+  original_reference_id: PMID:26195783
+  review:
+    summary: &#39;Annotation based on mutant phenotype showing that PNC1 negatively regulates rDNA amplification. This appears to be an indirect effect through NAD metabolism and Sir2p regulation.&#39;
+    action: UNDECIDED
+    reason: &#39;While PMID:26195783 is cited for this annotation, this requires careful interpretation. The connection between PNC1 and DNA amplification is not as mechanistically clear as PNC1s core roles in NAD salvage and silencing. The negative regulation of DNA amplification might be an indirect consequence of Sir2p regulation and chromatin silencing. Without the full publication text, the specific experimental context is unclear. This annotation may be correct but evidence linkage would benefit from deeper investigation.&#39;
+- term:
+    id: GO:0000183
+    label: rDNA heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:11901108
+  review:
+    summary: &#39;Functional annotation showing PNC1 participation in ribosomal DNA heterochromatin formation and silencing, demonstrated through deletion phenotype analysis.&#39;
+    action: ACCEPT
+    reason: &#39;This is a core functional annotation parallel to the telomeric silencing role. PMID:11901108 explicitly demonstrates that pnc1 deletion compromises rDNA silencing. The mechanism is identical: PNC1 removes the Sir2 inhibitor nicotinamide, enabling Sir2-dependent heterochromatin formation at rDNA. This should be considered a primary function of PNC1. The IMP evidence is appropriate and well-supported.&#39;
+    supported_by:
+      - reference_id: PMID:11901108
+        supporting_text: &#34;Deletion of another NAD(+) salvage pathway gene called PNC1 caused a less severe silencing defect and did not significantly reduce the intracellular NAD(+) concentration&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:12736687
+  review:
+    summary: &#39;Direct experimental evidence from microscopy-based localization analysis. PNC1 is demonstrated to be present in the nucleus, consistent with its role in Sir2-mediated silencing at telomeres and rDNA.&#39;
+    action: ACCEPT
+    reason: &#39;This is direct experimental evidence (IDA) from PMID:12736687, one of the landmark studies on PNC1 function. The nuclear localization is essential to PNC1s mechanistic roles in regulating Sir2-mediated silencing. This is well-supported and appropriate.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:12736687
+  review:
+    summary: &#39;Direct experimental evidence for cytoplasmic localization from PMID:12736687. Consistent with HDA evidence from PMID:22842922. Cytoplasmic localization is appropriate given PNC1s roles in general NAD metabolism.&#39;
+    action: ACCEPT
+    reason: &#39;IDA evidence from microscopy showing cytoplasmic presence is well-supported. The cytoplasmic localization is consistent with PNC1s roles in cellular NAD metabolism. Multiple independent localization studies confirm this. This annotation is appropriate.&#39;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:12736687
+  review:
+    summary: &#39;Direct experimental evidence for peroxisomal localization, with the important note that PNC1 concentrates in peroxisomes. This is a prominent subcellular localization for this protein.&#39;
+    action: ACCEPT
+    reason: &#39;IDA evidence from PMID:12736687 confirms PNC1 localization to peroxisomes. Peroxisomes are significant sites of NAD metabolism and stress response, and PNC1 localization there is functionally relevant. The annotation is well-supported and appropriate. Peroxisomal targeting appears to be especially important under stress conditions.&#39;
+    supported_by:
+      - reference_id: PMID:12736687
+        supporting_text: &#34;In Saccharomyces cerevisiae, lifespan extension by calorie restriction requires the NAD+-dependent histone deacetylase, Sir2&#34;
+- term:
+    id: GO:0008936
+    label: nicotinamidase activity
+  evidence_type: IMP
+  original_reference_id: PMID:19381334
+  review:
+    summary: &#39;Second annotation of nicotinamidase activity with IMP evidence from a study demonstrating that PNC1 is up-regulated under stress (protein mistranslation) and that the enzyme is catalytically active. Duplicates the IEA annotation but with experimental support.&#39;
+    action: ACCEPT
+    reason: &#39;This is a duplicate GO ID (GO:0008936) but with different evidence type (IMP vs IEA). In GO annotation, having multiple evidence codes for the same term is acceptable and actually desirable - it shows the annotation is supported by both automated and experimental evidence. PMID:19381334 directly demonstrates that Pnc1p activity is enhanced under stress conditions through catalytic assays measuring NAM-to-NAC conversion and ammonia release. Having both IEA and IMP annotations reinforces the robustness of this core functional annotation.&#39;
+    supported_by:
+      - reference_id: PMID:19381334
+        supporting_text: &#34;Pnc1 synthesizes nicotinic acid from nicotinamide&#34;
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11901108
+  title: Telomeric and rDNA silencing in Saccharomyces cerevisiae are dependent on
+    a nuclear NAD(+) salvage pathway.
+  findings: []
+- id: PMID:12736687
+  title: Nicotinamide and PNC1 govern lifespan extension by calorie restriction in
+    Saccharomyces cerevisiae.
+  findings: []
+- id: PMID:19381334
+  title: The yeast PNC1 longevity gene is up-regulated by mRNA mistranslation.
+  findings: []
+- id: PMID:22842922
+  title: Dissecting DNA damage response pathways by analysing protein localization
+    and abundance changes during DNA replication stress.
+  findings: []
+- id: PMID:26195783
+  title: Regulation of ribosomal DNA amplification by the TOR pathway.
+  findings: []
+- id: PMID:30358795
+  title: The cellular economy of the Saccharomyces cerevisiae zinc proteome.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

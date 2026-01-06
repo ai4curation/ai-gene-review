@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCAMP3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SCAMP3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14828" target="_blank" class="term-link">
+                        O14828
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SCAMP3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14828" data-a="DESCRIPTION: SCAMP3 (Secretory carrier-associated membrane prot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SCAMP3 (Secretory carrier-associated membrane protein 3) is a tetraspanning integral membrane protein that functions as a key regulator of endosomal trafficking and multivesicular body (MVB) biogenesis. The protein contains an N-terminal cytoplasmic domain with functionally critical motifs including a PPAY motif that binds WW-domain E3 ubiquitin ligases (NEDD4 family) and a PSAP motif that mediates interaction with the ESCRT-I component TSG101. SCAMP3 localizes to the Golgi apparatus, early endosomes, and a subset of late endosomes. It plays a central role in regulating epidermal growth factor receptor (EGFR) trafficking fate, balancing receptor recycling versus lysosomal degradation through ESCRT-dependent sorting into intralumenal vesicles. SCAMP3 is multi-monoubiquitinated and is itself phosphorylated by EGFR at Tyr86, which promotes EGFR-SCAMP3 interaction and EGFR degradation. SCAMP3 is essential for WW domain-activated extracellular vesicle (WAEV) budding, positioning it as a critical factor in exosome/EV biogenesis.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006887" target="_blank" class="term-link">
+                                    GO:0006887
+                                </a>
+                            </span>
+                            <span class="term-label">exocytosis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0006887" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation derives from phylogenetic inference across the SCAMP family. While SCAMP3 is involved in vesicular trafficking pathways, the primary experimental evidence supports its role in endosomal sorting and MVB biogenesis rather than classical exocytosis. The original SCAMP1/2 literature focused on post-Golgi recycling carriers, but SCAMP3-specific studies emphasize EGFR trafficking and intralumenal vesicle formation (PMID:19158374).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;exocytosis&#39; is too general and does not capture the specific role of SCAMP3. The deep research indicates SCAMP3 functions primarily in endosomal sorting, MVB biogenesis, and regulation of receptor recycling vs degradation rather than classical exocytosis. A more appropriate term would be &#39;post-Golgi vesicle-mediated transport&#39; (which already exists as another annotation) or &#39;endosomal transport&#39;.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016197" target="_blank" class="term-link">
+                                    endosomal transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes receptor recycling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032588" target="_blank" class="term-link">
+                                    GO:0032588
+                                </a>
+                            </span>
+                            <span class="term-label">trans-Golgi network membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0032588" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is consistent with experimental findings. The deep research indicates SCAMP3 localizes to the Golgi apparatus, and the original 1997 paper (PMID:9378760) showed SCAMPs have similar subcellular distributions including Golgi-associated compartments. The 2012 Traffic paper confirmed SCAMP3 localization to Golgi and endosomal compartments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation accurately reflects SCAMP3 localization. Literature demonstrates SCAMP3 presence at Golgi and trans-Golgi network membranes consistent with its role in post-Golgi trafficking.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link">
+                                        PMID:9378760
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Examination of the codistribution of the three forms within individual cells using double label immunofluorescence indicates extensive colocalization of SCAMP2 and SCAMP3 with endogenous SCAMP1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055038" target="_blank" class="term-link">
+                                    GO:0055038
+                                </a>
+                            </span>
+                            <span class="term-label">recycling endosome membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0055038" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is well-supported by experimental evidence. SCAMP3 promotes receptor recycling and localizes to endosomal compartments including recycling endosomes. The 2009 Mol Biol Cell paper demonstrated that SCAMP3 promotes EGFR recycling rather than degradation (PMID:19158374).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation accurately reflects SCAMP3 localization and function. SCAMP3 functions as a recycling carrier and promotes receptor recycling from endosomal compartments back to the plasma membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes receptor recycling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0015031" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation inferred from InterPro domain and UniProtKB keywords is accurate but very general. SCAMP3 is indeed involved in protein transport through its role in vesicular trafficking, EGFR sorting, and MVB pathway regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but represents a high-level term. More specific annotations like post-Golgi vesicle-mediated transport and endosomal transport better capture SCAMP3 function. However, this IEA annotation is not incorrect and provides appropriate coverage.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link">
+                                        PMID:9378760
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The SCAMPs may largely function at the same sites during vesicular transport rather than in separate post-Golgi recycling pathways</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is correct. SCAMP3 is a tetraspanning integral membrane protein with four transmembrane helices (residues 171-191, 197-217, 247-267, 277-297) according to UniProt annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is accurate. SCAMP3 is clearly a membrane protein with four transmembrane domains. More specific membrane localizations (trans-Golgi network membrane, recycling endosome membrane) are captured in other annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link">
+                                        PMID:9378760
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMPs are highly related products of distinct genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    GO:0031625
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23418353
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The E3 ubiquitin ligases RNF126 and Rabring7 regulate endoso...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0031625" data-r="PMID:23418353" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IPI annotation is well-supported. SCAMP3 contains a PPAY motif that binds WW-domain E3 ubiquitin ligases including NEDD4 and NEDD4L. The UniProt entry confirms interactions with NEDD4, NEDD4L, TSG101, and RNF126. The cited paper (PMID:23418353) demonstrates SCAMP3 interaction with RNF126 E3 ubiquitin ligase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation accurately reflects SCAMP3&#39;s molecular function. The PPAY motif mediates binding to WW-domain containing E3 ubiquitin ligases. This interaction is functionally important for SCAMP3&#39;s role in endosomal sorting and receptor trafficking.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link">
+                                        PMID:23418353
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also show that the depletion of Rabring7 attenuates the degradation of MET and that both RNF126 and Rabring7 regulate the sorting of CXCR4 from an early endocytic compartment</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0070062" data-r="PMID:20458337" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This HDA annotation from high-throughput proteomics is strongly supported by recent functional studies. The 2023 Science Advances paper demonstrated that SCAMP3 is essential for WW domain-activated extracellular vesicle (WAEV) budding. SCAMP3 knockout nearly abolishes EV production measured by NanoSight, and only wild-type (not PPAY mutant) SCAMP3 can rescue this phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is experimentally validated by multiple studies. SCAMP3 was identified in B-cell exosome proteomics and later shown to be functionally required for extracellular vesicle biogenesis through its PPAY-WW domain interactions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                                        PMID:20458337
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We first analyzed the total proteome of highly purified B cell-derived exosomes using sensitive and accurate mass spectrometry (MS), and identified 539 proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006892" target="_blank" class="term-link">
+                                    GO:0006892
+                                </a>
+                            </span>
+                            <span class="term-label">post-Golgi vesicle-mediated transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9378760
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Three mammalian SCAMPs (secretory carrier membrane proteins)...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0006892" data-r="PMID:9378760" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TAS annotation from the original SCAMP characterization paper is well-supported. The 1997 paper established that SCAMPs function in post-Golgi recycling pathways, and subsequent studies have confirmed SCAMP3&#39;s role in trafficking from Golgi through endosomal compartments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation accurately reflects a core function of SCAMP3. The protein functions in post-Golgi vesicular transport, mediating carrier function between Golgi, endosomal compartments, and plasma membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link">
+                                        PMID:9378760
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These findings suggest that the SCAMPs may largely function at the same sites during vesicular transport rather than in separate post-Golgi recycling pathways</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070676" target="_blank" class="term-link">
+                                    GO:0070676
+                                </a>
+                            </span>
+                            <span class="term-label">intralumenal vesicle formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0070676" data-r="file:human/SCAMP3/SCAMP3-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation supported by direct experimental evidence. The 2012 Traffic paper demonstrated that SCAMP3 knockdown significantly reduces intralumenal vesicle (ILV) formation in multivesicular bodies (stereological analysis, p&lt;0.0001). SCAMP3 is required for cargo sorting into ILVs and MVB biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence supports this annotation. SCAMP3 is required for ILV formation through its interaction with ESCRT machinery via the PSAP-TSG101 and PPAY-WW domain interactions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3, its modification with ubiquitin, and its interactions with ESCRTs coordinately regulate endosomal pathways and affect the efficiency of receptor down-regulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005770" target="_blank" class="term-link">
+                                    GO:0005770
+                                </a>
+                            </span>
+                            <span class="term-label">late endosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0005770" data-r="file:human/SCAMP3/SCAMP3-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation supported by experimental evidence. The 2012 Traffic paper demonstrated that approximately 30% of late endosomes contain SCAMP3 based on quantitative image analysis. SCAMP3 localizes to a subset of late endosomes/MVBs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct evidence from immunofluorescence and EM studies shows SCAMP3 localization to late endosomal compartments where it functions in cargo sorting and ILV formation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3 depletion appeared to sustain the incidence of EGFR-containing MVBs detected by immunoelectron microscopy</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001881" target="_blank" class="term-link">
+                                    GO:0001881
+                                </a>
+                            </span>
+                            <span class="term-label">receptor recycling</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19158374
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SCAMP3 negatively regulates epidermal growth factor receptor...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0001881" data-r="PMID:19158374" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation supported by experimental evidence. The 2009 Mol Biol Cell paper demonstrated that SCAMP3 promotes EGFR recycling. SCAMP3 overexpression enhanced EGFR recycling while knockdown accelerated degradation and impaired recycling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence from mutant analysis shows SCAMP3 functions in promoting receptor recycling, balancing recycling vs degradation fate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Depletion of SCAMP3 in HeLa cells by inhibitory RNA accelerated degradation of EGFR and EGF while inhibiting recycling</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032585" target="_blank" class="term-link">
+                                    GO:0032585
+                                </a>
+                            </span>
+                            <span class="term-label">multivesicular body membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O14828" data-a="GO:0032585" data-r="file:human/SCAMP3/SCAMP3-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation supported by experimental evidence. SCAMP3 localizes to and functions at MVB membranes, where it is required for ILV formation and cargo sorting.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> SCAMP3 localization to MVB membranes is demonstrated through its role in MVB biogenesis and ESCRT-dependent sorting.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                                        PMID:19158374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SCAMP3 depletion appeared to sustain the incidence of EGFR-containing MVBs detected by immunoelectron microscopy</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SCAMP3 functions as a multi-modal regulator of endosomal trafficking, controlling the fate of cargo proteins including EGFR between recycling and lysosomal degradation pathways through interactions with ESCRT machinery.</h3>
+                <span class="vote-buttons" data-g="O14828" data-a="FUNCTION: SCAMP3 functions as a multi-modal regulator of end..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                            ubiquitin protein ligase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016197" target="_blank" class="term-link">
+                                endosomal transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070676" target="_blank" class="term-link">
+                                intralumenal vesicle formation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055038" target="_blank" class="term-link">
+                                recycling endosome membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032585" target="_blank" class="term-link">
+                                multivesicular body membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032588" target="_blank" class="term-link">
+                                trans-Golgi network membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 identified in B-cell exosome proteome</div>
+                        
+                        <div class="finding-text">"We first analyzed the total proteome of highly purified B cell-derived exosomes using sensitive and accurate mass spectrometry (MS), and identified 539 proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link">
+                            PMID:23418353
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The E3 ubiquitin ligases RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF126 and Rabring7 regulate EGFR endosomal sorting</div>
+                        
+                        <div class="finding-text">"RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9378760" target="_blank" class="term-link">
+                            PMID:9378760
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Three mammalian SCAMPs (secretory carrier membrane proteins) are highly related products of distinct genes having similar subcellular distributions.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 characterized as member of SCAMP family</div>
+                        
+                        <div class="finding-text">"Three mammalian SCAMPs (secretory carrier membrane proteins) are highly related products of distinct genes having similar subcellular distributions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMPs colocalize and function in post-Golgi recycling pathways</div>
+                        
+                        <div class="finding-text">"These findings suggest that the SCAMPs may largely function at the same sites during vesicular transport rather than in separate post-Golgi recycling pathways"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19158374" target="_blank" class="term-link">
+                            PMID:19158374
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes receptor recycling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 contains PPAY motif binding NEDD4 family E3 ligases</div>
+                        
+                        <div class="finding-text">"SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 is multi-monoubiquitinated</div>
+                        
+                        <div class="finding-text">"SCAMP3 is multimonoubiquitylated"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 promotes EGFR recycling over degradation</div>
+                        
+                        <div class="finding-text">"Depletion of SCAMP3 in HeLa cells by inhibitory RNA accelerated degradation of EGFR and EGF while inhibiting recycling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 interacts with NEDD4, NEDD4L, and TSG101</div>
+                        
+                        <div class="finding-text">"SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on SCAMP3 function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 required for ILV formation in MVBs based on 2012 Traffic paper</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCAMP3 localizes to late endosomes based on immunofluorescence studies</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does SCAMP3 ubiquitination state regulate the balance between receptor recycling and degradation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14828" data-a="Q: How does SCAMP3 ubiquitination state regulate the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise mechanism by which SCAMP3 coordinates with ESCRT-0 (HRS) in addition to ESCRT-I (TSG101)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14828" data-a="Q: What is the precise mechanism by which SCAMP3 coor..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function analysis of SCAMP3 using site-directed mutagenesis of the ubiquitination sites to determine how ubiquitination state affects recycling vs degradation outcomes. This could resolve the apparent discrepancy between SCAMP3&#39;s role in promoting recycling versus driving lysosomal degradation.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O14828" data-a="EXPERIMENT: Structure-function analysis of SCAMP3 using site-d..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SCAMP3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14828" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T23:31:58.145149'<br />
+end_time: '2025-12-27T23:38:03.641167'<br />
+duration_seconds: 365.5<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: SCAMP3<br />
+  gene_symbol: SCAMP3<br />
+  uniprot_accession: O14828<br />
+  protein_description: 'RecName: Full=Secretory carrier-associated membrane protein<br />
+    3; Short=Secretory carrier membrane protein 3;'<br />
+  gene_info: Name=SCAMP3; Synonyms=C1orf3, PROPIN1;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the SCAMP family. .<br />
+  protein_domains: SCAMP. (IPR007273); SCAMP (PF04144)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 22</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O14828</li>
+<li><strong>Protein Description:</strong> RecName: Full=Secretory carrier-associated membrane protein 3; Short=Secretory carrier membrane protein 3;</li>
+<li><strong>Gene Information:</strong> Name=SCAMP3; Synonyms=C1orf3, PROPIN1;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the SCAMP family. .</li>
+<li><strong>Key Domains:</strong> SCAMP. (IPR007273); SCAMP (PF04144)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SCAMP3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SCAMP3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SCAMP3</strong> (gene ID: SCAMP3, UniProt: O14828) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O14828</li>
+<li><strong>Protein Description:</strong> RecName: Full=Secretory carrier-associated membrane protein 3; Short=Secretory carrier membrane protein 3;</li>
+<li><strong>Gene Information:</strong> Name=SCAMP3; Synonyms=C1orf3, PROPIN1;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the SCAMP family. .</li>
+<li><strong>Key Domains:</strong> SCAMP. (IPR007273); SCAMP (PF04144)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SCAMP3" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SCAMP3' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SCAMP3</strong> (gene ID: SCAMP3, UniProt: O14828) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Verified target identity and nomenclature.<br />
+- Retrieved and synthesized recent primary literature (priority 2023–2024) and authoritative sources on SCAMP3.<br />
+- Extracted mechanistic evidence on localization, motifs, post-translational modifications, interacting partners, and trafficking functions.<br />
+- Summarized recent developments in EV technology, cancer biology, and infection/immunity.<br />
+- Compiled quantitative findings and created a summary artifact.</p>
+<p>Comprehensive research report: SCAMP3 (Human; UniProt O14828)</p>
+<p>1) Identity verification and core concepts<br />
+- Identity and organism: SCAMP3 (secretory carrier-associated membrane protein 3) is a human integral membrane protein in the SCAMP family (SCAMP1–5), with a characteristic tetraspanning topology and cytoplasmic N- and C-termini (Homo sapiens). Traffic-focused cell biology places SCAMP3 at the Golgi, early endosomes, and a subset of late endosomes; quantification indicates roughly 30% of late endosomes contain SCAMP3 (image analysis) (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 1-2).<br />
+- Domain/motif architecture and ubiquitin linkage: SCAMP3 contains an N‑terminal proline-rich region with a PPAY motif (PY) that binds WW-domain E3 ligases (e.g., NEDD4-family) and a PSAP motif that binds ESCRT‑I subunit TSG101. SCAMP3 is multi‑monoubiquitylated. These features underlie its functional interactions in endosomal sorting and EGFR trafficking (2009-03; Mol Biol Cell; https://doi.org/10.1091/mbc.e08-09-0894) (aoh2009scamp3negativelyregulates pages 1-2, radic2016anovelrolea pages 44-49).<br />
+- Functional theme: SCAMP3 is a trafficking regulator at early-to-late endosomes/MVBs that tunes the balance of receptor recycling versus degradation and participates in intralumenal vesicle (ILV) formation via ESCRT-associated mechanisms (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 10-11, falguieres2012regulationofthe pages 7-9).</p>
+<p>2) Molecular function, mechanisms, and localization<br />
+- Subcellular localization: SCAMP3 localizes to Golgi and early endosomes (coincident with Rab5/EEA1) and to a subset of late endosomes/lysosomes; limited surface presence has been detected. Approximately 30% of late endosomes are SCAMP3-positive (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 1-2).<br />
+- ESCRT-coupled sorting and motifs: The PSAP motif in SCAMP3 mediates binding to TSG101 (ESCRT‑I), and the PPAY motif engages WW-domain E3 ligases (e.g., NEDD4 family), with SCAMP3 itself being multi‑monoubiquitylated. SCAMP3 depletion accelerated EGFR/EGF degradation and impaired recycling, while overexpression enhanced recycling; these effects required SCAMP3 lysines and intact PSAP/PY motifs (2009-03; Mol Biol Cell; https://doi.org/10.1091/mbc.e08-09-0894) (aoh2009scamp3negativelyregulates pages 1-2).<br />
+- Role in MVB/ILV biogenesis: SCAMP3 is required for cargo sorting into ILVs and for EGF‑driven multivesicular endosome biogenesis; its knockdown reduces ILV formation (stereology over ~3000 μm² cytoplasm, p&lt;0.0001), reduces cargo incorporation (HPTS/nanogold), and delays EGFR degradation (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 7-9).<br />
+- EGFR trafficking and resolution of apparent discrepancies: Early work showed SCAMP3 promotes EGFR recycling and limits degradation (2009). Later work emphasized SCAMP3’s necessity for ILV formation and lysosomal targeting of EGFR (2012). A 2016 synthesis suggested that differential SCAMP3 ubiquitination state or regulatory context could reconcile these findings (2016; preprint/unknown venue) (aoh2009scamp3negativelyregulates pages 1-2, falguieres2012regulationofthe pages 7-9, radic2016anovelrolea pages 44-49).</p>
+<p>3) Post-translational modifications and regulatory switches<br />
+- Ubiquitination: SCAMP3 undergoes multiple monoubiquitinations; modulation of ubiquitylation likely toggles functions (e.g., ESCRT engagement vs recycling roles) (2009-03; Mol Biol Cell; https://doi.org/10.1091/mbc.e08-09-0894) (aoh2009scamp3negativelyregulates pages 1-2).<br />
+- Tyrosine phosphorylation by EGFR: Quantitative phosphoproteomics in lung adenocarcinoma identified SCAMP3 Tyr86 (and Tyr35) phosphorylation downstream of activated or mutant EGFR (L858R/T790M). Y86 phosphorylation enhances SCAMP3–EGFR interaction and is required for SCAMP3-driven EGFR degradation and tumor-suppressive phenotypes; Y86F fails to rescue degradation defects and growth phenotypes (2021-04; Oncogene; https://doi.org/10.1038/s41388-021-01764-y) (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10, venugopalan2021scamp3isa pages 1-2).</p>
+<p>4) Interactors and pathway placement<br />
+- EGFR axis: SCAMP3 physically associates with EGFR upon activation and co-localizes in early endosomes/perinuclear compartments; phosphorylation at Y86 promotes this association (2021-04; Oncogene; https://doi.org/10.1038/s41388-021-01764-y; 2022-06; Cancers; https://doi.org/10.3390/cancers14112807) (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10, acevedodiaz2022scamp3regulatesegfr pages 9-13).<br />
+- ESCRT machinery: SCAMP3 engages TSG101 (ESCRT‑I) via PSAP and associates with HRS (ESCRT‑0), functionally linking to receptor sorting into ILVs (2009-03; Mol Biol Cell; https://doi.org/10.1091/mbc.e08-09-0894; 2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (aoh2009scamp3negativelyregulates pages 1-2, falguieres2012regulationofthe pages 7-9).<br />
+- WW-domain proteins and EV budding: SCAMP3’s PPAY motif binds WW domains to drive “WW domain–activated extracellular vesicles” (WAEVs); SCAMP3 knockout nearly abolishes WAEV budding, and re-expression of WT but not PPAY→PPAA mutant restores EV budding (2023-01; Sci Adv; https://doi.org/10.1126/sciadv.ade2708) (choi2023displayinganddelivering pages 2-3).<br />
+- Antiviral innate immunity: SCAMP3 stabilizes IFITM3 by decreasing its lysosomal degradation and alters endosome→Golgi retrograde transport; it physically interacts with IFITM3. Notably, SCAMP3 did not change IFITM3 ubiquitination pattern (2016; preprint/unknown venue) (radic2016anovelrolea pages 88-97, radic2016anovelrole pages 88-97).<br />
+- Viral replication complexes: SCAMP3 interacts with enterovirus 3A and co-assembles with PI4KIIIβ/PI4P at replication sites; SCAMP3 depletion decreases viral RNA/protein synthesis and viral growth (EV‑A71, CVB3) (2021-09; Microbiol Spectrum; https://doi.org/10.1128/spectrum.00475-21) (lu2021secretorycarriermembrane pages 10-11).</p>
+<p>5) Recent developments (priority 2023–2024) and applications<br />
+- EV technology and vaccine design (2023): A WW-domain–activated EV platform requires SCAMP3; WW–PPAY interactions on SCAMP3 recruit cargo to EVs and drive budding. SCAMP3 knockout drastically reduces EV number (NanoSight) and eliminates WAEV budding; WT rescue restores budding, PPAY-mutant fails. This establishes SCAMP3 as an actionable EV-budding factor for membrane antigen vaccine delivery (2023-01; Sci Adv; https://doi.org/10.1126/sciadv.ade2708) (choi2023displayinganddelivering pages 2-3).<br />
+- Cancer signaling and trafficking control (2021–2022): In lung adenocarcinoma, SCAMP3 is a mutant EGFR phosphorylation target; Y86 phosphorylation is required for tumor-suppressive control of EGFR degradation and for preventing multinucleation and hyperproliferation (2021-04; Oncogene; https://doi.org/10.1038/s41388-021-01764-y) (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10). In TNBC, SCAMP3 controls EGFR trafficking and modulates AKT/ERK/STAT3 pathways; knockout reduces proliferation, migration, invasion, and delays early tumor growth in xenografts; high SCAMP3 associates with poorer outcomes in patient datasets (2022-06; Cancers; https://doi.org/10.3390/cancers14112807) (acevedodiaz2022scamp3regulatesegfr pages 7-9, acevedodiaz2022scamp3regulatesegfr pages 1-2, acevedodiaz2022scamp3regulatesegfr pages 19-21, acevedodiaz2022scamp3regulatesegfr pages 9-13).<br />
+- Infection biology (2021): SCAMP3’s role in enterovirus replication complexes supports broader functions in virus-driven membrane remodeling and lipid kinase recruitment (PI4KIIIβ/PI4P) (2021-09; Microbiol Spectrum; https://doi.org/10.1128/spectrum.00475-21) (lu2021secretorycarriermembrane pages 10-11).</p>
+<p>6) Quantitative data and phenotypes<br />
+- Localization prevalence: ~30% of late endosomes are SCAMP3-positive (image analysis), with colocalization to early endosome markers (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 1-2).<br />
+- ILV/MVB formation: SCAMP3 knockdown significantly reduces ILV formation (stereological analysis across ~3000 μm² cytoplasm, p&lt;0.0001); EGFR degradation is delayed (2012-01; Traffic; https://doi.org/10.1111/j.1600-0854.2011.01291.x) (falguieres2012regulationofthe pages 7-9).<br />
+- EGFR degradation kinetics and tumor phenotypes: In lung adenocarcinoma models, control cells show substantial EGFR degradation by ~30 min; SCAMP3-depleted cells exhibit delayed degradation (comparable only by ~2 h). SCAMP3 depletion increases pERK/pAKT, proliferation, colony formation, multinucleation; rescue by WT but not Y86F SCAMP3. Multinucleation assay counts: control n=1576; SCAMP3‑KD n=1132; rescue n=1283; Y86F n=1041 (2021-04; Oncogene; https://doi.org/10.1038/s41388-021-01764-y) (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10).<br />
+- EV production: SCAMP3-KO cells show a significant reduction in EV counts (NanoSight), with near-complete loss of WAEV budding; re-expressing WT but not PPAY-mutant (PPAA) restores budding (2023-01; Sci Adv; https://doi.org/10.1126/sciadv.ade2708) (choi2023displayinganddelivering pages 2-3).<br />
+- TNBC functional readouts: SCAMP3 knockout decreases proliferation at 72 h with EGF stimulation; reduces colony and tumorsphere formation, migration and invasion. Early in vivo xenograft growth is delayed; high SCAMP3 associates with reduced RFS/DMFS in TCGA analyses (2022-06; Cancers; https://doi.org/10.3390/cancers14112807) (acevedodiaz2022scamp3regulatesegfr pages 7-9, acevedodiaz2022scamp3regulatesegfr pages 1-2, acevedodiaz2022scamp3regulatesegfr pages 19-21, acevedodiaz2022scamp3regulatesegfr pages 9-13).<br />
+- IFITM3 regulation: SCAMP3 stabilizes IFITM3 without altering its ubiquitination, with statistically supported effects (n=3; P&lt;0.05) and altered endosome→Golgi transport measured by CTXB uptake and flow cytometry (2016; preprint/unknown venue) (radic2016anovelrolea pages 88-97, radic2016anovelrole pages 88-97).<br />
+- Enterovirus replication: SCAMP3 KD/KO decreases EV-A71 RNA synthesis, viral proteins, and viral growth; reduces colocalization of PI4KIIIβ and PI4P with 3A (2021-09; Microbiol Spectrum; https://doi.org/10.1128/spectrum.00475-21) (lu2021secretorycarriermembrane pages 10-11).</p>
+<p>7) Current applications and real-world implementations<br />
+- EV vaccine platform: SCAMP3 is required for budding of WW domain–activated EVs that present viral membrane antigens; immunization using WAEVs displaying influenza or HIV membrane proteins elicited neutralizing antibodies and conferred protection in mice (platform concept and mechanism; SCAMP3 requirement demonstrated in cells) (2023-01; Sci Adv; https://doi.org/10.1126/sciadv.ade2708) (choi2023displayinganddelivering pages 2-3).<br />
+- Oncology: SCAMP3’s modulation of EGFR fate and signaling positions it as a potential biomarker and functional target in EGFR‑driven tumors; in lung adenocarcinoma, SCAMP3 acts as a tumor suppressor via promoting EGFR degradation (2021-04; Oncogene; https://doi.org/10.1038/s41388-021-01764-y) and in TNBC, its expression correlates with aggressive phenotypes and worse outcomes (2022-06; Cancers; https://doi.org/10.3390/cancers14112807) (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10, acevedodiaz2022scamp3regulatesegfr pages 7-9, acevedodiaz2022scamp3regulatesegfr pages 19-21, acevedodiaz2022scamp3regulatesegfr pages 9-13).<br />
+- Antiviral strategies: SCAMP3’s roles in IFITM3 stabilization and enterovirus replication complexes suggest it as a node for modulating host–virus interactions (2016; 2021-09; https://doi.org/10.1128/spectrum.00475-21) (radic2016anovelrolea pages 88-97, radic2016anovelrole pages 88-97, lu2021secretorycarriermembrane pages 10-11).</p>
+<p>8) Expert perspective and synthesis<br />
+- The preponderance of mechanistic data supports SCAMP3 as a multi-modal endosomal membrane organizer that bridges ESCRT entry points (via PSAP–TSG101 and HRS) with receptor fate decisions and vesicle biogenesis. PTMs act as switches: ubiquitylation state and EGFR‑driven phosphorylation at Y86 appear to bias SCAMP3 toward ILV sorting and degradation of EGFR, thereby constraining signaling. Conversely, under some conditions SCAMP3 can promote recycling; differences likely reflect cell type, ligand dose/time, and SCAMP3 modification status (2009 vs 2012 findings; inferential reconciliation) (aoh2009scamp3negativelyregulates pages 1-2, falguieres2012regulationofthe pages 7-9, radic2016anovelrolea pages 44-49). The 2023 EV study elevates SCAMP3 from a trafficking regulator to an indispensable biogenesis factor for a designer EV platform, showcasing translational relevance (choi2023displayinganddelivering pages 2-3). In cancer, the strongest experimental evidence indicates a tumor-suppressive role in EGFR‑mutant lung adenocarcinoma via Y86‑dependent degradation of EGFR, while in TNBC SCAMP3 aligns with aggressive traits; these contrasts emphasize context-specific signaling ecosystems (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10, acevedodiaz2022scamp3regulatesegfr pages 7-9, acevedodiaz2022scamp3regulatesegfr pages 19-21, acevedodiaz2022scamp3regulatesegfr pages 9-13).</p>
+<p>Embedded summary table of key evidence<br />
+| Topic | Key finding/claim | System/model | Quantitative/stat info | Year | Source (journal) | DOI/URL | Citation ID |<br />
+|---|---|---|---|---|---|---|---|<br />
+| Identity / family / localization | SCAMP3 is a tetraspanning SCAMP family membrane protein with N-terminal NPF repeats; localizes to Golgi, early endosomes and a subset of late endosomes (~30% of late endosomes) | BHK / HeLa cells; IF, EM, proteomics | ~30% of late endosomes contain SCAMP3 (quantified by image analysis) | 2012 | Traffic | https://doi.org/10.1111/j.1600-0854.2011.01291.x | (falguieres2012regulationofthe pages 1-2) |<br />
+| ESCRT interactions, PY/PSAP motifs &amp; ubiquitination | SCAMP3 is multi-monoubiquitylated; contains PY (PPAY) motif binding Nedd4-family E3s and PSAP motif that binds Tsg101; modulates EGFR recycling vs degradation | HeLa cells; RNAi, overexpression, mutagenesis, IP, EM | RNAi accelerates EGFR degradation; overexpression enhances recycling; requires ubiquitylatable lysines and intact PY/PSAP motifs | 2009 | Molecular Biology of the Cell | https://doi.org/10.1091/mbc.e08-09-0894 | (aoh2009scamp3negativelyregulates pages 1-2) |<br />
+| Role in MVB / ILV biogenesis &amp; EGFR sorting | SCAMP3 required for ILV formation and EGF-driven MVB biogenesis; regulates sorting of EGFR into intralumenal vesicles and lysosomal targeting | HeLa / BHK; EM, invagination assays, stereology | Knockdown reduces ILV formation (stereological analysis ≈3000 μm² cytoplasm analyzed); effect significant (p&lt;0.0001); impairs EGFR incorporation/degradation | 2012 | Traffic | https://doi.org/10.1111/j.1600-0854.2011.01291.x | (falguieres2012regulationofthe pages 7-9) |<br />
+| EGFR phosphorylation (Y86) &amp; tumor-suppressor role | SCAMP3 is phosphorylated at Y86 by activated/mutant EGFR; Y86 phosphorylation required for SCAMP3-promoted EGFR degradation and tumor-suppressive phenotypes (WT rescues, Y86F does not) | Lung adenocarcinoma lines; SILAC phosphoproteomics, mutagenesis, xenografts | Multinucleation counts reported (control n=1576; SCAMP3-KD n=1132; rescue n=1283; Y86F n=1041); SCAMP3-KD delays EGFR degradation and increases xenograft growth | 2021 | Oncogene | https://doi.org/10.1038/s41388-021-01764-y | (venugopalan2021scamp3isa pages 10-12) |<br />
+| TNBC: EGFR trafficking, signaling &amp; in vivo effects | SCAMP3 regulates EGFR internalization/redistribution and degradation, modulating AKT/ERK/STAT3; SCAMP3 loss reduces proliferation, migration, tumorsphere formation; xenografts show delayed early tumor growth; high SCAMP3 linked to worse RFS/DMFS (TCGA) | TNBC cell lines (MDA‑MB‑231, SUM‑149); SCAMP3 KO, orthotopic xenografts, TCGA analysis | Reduced proliferation at 72 h after EGF; early delay in tumor proliferation (week 1); association with decreased RFS/DMFS in patient data | 2022 | Cancers | https://doi.org/10.3390/cancers14112807 | (acevedodiaz2022scamp3regulatesegfr pages 7-9) |<br />
+| EV budding via WW–PPAY &amp; PSAP–TSG101 dependency | SCAMP3 is essential for WW domain–activated extracellular vesicle (WAEV) budding; PPAY motif required for WW interaction; PSAP links to TSG101/ESCRT-I | Cell lines; CRISPR KO, NanoSight, proteomics, mutant re-expression | SCAMP3-KO: significant reduction in EV number (NanoSight) and near-complete loss of WAEV budding; WT re-expression restores budding, PPAA mutant fails to rescue | 2023 | Science Advances | https://doi.org/10.1126/sciadv.ade2708 | (choi2023displayinganddelivering pages 2-3) |<br />
+| Innate immunity: IFITM3 stabilization &amp; trafficking | SCAMP3 stabilizes IFITM3 by reducing lysosomal degradation and alters endosome→Golgi retrograde transport; SCAMP3 physically interacts with IFITM3 but does not change IFITM3 ubiquitination | Cell-based assays; shRNA, inducible expression, co‑IP/MS, confocal, flow cytometry | Effects reproducible (n=3; s.d.; P&lt;0.05 reported); IFITM3 ubiquitination pattern unchanged | 2016 | (unknown) | N/A | (radic2016anovelrolea pages 88-97) |<br />
+| Viral replication: EV‑A71 3A interaction &amp; PI4KIIIβ/PI4P complex | SCAMP3 associates with enterovirus 3A, PI4KIIIβ and PI4P at replication sites and positively regulates viral RNA/protein synthesis and viral growth | EV‑A71 and CVB3 infection in cultured cells; IP + LC‑MS/MS; SCAMP3 KD/KO | SCAMP3 KD/KO decreases viral RNA synthesis, viral protein levels and viral growth; reduces PI4KIIIβ/PI4P colocalization with 3A | 2021 | Microbiology Spectrum | https://doi.org/10.1128/spectrum.00475-21 | (lu2021secretorycarriermembrane pages 10-11) |</p>
+<p><em>Table: A compact table of primary findings on human SCAMP3 (UniProt O14828), listing mechanisms, systems, key quantitative results and source citations to facilitate rapid review and reference.</em></p>
+<p>References (with URLs and dates)<br />
+- Aoh QL et al. SCAMP3 negatively regulates EGFR degradation and promotes receptor recycling. Mol Biol Cell. 2009-03. https://doi.org/10.1091/mbc.e08-09-0894 (aoh2009scamp3negativelyregulates pages 1-2)<br />
+- Falguières T et al. Regulation of the MVB Pathway by SCAMP3. Traffic. 2012-01. https://doi.org/10.1111/j.1600-0854.2011.01291.x (falguieres2012regulationofthe pages 1-2, falguieres2012regulationofthe pages 10-11, falguieres2012regulationofthe pages 7-9)<br />
+- Venugopalan A et al. SCAMP3 is a mutant EGFR phosphorylation target and a tumor suppressor in lung adenocarcinoma. Oncogene. 2021-04. https://doi.org/10.1038/s41388-021-01764-y (venugopalan2021scamp3isa pages 10-12, venugopalan2021scamp3isa pages 7-10, venugopalan2021scamp3isa pages 1-2)<br />
+- Acevedo-Díaz A et al. SCAMP3 regulates EGFR and promotes proliferation and migration of TNBC cells. Cancers. 2022-06. https://doi.org/10.3390/cancers14112807 (acevedodiaz2022scamp3regulatesegfr pages 7-9, acevedodiaz2022scamp3regulatesegfr pages 1-2, acevedodiaz2022scamp3regulatesegfr pages 19-21, acevedodiaz2022scamp3regulatesegfr pages 9-13)<br />
+- Choi S et al. Displaying and delivering viral membrane antigens via WW domain–activated extracellular vesicles. Sci Adv. 2023-01. https://doi.org/10.1126/sciadv.ade2708 (choi2023displayinganddelivering pages 2-3)<br />
+- Lu J‑Y et al. SCAMP3 interacts with enterovirus 3A and participates in viral replication. Microbiol Spectr. 2021-09. https://doi.org/10.1128/spectrum.00475-21 (lu2021secretorycarriermembrane pages 10-11)<br />
+- Radic V. A novel role for SCAMP3 as an innate immune factor. 2016. (repository/unknown); SCAMP3 stabilizes IFITM3 and alters retrograde transport (radic2016anovelrolea pages 88-97, radic2016anovelrole pages 88-97)</p>
+<p>Compliance with identity checks<br />
+- Gene symbol and UniProt accession match the requested target: SCAMP3, UniProt O14828, human. Multiple sources explicitly refer to human SCAMP3 and its roles in human cells (Mol Biol Cell 2009; Traffic 2012; Oncogene 2021; Sci Adv 2023) (aoh2009scamp3negativelyregulates pages 1-2, falguieres2012regulationofthe pages 7-9, venugopalan2021scamp3isa pages 10-12, choi2023displayinganddelivering pages 2-3).<br />
+- Protein family/domains: Findings align with SCAMP family membership and tetraspanning topology; functional motifs (PPAY, PSAP) and ESCRT/WW-domain interactions are supported (aoh2009scamp3negativelyregulates pages 1-2, choi2023displayinganddelivering pages 2-3).</p>
+<p>Limitations<br />
+- Some innate immunity data derive from a dissertation/unknown journal; mechanistic claims are supported by experimental assays but warrant independent primary validation (radic2016anovelrolea pages 88-97, radic2016anovelrole pages 88-97).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(falguieres2012regulationofthe pages 1-2): Thomas Falguières, David Castle, and Jean Gruenberg. Regulation of the mvb pathway by scamp3. Traffic, 13:131-142, Jan 2012. URL: https://doi.org/10.1111/j.1600-0854.2011.01291.x, doi:10.1111/j.1600-0854.2011.01291.x. This article has 48 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aoh2009scamp3negativelyregulates pages 1-2): Quyen L. Aoh, Anna M. Castle, Charles H. Hubbard, Osamu Katsumata, and J. David Castle. Scamp3 negatively regulates epidermal growth factor receptor degradation and promotes receptor recycling. Molecular biology of the cell, 20 6:1816-32, Mar 2009. URL: https://doi.org/10.1091/mbc.e08-09-0894, doi:10.1091/mbc.e08-09-0894. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(radic2016anovelrolea pages 44-49): V Radic. A novel role for scamp3 as an innate immune factor. Unknown journal, 2016.</p>
+</li>
+<li>
+<p>(falguieres2012regulationofthe pages 10-11): Thomas Falguières, David Castle, and Jean Gruenberg. Regulation of the mvb pathway by scamp3. Traffic, 13:131-142, Jan 2012. URL: https://doi.org/10.1111/j.1600-0854.2011.01291.x, doi:10.1111/j.1600-0854.2011.01291.x. This article has 48 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(falguieres2012regulationofthe pages 7-9): Thomas Falguières, David Castle, and Jean Gruenberg. Regulation of the mvb pathway by scamp3. Traffic, 13:131-142, Jan 2012. URL: https://doi.org/10.1111/j.1600-0854.2011.01291.x, doi:10.1111/j.1600-0854.2011.01291.x. This article has 48 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(venugopalan2021scamp3isa pages 10-12): Abhilash Venugopalan, Matthew Lynberg, Constance M. Cultraro, Khoa Dang P. Nguyen, Xu Zhang, Maryam Waris, Noelle Dayal, Asebot Abebe, Tapan K. Maity, and Udayan Guha. Scamp3 is a mutant egfr phosphorylation target and a tumor suppressor in lung adenocarcinoma. Oncogene, 40:3331-3346, Apr 2021. URL: https://doi.org/10.1038/s41388-021-01764-y, doi:10.1038/s41388-021-01764-y. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(venugopalan2021scamp3isa pages 7-10): Abhilash Venugopalan, Matthew Lynberg, Constance M. Cultraro, Khoa Dang P. Nguyen, Xu Zhang, Maryam Waris, Noelle Dayal, Asebot Abebe, Tapan K. Maity, and Udayan Guha. Scamp3 is a mutant egfr phosphorylation target and a tumor suppressor in lung adenocarcinoma. Oncogene, 40:3331-3346, Apr 2021. URL: https://doi.org/10.1038/s41388-021-01764-y, doi:10.1038/s41388-021-01764-y. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(venugopalan2021scamp3isa pages 1-2): Abhilash Venugopalan, Matthew Lynberg, Constance M. Cultraro, Khoa Dang P. Nguyen, Xu Zhang, Maryam Waris, Noelle Dayal, Asebot Abebe, Tapan K. Maity, and Udayan Guha. Scamp3 is a mutant egfr phosphorylation target and a tumor suppressor in lung adenocarcinoma. Oncogene, 40:3331-3346, Apr 2021. URL: https://doi.org/10.1038/s41388-021-01764-y, doi:10.1038/s41388-021-01764-y. This article has 15 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(acevedodiaz2022scamp3regulatesegfr pages 9-13): Ariana Acevedo-Díaz, Beatriz M. Morales-Cabán, Astrid Zayas-Santiago, Michelle M. Martínez-Montemayor, and Ivette J. Suárez-Arroyo. Scamp3 regulates egfr and promotes proliferation and migration of triple-negative breast cancer cells through the modulation of akt, erk, and stat3 signaling pathways. Cancers, 14:2807, Jun 2022. URL: https://doi.org/10.3390/cancers14112807, doi:10.3390/cancers14112807. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(choi2023displayinganddelivering pages 2-3): Sengjin Choi, Zhiping Yang, Qiyu Wang, Zhi Qiao, Maoyun Sun, Joshua Wiggins, Shi-Hua Xiang, and Quan Lu. Displaying and delivering viral membrane antigens via ww domain–activated extracellular vesicles. Science Advances, Jan 2023. URL: https://doi.org/10.1126/sciadv.ade2708, doi:10.1126/sciadv.ade2708. This article has 24 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(radic2016anovelrolea pages 88-97): V Radic. A novel role for scamp3 as an innate immune factor. Unknown journal, 2016.</p>
+</li>
+<li>
+<p>(radic2016anovelrole pages 88-97): V Radic. A novel role for scamp3 as an innate immune factor. Unknown journal, 2016.</p>
+</li>
+<li>
+<p>(lu2021secretorycarriermembrane pages 10-11): Jia-Ying Lu, Gary Brewer, Mei-Ling Li, Kai-Zhe Lin, Chien-Chih Huang, Li-Chen Yen, and Jing-Yi Lin. Secretory carrier membrane protein 3 interacts with 3a viral protein of enterovirus and participates in viral replication. Microbiology Spectrum, Sep 2021. URL: https://doi.org/10.1128/spectrum.00475-21, doi:10.1128/spectrum.00475-21. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(acevedodiaz2022scamp3regulatesegfr pages 7-9): Ariana Acevedo-Díaz, Beatriz M. Morales-Cabán, Astrid Zayas-Santiago, Michelle M. Martínez-Montemayor, and Ivette J. Suárez-Arroyo. Scamp3 regulates egfr and promotes proliferation and migration of triple-negative breast cancer cells through the modulation of akt, erk, and stat3 signaling pathways. Cancers, 14:2807, Jun 2022. URL: https://doi.org/10.3390/cancers14112807, doi:10.3390/cancers14112807. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(acevedodiaz2022scamp3regulatesegfr pages 1-2): Ariana Acevedo-Díaz, Beatriz M. Morales-Cabán, Astrid Zayas-Santiago, Michelle M. Martínez-Montemayor, and Ivette J. Suárez-Arroyo. Scamp3 regulates egfr and promotes proliferation and migration of triple-negative breast cancer cells through the modulation of akt, erk, and stat3 signaling pathways. Cancers, 14:2807, Jun 2022. URL: https://doi.org/10.3390/cancers14112807, doi:10.3390/cancers14112807. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(acevedodiaz2022scamp3regulatesegfr pages 19-21): Ariana Acevedo-Díaz, Beatriz M. Morales-Cabán, Astrid Zayas-Santiago, Michelle M. Martínez-Montemayor, and Ivette J. Suárez-Arroyo. Scamp3 regulates egfr and promotes proliferation and migration of triple-negative breast cancer cells through the modulation of akt, erk, and stat3 signaling pathways. Cancers, 14:2807, Jun 2022. URL: https://doi.org/10.3390/cancers14112807, doi:10.3390/cancers14112807. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>falguieres2012regulationofthe pages 1-2</li>
+<li>falguieres2012regulationofthe pages 7-9</li>
+<li>choi2023displayinganddelivering pages 2-3</li>
+<li>lu2021secretorycarriermembrane pages 10-11</li>
+<li>radic2016anovelrolea pages 88-97</li>
+<li>radic2016anovelrolea pages 44-49</li>
+<li>falguieres2012regulationofthe pages 10-11</li>
+<li>radic2016anovelrole pages 88-97</li>
+<li>https://doi.org/10.1111/j.1600-0854.2011.01291.x</li>
+<li>https://doi.org/10.1091/mbc.e08-09-0894</li>
+<li>https://doi.org/10.1038/s41388-021-01764-y</li>
+<li>https://doi.org/10.1038/s41388-021-01764-y;</li>
+<li>https://doi.org/10.3390/cancers14112807</li>
+<li>https://doi.org/10.1091/mbc.e08-09-0894;</li>
+<li>https://doi.org/10.1126/sciadv.ade2708</li>
+<li>https://doi.org/10.1128/spectrum.00475-21</li>
+<li>https://doi.org/10.1111/j.1600-0854.2011.01291.x,</li>
+<li>https://doi.org/10.1091/mbc.e08-09-0894,</li>
+<li>https://doi.org/10.1038/s41388-021-01764-y,</li>
+<li>https://doi.org/10.3390/cancers14112807,</li>
+<li>https://doi.org/10.1126/sciadv.ade2708,</li>
+<li>https://doi.org/10.1128/spectrum.00475-21,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14828
+gene_symbol: SCAMP3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: SCAMP3 (Secretory carrier-associated membrane protein 3) is a tetraspanning integral membrane
+  protein that functions as a key regulator of endosomal trafficking and multivesicular body (MVB) biogenesis.
+  The protein contains an N-terminal cytoplasmic domain with functionally critical motifs including a
+  PPAY motif that binds WW-domain E3 ubiquitin ligases (NEDD4 family) and a PSAP motif that mediates interaction
+  with the ESCRT-I component TSG101. SCAMP3 localizes to the Golgi apparatus, early endosomes, and a subset
+  of late endosomes. It plays a central role in regulating epidermal growth factor receptor (EGFR) trafficking
+  fate, balancing receptor recycling versus lysosomal degradation through ESCRT-dependent sorting into
+  intralumenal vesicles. SCAMP3 is multi-monoubiquitinated and is itself phosphorylated by EGFR at Tyr86,
+  which promotes EGFR-SCAMP3 interaction and EGFR degradation. SCAMP3 is essential for WW domain-activated
+  extracellular vesicle (WAEV) budding, positioning it as a critical factor in exosome/EV biogenesis.
+existing_annotations:
+- term:
+    id: GO:0006887
+    label: exocytosis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This IBA annotation derives from phylogenetic inference across the SCAMP family. While SCAMP3
+      is involved in vesicular trafficking pathways, the primary experimental evidence supports its role
+      in endosomal sorting and MVB biogenesis rather than classical exocytosis. The original SCAMP1/2
+      literature focused on post-Golgi recycling carriers, but SCAMP3-specific studies emphasize EGFR
+      trafficking and intralumenal vesicle formation (PMID:19158374).
+    action: MODIFY
+    reason: The term &#39;exocytosis&#39; is too general and does not capture the specific role of SCAMP3. The
+      deep research indicates SCAMP3 functions primarily in endosomal sorting, MVB biogenesis, and regulation
+      of receptor recycling vs degradation rather than classical exocytosis. A more appropriate term would
+      be &#39;post-Golgi vesicle-mediated transport&#39; (which already exists as another annotation) or &#39;endosomal
+      transport&#39;.
+    proposed_replacement_terms:
+    - id: GO:0016197
+      label: endosomal transport
+    additional_reference_ids:
+    - PMID:19158374
+    - file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes
+        receptor recycling
+- term:
+    id: GO:0032588
+    label: trans-Golgi network membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This IBA annotation is consistent with experimental findings. The deep research indicates
+      SCAMP3 localizes to the Golgi apparatus, and the original 1997 paper (PMID:9378760) showed SCAMPs
+      have similar subcellular distributions including Golgi-associated compartments. The 2012 Traffic
+      paper confirmed SCAMP3 localization to Golgi and endosomal compartments.
+    action: ACCEPT
+    reason: The annotation accurately reflects SCAMP3 localization. Literature demonstrates SCAMP3 presence
+      at Golgi and trans-Golgi network membranes consistent with its role in post-Golgi trafficking.
+    supported_by:
+    - reference_id: PMID:9378760
+      supporting_text: Examination of the codistribution of the three forms within individual cells using
+        double label immunofluorescence indicates extensive colocalization of SCAMP2 and SCAMP3 with endogenous
+        SCAMP1
+- term:
+    id: GO:0055038
+    label: recycling endosome membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This IBA annotation is well-supported by experimental evidence. SCAMP3 promotes receptor
+      recycling and localizes to endosomal compartments including recycling endosomes. The 2009 Mol Biol
+      Cell paper demonstrated that SCAMP3 promotes EGFR recycling rather than degradation (PMID:19158374).
+    action: ACCEPT
+    reason: The annotation accurately reflects SCAMP3 localization and function. SCAMP3 functions as a
+      recycling carrier and promotes receptor recycling from endosomal compartments back to the plasma
+      membrane.
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes
+        receptor recycling
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This IEA annotation inferred from InterPro domain and UniProtKB keywords is accurate but
+      very general. SCAMP3 is indeed involved in protein transport through its role in vesicular trafficking,
+      EGFR sorting, and MVB pathway regulation.
+    action: ACCEPT
+    reason: The annotation is correct but represents a high-level term. More specific annotations like
+      post-Golgi vesicle-mediated transport and endosomal transport better capture SCAMP3 function. However,
+      this IEA annotation is not incorrect and provides appropriate coverage.
+    supported_by:
+    - reference_id: PMID:9378760
+      supporting_text: The SCAMPs may largely function at the same sites during vesicular transport rather
+        than in separate post-Golgi recycling pathways
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This IEA annotation is correct. SCAMP3 is a tetraspanning integral membrane protein with
+      four transmembrane helices (residues 171-191, 197-217, 247-267, 277-297) according to UniProt annotation.
+    action: ACCEPT
+    reason: The annotation is accurate. SCAMP3 is clearly a membrane protein with four transmembrane domains.
+      More specific membrane localizations (trans-Golgi network membrane, recycling endosome membrane)
+      are captured in other annotations.
+    supported_by:
+    - reference_id: PMID:9378760
+      supporting_text: SCAMPs are highly related products of distinct genes
+- term:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  evidence_type: IPI
+  original_reference_id: PMID:23418353
+  review:
+    summary: This IPI annotation is well-supported. SCAMP3 contains a PPAY motif that binds WW-domain
+      E3 ubiquitin ligases including NEDD4 and NEDD4L. The UniProt entry confirms interactions with NEDD4,
+      NEDD4L, TSG101, and RNF126. The cited paper (PMID:23418353) demonstrates SCAMP3 interaction with
+      RNF126 E3 ubiquitin ligase.
+    action: ACCEPT
+    reason: The annotation accurately reflects SCAMP3&#39;s molecular function. The PPAY motif mediates binding
+      to WW-domain containing E3 ubiquitin ligases. This interaction is functionally important for SCAMP3&#39;s
+      role in endosomal sorting and receptor trafficking.
+    supported_by:
+    - reference_id: PMID:23418353
+      supporting_text: We also show that the depletion of Rabring7 attenuates the degradation of MET and
+        that both RNF126 and Rabring7 regulate the sorting of CXCR4 from an early endocytic compartment
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin
+        ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  review:
+    summary: This HDA annotation from high-throughput proteomics is strongly supported by recent functional
+      studies. The 2023 Science Advances paper demonstrated that SCAMP3 is essential for WW domain-activated
+      extracellular vesicle (WAEV) budding. SCAMP3 knockout nearly abolishes EV production measured by
+      NanoSight, and only wild-type (not PPAY mutant) SCAMP3 can rescue this phenotype.
+    action: ACCEPT
+    reason: The annotation is experimentally validated by multiple studies. SCAMP3 was identified in B-cell
+      exosome proteomics and later shown to be functionally required for extracellular vesicle biogenesis
+      through its PPAY-WW domain interactions.
+    supported_by:
+    - reference_id: PMID:20458337
+      supporting_text: We first analyzed the total proteome of highly purified B cell-derived exosomes
+        using sensitive and accurate mass spectrometry (MS), and identified 539 proteins
+- term:
+    id: GO:0006892
+    label: post-Golgi vesicle-mediated transport
+  evidence_type: TAS
+  original_reference_id: PMID:9378760
+  review:
+    summary: This TAS annotation from the original SCAMP characterization paper is well-supported. The
+      1997 paper established that SCAMPs function in post-Golgi recycling pathways, and subsequent studies
+      have confirmed SCAMP3&#39;s role in trafficking from Golgi through endosomal compartments.
+    action: ACCEPT
+    reason: The annotation accurately reflects a core function of SCAMP3. The protein functions in post-Golgi
+      vesicular transport, mediating carrier function between Golgi, endosomal compartments, and plasma
+      membrane.
+    supported_by:
+    - reference_id: PMID:9378760
+      supporting_text: These findings suggest that the SCAMPs may largely function at the same sites during
+        vesicular transport rather than in separate post-Golgi recycling pathways
+- term:
+    id: GO:0070676
+    label: intralumenal vesicle formation
+  evidence_type: IDA
+  original_reference_id: file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+  review:
+    summary: NEW annotation supported by direct experimental evidence. The 2012 Traffic paper demonstrated
+      that SCAMP3 knockdown significantly reduces intralumenal vesicle (ILV) formation in multivesicular
+      bodies (stereological analysis, p&lt;0.0001). SCAMP3 is required for cargo sorting into ILVs and MVB
+      biogenesis.
+    action: NEW
+    reason: Strong experimental evidence supports this annotation. SCAMP3 is required for ILV formation
+      through its interaction with ESCRT machinery via the PSAP-TSG101 and PPAY-WW domain interactions.
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3, its modification with ubiquitin, and its interactions with ESCRTs
+        coordinately regulate endosomal pathways and affect the efficiency of receptor
+        down-regulation
+- term:
+    id: GO:0005770
+    label: late endosome
+  evidence_type: IDA
+  original_reference_id: file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+  review:
+    summary: NEW annotation supported by experimental evidence. The 2012 Traffic paper demonstrated that
+      approximately 30% of late endosomes contain SCAMP3 based on quantitative image analysis. SCAMP3
+      localizes to a subset of late endosomes/MVBs.
+    action: NEW
+    reason: Direct evidence from immunofluorescence and EM studies shows SCAMP3 localization to late endosomal
+      compartments where it functions in cargo sorting and ILV formation.
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3 depletion appeared to sustain the incidence of EGFR-containing MVBs
+        detected by immunoelectron microscopy
+- term:
+    id: GO:0001881
+    label: receptor recycling
+  evidence_type: IMP
+  original_reference_id: PMID:19158374
+  review:
+    summary: NEW annotation supported by experimental evidence. The 2009 Mol Biol Cell paper demonstrated
+      that SCAMP3 promotes EGFR recycling. SCAMP3 overexpression enhanced EGFR recycling while knockdown
+      accelerated degradation and impaired recycling.
+    action: NEW
+    reason: Strong experimental evidence from mutant analysis shows SCAMP3 functions in promoting receptor
+      recycling, balancing recycling vs degradation fate.
+    additional_reference_ids:
+    - PMID:19158374
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: Depletion of SCAMP3 in HeLa cells by inhibitory RNA accelerated degradation of EGFR and EGF while inhibiting
+        recycling
+- term:
+    id: GO:0032585
+    label: multivesicular body membrane
+  evidence_type: IDA
+  original_reference_id: file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+  review:
+    summary: NEW annotation supported by experimental evidence. SCAMP3 localizes to and functions at MVB
+      membranes, where it is required for ILV formation and cargo sorting.
+    action: NEW
+    reason: SCAMP3 localization to MVB membranes is demonstrated through its role in MVB biogenesis and
+      ESCRT-dependent sorting.
+    supported_by:
+    - reference_id: PMID:19158374
+      supporting_text: SCAMP3 depletion appeared to sustain the incidence of EGFR-containing MVBs
+        detected by immunoelectron microscopy
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional implications for
+    exosome biogenesis.
+  findings:
+  - statement: SCAMP3 identified in B-cell exosome proteome
+    supporting_text: We first analyzed the total proteome of highly purified B cell-derived exosomes
+      using sensitive and accurate mass spectrometry (MS), and identified 539 proteins
+- id: PMID:23418353
+  title: The E3 ubiquitin ligases RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth
+    factor receptor.
+  findings:
+  - statement: RNF126 and Rabring7 regulate EGFR endosomal sorting
+    supporting_text: RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor
+- id: PMID:9378760
+  title: Three mammalian SCAMPs (secretory carrier membrane proteins) are highly related products of distinct
+    genes having similar subcellular distributions.
+  findings:
+  - statement: SCAMP3 characterized as member of SCAMP family
+    supporting_text: Three mammalian SCAMPs (secretory carrier membrane proteins) are highly related
+      products of distinct genes having similar subcellular distributions
+  - statement: SCAMPs colocalize and function in post-Golgi recycling pathways
+    supporting_text: These findings suggest that the SCAMPs may largely function at the same sites during
+      vesicular transport rather than in separate post-Golgi recycling pathways
+- id: PMID:19158374
+  title: SCAMP3 negatively regulates epidermal growth factor receptor degradation and promotes receptor
+    recycling.
+  findings:
+  - statement: SCAMP3 contains PPAY motif binding NEDD4 family E3 ligases
+    supporting_text: SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin
+      ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively
+  - statement: SCAMP3 is multi-monoubiquitinated
+    supporting_text: SCAMP3 is multimonoubiquitylated
+  - statement: SCAMP3 promotes EGFR recycling over degradation
+    supporting_text: Depletion of SCAMP3 in HeLa cells by inhibitory RNA accelerated degradation of EGFR and EGF while inhibiting
+      recycling
+  - statement: SCAMP3 interacts with NEDD4, NEDD4L, and TSG101
+    supporting_text: SCAMP3 is multimonoubiquitylated and is able to associate with Nedd4 HECT ubiquitin
+      ligases and the ESCRT-I subunit Tsg101 via its PY and PSAP motifs, respectively
+- id: file:human/SCAMP3/SCAMP3-deep-research-falcon.md
+  title: Deep research on SCAMP3 function
+  findings:
+  - statement: SCAMP3 required for ILV formation in MVBs based on 2012 Traffic paper
+  - statement: SCAMP3 localizes to late endosomes based on immunofluorescence studies
+core_functions:
+- description: SCAMP3 functions as a multi-modal regulator of endosomal trafficking, controlling the fate
+    of cargo proteins including EGFR between recycling and lysosomal degradation pathways through interactions
+    with ESCRT machinery.
+  molecular_function:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  directly_involved_in:
+  - id: GO:0016197
+    label: endosomal transport
+  - id: GO:0070676
+    label: intralumenal vesicle formation
+  locations:
+  - id: GO:0055038
+    label: recycling endosome membrane
+  - id: GO:0032585
+    label: multivesicular body membrane
+  - id: GO:0032588
+    label: trans-Golgi network membrane
+proposed_new_terms: []
+suggested_questions:
+- question: How does SCAMP3 ubiquitination state regulate the balance between receptor recycling and degradation?
+- question: What is the precise mechanism by which SCAMP3 coordinates with ESCRT-0 (HRS) in addition to
+    ESCRT-I (TSG101)?
+suggested_experiments:
+- description: Structure-function analysis of SCAMP3 using site-directed mutagenesis of the ubiquitination
+    sites to determine how ubiquitination state affects recycling vs degradation outcomes. This could
+    resolve the apparent discrepancy between SCAMP3&#39;s role in promoting recycling versus driving lysosomal
+    degradation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

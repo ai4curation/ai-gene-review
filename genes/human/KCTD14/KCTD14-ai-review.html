@@ -1,0 +1,2254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCTD14 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KCTD14</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BQ13" target="_blank" class="term-link">
+                        Q9BQ13
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "KCTD14";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BQ13" data-a="DESCRIPTION: KCTD14 encodes a BTB/POZ domain-containing protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KCTD14 encodes a BTB/POZ domain-containing protein that is a member of the KCTD (potassium channel tetramerization domain-containing) protein family. The protein contains a T1-type BTB domain (residues 33-130) that is predicted to mediate pentameric homooligomerization based on family-wide structural analysis. Unlike many other KCTD family members, recent AlphaFold-based structural modeling (2024) suggests KCTD14 does NOT form a stable complex with Cullin3 (Cul3), indicating it may not function as a canonical CRL3 E3 ubiquitin ligase adaptor. The protein&#39;s primary molecular function remains poorly characterized, though high-throughput interaction studies have detected associations with STK16, TCF4, and ACSF3. KCTD14 shows low tissue specificity and has been detected in parotid gland and 138 other cell types or tissues.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051260" target="_blank" class="term-link">
+                                    GO:0051260
+                                </a>
+                            </span>
+                            <span class="term-label">protein homooligomerization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ13" data-a="GO:0051260" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from InterPro domain analysis. The T1-type BTB domain (IPR003131) in KCTD14 is structurally homologous to domains that mediate oligomerization in other KCTD family members. AlphaFold-based structural surveys support that KCTD BTB domains frequently assemble into pentamers, and KCTD14 is expected to oligomerize via its BTB domain in keeping with the family trend (Balasco et al. 2024).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is well-supported by structural homology. The BTB/POZ domain is a well-characterized oligomerization domain. Family-wide AlphaFold analyses confirm that KCTD proteins typically form pentameric assemblies via their BTB domains. While direct experimental evidence for KCTD14 oligomerization is lacking, the structural prediction is robust given the high conservation of oligomerization function across BTB domains.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/KCTD14/KCTD14-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with the family trend</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ13" data-a="GO:0005515" data-r="PMID:25416956" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the Rolland et al. 2014 proteome-scale human interactome map, which used yeast two-hybrid screening to identify approximately 14,000 high-quality binary protein-protein interactions. This is a high-throughput study without specific KCTD14-focused validation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. The term does not convey any specific information about the molecular function of KCTD14. The high-throughput nature of the study means specific interactors were not validated for KCTD14 individually. If specific binding partners were identified, more informative molecular function terms should be used instead. The interaction data itself may be useful but the GO:0005515 annotation is not informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ13" data-a="GO:0005515" data-r="PMID:28514442" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the BioPlex 2.0 study (Huttlin et al. 2017), which used affinity-purification mass spectrometry (AP-MS) to identify protein-protein interactions for over 25% of human protein-coding genes. BioPlex 2.0 contains over 56,000 candidate interactions. This is a high-throughput proteome-scale study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. While BioPlex 2.0 is a valuable resource for identifying potential interaction partners, the generic protein binding annotation does not convey specific functional information about KCTD14. The underlying interaction data may be valuable for characterizing KCTD14 function, but the GO annotation itself is not informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to date, containing 56,553 interactions from 10,961 proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29892012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An interactome perturbation framework prioritizes damaging m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ13" data-a="GO:0005515" data-r="PMID:29892012" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from Chen et al. 2018, which established an interactome perturbation framework to prioritize damaging missense mutations for developmental disorders. The study analyzed approximately 2,000 de novo missense mutations in the context of the human interactome network. This is a computational/high-throughput study focused on mutation effects on interactions rather than direct functional characterization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. This study was focused on identifying disease-relevant missense mutations by their effects on protein interactions, not on characterizing the specific molecular functions of individual proteins like KCTD14. The generic protein binding annotation provides no insight into KCTD14&#39;s specific function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                                        PMID:29892012
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we establish an experimentally and computationally integrated approach to investigate the functional impact of missense mutations in the context of the human interactome network</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BQ13" data-a="GO:0005515" data-r="PMID:33961781" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the BioPlex 3.0/dual network study (Huttlin et al. 2021), which profiled protein interactions in both 293T and HCT116 cells using affinity-purification mass spectrometry. BioPlex 3.0 includes 118,162 interactions among 14,586 proteins. This is a high-throughput proteome-scale study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. While this dual-network approach provides valuable context about cell-type-specific interactions, the generic protein binding annotation does not convey any specific information about KCTD14&#39;s molecular function. If specific binding partners were validated, more informative terms should be used.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">BioPlex 3.0, results from affinity purification of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162 interactions among 14,586 proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>KCTD14 forms homooligomeric assemblies via its BTB domain, likely as pentamers based on family-wide structural analysis. The primary molecular function beyond oligomerization remains to be determined experimentally.</h3>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="FUNCTION: KCTD14 forms homooligomeric assemblies via its BTB..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                            identical protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051260" target="_blank" class="term-link">
+                                protein homooligomerization
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/KCTD14/KCTD14-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with the family trend</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD14 contains T1-type BTB domain (IPR003131) associated with oligomerization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput yeast two-hybrid study identifying approximately 14,000 binary protein-protein interactions</div>
+                        
+                        <div class="finding-text">"Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Study focused on generating reference interactome map, not individual protein characterization</div>
+                        
+                        <div class="finding-text">"Just as reference genome sequences revolutionized human genetics, reference maps of interactome networks will be critical to fully understand genotype-phenotype relationships"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 2.0 AP-MS study with over 56,000 candidate interactions</div>
+                        
+                        <div class="finding-text">"BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to date, containing 56,553 interactions from 10,961 proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BTB domains like those in KCTD proteins associated with Cullin-RING E3 ubiquitin ligase system</div>
+                        
+                        <div class="finding-text">"The cullin domain was paired de novo with 15 additional domains, many of which also co-associated... Neighbors of proteins containing RBX1/2-binding cullin homology domains were enriched with BTB, BTB_2, SOCS and FBOX domains known to bind the cullin N-terminal domain"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                            PMID:29892012
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Computational framework for analyzing effects of missense mutations on protein interactions</div>
+                        
+                        <div class="finding-text">"Here we establish an experimentally and computationally integrated approach to investigate the functional impact of missense mutations in the context of the human interactome network"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Study focused on autism and developmental disorders</div>
+                        
+                        <div class="finding-text">"test our approach by analyzing ~2,000 de novo missense mutations found in autism subjects and their unaffected siblings"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 3.0 with 118,162 interactions in 293T cells</div>
+                        
+                        <div class="finding-text">"BioPlex 3.0, results from affinity purification of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162 interactions among 14,586 proteins"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comparison of context-specific interactome networks</div>
+                        
+                        <div class="finding-text">"performing AP-MS in 293T and HCT116 cells has enabled comparison of two context-specific, proteome-scale interaction networks"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/KCTD14/KCTD14-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for KCTD14</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD14 BTB domain does not form stable complex with Cullin3 in AlphaFold-based modeling</div>
+                        
+                        <div class="finding-text">"The 2024 AF survey explicitly reports &#34;no stable complex detected&#34; for KCTD14-Cul3 under a 5:5 symmetry assumption for the BTB-Cul3 assembly"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD14 is predicted NOT to be a canonical CRL3 adaptor based on structural analysis</div>
+                        
+                        <div class="finding-text">"AF-based modeling found no stable Cul3 binding, arguing against a canonical CRL3 adaptor role"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD proteins typically form pentameric assemblies via BTB domains</div>
+                        
+                        <div class="finding-text">"KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with the family trend"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KCTD14 clusters structurally with KCTD7 based on fold similarity</div>
+                        
+                        <div class="finding-text">"AlphaFold-derived pseudo-phylogenetic analysis reported a specific structural pairing of KCTD7 with KCTD14"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific binding partners of KCTD14 and what biological processes do these interactions serve?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="Q: What are the specific binding partners of KCTD14 a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KCTD14 have any scaffolding or regulatory functions independent of Cullin3?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="Q: Does KCTD14 have any scaffolding or regulatory fun..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the subcellular localization of KCTD14 in different cell types?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="Q: What is the subcellular localization of KCTD14 in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KCTD14 interact with STK16 and TCF4 in vivo and what are the functional consequences of these interactions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="Q: Does KCTD14 interact with STK16 and TCF4 in vivo a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or proximity labeling (BioID/APEX) to identify and validate specific interaction partners</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="EXPERIMENT: Co-immunoprecipitation or proximity labeling (BioI..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Immunofluorescence or subcellular fractionation to determine cellular localization</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="EXPERIMENT: Immunofluorescence or subcellular fractionation to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR knockout or knockdown studies to identify phenotypic consequences</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="EXPERIMENT: CRISPR knockout or knockdown studies to identify p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical characterization of oligomeric state using size exclusion chromatography or native PAGE</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BQ13" data-a="EXPERIMENT: Biochemical characterization of oligomeric state u..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KCTD14-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BQ13" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2025-12-27T10:39:14.975068'<br />
+end_time: '2025-12-27T10:43:55.135027'<br />
+duration_seconds: 280.16<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: KCTD14<br />
+  gene_symbol: KCTD14<br />
+  uniprot_accession: Q9BQ13<br />
+  protein_description: 'RecName: Full=BTB/POZ domain-containing protein KCTD14;'<br />
+  gene_info: Name=KCTD14;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: BTB/POZ_dom. (IPR000210); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB.<br />
+    (IPR003131); BTB_2 (PF02214)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 10</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9BQ13</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD14;</li>
+<li><strong>Gene Information:</strong> Name=KCTD14;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> BTB/POZ_dom. (IPR000210); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD14" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD14' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD14</strong> (gene ID: KCTD14, UniProt: Q9BQ13) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9BQ13</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD14;</li>
+<li><strong>Gene Information:</strong> Name=KCTD14;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> BTB/POZ_dom. (IPR000210); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD14" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD14' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD14</strong> (gene ID: KCTD14, UniProt: Q9BQ13) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan and scope<br />
+We verified the target gene/protein identity, then synthesized current structural and functional understanding for human KCTD14, prioritizing 2023–2024 sources and authoritative family-wide studies where KCTD14-specific data are scarce. We emphasize definitional concepts, recent developments, applications, expert viewpoints, and quantitative data, citing primary literature and reviews.</p>
+<p>Identity verification and canonical features<br />
+• Gene/protein identity: The requested target is human KCTD14, UniProt Q9BQ13, a BTB/POZ domain–containing protein in Homo sapiens. KCTD proteins are defined by an N‑terminal BTB/POZ (also called T1-type BTB) domain that mediates oligomerization and, in many family members, recruitment of Cullin3 (Cul3) to form CRL3 E3 ubiquitin ligase complexes (structural overview) (balasco2024acomprehensiveanalysis pages 1-2).<br />
+• Domains: Family-level analyses consistently place KCTD proteins within the BTB/POZ superfamily; the BTB fold is described as a β-sheet flanked by five α-helices. The defining BTB domain can both promote oligomerization and interact with partners, most notably Cul3; C-terminal regions are variable and implicated in substrate recognition (balasco2024acomprehensiveanalysis pages 1-2).<br />
+• Oligomeric organization: KCTD BTB domains frequently assemble into pentamers. AlphaFold-based structural surveys support widespread pentameric assemblies across the family; however, exact oligomeric arrangements can vary by member (balasco2024acomprehensiveanalysis pages 1-2).</p>
+<p>Key concepts and definitions<br />
+• KCTD family and CRL3 adaptors: Many KCTD proteins function as substrate adaptors for Cul3-based E3 ubiquitin ligases via their N-terminal BTB/POZ domains. The C-terminal domains provide substrate-selection interfaces. Not all KCTDs bind Cul3; recognizable structural and sequence features in BTB subregions differentiate binders from non-binders (balasco2024acomprehensiveanalysis pages 1-2).<br />
+• Quantitative scope: A 2024 comprehensive AlphaFold modeling study generated KCTD–Cul3 complex models for the entire family and obtained reliable/stable models only for the subset of KCTDs that are experimentally known to interact with Cul3 (15 family members), indicating discriminatory power and family partitioning into Cul3-binders and non-binders (balasco2024acomprehensiveanalysis pages 1-2).</p>
+<p>Recent developments and latest research (prioritize 2023–2024)<br />
+• AF-based Cul3 recognition map (2024): Balasco et al. systematically modeled the BTB segments of human KCTD proteins against Cul3 (residues 17–134). The study reports for KCTD14 (BTB T33–D124) that no stable Cul3 complex was detected in the 5:5 assembly prediction, in contrast to several other KCTDs, including KCTD7, that formed stable predicted complexes and have experimental structures (KCTD7–Cul3 cryo-EM used as validation) (International Journal of Molecular Sciences, 2024-02; https://doi.org/10.3390/ijms25031881) (balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• Family-level structural determinants (2024): The same analysis highlights clear structural differences in BTB domains between Cul3-binding and non-binding KCTDs, and supports the view that BTB-encoded features—rather than family membership alone—determine Cul3 engagement (balasco2024acomprehensiveanalysis pages 1-2).<br />
+• AF-based structural relationships (2021): AlphaFold-derived pseudo-phylogenetic analysis reported a specific structural pairing of KCTD7 with KCTD14, suggesting related C‑terminal folds despite low sequence identity, and supporting the presence of shared architectural principles within this clade. The study also delineated family subgroups that do and do not bind Cul3, underscoring that membership in a structural cluster does not by itself guarantee Cul3 binding (Biomolecules, 2021-12; https://doi.org/10.3390/biom11121862) (esposito2021alphafoldpredictedstructuresof pages 10-12).</p>
+<p>Current functional understanding of human KCTD14<br />
+• Primary biochemical role: No direct enzymatic or substrate-transport activity has been assigned to KCTD14. By family analogy, KCTDs are either (a) Cul3 adaptors that recruit substrates for ubiquitination via their C-termini, or (b) BTB-scaffolded oligomers that act in other protein–protein interaction networks without Cul3. For KCTD14, AF-based modeling found no stable Cul3 binding, arguing against a canonical CRL3 adaptor role, at least via the tested BTB segment and the standard 5:5 assembly (balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• Oligomerization: KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with the family trend; AlphaFold family analyses support pentamerization as a prevalent architecture (balasco2024acomprehensiveanalysis pages 1-2). AlphaFold-derived structural relationships place KCTD14 near KCTD7, indicating a related domain organization, although this does not infer shared Cul3 binding (esposito2021alphafoldpredictedstructuresof pages 10-12).<br />
+• Cellular localization: Direct experimental localization for KCTD14 remains sparse. Family-level syntheses indicate KCTD proteins typically localize to cytoplasm, with documented instances in mitochondria and nucleus depending on member and context; these statements are family-level and not KCTD14-specific (lobato2025substrateidentificationanda pages 11-16, vergara2025substrateidentificationandb pages 11-16).</p>
+<p>Pathways and interactors<br />
+• Cul3 interaction status: The 2024 AF survey explicitly reports “no stable complex detected” for KCTD14–Cul3 under a 5:5 symmetry assumption for the BTB–Cul3 assembly, contrasting with confirmed binders such as KCTD7 (used as an internal validation of the AF approach). This suggests KCTD14 may not be a canonical Cul3 adaptor or may require additional regions/contexts for interaction that are not captured by the BTB-only modeling (balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• Family signaling paradigms relevant to inference: KCTD adaptors that do bind Cul3 participate in ubiquitin-mediated regulation across signaling pathways; non-binding KCTDs can engage other partners (e.g., GABAB2 or transcription factors) through their CTDs. Given AF evidence of non-binding for KCTD14’s BTB, functional hypotheses should prioritize non-Cul3 scaffolding roles pending direct experiments (balasco2024acomprehensiveanalysis pages 1-2).</p>
+<p>Disease associations and translational context<br />
+• Family context: Multiple KCTD members are implicated in cancer and neurological disease; the 2024 structural survey motivates target-specific modulation strategies that hinge on whether a KCTD binds Cul3. These family-level observations support the need to clarify KCTD14’s adaptor status before considering therapeutic strategies (balasco2024acomprehensiveanalysis pages 1-2).<br />
+• KCTD14-specific disease evidence: We did not find direct KCTD14 disease mechanisms in the curated, cited sources. As of the 2024 AF analysis, KCTD14 is grouped structurally with KCTD7 but distinguished by predicted lack of Cul3 binding; caution is warranted in extrapolating disease roles from KCTD7 or other family members (esposito2021alphafoldpredictedstructuresof pages 10-12, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).</p>
+<p>Expert opinions and analysis from authoritative sources<br />
+• Structural experts (2024): Comprehensive AF modeling indicates that only a subset of KCTDs yield stable, plausible BTB–Cul3 complexes; the remainder—including KCTD14—likely serve alternative roles. The authors argue that accurate three-dimensional models for KCTD–Cul3 interactions can guide compound design, but only for Cul3-binding members (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• Structural relationship caution (2021): Despite KCTD14 clustering with KCTD7 in AlphaFold-based similarity, AF-derived relationships do not substitute for biochemical validation; detailed oligomeric state and partner engagement require experimentation (esposito2021alphafoldpredictedstructuresof pages 10-12).</p>
+<p>Relevant statistics and data from recent studies<br />
+• Family size and Cul3 binding: The 2024 analysis reports reliable modeling of KCTD–Cul3 complexes for the 15 family members known to interact with Cul3, and explicit non-binding predictions for others, including KCTD14 (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• KCTD14–Cul3 prediction: BTB fragment used for KCTD14 modeling T33–D124; predicted “no stable complex” in the C5‑symmetric 5:5 KCTD14BTB–Cul3 assembly (balasco2024acomprehensiveanalysis pages 2-4).</p>
+<p>Applications and real-world implementations<br />
+• Target selection for degrader design and E3-modulation: For KCTD family members that bind Cul3, structural models enable rational targeting of substrate recognition or BTB–Cul3 interfaces; for non-binders like KCTD14 (per AF prediction), therapeutic concepts should instead explore CTD-mediated scaffolding interactions or hetero-oligomeric assemblies independent of Cul3 (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).</p>
+<p>Limitations and open questions<br />
+• Sparse, KCTD14-specific data: Peer-reviewed experimental studies directly assigning function, cellular localization, substrates, or interactors to human KCTD14 are limited in the curated sources used here. The most specific recent insight is the AF-based negative prediction for Cul3 binding (balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4).<br />
+• Next experimental steps: Verify oligomeric state and stability of full-length KCTD14; test Cul3 interaction with full-length protein and/or alternative stoichiometries; map CTD interactions via proteomics; determine subcellular localization using tagged constructs and antibodies.</p>
+<p>Summary conclusion<br />
+Human KCTD14 (Q9BQ13) is a BTB/POZ-domain protein of the KCTD family with predicted pentamerizing capacity via its BTB domain and a structurally variable C-terminus. Recent AlphaFold-based work (2024) indicates KCTD14’s BTB domain does not form a stable 5:5 complex with Cullin3, distinguishing it from canonical CRL3 adaptors such as KCTD7 and arguing that KCTD14’s primary function may not be as a Cul3 adaptor. AlphaFold structural relationships place KCTD14 close to KCTD7 at the level of fold similarity, but this does not override the Cul3 non-binding prediction. Direct functional, localization, and disease-link data specific to KCTD14 remain sparse; therefore, current understanding relies on high-confidence family-level principles and a 2024 negative prediction for Cul3 binding, prioritizing experimental validation to define KCTD14’s partners and pathways (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 2-4, esposito2021alphafoldpredictedstructuresof pages 10-12, lobato2025substrateidentificationanda pages 11-16, vergara2025substrateidentificationandb pages 11-16).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 1-2): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 4-5): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(balasco2024acomprehensiveanalysis pages 2-4): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(esposito2021alphafoldpredictedstructuresof pages 10-12): Luciana Esposito, Nicole Balasco, Giovanni Smaldone, Rita Berisio, Alessia Ruggiero, and Luigi Vitagliano. Alphafold-predicted structures of kctd proteins unravel previously undetected relationships among the members of the family. Biomolecules, 11:1862, Dec 2021. URL: https://doi.org/10.3390/biom11121862, doi:10.3390/biom11121862. This article has 31 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(lobato2025substrateidentificationanda pages 11-16): R Lobato. Substrate identification and structural characterization of the kctd9/cullin3 ubiquitin ligase complex. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(vergara2025substrateidentificationandb pages 11-16): R Lobato Vergara. Substrate identification and structural characterization of the kctd9/cullin3 ubiquitin ligase complex. Unknown journal, 2025.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>balasco2024acomprehensiveanalysis pages 1-2</li>
+<li>esposito2021alphafoldpredictedstructuresof pages 10-12</li>
+<li>balasco2024acomprehensiveanalysis pages 2-4</li>
+<li>balasco2024acomprehensiveanalysis pages 4-5</li>
+<li>lobato2025substrateidentificationanda pages 11-16</li>
+<li>vergara2025substrateidentificationandb pages 11-16</li>
+<li>https://doi.org/10.3390/ijms25031881</li>
+<li>https://doi.org/10.3390/biom11121862</li>
+<li>https://doi.org/10.3390/ijms25031881,</li>
+<li>https://doi.org/10.3390/biom11121862,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KCTD14-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BQ13" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2025-12-27T16:54:32.056353'<br />
+end_time: '2025-12-27T17:21:04.366445'<br />
+duration_seconds: 1592.31<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: KCTD14<br />
+  gene_symbol: KCTD14<br />
+  uniprot_accession: Q9BQ13<br />
+  protein_description: 'RecName: Full=BTB/POZ domain-containing protein KCTD14;'<br />
+  gene_info: Name=KCTD14;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: BTB/POZ_dom. (IPR000210); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB.<br />
+    (IPR003131); BTB_2 (PF02214)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 60</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9BQ13</li>
+<li><strong>Protein Description:</strong> RecName: Full=BTB/POZ domain-containing protein KCTD14;</li>
+<li><strong>Gene Information:</strong> Name=KCTD14;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> BTB/POZ_dom. (IPR000210); SKP1/BTB/POZ_sf. (IPR011333); T1-type_BTB. (IPR003131); BTB_2 (PF02214)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "KCTD14" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'KCTD14' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>KCTD14</strong> (gene ID: KCTD14, UniProt: Q9BQ13) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="kctd14-structure-function-and-biological-role">KCTD14: Structure, Function, and Biological Role</h1>
+<h2 id="gene-identity-and-family-context">Gene Identity and Family Context</h2>
+<p><strong>KCTD14</strong> (UniProt Q9BQ13) is a human gene encoding the <strong>BTB/POZ domain-containing protein KCTD14</strong>, a member of the potassium channel tetramerization domain (KCTD) protein family. The gene symbol <strong>KCTD14</strong> unambiguously refers to this human protein (Homo sapiens) and should not be confused with other species’ genes. KCTD proteins are named for a shared <strong>“tetramerization” BTB/POZ domain</strong> originally identified in potassium channel subunits, although KCTDs themselves are <strong>soluble, non-channel proteins</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=domains%20embedded%20in%20potassium%20channels,21%2C%20KCNRG%2C%20TNFAIP1%2C%20SHKBP1">pmc.ncbi.nlm.nih.gov</a>). KCTD14 contains a single N-terminal <strong>BTB/POZ domain</strong> (also known as a T1 domain) – the defining feature of this family – and a variable C-terminal region with no other well-characterized domains (consistent with the family’s diversity outside the BTB motif (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein">pmc.ncbi.nlm.nih.gov</a>)). The BTB domain mediates <strong>protein–protein interactions and oligomerization</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=of%20this%20common%20motif%2C%20consisting,little%20involvement%20in%20potassium%20channeling">pmc.ncbi.nlm.nih.gov</a>), which is central to KCTD14’s presumed function. According to curated databases, KCTD14 is <strong>predicted to form homooligomers</strong> (<a href="https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Summary%20Predicted%20to%20be%20involved,Orthologs%20%2012%20all">www.ncbi.nlm.nih.gov</a>), aligning with the general ability of KCTDs to self-assemble into multi-subunit complexes. Unlike some better-known KCTD members, KCTD14 remains <strong>poorly characterized in the literature</strong> – there are no specific enzymatic activities or substrates definitively attributed to it yet, and it has not been conclusively tied to a particular signaling pathway or genetic disorder. This under-studied status is typical of many KCTD family proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=into%20mechanisms%20of%20the%20poorly,Recent%20biochemical">pmc.ncbi.nlm.nih.gov</a>), even as the family as a whole is increasingly recognized for roles in protein interaction networks and disease processes.</p>
+<h2 id="structural-features-and-oligomerization">Structural Features and Oligomerization</h2>
+<p>KCTD14 is a relatively small protein (~240 amino acids) consisting mostly of the N-terminal BTB domain and a shorter C-terminal tail. The <strong>BTB/POZ domain</strong> (Bric-à-brac, Tramtrack, Broad complex/Poxvirus and Zinc finger domain) is a ~120-residue fold known for mediating <strong>oligomerization</strong> and partnerships in many proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=motifs%2C%20several%20modules%20specifically%20dedicated,2%20%2C%2010%5D.%20Moreover">pmc.ncbi.nlm.nih.gov</a>). In KCTD family proteins, BTB domains typically drive the formation of <strong>homo-oligomeric assemblies</strong>, often five-subunit rings (pentamers) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,functional%20role%2C%20although%20somehow%20overlooked">pmc.ncbi.nlm.nih.gov</a>). Consistent with this, recent <strong>AlphaFold</strong> structure predictions (2022) suggest that KCTD14 self-assembles into a <strong>pentameric complex</strong> (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be">www.mdpi.com</a>). The predicted pentamer has a <strong>propeller-like architecture</strong> with a central cavity, similar to other KCTDs (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be">www.mdpi.com</a>). Notably, the models indicate KCTD14 (and its close paralog KCTD7) form a somewhat unique pentameric arrangement: five subunits arranged in a <strong>ring with a large central cavity</strong> (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=KCNRG%2C%20KCTD6%2C%20KCTD4%2C%20KCTD7%2C%20KCTD9%2C,Our%20predictions%20also">www.mdpi.com</a>). This differs slightly from the tighter propeller of some other KCTD pentamers and may reflect differences in the C-terminal region organization (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=important%20structural%20features%2C%20such%20as,herein%20represent%20models%20that%20require">www.mdpi.com</a>). While these structural insights are computational models, they are considered reliable and are consistent with experimental structures of related KCTDs (for example, KCTD5 is known to form a stable pentameric ring in crystal and cryo-EM structures (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=cells%20that%20would%20robustly%20report,considering%20the%20shared%20homology%20and">pmc.ncbi.nlm.nih.gov</a>)). </p>
+<p>The BTB domain’s capacity to oligomerize not only allows KCTD14 to form homooligomers but also enables potential <strong>hetero-oligomeric complexes</strong> with other KCTD family members. Recent biochemical studies (2023) examined interactions between KCTD5 and all other KCTDs, revealing that <strong>KCTD14 can co-assemble with KCTD5</strong> in cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly">pmc.ncbi.nlm.nih.gov</a>). In co-immunoprecipitation assays from HEK293 cells, KCTD14 was pulled down as a binding partner of KCTD5, whereas the related KCTD7 (which shares ~40% sequence identity with KCTD14) was not detected under the same conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly">pmc.ncbi.nlm.nih.gov</a>). This implies that KCTD14’s BTB domain is compatible with KCTD5 in forming mixed oligomers. KCTD5 is itself a pentamer-forming KCTD, so KCTD14–KCTD5 hetero-pentamers or mixed decamers may form. The ability to hetero-oligomerize adds another layer to KCTD14’s structural biology – it can potentially serve as one subunit within larger KCTD complexes, which may broaden its functional interactions (discussed further below).</p>
+<h2 id="molecular-function-and-interaction-partners">Molecular Function and Interaction Partners</h2>
+<p><strong>KCTD proteins commonly act as adaptors</strong> in ubiquitin ligase complexes, and this is a major hypothesis for KCTD14’s function. The BTB domains of many KCTDs bind tightly to <strong>Cullin-3 (Cul3)</strong>, a scaffold protein in Cullin-RING E3 ubiquitin ligases (CRL3 complexes) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the">pmc.ncbi.nlm.nih.gov</a>). In this adaptor model – supported by numerous studies of other KCTDs – a KCTD’s BTB domain recruits Cul3, while the variable C-terminal region binds a specific substrate protein, thus bringing the substrate to the E3 ligase for ubiquitination and degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the">pmc.ncbi.nlm.nih.gov</a>). KCTD14 is grouped with several KCTDs (including KCTD7) that have been proposed to interface with Cul3 (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=of%20group%20B%20%28KCASH1,Cul3%29%20ligase">biosignaling.biomedcentral.com</a>). However, <strong>direct Cul3 binding by KCTD14 has recently come into question</strong>. A comprehensive structural analysis (2023) of all KCTD BTB domains and their Cul3 interactions reported that <strong>no stable Cul3–KCTD14 complex could be modeled</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD14%5E%7BBTB%28T33,Stable%20complex%20detected">pmc.ncbi.nlm.nih.gov</a>). The BTB domain of KCTD14 has a distinctive loop region that appears to form secondary structure, making it <strong>too rigid to accommodate the Cul3 interface</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10">pmc.ncbi.nlm.nih.gov</a>). In other words, unlike many KCTDs, KCTD14 may <strong>fail to bind Cul3 on its own</strong>, or bind only very weakly. This finding suggests that KCTD14’s biological role might <strong>diverge from the classic CRL3-adaptor paradigm</strong>, or that it might require partnership with another protein to engage Cul3.</p>
+<p>Importantly, KCTD14’s demonstrated interaction with <strong>KCTD5</strong> could provide a workaround to participate in ubiquitination pathways. KCTD5 is a confirmed <strong>Cullin-3 adaptor</strong> (part of a Cul3 E3 ligase complex) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating">pmc.ncbi.nlm.nih.gov</a>). In fact, hetero-oligomerization can allow non-Cul3-binding KCTDs to indirectly associate with Cul3: for example, KCTD5 forming a complex with KCTD2 enabled the latter to bind Cul3 and target substrates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating">pmc.ncbi.nlm.nih.gov</a>). By analogy, when KCTD14 binds to KCTD5, <strong>KCTD14 might be brought into Cullin-3 ligase complexes via KCTD5</strong>. This implies KCTD14 could function as a co-adaptor or substrate-specific subunit in a larger ubiquitin ligase assembly, even if it doesn’t directly touch the Cul3 protein. Currently, the specific <strong>substrate proteins</strong> (if any) that KCTD14 targets for ubiquitination remain unknown. Yet, emerging proteomic data provide clues to KCTD14’s cellular partners, which might be its substrates or binding targets: </p>
+<ul>
+<li>
+<p><strong>ACSF3</strong> (Acyl-CoA synthetase family member 3) – an enzyme involved in mitochondrial fatty acid metabolism – was identified as a high-confidence interactor of KCTD14 in a large-scale affinity purification study. In the BioPlex human interactome project (HEK293T cells), KCTD14 pulled down ACSF3 with a very high quantitative score (CompPASS ~0.99, well above significance threshold) (<a href="https://thebiogrid.org/interaction/1175987#:~:text=">thebiogrid.org</a>) (<a href="https://thebiogrid.org/interaction/1175987#:~:text=KCTD14%20ACSF3%20%20%20,3060831">thebiogrid.org</a>). This interaction was consistently observed across multiple dataset versions (BioPlex 1.0, 2.0, 3.0) (<a href="https://thebiogrid.org/interaction/1175987#:~:text=KCTD14%20ACSF3%20%20%20,3060831">thebiogrid.org</a>), suggesting a robust association. ACSF3 is a mitochondrial matrix enzyme; if KCTD14 binds ACSF3, it could hint at a role in regulating metabolic enzymes (for instance, by ubiquitination or localization).  </p>
+</li>
+<li>
+<p><strong>TUBGCP6</strong> (Tubulin gamma complex-associated protein 6) – a component of the γ-tubulin ring complex involved in microtubule nucleation at centrosomes – was also co-purified with KCTD14 in the BioPlex screen, with a similarly high interaction score (~0.98) (<a href="https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly">thebiogrid.org</a>). This suggests KCTD14 might associate with centrosomal or cytoskeletal structures, possibly influencing cell cycle or mitotic spindle organization if the interaction is functional. </p>
+</li>
+</ul>
+<p>These partners are notable because they point toward disparate cellular processes (mitochondrial metabolism and microtubule organization). It is not yet confirmed whether KCTD14 directly regulates these proteins, but such <strong>protein–protein interaction data</strong> provide testable hypotheses. At minimum, they reinforce that KCTD14 is engaged in protein networks inside the cell rather than acting alone. In addition to these interactions, KCTD14 is presumed to partake in broader protein complexes by virtue of its oligomerization and possible co-adaptor behavior. Overall, while KCTD14’s <strong>primary molecular function</strong> has not been definitively demonstrated, the current understanding is that it likely serves as a <strong>scaffold or adaptor protein</strong>, potentially in ubiquitin-mediated proteostasis pathways or other multi-protein complexes. This is supported by the consensus that KCTD family members “use their C-termini to bind and recruit diverse cellular proteins destined for degradation” in partnership with Cullin3 complexes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein">pmc.ncbi.nlm.nih.gov</a>) (a model that KCTD14 may partially follow, albeit in an atypical way).</p>
+<h2 id="localization-and-expression-profile">Localization and Expression Profile</h2>
+<p>Knowing where a protein is expressed and localized can provide insight into its function. <strong>KCTD14 is an intracellular protein</strong> with a broad tissue distribution. It has no signal peptide or transmembrane segment, and experiments confirm it resides inside cells (not secreted) (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=vesicle%20and%20adrenal%20gland,i%7D%20Intracellular%20TISSUE%20RNA%20EXPRESSION">www.proteinatlas.org</a>). In immunohistochemistry/immunofluorescence analyses, KCTD14 protein shows <strong>cytosolic and nucleoplasmic localization</strong> (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity">www.proteinatlas.org</a>). Specifically, the Human Protein Atlas reports KCTD14 concentrated in the <strong>nucleoplasm</strong> (nuclear interior) and also in the <strong>cytosol and vesicle-like structures</strong> (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity">www.proteinatlas.org</a>). The vesicular staining could indicate presence on or near certain organelles or protein complexes (for example, it might associate with vesicular bodies or mitochondria, consistent with its interaction with a mitochondrial enzyme). The nucleoplasmic presence suggests KCTD14 might shuttle to the nucleus or interact with nuclear proteins, though its role there is undefined. It is not known to bind DNA directly (no DNA-binding domains), but it could influence nuclear processes indirectly via protein interactions.</p>
+<p>At the tissue level, <strong>KCTD14 mRNA is expressed in many tissues</strong> without extreme specificity. RNA profiling (NCBI and GTEx data) shows <strong>broad expression</strong>: for instance, moderate levels in adrenal gland (RPKM ~10) and stomach (RPKM ~9.5), among at least 17 tissues examined (<a href="https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Predicted%20to%20be%20involved%20in,Orthologs%20%2012%20all">www.ncbi.nlm.nih.gov</a>). The expression is <strong>“low tissue specificity”</strong>, meaning KCTD14 is fairly ubiquitously expressed rather than restricted to a particular organ or cell type (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,type%202%2C%20Goblet%20cells%2C%20Submucosal">www.proteinatlas.org</a>). Nonetheless, some enrichment has been noted in certain cell types: single-cell RNA data indicate higher expression in epithelial secretory cells (e.g. breast glandular cells, stomach foveolar cells, epididymal cells, alveolar type II lung cells) (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=Brain%20expression%20cluster%5E%7Bi%7D%20Non,Adipose%20visceral">www.proteinatlas.org</a>). This clustering in secretory/glandular cell types could be a clue to function – perhaps KCTD14 is involved in <strong>protein processing or vesicle trafficking</strong>, as those cells have high secretory activity. In fact, KCTD14’s expression pattern groups with a cluster of genes related to “protein processing” in the Human Protein Atlas analysis (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,type%202%2C%20Goblet%20cells%2C%20Submucosal">www.proteinatlas.org</a>). It is not detected in blood plasma and shows no enrichment in immune cells (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=salivary%20glandular%20cells%2C%20Skin%20,no%20cluster%20assigned">www.proteinatlas.org</a>), aligning with it being a intracellular, ubiquitously expressed regulator rather than a secreted factor or cytokine.</p>
+<p>In summary, the <strong>subcellular localization and expression data</strong> suggest KCTD14 operates in the general cellular machinery present in many cell types. Its presence in both the nucleus and cytosol indicates a potentially shuttling or multi-functional protein. Given these locations, KCTD14 could influence processes ranging from protein degradation (often cytosolic) to cell cycle or gene expression (nuclear) – consistent with the diverse identities of its candidate interacting partners (mitochondrial enzyme vs. centrosomal protein). However, pinpointing the exact cellular process requires more targeted studies.</p>
+<h2 id="biological-significance-and-current-research-directions">Biological Significance and Current Research Directions</h2>
+<p>Because KCTD14 has only recently begun to attract research interest, its precise biological role is not fully established. Unlike some KCTD family members (e.g. <strong>KCTD13 implicated in neurodevelopmental disorders, KCTD7 in epilepsy, KCTD11 in cancer</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=into%20mechanisms%20of%20the%20poorly,Recent%20biochemical">pmc.ncbi.nlm.nih.gov</a>)), <strong>KCTD14 has not yet been definitively linked to a specific disease or phenotype</strong>. There are no known inherited mutations in KCTD14 causing a human genetic syndrome, and KCTD14 knockout mouse phenotypes have not been reported in the literature as of 2023. This suggests that KCTD14’s functions might be somewhat redundant or subtle, or simply that it has been under-investigated. However, emerging data hints at some clinical correlations: <strong>cancer genomics studies</strong> have found that <strong>KCTD14 expression levels correlate with patient outcomes</strong> in certain cancers. According to the Human Protein Atlas analysis of tumor datasets, KCTD14 is a prognostic marker in at least four cancer types – including kidney renal clear cell carcinoma, pancreatic adenocarcinoma, skin melanoma, and thyroid carcinoma (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=expression%20cluster%5E%7Bi%7D%20Not%20detected%20,i%7D%20Low%20cancer%20specificity">www.proteinatlas.org</a>). Specifically, differential expression of KCTD14 in these tumors is statistically associated with survival rates (though the direction of risk isn’t specified in the snippet). This association suggests that KCTD14 could play a role in tumor biology, perhaps through its putative function in protein degradation pathways or cell cycle regulation. It’s important to note that being a <em>prognostic marker</em> does not necessarily mean KCTD14 drives cancer progression; it might be part of a broader expression program in tumors. Nonetheless, such findings make KCTD14 a candidate for further research in oncology – understanding how its expression is regulated in cancers and whether it contributes to processes like cell proliferation or stress responses could be valuable.</p>
+<p>From a research standpoint, <strong>expert opinions</strong> highlight the need to characterize proteins like KCTD14 to fill gaps in our understanding of cellular regulation. A 2019 review on the KCTD family pointed out that many KCTDs “remain relatively uncharacterized” and called for deeper investigation into their molecular mechanisms (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states">pmc.ncbi.nlm.nih.gov</a>). The same review and others have pointed out that <em>diverse functions have been proposed for KCTDs</em>, including roles in apoptosis, metabolism, and neural signaling (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=underlie%20the%20diverse%20biological%20processes,30">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=So%20far%2C%20KCTD%20genes%20have,cancer%20appears%20far%20from%20completed">biosignaling.biomedcentral.com</a>). It is thought that the <strong>adaptor/scaffold function</strong> of KCTDs could underlie these varied roles – by selecting specific protein targets for ubiquitination or by assembling signaling complexes, KCTDs can impact various pathways (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=molecules%20that%20use%20their%20C%E2%80%90termini,reported%20for%20KCTD%20proteins%2C%20including">pmc.ncbi.nlm.nih.gov</a>). In the case of KCTD14, current hypotheses (drawing from the family context and preliminary data) include: </p>
+<ul>
+<li>
+<p><strong>Proteostasis Regulation:</strong> KCTD14 may help target certain proteins (like the ACSF3 enzyme or other yet-unknown substrates) for ubiquitin-mediated degradation. This could affect metabolic enzyme turnover or the stability of proteins involved in cell structure (e.g. tubulin complex components). Supporting this, KCTD14’s close homolog KCTD7 has been linked to the ubiquitin–proteasome system in neurons (<a href="https://pubmed.ncbi.nlm.nih.gov/22748208/#:~:text=A%20homozygous%20mutation%20in%20KCTD7,identified%20variant%20altered%20the%20localization">pubmed.ncbi.nlm.nih.gov</a>), and loss of KCTD7 causes accumulation of proteins in a neurodegenerative context. It’s conceivable KCTD14 performs a similar function in other cell types.</p>
+</li>
+<li>
+<p><strong>Cell Cycle or Signaling Scaffold:</strong> If the interaction with TUBGCP6 is biologically relevant, KCTD14 might localize to centrosomes or mitotic structures and influence cell division. Alternatively, KCTD14 could have unidentified interactions with signaling proteins (e.g., kinases or receptors) given that some KCTDs modulate G-protein-coupled receptor signaling (notably KCTD12, -16 modulate GABA_B receptors ). No direct evidence yet ties KCTD14 to a specific signaling pathway, but ongoing interactome studies and phenotypic screens (such as CRISPR knockouts in cell lines) may soon illuminate its role. Notably, large-scale screens (DepMap) have not flagged KCTD14 as an essential gene for cell viability in cancer cell lines, but subtler phenotypes are possible. </p>
+</li>
+<li>
+<p><strong>Compensatory/Redundant Functions:</strong> It’s also possible KCTD14 has overlapping function with another KCTD. Given its ability to bind KCTD5, one theory is that KCTD14 could modulate the activity of the Cul3–KCTD5 ubiquitin ligase complex. For example, a KCTD14 subunit in a KCTD5 pentamer might alter which substrate is ubiquitinated or the timing of ubiquitin transfer. Such regulatory crosstalk between KCTD family members is an emerging theme – a recent study showed KCTD12 and KCTD16 form hetero-oligomers that fine-tune GABA_B receptor signaling kinetics (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=association%20with%20a%20GIRK%20channel%2C,the%20ability%20to%20interact%20with">pmc.ncbi.nlm.nih.gov</a>). Similarly, KCTD5’s interplay with other KCTDs influenced their ability to recruit Cul3 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,a%20major%20role%20in%20regulating">pmc.ncbi.nlm.nih.gov</a>). Investigating whether KCTD14 alters KCTD5’s function (or vice versa) is a current research question.</p>
+</li>
+</ul>
+<p>In <strong>latest research (2022–2024)</strong>, the focus has been on understanding structure and interactions:<br />
+- The <strong>AlphaFold-based structural analyses (2021–2022)</strong> of the entire KCTD family provided a framework for KCTD14’s pentameric structure and highlighted its unusual BTB loop, raising the question about Cul3 binding (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be">www.mdpi.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10">pmc.ncbi.nlm.nih.gov</a>). These computational studies by Esposito <em>et al.</em> and by Balasco <em>et al.</em> (Int. J. Mol. Sci. 2022; <em>Biomolecules</em> 2021) are guiding experimentalists to which aspects of KCTD14’s structure to validate. <br />
+- The <strong>protein–protein interaction studies (2023)</strong>, such as Liao <em>et al.</em> (Int. J. Mol. Sci. 2023), systematically probing KCTD5 interactions, have for the first time shown KCTD14 in complex with another family member (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly">pmc.ncbi.nlm.nih.gov</a>). This provides concrete evidence that KCTD14 does not function in isolation and can integrate into known pathways (Cul3 ubiquitination via KCTD5). <br />
+- Ongoing <strong>high-throughput proteomics</strong> (BioPlex 3.0 released in 2021 (<a href="https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly">thebiogrid.org</a>)) has expanded the list of KCTD14’s candidate partners, which researchers can now follow up individually to test if, for example, KCTD14 regulates the stability or activity of ACSF3 or TUBGCP6 in cells.</p>
+<p><strong>In conclusion,</strong> KCTD14 is a scaffold-like protein whose known attributes (BTB domain oligomerization, broad expression, intracellular localization) align with a role in orchestrating protein complexes, possibly in ubiquitin-mediated protein turnover. Current evidence points to it forming pentamers and interacting with key cellular proteins, though it may be unique among KCTDs in how it engages the Cul3 ubiquitin ligase pathway. As a relatively uncharted gene, KCTD14’s function is being pieced together from bioinformatic predictions and initial protein-interaction maps. The next steps in research will likely involve <strong>targeted experiments</strong>: e.g. creating KCTD14-knockout cell lines or animals to see what physiological processes are affected, and biochemical assays to confirm if it directs ubiquitination of specific substrates. Given its emerging links to cancer prognosis and potential partnerships in critical cellular machinery (metabolism and microtubule organization), KCTD14 represents a fascinating example of a “dark” gene now coming to light. Continued investigation, supported by the recent structural and interactome data, should clarify the <strong>biological processes governed by KCTD14</strong> and whether it can be leveraged in biomedical contexts (for instance, as a biomarker or a therapeutic target in pathways it regulates). The current understanding, while limited, establishes KCTD14 as an intracellular adaptor protein with a probable role in maintaining protein homeostasis and cellular signaling integrity, operating at the intersection of the ubiquitin-proteasome system and other cellular networks.  </p>
+<p><strong>References:</strong> Recent authoritative sources and data supporting this summary include structural biology analyses of KCTD oligomers (<a href="https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be">www.mdpi.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10">pmc.ncbi.nlm.nih.gov</a>), reviews on KCTD family functions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the">pmc.ncbi.nlm.nih.gov</a>), interaction studies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating">pmc.ncbi.nlm.nih.gov</a>), expression/localization databases (<a href="https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity">www.proteinatlas.org</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Predicted%20to%20be%20involved%20in,Orthologs%20%2012%20all">www.ncbi.nlm.nih.gov</a>), and bioinformatic protein network findings (<a href="https://thebiogrid.org/interaction/1175987#:~:text=">thebiogrid.org</a>) (<a href="https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly">thebiogrid.org</a>) (referenced in-line above). These up-to-date sources (2019–2023) provide the foundation for the current model of KCTD14 function and will serve as a guide for future experimental exploration.</p>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=773, start_index=603, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=domains%20embedded%20in%20potassium%20channels,21%2C%20KCNRG%2C%20TNFAIP1%2C%20SHKBP1')</li>
+<li>AnnotationURLCitation(end_index=1197, start_index=1034, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein')</li>
+<li>AnnotationURLCitation(end_index=1429, start_index=1277, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=1608, start_index=1430, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=of%20this%20common%20motif%2C%20consisting,little%20involvement%20in%20potassium%20channeling')</li>
+<li>AnnotationURLCitation(end_index=1874, start_index=1736, title='KCTD14 potassium channel tetramerization domain containing 14 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Summary%20Predicted%20to%20be%20involved,Orthologs%20%2012%20all')</li>
+<li>AnnotationURLCitation(end_index=2468, start_index=2316, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=2611, start_index=2469, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=into%20mechanisms%20of%20the%20poorly,Recent%20biochemical')</li>
+<li>AnnotationURLCitation(end_index=3276, start_index=3107, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=motifs%2C%20several%20modules%20specifically%20dedicated,2%20%2C%2010%5D.%20Moreover')</li>
+<li>AnnotationURLCitation(end_index=3557, start_index=3417, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=,functional%20role%2C%20although%20somehow%20overlooked')</li>
+<li>AnnotationURLCitation(end_index=3845, start_index=3696, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be')</li>
+<li>AnnotationURLCitation(end_index=4103, start_index=3954, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be')</li>
+<li>AnnotationURLCitation(end_index=4429, start_index=4283, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=KCNRG%2C%20KCTD6%2C%20KCTD4%2C%20KCTD7%2C%20KCTD9%2C,Our%20predictions%20also')</li>
+<li>AnnotationURLCitation(end_index=4737, start_index=4575, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=important%20structural%20features%2C%20such%20as,herein%20represent%20models%20that%20require')</li>
+<li>AnnotationURLCitation(end_index=5156, start_index=4987, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=cells%20that%20would%20robustly%20report,considering%20the%20shared%20homology%20and')</li>
+<li>AnnotationURLCitation(end_index=5657, start_index=5491, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly')</li>
+<li>AnnotationURLCitation(end_index=6050, start_index=5884, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly')</li>
+<li>AnnotationURLCitation(end_index=6954, start_index=6791, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the')</li>
+<li>AnnotationURLCitation(end_index=7378, start_index=7215, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein')</li>
+<li>AnnotationURLCitation(end_index=7542, start_index=7379, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the')</li>
+<li>AnnotationURLCitation(end_index=7808, start_index=7646, title='The emerging role of the KCTD proteins in cancer | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=of%20group%20B%20%28KCASH1,Cul3%29%20ligase')</li>
+<li>AnnotationURLCitation(end_index=8180, start_index=8046, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=KCTD14%5E%7BBTB%28T33,Stable%20complex%20detected')</li>
+<li>AnnotationURLCitation(end_index=8512, start_index=8337, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10')</li>
+<li>AnnotationURLCitation(end_index=9146, start_index=9014, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating')</li>
+<li>AnnotationURLCitation(end_index=9482, start_index=9350, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating')</li>
+<li>AnnotationURLCitation(end_index=10460, start_index=10389, title='KCTD14 - ACSF3 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175987#:~:text=')</li>
+<li>AnnotationURLCitation(end_index=10563, start_index=10461, title='KCTD14 - ACSF3 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175987#:~:text=KCTD14%20ACSF3%20%20%20,3060831')</li>
+<li>AnnotationURLCitation(end_index=10767, start_index=10665, title='KCTD14 - ACSF3 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175987#:~:text=KCTD14%20ACSF3%20%20%20,3060831')</li>
+<li>AnnotationURLCitation(end_index=11339, start_index=11234, title='KCTD14 - TUBGCP6 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly')</li>
+<li>AnnotationURLCitation(end_index=12712, start_index=12549, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein')</li>
+<li>AnnotationURLCitation(end_index=13269, start_index=13103, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=vesicle%20and%20adrenal%20gland,i%7D%20Intracellular%20TISSUE%20RNA%20EXPRESSION')</li>
+<li>AnnotationURLCitation(end_index=13560, start_index=13390, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity')</li>
+<li>AnnotationURLCitation(end_index=13896, start_index=13726, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity')</li>
+<li>AnnotationURLCitation(end_index=14824, start_index=14691, title='KCTD14 potassium channel tetramerization domain containing 14 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Predicted%20to%20be%20involved%20in,Orthologs%20%2012%20all')</li>
+<li>AnnotationURLCitation(end_index=15159, start_index=14980, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,type%202%2C%20Goblet%20cells%2C%20Submucosal')</li>
+<li>AnnotationURLCitation(end_index=15556, start_index=15407, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=Brain%20expression%20cluster%5E%7Bi%7D%20Non,Adipose%20visceral')</li>
+<li>AnnotationURLCitation(end_index=16075, start_index=15896, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=TISSUE%20RNA%20EXPRESSION%20Tissue%20specificity,type%202%2C%20Goblet%20cells%2C%20Submucosal')</li>
+<li>AnnotationURLCitation(end_index=16303, start_index=16152, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=salivary%20glandular%20cells%2C%20Skin%20,no%20cluster%20assigned')</li>
+<li>AnnotationURLCitation(end_index=17494, start_index=17352, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=into%20mechanisms%20of%20the%20poorly,Recent%20biochemical')</li>
+<li>AnnotationURLCitation(end_index=18469, start_index=18299, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=expression%20cluster%5E%7Bi%7D%20Not%20detected%20,i%7D%20Low%20cancer%20specificity')</li>
+<li>AnnotationURLCitation(end_index=19718, start_index=19566, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=two%20dozen%20proteins%20,roles%20that%20underly%20disease%20states')</li>
+<li>AnnotationURLCitation(end_index=20018, start_index=19882, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=underlie%20the%20diverse%20biological%20processes,30')</li>
+<li>AnnotationURLCitation(end_index=20213, start_index=20019, title='The emerging role of the KCTD proteins in cancer | Cell Communication and Signaling | Full Text', type='url_citation', url='https://biosignaling.biomedcentral.com/articles/10.1186/s12964-021-00737-8#:~:text=So%20far%2C%20KCTD%20genes%20have,cancer%20appears%20far%20from%20completed')</li>
+<li>AnnotationURLCitation(end_index=20624, start_index=20442, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=molecules%20that%20use%20their%20C%E2%80%90termini,reported%20for%20KCTD%20proteins%2C%20including')</li>
+<li>AnnotationURLCitation(end_index=21309, start_index=21140, title='A homozygous mutation in KCTD7 links neuronal ceroid lipofuscinosis to the ubiquitin-proteasome system - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/22748208/#:~:text=A%20homozygous%20mutation%20in%20KCTD7,identified%20variant%20altered%20the%20localization')</li>
+<li>AnnotationURLCitation(end_index=22966, start_index=22802, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=association%20with%20a%20GIRK%20channel%2C,the%20ability%20to%20interact%20with')</li>
+<li>AnnotationURLCitation(end_index=23219, start_index=23055, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=%28Cul3%29%20ubiquitin%20ligase%20adapter%20,a%20major%20role%20in%20regulating')</li>
+<li>AnnotationURLCitation(end_index=23789, start_index=23640, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be')</li>
+<li>AnnotationURLCitation(end_index=23965, start_index=23790, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10')</li>
+<li>AnnotationURLCitation(end_index=24554, start_index=24388, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly')</li>
+<li>AnnotationURLCitation(end_index=24879, start_index=24774, title='KCTD14 - TUBGCP6 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly')</li>
+<li>AnnotationURLCitation(end_index=26994, start_index=26845, title='Alphafold Predictions Provide Insights into the Structural Features of the Functional Oligomers of All Members of the KCTD Family', type='url_citation', url='https://www.mdpi.com/1422-0067/23/21/13346#:~:text=members%20of%20the%20KCTD%20protein,although%20pentameric%2C%20appears%20to%20be')</li>
+<li>AnnotationURLCitation(end_index=27170, start_index=26995, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=while%20a%20meaningless%20complex%20is,BTB%7D%E2%80%93Cul3%20partnership%20%28Figure%20S10')</li>
+<li>AnnotationURLCitation(end_index=27368, start_index=27205, title='KCTD: A new gene family involved in neurodevelopmental and neuropsychiatric disorders - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC6566181/#:~:text=An%20unusual%20feature%20of%20this,the%20delicate%20balance%20between%20protein')</li>
+<li>AnnotationURLCitation(end_index=27532, start_index=27369, title='A Comprehensive Analysis of the Structural Recognition between KCTD Proteins and Cullin 3 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10856315/#:~:text=functionalities%20of%20these%20proteins,BTB%20domain%2C%20thus%20helping%20the')</li>
+<li>AnnotationURLCitation(end_index=27720, start_index=27554, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=exhibit%20differential%20affinity%20for%20KCTD5,KCTD10%20and%20KCTD13%20similarly')</li>
+<li>AnnotationURLCitation(end_index=27853, start_index=27721, title='KCTD5 Forms Hetero-Oligomeric Complexes with Various Members of the KCTD Protein Family - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC10531988/#:~:text=GABA_%7BB%7D,a%20major%20role%20in%20regulating')</li>
+<li>AnnotationURLCitation(end_index=28059, start_index=27889, title='KCTD14 protein expression summary - The Human Protein Atlas', type='url_citation', url='https://www.proteinatlas.org/ENSG00000151364-KCTD14#:~:text=PROTEIN%20EXPRESSION%20AND%20LOCALIZATION%20Tissue,i%7D%20Low%20tissue%20specificity')</li>
+<li>AnnotationURLCitation(end_index=28193, start_index=28060, title='KCTD14 potassium channel tetramerization domain containing 14 [Homo sapiens (human)] - Gene - NCBI', type='url_citation', url='https://www.ncbi.nlm.nih.gov/gene/65987#:~:text=Predicted%20to%20be%20involved%20in,Orthologs%20%2012%20all')</li>
+<li>AnnotationURLCitation(end_index=28309, start_index=28238, title='KCTD14 - ACSF3 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175987#:~:text=')</li>
+<li>AnnotationURLCitation(end_index=28415, start_index=28310, title='KCTD14 - TUBGCP6 Interaction Summary | BioGRID', type='url_citation', url='https://thebiogrid.org/interaction/1175988#:~:text=,should%20be%20compared%20directly')</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BQ13
+gene_symbol: KCTD14
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: KCTD14 encodes a BTB/POZ domain-containing protein that is a member of the KCTD (potassium channel tetramerization
+  domain-containing) protein family. The protein contains a T1-type BTB domain (residues 33-130) that is predicted to mediate
+  pentameric homooligomerization based on family-wide structural analysis. Unlike many other KCTD family members, recent AlphaFold-based
+  structural modeling (2024) suggests KCTD14 does NOT form a stable complex with Cullin3 (Cul3), indicating it may not function
+  as a canonical CRL3 E3 ubiquitin ligase adaptor. The protein&#39;s primary molecular function remains poorly characterized,
+  though high-throughput interaction studies have detected associations with STK16, TCF4, and ACSF3. KCTD14 shows low tissue
+  specificity and has been detected in parotid gland and 138 other cell types or tissues.
+existing_annotations:
+- term:
+    id: GO:0051260
+    label: protein homooligomerization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation is inferred from InterPro domain analysis. The T1-type BTB domain (IPR003131) in KCTD14 is structurally
+      homologous to domains that mediate oligomerization in other KCTD family members. AlphaFold-based structural surveys
+      support that KCTD BTB domains frequently assemble into pentamers, and KCTD14 is expected to oligomerize via its BTB
+      domain in keeping with the family trend (Balasco et al. 2024).
+    action: ACCEPT
+    reason: The annotation is well-supported by structural homology. The BTB/POZ domain is a well-characterized oligomerization
+      domain. Family-wide AlphaFold analyses confirm that KCTD proteins typically form pentameric assemblies via their BTB
+      domains. While direct experimental evidence for KCTD14 oligomerization is lacking, the structural prediction is robust
+      given the high conservation of oligomerization function across BTB domains.
+    supported_by:
+    - reference_id: file:human/KCTD14/KCTD14-deep-research-falcon.md
+      supporting_text: KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with
+        the family trend
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  review:
+    summary: This annotation derives from the Rolland et al. 2014 proteome-scale human interactome map, which used yeast two-hybrid
+      screening to identify approximately 14,000 high-quality binary protein-protein interactions. This is a high-throughput
+      study without specific KCTD14-focused validation.
+    action: REMOVE
+    reason: Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. The term does not
+      convey any specific information about the molecular function of KCTD14. The high-throughput nature of the study means
+      specific interactors were not validated for KCTD14 individually. If specific binding partners were identified, more
+      informative molecular function terms should be used instead. The interaction data itself may be useful but the GO:0005515
+      annotation is not informative.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  review:
+    summary: This annotation derives from the BioPlex 2.0 study (Huttlin et al. 2017), which used affinity-purification mass
+      spectrometry (AP-MS) to identify protein-protein interactions for over 25% of human protein-coding genes. BioPlex 2.0
+      contains over 56,000 candidate interactions. This is a high-throughput proteome-scale study.
+    action: REMOVE
+    reason: Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. While BioPlex 2.0
+      is a valuable resource for identifying potential interaction partners, the generic protein binding annotation does not
+      convey specific functional information about KCTD14. The underlying interaction data may be valuable for characterizing
+      KCTD14 function, but the GO annotation itself is not informative.
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to
+        date, containing 56,553 interactions from 10,961 proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29892012
+  review:
+    summary: This annotation derives from Chen et al. 2018, which established an interactome perturbation framework to prioritize
+      damaging missense mutations for developmental disorders. The study analyzed approximately 2,000 de novo missense mutations
+      in the context of the human interactome network. This is a computational/high-throughput study focused on mutation effects
+      on interactions rather than direct functional characterization.
+    action: REMOVE
+    reason: Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. This study was focused
+      on identifying disease-relevant missense mutations by their effects on protein interactions, not on characterizing the
+      specific molecular functions of individual proteins like KCTD14. The generic protein binding annotation provides no
+      insight into KCTD14&#39;s specific function.
+    supported_by:
+    - reference_id: PMID:29892012
+      supporting_text: Here we establish an experimentally and computationally integrated approach to investigate the functional
+        impact of missense mutations in the context of the human interactome network
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  review:
+    summary: This annotation derives from the BioPlex 3.0/dual network study (Huttlin et al. 2021), which profiled protein
+      interactions in both 293T and HCT116 cells using affinity-purification mass spectrometry. BioPlex 3.0 includes 118,162
+      interactions among 14,586 proteins. This is a high-throughput proteome-scale study.
+    action: REMOVE
+    reason: Per curation guidelines, GO:0005515 (protein binding) is uninformative and should be avoided. While this dual-network
+      approach provides valuable context about cell-type-specific interactions, the generic protein binding annotation does
+      not convey any specific information about KCTD14&#39;s molecular function. If specific binding partners were validated,
+      more informative terms should be used.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: BioPlex 3.0, results from affinity purification of 10,128 human proteins-half the proteome-in 293T
+        cells and includes 118,162 interactions among 14,586 proteins
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: KCTD14 contains T1-type BTB domain (IPR003131) associated with oligomerization
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: High-throughput yeast two-hybrid study identifying approximately 14,000 binary protein-protein interactions
+    supporting_text: Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions
+  - statement: Study focused on generating reference interactome map, not individual protein characterization
+    supporting_text: Just as reference genome sequences revolutionized human genetics, reference maps of interactome networks
+      will be critical to fully understand genotype-phenotype relationships
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease networks.
+  findings:
+  - statement: BioPlex 2.0 AP-MS study with over 56,000 candidate interactions
+    supporting_text: BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to date,
+      containing 56,553 interactions from 10,961 proteins
+  - statement: BTB domains like those in KCTD proteins associated with Cullin-RING E3 ubiquitin ligase system
+    supporting_text: The cullin domain was paired de novo with 15 additional domains, many of which also co-associated...
+      Neighbors of proteins containing RBX1/2-binding cullin homology domains were enriched with BTB, BTB_2, SOCS and FBOX
+      domains known to bind the cullin N-terminal domain
+- id: PMID:29892012
+  title: An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.
+  findings:
+  - statement: Computational framework for analyzing effects of missense mutations on protein interactions
+    supporting_text: Here we establish an experimentally and computationally integrated approach to investigate the functional
+      impact of missense mutations in the context of the human interactome network
+  - statement: Study focused on autism and developmental disorders
+    supporting_text: test our approach by analyzing ~2,000 de novo missense mutations found in autism subjects and their unaffected
+      siblings
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings:
+  - statement: BioPlex 3.0 with 118,162 interactions in 293T cells
+    supporting_text: BioPlex 3.0, results from affinity purification of 10,128 human proteins-half the proteome-in 293T cells
+      and includes 118,162 interactions among 14,586 proteins
+  - statement: Comparison of context-specific interactome networks
+    supporting_text: performing AP-MS in 293T and HCT116 cells has enabled comparison of two context-specific, proteome-scale
+      interaction networks
+- id: file:human/KCTD14/KCTD14-deep-research-falcon.md
+  title: Deep research summary for KCTD14
+  findings:
+  - statement: KCTD14 BTB domain does not form stable complex with Cullin3 in AlphaFold-based modeling
+    supporting_text: The 2024 AF survey explicitly reports &#34;no stable complex detected&#34; for KCTD14-Cul3 under a 5:5 symmetry
+      assumption for the BTB-Cul3 assembly
+  - statement: KCTD14 is predicted NOT to be a canonical CRL3 adaptor based on structural analysis
+    supporting_text: AF-based modeling found no stable Cul3 binding, arguing against a canonical CRL3 adaptor role
+  - statement: KCTD proteins typically form pentameric assemblies via BTB domains
+    supporting_text: KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with
+      the family trend
+  - statement: KCTD14 clusters structurally with KCTD7 based on fold similarity
+    supporting_text: AlphaFold-derived pseudo-phylogenetic analysis reported a specific structural pairing of KCTD7 with KCTD14
+core_functions:
+- description: KCTD14 forms homooligomeric assemblies via its BTB domain, likely as pentamers based on family-wide structural
+    analysis. The primary molecular function beyond oligomerization remains to be determined experimentally.
+  molecular_function:
+    id: GO:0042802
+    label: identical protein binding
+  directly_involved_in:
+  - id: GO:0051260
+    label: protein homooligomerization
+  supported_by:
+  - reference_id: file:human/KCTD14/KCTD14-deep-research-falcon.md
+    supporting_text: KCTD14 is expected to oligomerize via its BTB domain, most commonly as a homopentamer, in keeping with
+      the family trend
+suggested_questions:
+- question: What are the specific binding partners of KCTD14 and what biological processes do these interactions serve?
+- question: Does KCTD14 have any scaffolding or regulatory functions independent of Cullin3?
+- question: What is the subcellular localization of KCTD14 in different cell types?
+- question: Does KCTD14 interact with STK16 and TCF4 in vivo and what are the functional consequences of these interactions?
+suggested_experiments:
+- description: Co-immunoprecipitation or proximity labeling (BioID/APEX) to identify and validate specific interaction partners
+- description: Immunofluorescence or subcellular fractionation to determine cellular localization
+- description: CRISPR knockout or knockdown studies to identify phenotypic consequences
+- description: Biochemical characterization of oligomeric state using size exclusion chromatography or native PAGE
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

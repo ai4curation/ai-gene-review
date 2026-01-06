@@ -1,0 +1,3853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HST2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HST2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53686" target="_blank" class="term-link">
+                        P53686
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HST2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53686" data-a="DESCRIPTION: NAD-dependent protein deacetylase HST2, a sirtuin ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NAD-dependent protein deacetylase HST2, a sirtuin family member (Class I sirtuin). HST2 is primarily cytoplasmic but shuttles between nucleus and cytoplasm via the CRM1 exportin. It catalyzes NAD-dependent deacetylation of lysine residues on histone and non-histone proteins, with strong preference for histone H4K16. Key roles include modulation of nuclear silencing events (rDNA heterochromatin formation and negative regulation of subtelomeric position effect), DNA stability maintenance, and lifespan extension under calorie restriction. Functionally distinct from SIR2 in substrate specificity and localization-dependent regulation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HST2 localizes to both nucleus and cytoplasm, with dynamic shuttling between compartments. IBA annotation is appropriate despite HST2 being primarily cytoplasmic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 exhibits documented nuclear localization and performs transcriptional repression functions in the nucleus, enabling both telomeric and rDNA silencing activities. Nuclear localization is physiologically relevant despite efficient nuclear export that results in predominantly cytoplasmic steady-state distribution.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110954" target="_blank" class="term-link">
+                                        PMID:17110954
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hst2 moves between the nucleus and cytoplasm, but is largely cytoplasmic owing to efficient nuclear export. This nuclear exclusion is mediated by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence in Hst2</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although yHst2p cannot restore silencing in a sir2 deletion, overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017136" target="_blank" class="term-link">
+                                    GO:0017136
+                                </a>
+                            </span>
+                            <span class="term-label">histone deacetylase activity, NAD-dependent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0017136" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HST2 is a canonical member of the sirtuin family with core NAD-dependent histone deacetylase activity, phylogenetically conserved across kingdoms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 catalyzes NAD-dependent deacetylation of acetylated lysines on histones and other proteins, representing a primary and well-established molecular function. The IBA annotation is justified through phylogenetic inference from characterized sirtuin orthologs in other organisms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10811920" target="_blank" class="term-link">
+                                        PMID:10811920
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">members of the SIR2 family catalyze an NAD-nicotinamide exchange reaction that requires the presence of acetylated lysines such as those found in the N termini of histones. Significantly, these enzymes also catalyze histone deacetylation in a reaction that absolutely requires NAD</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In budding yeast, the silent information regulator Sir2p is a nuclear NAD-dependent deacetylase... All eukaryotic species examined to date have multiple homologues of Sir two (HSTs), which share a highly conserved globular core domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000183" target="_blank" class="term-link">
+                                    GO:0000183
+                                </a>
+                            </span>
+                            <span class="term-label">rDNA heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0000183" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HST2 actively increases repression at the rDNA locus (nucleolar silencing), a core functional role well-documented in experimental literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 overexpression results in increased repression of rDNA heterochromatin formation, particularly promoting DNA stability in repetitive ribosomal DNA sequences. This is a key biological process function that HST2 performs through its deacetylase activity on histones in the rDNA locus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link">
+                                        PMID:16051752
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sir2-independent life-span extension is mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the same mechanism by which Sir2 extends life span</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB subcellular location vocabulary mapping. Redundant with IBA and IDA annotations for nucleus localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While based on automated mapping from UniProtKB, this annotation is correct. HST2 does localize to the nucleus, and UniProt correctly lists nucleus as a subcellular location. This is a conservative IEA assignment that aligns with experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000044
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB subcellular location vocabulary. HST2 is primarily and predominantly cytoplasmic under normal growth conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 is correctly annotated as cytoplasmic. The UniProtKB annotation notes that HST2 shuttles between nucleus and cytoplasm but is largely cytoplasmic due to efficient nuclear export mediated by CRM1. This is the predominant steady-state localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000044
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0006351" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword &#34;Transcription&#34; mapping. HST2 affects transcription through histone deacetylation and chromatin remodeling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While HST2 influences transcriptional outcomes through its deacetylase activity on histones, particularly affecting silencing at telomeric and rDNA loci, it is more accurate to annotate this as negative regulation of transcription or regulation of transcription rather than the direct process of DNA-templated transcription. HST2 does not catalyze transcription itself but modifies chromatin structure to suppress transcription.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006308" target="_blank" class="term-link">
+                                    DNA-templated transcription repression
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008156" target="_blank" class="term-link">
+                                    negative regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword mapping. Technically, sirtuins catalyze an ADP-ribosyl transfer reaction as part of their deacetylation mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While sirtuins do generate ADP-ribose during their catalytic cycle, the primary annotated activity is deacetylation (hydrolysis), not transferase activity per se. The EC number (2.3.1.286) assigned to HST2 suggests hydrolase classification. More specific molecular function terms already capture HST2&#39;s enzymatic activities (GO:0017136, GO:0046970, GO:0034979). This annotation is technically correct but too general and less informative than the specific deacetylase terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000043
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017136" target="_blank" class="term-link">
+                                    GO:0017136
+                                </a>
+                            </span>
+                            <span class="term-label">histone deacetylase activity, NAD-dependent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0017136" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from Combined Automated Annotation using InterPro protein signature mapping. Correct annotation of core HST2 molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with IBA and IDA annotations but correct. InterPro IPR017328 (Sirtuin class I domain) appropriately maps to GO:0017136. Multiple evidence types confirming the same annotation strengthen confidence in this core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">Combined Automated Annotation using Multiple IEA Methods</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031507" target="_blank" class="term-link">
+                                    GO:0031507
+                                </a>
+                            </span>
+                            <span class="term-label">heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0031507" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning model. HST2 does participate in heterochromatin formation through its deacetylase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2&#39;s demonstrated activity in promoting rDNA heterochromatin formation supports this broader heterochromatin formation annotation. The ARBA model inference is reasonable and consistent with experimental evidence showing HST2&#39;s role in nucleolar silencing and chromatin compaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although yHst2p cannot restore silencing in a sir2 deletion, overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034979" target="_blank" class="term-link">
+                                    GO:0034979
+                                </a>
+                            </span>
+                            <span class="term-label">NAD-dependent protein lysine deacetylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0034979" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro and RHEA mapping. This is a more general parent term encompassing both histone and non-histone protein deacetylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 catalyzes NAD-dependent deacetylation of lysine residues on both histone and non-histone substrates. This parent term appropriately captures the broader specificity of HST2&#39;s deacetylase activity beyond just histones. RHEA:43636 correctly represents the NAD-dependent deacetylation reaction catalyzed by sirtuins.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000120
+                                    
+                                </span>
+                                
+                                <div class="support-text">Combined Automated Annotation using Multiple IEA Methods with RHEA:43636</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProtKB keyword &#34;Metal-binding&#34; (zinc). HST2 contains a functional zinc cofactor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 binds one zinc ion per subunit as an essential structural and catalytic cofactor, documented through crystallographic structure determination and mutagenesis. The zinc is coordinated by three cysteine residues and one histidine in the active site, forming part of the deacetylase catalytic mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000043
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro protein signature IPR017328 (Sirtuin class I domain). HST2 requires NAD as essential cofactor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> HST2 absolutely requires NAD as a cofactor for its deacetylase activity. Multiple structural studies demonstrate NAD binding in the conserved sirtuin NAD-binding pocket. The Km for NAD is approximately 10.2 uM, indicating physiologically relevant binding affinity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070403" target="_blank" class="term-link">
+                                    GO:0070403
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0070403" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro IPR003000 (Sirtuin domain). Redundant with GO:0051287 but more specifically refers to NAD+ (oxidized form).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Functionally equivalent to GO:0051287 NAD binding but specifies the oxidized NAD+ form that is the actual catalytic substrate. HST2 catalyzes reactions that consume NAD+, and specific binding of the oxidized form is mechanistically relevant. Both terms can coexist as they capture slightly different aspects of NAD cofactor requirements.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000002
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30358795
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cellular economy of the Saccharomyces cerevisiae zinc pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0008270" data-r="PMID:30358795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCA annotation from The Saccharomyces cerevisiae zinc proteome study. HST2 is confirmed as a zinc-binding protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:30358795 provides experimental evidence that HST2 is a zinc-binding protein in the yeast zinc proteome. RCA (reviewed computational analysis) is appropriate for this annotation based on inclusion in a systematic proteomic study of zinc-binding proteins. HST2&#39;s zinc cofactor binding is well-characterized through structural biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                                        PMID:30358795
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cellular economy of the Saccharomyces cerevisiae zinc proteome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046970" target="_blank" class="term-link">
+                                    GO:0046970
+                                </a>
+                            </span>
+                            <span class="term-label">histone H4K16 deacetylase activity, NAD-dependent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16648462" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16648462
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SirT2 is a histone deacetylase with preference for histone H...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0046970" data-r="PMID:16648462" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation with strong substrate specificity for histone H4 lysine 16. This represents a core and highly specific molecular function of HST2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:16648462 demonstrates that HST2 (and its mammalian ortholog SirT2) have strong preference for histone H4K16Ac as substrate both in vitro and in vivo. This is a documented core molecular function of HST2 with physiological relevance to chromatin condensation during mitosis. The specific substrate preference is a key distinguishing feature of this sirtuin family member.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16648462" target="_blank" class="term-link">
+                                        PMID:16648462
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SirT2 and its yeast counterpart Hst2 have a strong preference for histone H4K16Ac in their deacetylation activity in vitro and in vivo. We have pinpointed the decrease in global levels of H4K16Ac during the mammalian cell cycle to the G2/M transition that coincides with SirT2 localization on chromatin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000183" target="_blank" class="term-link">
+                                    GO:0000183
+                                </a>
+                            </span>
+                            <span class="term-label">rDNA heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11226170
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A cytosolic NAD-dependent deacetylase, Hst2p, can modulate n...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0000183" data-r="PMID:11226170" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation with direct mutant phenotype evidence. HST2 overexpression increases rDNA silencing.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mutant overexpression experiments directly demonstrate that HST2 increases repression at the rDNA locus, promoting heterochromatin formation at ribosomal DNA. This is strong experimental evidence (IMP) for a core biological process function. The effect is specific to rDNA and distinct from the SIR2 effects on subtelomeric silencing.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000183" target="_blank" class="term-link">
+                                    GO:0000183
+                                </a>
+                            </span>
+                            <span class="term-label">rDNA heterochromatin formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16051752
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HST2 mediates SIR2-independent life-span extension by calori...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0000183" data-r="PMID:16051752" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from calorie restriction study. HST2 maintains stability of repetitive rDNA under CR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:16051752 demonstrates through mutant analysis that HST2 mediates rDNA heterochromatin stability under calorie restriction, promoting the same DNA stability mechanism by which SIR2 extends lifespan. This provides independent experimental validation (different study system) of HST2&#39;s role in rDNA heterochromatin formation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link">
+                                        PMID:16051752
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sir2-independent life-span extension is mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the same mechanism by which Sir2 extends life span</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17110954" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17110954
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear export modulates the cytoplasmic Sir2 homologue Hst2...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0005634" data-r="PMID:17110954" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation confirming nuclear localization of HST2 through direct observation (microscopy).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (PMID:17110954) demonstrates that HST2 localizes to the nucleus despite being predominantly cytoplasmic. The IDA evidence documents actual nuclear presence and movement between cellular compartments. This corroborates the IBA and IEA nuclear annotations from other sources.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17110954" target="_blank" class="term-link">
+                                        PMID:17110954
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hst2 moves between the nucleus and cytoplasm, but is largely cytoplasmic owing to efficient nuclear export. This nuclear exclusion is mediated by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence in Hst2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11226170
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A cytosolic NAD-dependent deacetylase, Hst2p, can modulate n...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0005737" data-r="PMID:11226170" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation confirming predominant cytoplasmic localization of HST2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:11226170 provides direct experimental evidence that HST2 is cytoplasmic in yeast cells, contrasting with the exclusively nuclear localization of SIR2 and HST1. This is the predominant steady-state localization, supported by multiple lines of evidence and central to understanding HST2&#39;s distinctive role from SIR2.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                        PMID:11226170
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we report that yeast Hst2p and a mammalian Hst2p homologue, hSirT2p, are cytoplasmic in yeast and human cells, in contrast to yHst1p and ySir2p which are exclusively nuclear</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017136" target="_blank" class="term-link">
+                                    GO:0017136
+                                </a>
+                            </span>
+                            <span class="term-label">histone deacetylase activity, NAD-dependent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10811920" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10811920
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The silencing protein SIR2 and its homologs are NAD-dependen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0017136" data-r="PMID:10811920" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation with direct enzymatic activity evidence. PMID:10811920 provides foundational evidence for HST2&#39;s NAD-dependent deacetylase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:10811920 is a seminal paper demonstrating that SIR2 family members, including HST2, catalyze NAD-dependent histone deacetylation. This is direct experimental evidence (IDA) for the core molecular function. The discovery that these enzymes absolutely require NAD (distinguishing them from other histone deacetylases) is mechanistically fundamental to HST2&#39;s identity as a sirtuin.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10811920" target="_blank" class="term-link">
+                                        PMID:10811920
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these enzymes also catalyze histone deacetylation in a reaction that absolutely requires NAD, thereby distinguishing them from previously characterized deacetylases. The enzymes are active on histone substrates that have been acetylated by both chromatin assembly-linked and transcription-related acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017136" target="_blank" class="term-link">
+                                    GO:0017136
+                                </a>
+                            </span>
+                            <span class="term-label">histone deacetylase activity, NAD-dependent</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10841563" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10841563
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A phylogenetically conserved NAD+-dependent protein deacetyl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0017136" data-r="PMID:10841563" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from PMID:10841563 demonstrating phylogenetically conserved NAD-dependent deacetylase activity in Sir2 family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:10841563 demonstrates through mutant phenotype analysis that NAD-dependent deacetylase activity is phylogenetically conserved in the Sir2 protein family, including HST2. This provides complementary IMP evidence supporting the IDA evidence from PMID:10811920. Multiple evidence types strengthen confidence in this core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10841563" target="_blank" class="term-link">
+                                        PMID:10841563
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A phylogenetically conserved NAD+-dependent protein deacetylase activity in the Sir2 protein family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045950" target="_blank" class="term-link">
+                                    GO:0045950
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of mitotic recombination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16051752
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HST2 mediates SIR2-independent life-span extension by calori...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0045950" data-r="PMID:16051752" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation indicating HST2 negatively regulates mitotic recombination, inferred from mutant phenotype in calorie restriction study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:16051752 focuses on rDNA stability and lifespan extension under calorie restriction. The connection to mitotic recombination regulation is not explicitly addressed in the paper title or abstract available. While DNA stability maintenance by HST2 could plausibly prevent inappropriate recombination, the specific mechanism and evidence for negative regulation of mitotic recombination is unclear from the available publication information. This annotation may be correct but requires access to the full paper content to definitively assess the supporting evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045950" target="_blank" class="term-link">
+                                    GO:0045950
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of mitotic recombination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16051752
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HST2 mediates SIR2-independent life-span extension by calori...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P53686" data-a="GO:0045950" data-r="PMID:16051752" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation indicating genetic interaction evidence for HST2&#39;s role in negative regulation of mitotic recombination.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation references SGD:S000002200 (SIR2) and SGD:S000002517 as genetic interaction partners. However, without access to the full paper or detailed interaction data, it is unclear whether these genetic interactions specifically support the mitotic recombination regulation annotation. The mechanism connecting HST2-SIR2 or HST2-S000002517 interactions to mitotic recombination control is not evident from the available abstract.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD-dependent histone deacetylation, particularly histone H4K16 (H4K16ac deacetylation being the preferred substrate during cell cycle)</h3>
+                <span class="vote-buttons" data-g="P53686" data-a="FUNCTION: NAD-dependent histone deacetylation, particularly ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046970" target="_blank" class="term-link">
+                            histone H4K16 deacetylase activity, NAD-dependent
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16648462" target="_blank" class="term-link">
+                                PMID:16648462
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">SirT2 and its yeast counterpart Hst2 have a strong preference for histone H4K16Ac in their deacetylation activity in vitro and in vivo</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>rDNA heterochromatin formation and ribosomal DNA stability maintenance (particularly under calorie restriction) through NAD-dependent histone deacetylation</h3>
+                <span class="vote-buttons" data-g="P53686" data-a="FUNCTION: rDNA heterochromatin formation and ribosomal DNA s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017136" target="_blank" class="term-link">
+                            histone deacetylase activity, NAD-dependent
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link">
+                                PMID:16051752
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Hst2 promotes the stability of repetitive ribosomal DNA, the same mechanism by which Sir2 extends life span</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Subtelomeric silencing modulation through derepression of subtelomeric loci via lysine deacetylation</h3>
+                <span class="vote-buttons" data-g="P53686" data-a="FUNCTION: Subtelomeric silencing modulation through derepres..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034979" target="_blank" class="term-link">
+                            NAD-dependent protein lysine deacetylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                                PMID:11226170
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nuclear-cytoplasmic shuttling regulation where efficient CRM1-mediated nuclear export determines HST2 localization and modulates its transcriptional repression activity (NAD binding is essential for catalytic activity)</h3>
+                <span class="vote-buttons" data-g="P53686" data-a="FUNCTION: Nuclear-cytoplasmic shuttling regulation where eff..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                            NAD binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17110954" target="_blank" class="term-link">
+                                PMID:17110954
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Hst2 is largely cytoplasmic owing to efficient nuclear export. This nuclear exclusion is mediated by the exportin chromosomal region maintenance 1 (Crm1)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Life-span extension under calorie restriction through DNA stability maintenance (SIR2-independent pathway, zinc cofactor essential for catalytic activity)</h3>
+                <span class="vote-buttons" data-g="P53686" data-a="FUNCTION: Life-span extension under calorie restriction thro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link">
+                                PMID:16051752
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">HST2 mediates SIR2-independent life-span extension by calorie restriction</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10811920" target="_blank" class="term-link">
+                            PMID:10811920
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The silencing protein SIR2 and its homologs are NAD-dependent protein deacetylases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 catalyzes NAD-dependent histone deacetylation with absolute requirement for NAD cofactor</div>
+                        
+                        <div class="finding-text">"these enzymes also catalyze histone deacetylation in a reaction that absolutely requires NAD, thereby distinguishing them from previously characterized deacetylases"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Family activity is distinct from previously characterized histone deacetylases</div>
+                        
+                        <div class="finding-text">"these enzymes also catalyze histone deacetylation in a reaction that absolutely requires NAD, thereby distinguishing them from previously characterized deacetylases"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10841563" target="_blank" class="term-link">
+                            PMID:10841563
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A phylogenetically conserved NAD+-dependent protein deacetylase activity in the Sir2 protein family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NAD-dependent deacetylase activity is phylogenetically conserved across sirtuin family</div>
+                        
+                        <div class="finding-text">"A phylogenetically conserved NAD+-dependent protein deacetylase activity in the Sir2 protein family"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11226170" target="_blank" class="term-link">
+                            PMID:11226170
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A cytosolic NAD-dependent deacetylase, Hst2p, can modulate nucleolar and telomeric silencing in yeast.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 is predominantly cytoplasmic (distinct from nuclear SIR2 and HST1)</div>
+                        
+                        <div class="finding-text">"Here we report that yeast Hst2p and a mammalian Hst2p homologue, hSirT2p, are cytoplasmic in yeast and human cells, in contrast to yHst1p and ySir2p which are exclusively nuclear"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 overexpression increases rDNA repression while derepressing subtelomeric silencing</div>
+                        
+                        <div class="finding-text">"overexpression of yHst2p influences nuclear silencing events in a SIR2 strain, derepressing subtelomeric silencing while increasing repression in the rDNA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 can influence nuclear silencing events through extra-nuclear localization</div>
+                        
+                        <div class="finding-text">"Although yHst2p cannot restore silencing in a sir2 deletion, overexpression of yHst2p influences nuclear silencing events in a SIR2 strain"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16051752" target="_blank" class="term-link">
+                            PMID:16051752
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">HST2 mediates SIR2-independent life-span extension by calorie restriction.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 mediates lifespan extension independent of SIR2 under calorie restriction</div>
+                        
+                        <div class="finding-text">"Sir2-independent life-span extension is mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal DNA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 promotes stability of repetitive ribosomal DNA sequences</div>
+                        
+                        <div class="finding-text">"Here, we show that Sir2-independent life-span extension is mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the same mechanism by which Sir2 extends life span"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 extends lifespan through same DNA stability mechanism as SIR2</div>
+                        
+                        <div class="finding-text">"Here, we show that Sir2-independent life-span extension is mediated by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the same mechanism by which Sir2 extends life span"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16648462" target="_blank" class="term-link">
+                            PMID:16648462
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SirT2 is a histone deacetylase with preference for histone H4 Lys 16 during mitosis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 (yeast ortholog) exhibits strong preference for histone H4K16Ac as deacetylation substrate</div>
+                        
+                        <div class="finding-text">"SirT2 and its yeast counterpart Hst2 have a strong preference for histone H4K16Ac in their deacetylation activity in vitro and in vivo"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">H4K16Ac deacetylation is important for chromatin condensation during cell cycle</div>
+                        
+                        <div class="finding-text">"The enzymatic conversion of H4K16Ac to its deacetylated form may be pivotal to the formation of condensed chromatin"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17110954" target="_blank" class="term-link">
+                            PMID:17110954
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nuclear export modulates the cytoplasmic Sir2 homologue Hst2.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 shuttles between nucleus and cytoplasm</div>
+                        
+                        <div class="finding-text">"Hst2 moves between the nucleus and cytoplasm, but is largely cytoplasmic owing to efficient nuclear export"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 is largely cytoplasmic due to efficient CRM1-mediated nuclear export</div>
+                        
+                        <div class="finding-text">"This nuclear exclusion is mediated by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence in Hst2"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear export regulates HST2&#39;s transcriptional repression activity</div>
+                        
+                        <div class="finding-text">"Disruption of Hst2 export shows that nuclear exclusion inhibits the activity of Hst2 as a transcriptional repressor"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains putative leucine-rich nuclear export sequence overlapping autoregulatory helix</div>
+                        
+                        <div class="finding-text">"This nuclear exclusion is mediated by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence in Hst2, which overlaps a unique autoregulatory helix"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                            PMID:30358795
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The cellular economy of the Saccharomyces cerevisiae zinc proteome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HST2 identified as zinc-binding protein in systematic zinc proteome study</div>
+                        
+                        <div class="finding-text">"The cellular economy of the Saccharomyces cerevisiae zinc proteome"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does HST2 regulate mitotic recombination directly, or is the apparent connection mediated through effects on rDNA stability?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P53686" data-a="Q: Does HST2 regulate mitotic recombination directly,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the substrate specificities of HST2 for non-histone proteins in vivo beyond histone H4K16?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P53686" data-a="Q: What are the substrate specificities of HST2 for n..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does HST2&#39;s nuclear export regulation integrate with its transcriptional repression functions under different cellular conditions and stress states?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P53686" data-a="Q: How does HST2&#39;s nuclear export regulation integrat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there cell cycle-dependent changes in HST2 activity or localization that modulate its rDNA silencing and chromatin condensation functions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P53686" data-a="Q: Are there cell cycle-dependent changes in HST2 act..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53686
+gene_symbol: HST2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: NAD-dependent protein deacetylase HST2, a sirtuin family member (Class
+  I sirtuin). HST2 is primarily cytoplasmic but shuttles between nucleus and cytoplasm
+  via the CRM1 exportin. It catalyzes NAD-dependent deacetylation of lysine residues
+  on histone and non-histone proteins, with strong preference for histone H4K16. Key
+  roles include modulation of nuclear silencing events (rDNA heterochromatin formation
+  and negative regulation of subtelomeric position effect), DNA stability maintenance,
+  and lifespan extension under calorie restriction. Functionally distinct from SIR2
+  in substrate specificity and localization-dependent regulation.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HST2 localizes to both nucleus and cytoplasm, with dynamic shuttling
+      between compartments. IBA annotation is appropriate despite HST2 being primarily
+      cytoplasmic.
+    action: ACCEPT
+    reason: HST2 exhibits documented nuclear localization and performs transcriptional
+      repression functions in the nucleus, enabling both telomeric and rDNA silencing
+      activities. Nuclear localization is physiologically relevant despite efficient
+      nuclear export that results in predominantly cytoplasmic steady-state distribution.
+    supported_by:
+    - reference_id: PMID:17110954
+      supporting_text: Hst2 moves between the nucleus and cytoplasm, but is largely
+        cytoplasmic owing to efficient nuclear export. This nuclear exclusion is mediated
+        by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich
+        nuclear export sequence in Hst2
+    - reference_id: PMID:11226170
+      supporting_text: Although yHst2p cannot restore silencing in a sir2 deletion,
+        overexpression of yHst2p influences nuclear silencing events in a SIR2 strain,
+        derepressing subtelomeric silencing while increasing repression in the rDNA
+- term:
+    id: GO:0017136
+    label: histone deacetylase activity, NAD-dependent
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HST2 is a canonical member of the sirtuin family with core NAD-dependent
+      histone deacetylase activity, phylogenetically conserved across kingdoms.
+    action: ACCEPT
+    reason: HST2 catalyzes NAD-dependent deacetylation of acetylated lysines on histones
+      and other proteins, representing a primary and well-established molecular function.
+      The IBA annotation is justified through phylogenetic inference from characterized
+      sirtuin orthologs in other organisms.
+    supported_by:
+    - reference_id: PMID:10811920
+      supporting_text: members of the SIR2 family catalyze an NAD-nicotinamide exchange
+        reaction that requires the presence of acetylated lysines such as those found
+        in the N termini of histones. Significantly, these enzymes also catalyze histone
+        deacetylation in a reaction that absolutely requires NAD
+    - reference_id: PMID:11226170
+      supporting_text: In budding yeast, the silent information regulator Sir2p is
+        a nuclear NAD-dependent deacetylase... All eukaryotic species examined to
+        date have multiple homologues of Sir two (HSTs), which share a highly conserved
+        globular core domain
+- term:
+    id: GO:0000183
+    label: rDNA heterochromatin formation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: HST2 actively increases repression at the rDNA locus (nucleolar silencing),
+      a core functional role well-documented in experimental literature.
+    action: ACCEPT
+    reason: HST2 overexpression results in increased repression of rDNA heterochromatin
+      formation, particularly promoting DNA stability in repetitive ribosomal DNA
+      sequences. This is a key biological process function that HST2 performs through
+      its deacetylase activity on histones in the rDNA locus.
+    supported_by:
+    - reference_id: PMID:11226170
+      supporting_text: overexpression of yHst2p influences nuclear silencing events
+        in a SIR2 strain, derepressing subtelomeric silencing while increasing repression
+        in the rDNA
+    - reference_id: PMID:16051752
+      supporting_text: Sir2-independent life-span extension is mediated by Hst2, a
+        Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the
+        same mechanism by which Sir2 extends life span
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProtKB subcellular location vocabulary mapping.
+      Redundant with IBA and IDA annotations for nucleus localization.
+    action: ACCEPT
+    reason: While based on automated mapping from UniProtKB, this annotation is correct.
+      HST2 does localize to the nucleus, and UniProt correctly lists nucleus as a
+      subcellular location. This is a conservative IEA assignment that aligns with
+      experimental evidence.
+    supported_by:
+    - reference_id: GO_REF:0000044
+      supporting_text: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular
+        Location vocabulary mapping
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: IEA annotation based on UniProtKB subcellular location vocabulary. HST2
+      is primarily and predominantly cytoplasmic under normal growth conditions.
+    action: ACCEPT
+    reason: HST2 is correctly annotated as cytoplasmic. The UniProtKB annotation notes
+      that HST2 shuttles between nucleus and cytoplasm but is largely cytoplasmic
+      due to efficient nuclear export mediated by CRM1. This is the predominant steady-state
+      localization.
+    supported_by:
+    - reference_id: GO_REF:0000044
+      supporting_text: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular
+        Location vocabulary mapping
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword &#34;Transcription&#34; mapping. HST2
+      affects transcription through histone deacetylation and chromatin remodeling.
+    action: MODIFY
+    reason: While HST2 influences transcriptional outcomes through its deacetylase
+      activity on histones, particularly affecting silencing at telomeric and rDNA
+      loci, it is more accurate to annotate this as negative regulation of transcription
+      or regulation of transcription rather than the direct process of DNA-templated
+      transcription. HST2 does not catalyze transcription itself but modifies chromatin
+      structure to suppress transcription.
+    proposed_replacement_terms:
+    - id: GO:0006308
+      label: DNA-templated transcription repression
+    - id: GO:0008156
+      label: negative regulation of DNA-templated transcription
+    additional_reference_ids:
+    - PMID:17110954
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword mapping. Technically, sirtuins
+      catalyze an ADP-ribosyl transfer reaction as part of their deacetylation mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While sirtuins do generate ADP-ribose during their catalytic cycle, the
+      primary annotated activity is deacetylation (hydrolysis), not transferase activity
+      per se. The EC number (2.3.1.286) assigned to HST2 suggests hydrolase classification.
+      More specific molecular function terms already capture HST2&#39;s enzymatic activities
+      (GO:0017136, GO:0046970, GO:0034979). This annotation is technically correct
+      but too general and less informative than the specific deacetylase terms.
+    supported_by:
+    - reference_id: GO_REF:0000043
+      supporting_text: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword
+        mapping
+- term:
+    id: GO:0017136
+    label: histone deacetylase activity, NAD-dependent
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from Combined Automated Annotation using InterPro protein
+      signature mapping. Correct annotation of core HST2 molecular function.
+    action: ACCEPT
+    reason: Redundant with IBA and IDA annotations but correct. InterPro IPR017328
+      (Sirtuin class I domain) appropriately maps to GO:0017136. Multiple evidence
+      types confirming the same annotation strengthen confidence in this core molecular
+      function.
+    supported_by:
+    - reference_id: GO_REF:0000120
+      supporting_text: Combined Automated Annotation using Multiple IEA Methods
+- term:
+    id: GO:0031507
+    label: heterochromatin formation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: IEA annotation from ARBA machine learning model. HST2 does participate
+      in heterochromatin formation through its deacetylase activity.
+    action: ACCEPT
+    reason: HST2&#39;s demonstrated activity in promoting rDNA heterochromatin formation
+      supports this broader heterochromatin formation annotation. The ARBA model inference
+      is reasonable and consistent with experimental evidence showing HST2&#39;s role
+      in nucleolar silencing and chromatin compaction.
+    supported_by:
+    - reference_id: PMID:11226170
+      supporting_text: Although yHst2p cannot restore silencing in a sir2 deletion,
+        overexpression of yHst2p influences nuclear silencing events in a SIR2 strain,
+        derepressing subtelomeric silencing while increasing repression in the rDNA
+- term:
+    id: GO:0034979
+    label: NAD-dependent protein lysine deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: IEA annotation from InterPro and RHEA mapping. This is a more general
+      parent term encompassing both histone and non-histone protein deacetylation.
+    action: ACCEPT
+    reason: HST2 catalyzes NAD-dependent deacetylation of lysine residues on both
+      histone and non-histone substrates. This parent term appropriately captures
+      the broader specificity of HST2&#39;s deacetylase activity beyond just histones.
+      RHEA:43636 correctly represents the NAD-dependent deacetylation reaction catalyzed
+      by sirtuins.
+    supported_by:
+    - reference_id: GO_REF:0000120
+      supporting_text: Combined Automated Annotation using Multiple IEA Methods with
+        RHEA:43636
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: IEA annotation based on UniProtKB keyword &#34;Metal-binding&#34; (zinc). HST2
+      contains a functional zinc cofactor.
+    action: ACCEPT
+    reason: HST2 binds one zinc ion per subunit as an essential structural and catalytic
+      cofactor, documented through crystallographic structure determination and mutagenesis.
+      The zinc is coordinated by three cysteine residues and one histidine in the
+      active site, forming part of the deacetylase catalytic mechanism.
+    supported_by:
+    - reference_id: GO_REF:0000043
+      supporting_text: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword
+        mapping
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro protein signature IPR017328 (Sirtuin class
+      I domain). HST2 requires NAD as essential cofactor.
+    action: ACCEPT
+    reason: HST2 absolutely requires NAD as a cofactor for its deacetylase activity.
+      Multiple structural studies demonstrate NAD binding in the conserved sirtuin
+      NAD-binding pocket. The Km for NAD is approximately 10.2 uM, indicating physiologically
+      relevant binding affinity.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: Gene Ontology annotation through association of InterPro records
+        with GO terms
+- term:
+    id: GO:0070403
+    label: NAD+ binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: IEA annotation from InterPro IPR003000 (Sirtuin domain). Redundant with
+      GO:0051287 but more specifically refers to NAD+ (oxidized form).
+    action: ACCEPT
+    reason: Functionally equivalent to GO:0051287 NAD binding but specifies the oxidized
+      NAD+ form that is the actual catalytic substrate. HST2 catalyzes reactions that
+      consume NAD+, and specific binding of the oxidized form is mechanistically relevant.
+      Both terms can coexist as they capture slightly different aspects of NAD cofactor
+      requirements.
+    supported_by:
+    - reference_id: GO_REF:0000002
+      supporting_text: Gene Ontology annotation through association of InterPro records
+        with GO terms
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: RCA
+  original_reference_id: PMID:30358795
+  review:
+    summary: RCA annotation from The Saccharomyces cerevisiae zinc proteome study.
+      HST2 is confirmed as a zinc-binding protein.
+    action: ACCEPT
+    reason: PMID:30358795 provides experimental evidence that HST2 is a zinc-binding
+      protein in the yeast zinc proteome. RCA (reviewed computational analysis) is
+      appropriate for this annotation based on inclusion in a systematic proteomic
+      study of zinc-binding proteins. HST2&#39;s zinc cofactor binding is well-characterized
+      through structural biology.
+    supported_by:
+    - reference_id: PMID:30358795
+      supporting_text: The cellular economy of the Saccharomyces cerevisiae zinc proteome
+- term:
+    id: GO:0046970
+    label: histone H4K16 deacetylase activity, NAD-dependent
+  evidence_type: IDA
+  original_reference_id: PMID:16648462
+  review:
+    summary: IDA annotation with strong substrate specificity for histone H4 lysine
+      16. This represents a core and highly specific molecular function of HST2.
+    action: ACCEPT
+    reason: PMID:16648462 demonstrates that HST2 (and its mammalian ortholog SirT2)
+      have strong preference for histone H4K16Ac as substrate both in vitro and in
+      vivo. This is a documented core molecular function of HST2 with physiological
+      relevance to chromatin condensation during mitosis. The specific substrate preference
+      is a key distinguishing feature of this sirtuin family member.
+    supported_by:
+    - reference_id: PMID:16648462
+      supporting_text: SirT2 and its yeast counterpart Hst2 have a strong preference
+        for histone H4K16Ac in their deacetylation activity in vitro and in vivo.
+        We have pinpointed the decrease in global levels of H4K16Ac during the mammalian
+        cell cycle to the G2/M transition that coincides with SirT2 localization on
+        chromatin
+- term:
+    id: GO:0000183
+    label: rDNA heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:11226170
+  review:
+    summary: IMP annotation with direct mutant phenotype evidence. HST2 overexpression
+      increases rDNA silencing.
+    action: ACCEPT
+    reason: Mutant overexpression experiments directly demonstrate that HST2 increases
+      repression at the rDNA locus, promoting heterochromatin formation at ribosomal
+      DNA. This is strong experimental evidence (IMP) for a core biological process
+      function. The effect is specific to rDNA and distinct from the SIR2 effects
+      on subtelomeric silencing.
+    supported_by:
+    - reference_id: PMID:11226170
+      supporting_text: overexpression of yHst2p influences nuclear silencing events
+        in a SIR2 strain, derepressing subtelomeric silencing while increasing repression
+        in the rDNA
+- term:
+    id: GO:0000183
+    label: rDNA heterochromatin formation
+  evidence_type: IMP
+  original_reference_id: PMID:16051752
+  review:
+    summary: IMP annotation from calorie restriction study. HST2 maintains stability
+      of repetitive rDNA under CR.
+    action: ACCEPT
+    reason: PMID:16051752 demonstrates through mutant analysis that HST2 mediates
+      rDNA heterochromatin stability under calorie restriction, promoting the same
+      DNA stability mechanism by which SIR2 extends lifespan. This provides independent
+      experimental validation (different study system) of HST2&#39;s role in rDNA heterochromatin
+      formation.
+    supported_by:
+    - reference_id: PMID:16051752
+      supporting_text: Sir2-independent life-span extension is mediated by Hst2, a
+        Sir2 homolog that promotes the stability of repetitive ribosomal DNA, the
+        same mechanism by which Sir2 extends life span
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:17110954
+  review:
+    summary: IDA annotation confirming nuclear localization of HST2 through direct
+      observation (microscopy).
+    action: ACCEPT
+    reason: Direct experimental evidence (PMID:17110954) demonstrates that HST2 localizes
+      to the nucleus despite being predominantly cytoplasmic. The IDA evidence documents
+      actual nuclear presence and movement between cellular compartments. This corroborates
+      the IBA and IEA nuclear annotations from other sources.
+    supported_by:
+    - reference_id: PMID:17110954
+      supporting_text: Hst2 moves between the nucleus and cytoplasm, but is largely
+        cytoplasmic owing to efficient nuclear export. This nuclear exclusion is mediated
+        by the exportin chromosomal region maintenance 1 (Crm1) and a putative leucine-rich
+        nuclear export sequence in Hst2
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:11226170
+  review:
+    summary: IDA annotation confirming predominant cytoplasmic localization of HST2.
+    action: ACCEPT
+    reason: PMID:11226170 provides direct experimental evidence that HST2 is cytoplasmic
+      in yeast cells, contrasting with the exclusively nuclear localization of SIR2
+      and HST1. This is the predominant steady-state localization, supported by multiple
+      lines of evidence and central to understanding HST2&#39;s distinctive role from
+      SIR2.
+    supported_by:
+    - reference_id: PMID:11226170
+      supporting_text: Here we report that yeast Hst2p and a mammalian Hst2p homologue,
+        hSirT2p, are cytoplasmic in yeast and human cells, in contrast to yHst1p and
+        ySir2p which are exclusively nuclear
+- term:
+    id: GO:0017136
+    label: histone deacetylase activity, NAD-dependent
+  evidence_type: IDA
+  original_reference_id: PMID:10811920
+  review:
+    summary: IDA annotation with direct enzymatic activity evidence. PMID:10811920
+      provides foundational evidence for HST2&#39;s NAD-dependent deacetylase activity.
+    action: ACCEPT
+    reason: PMID:10811920 is a seminal paper demonstrating that SIR2 family members,
+      including HST2, catalyze NAD-dependent histone deacetylation. This is direct
+      experimental evidence (IDA) for the core molecular function. The discovery that
+      these enzymes absolutely require NAD (distinguishing them from other histone
+      deacetylases) is mechanistically fundamental to HST2&#39;s identity as a sirtuin.
+    supported_by:
+    - reference_id: PMID:10811920
+      supporting_text: these enzymes also catalyze histone deacetylation in a reaction
+        that absolutely requires NAD, thereby distinguishing them from previously
+        characterized deacetylases. The enzymes are active on histone substrates that
+        have been acetylated by both chromatin assembly-linked and transcription-related
+        acetyltransferases
+- term:
+    id: GO:0017136
+    label: histone deacetylase activity, NAD-dependent
+  evidence_type: IMP
+  original_reference_id: PMID:10841563
+  review:
+    summary: IMP annotation from PMID:10841563 demonstrating phylogenetically conserved
+      NAD-dependent deacetylase activity in Sir2 family.
+    action: ACCEPT
+    reason: PMID:10841563 demonstrates through mutant phenotype analysis that NAD-dependent
+      deacetylase activity is phylogenetically conserved in the Sir2 protein family,
+      including HST2. This provides complementary IMP evidence supporting the IDA
+      evidence from PMID:10811920. Multiple evidence types strengthen confidence in
+      this core molecular function.
+    supported_by:
+    - reference_id: PMID:10841563
+      supporting_text: A phylogenetically conserved NAD+-dependent protein deacetylase
+        activity in the Sir2 protein family
+- term:
+    id: GO:0045950
+    label: negative regulation of mitotic recombination
+  evidence_type: IMP
+  original_reference_id: PMID:16051752
+  review:
+    summary: IMP annotation indicating HST2 negatively regulates mitotic recombination,
+      inferred from mutant phenotype in calorie restriction study.
+    action: UNDECIDED
+    reason: PMID:16051752 focuses on rDNA stability and lifespan extension under calorie
+      restriction. The connection to mitotic recombination regulation is not explicitly
+      addressed in the paper title or abstract available. While DNA stability maintenance
+      by HST2 could plausibly prevent inappropriate recombination, the specific mechanism
+      and evidence for negative regulation of mitotic recombination is unclear from
+      the available publication information. This annotation may be correct but requires
+      access to the full paper content to definitively assess the supporting evidence.
+    additional_reference_ids:
+    - PMID:16051752
+- term:
+    id: GO:0045950
+    label: negative regulation of mitotic recombination
+  evidence_type: IGI
+  original_reference_id: PMID:16051752
+  review:
+    summary: IGI annotation indicating genetic interaction evidence for HST2&#39;s role
+      in negative regulation of mitotic recombination.
+    action: UNDECIDED
+    reason: The annotation references SGD:S000002200 (SIR2) and SGD:S000002517 as
+      genetic interaction partners. However, without access to the full paper or detailed
+      interaction data, it is unclear whether these genetic interactions specifically
+      support the mitotic recombination regulation annotation. The mechanism connecting
+      HST2-SIR2 or HST2-S000002517 interactions to mitotic recombination control is
+      not evident from the available abstract.
+    additional_reference_ids:
+    - PMID:16051752
+core_functions:
+- molecular_function:
+    id: GO:0046970
+    label: histone H4K16 deacetylase activity, NAD-dependent
+  description: NAD-dependent histone deacetylation, particularly histone H4K16 (H4K16ac
+    deacetylation being the preferred substrate during cell cycle)
+  supported_by:
+  - reference_id: PMID:16648462
+    supporting_text: SirT2 and its yeast counterpart Hst2 have a strong preference
+      for histone H4K16Ac in their deacetylation activity in vitro and in vivo
+- molecular_function:
+    id: GO:0017136
+    label: histone deacetylase activity, NAD-dependent
+  description: rDNA heterochromatin formation and ribosomal DNA stability maintenance
+    (particularly under calorie restriction) through NAD-dependent histone deacetylation
+  supported_by:
+  - reference_id: PMID:16051752
+    supporting_text: Hst2 promotes the stability of repetitive ribosomal DNA, the
+      same mechanism by which Sir2 extends life span
+- molecular_function:
+    id: GO:0034979
+    label: NAD-dependent protein lysine deacetylase activity
+  description: Subtelomeric silencing modulation through derepression of subtelomeric
+    loci via lysine deacetylation
+  supported_by:
+  - reference_id: PMID:11226170
+    supporting_text: overexpression of yHst2p influences nuclear silencing events
+      in a SIR2 strain, derepressing subtelomeric silencing while increasing repression
+      in the rDNA
+- molecular_function:
+    id: GO:0051287
+    label: NAD binding
+  description: Nuclear-cytoplasmic shuttling regulation where efficient CRM1-mediated
+    nuclear export determines HST2 localization and modulates its transcriptional
+    repression activity (NAD binding is essential for catalytic activity)
+  supported_by:
+  - reference_id: PMID:17110954
+    supporting_text: Hst2 is largely cytoplasmic owing to efficient nuclear export.
+      This nuclear exclusion is mediated by the exportin chromosomal region maintenance
+      1 (Crm1)
+- molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  description: Life-span extension under calorie restriction through DNA stability
+    maintenance (SIR2-independent pathway, zinc cofactor essential for catalytic activity)
+  supported_by:
+  - reference_id: PMID:16051752
+    supporting_text: HST2 mediates SIR2-independent life-span extension by calorie
+      restriction
+proposed_new_terms: []
+suggested_questions:
+- question: Does HST2 regulate mitotic recombination directly, or is the apparent
+    connection mediated through effects on rDNA stability?
+- question: What are the substrate specificities of HST2 for non-histone proteins
+    in vivo beyond histone H4K16?
+- question: How does HST2&#39;s nuclear export regulation integrate with its transcriptional
+    repression functions under different cellular conditions and stress states?
+- question: Are there cell cycle-dependent changes in HST2 activity or localization
+    that modulate its rDNA silencing and chromatin condensation functions?
+suggested_experiments: []
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10811920
+  title: The silencing protein SIR2 and its homologs are NAD-dependent protein deacetylases.
+  findings:
+  - statement: HST2 catalyzes NAD-dependent histone deacetylation with absolute requirement
+      for NAD cofactor
+    supporting_text: these enzymes also catalyze histone deacetylation in a reaction
+      that absolutely requires NAD, thereby distinguishing them from previously characterized
+      deacetylases
+  - statement: Family activity is distinct from previously characterized histone deacetylases
+    supporting_text: these enzymes also catalyze histone deacetylation in a reaction
+      that absolutely requires NAD, thereby distinguishing them from previously characterized
+      deacetylases
+- id: PMID:10841563
+  title: A phylogenetically conserved NAD+-dependent protein deacetylase activity
+    in the Sir2 protein family.
+  findings:
+  - statement: NAD-dependent deacetylase activity is phylogenetically conserved across
+      sirtuin family
+    supporting_text: A phylogenetically conserved NAD+-dependent protein deacetylase
+      activity in the Sir2 protein family
+- id: PMID:11226170
+  title: A cytosolic NAD-dependent deacetylase, Hst2p, can modulate nucleolar and
+    telomeric silencing in yeast.
+  findings:
+  - statement: HST2 is predominantly cytoplasmic (distinct from nuclear SIR2 and HST1)
+    supporting_text: Here we report that yeast Hst2p and a mammalian Hst2p homologue,
+      hSirT2p, are cytoplasmic in yeast and human cells, in contrast to yHst1p and
+      ySir2p which are exclusively nuclear
+  - statement: HST2 overexpression increases rDNA repression while derepressing subtelomeric
+      silencing
+    supporting_text: overexpression of yHst2p influences nuclear silencing events
+      in a SIR2 strain, derepressing subtelomeric silencing while increasing repression
+      in the rDNA
+  - statement: HST2 can influence nuclear silencing events through extra-nuclear localization
+    supporting_text: Although yHst2p cannot restore silencing in a sir2 deletion,
+      overexpression of yHst2p influences nuclear silencing events in a SIR2 strain
+- id: PMID:16051752
+  title: HST2 mediates SIR2-independent life-span extension by calorie restriction.
+  findings:
+  - statement: HST2 mediates lifespan extension independent of SIR2 under calorie
+      restriction
+    supporting_text: Sir2-independent life-span extension is mediated by Hst2, a Sir2
+      homolog that promotes the stability of repetitive ribosomal DNA
+  - statement: HST2 promotes stability of repetitive ribosomal DNA sequences
+    supporting_text: Here, we show that Sir2-independent life-span extension is mediated
+      by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal
+      DNA, the same mechanism by which Sir2 extends life span
+  - statement: HST2 extends lifespan through same DNA stability mechanism as SIR2
+    supporting_text: Here, we show that Sir2-independent life-span extension is mediated
+      by Hst2, a Sir2 homolog that promotes the stability of repetitive ribosomal
+      DNA, the same mechanism by which Sir2 extends life span
+- id: PMID:16648462
+  title: SirT2 is a histone deacetylase with preference for histone H4 Lys 16 during
+    mitosis.
+  findings:
+  - statement: HST2 (yeast ortholog) exhibits strong preference for histone H4K16Ac
+      as deacetylation substrate
+    supporting_text: SirT2 and its yeast counterpart Hst2 have a strong preference
+      for histone H4K16Ac in their deacetylation activity in vitro and in vivo
+  - statement: H4K16Ac deacetylation is important for chromatin condensation during
+      cell cycle
+    supporting_text: The enzymatic conversion of H4K16Ac to its deacetylated form
+      may be pivotal to the formation of condensed chromatin
+- id: PMID:17110954
+  title: Nuclear export modulates the cytoplasmic Sir2 homologue Hst2.
+  findings:
+  - statement: HST2 shuttles between nucleus and cytoplasm
+    supporting_text: Hst2 moves between the nucleus and cytoplasm, but is largely
+      cytoplasmic owing to efficient nuclear export
+  - statement: HST2 is largely cytoplasmic due to efficient CRM1-mediated nuclear
+      export
+    supporting_text: This nuclear exclusion is mediated by the exportin chromosomal
+      region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence
+      in Hst2
+  - statement: Nuclear export regulates HST2&#39;s transcriptional repression activity
+    supporting_text: Disruption of Hst2 export shows that nuclear exclusion inhibits
+      the activity of Hst2 as a transcriptional repressor
+  - statement: Contains putative leucine-rich nuclear export sequence overlapping
+      autoregulatory helix
+    supporting_text: This nuclear exclusion is mediated by the exportin chromosomal
+      region maintenance 1 (Crm1) and a putative leucine-rich nuclear export sequence
+      in Hst2, which overlaps a unique autoregulatory helix
+- id: PMID:30358795
+  title: The cellular economy of the Saccharomyces cerevisiae zinc proteome.
+  findings:
+  - statement: HST2 identified as zinc-binding protein in systematic zinc proteome
+      study
+    supporting_text: The cellular economy of the Saccharomyces cerevisiae zinc proteome
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
