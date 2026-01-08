@@ -456,26 +456,38 @@ def check_best_practices_rules(
 
     # Helper function to validate file references
     def validate_file_reference(ref_id: str, path: str) -> None:
-        """Validate a file reference and add issues to report if invalid."""
+        """Validate a file reference and add issues to report if invalid.
+
+        File references are resolved in this order:
+        1. Relative to genes/ directory (for gene-specific files like SPECIES/GENE/file.md)
+        2. Relative to project root (for shared files like interpro/panther/PTHR10314/notes.md)
+        """
         if ref_id.startswith("file:"):
             # Extract the file path after 'file:'
             file_path_str = ref_id[5:]  # Remove 'file:' prefix
 
-            # Check if the file exists relative to the genes directory
-            # Assuming validation is run from project root
-            base_path = Path("genes")
-            full_path = base_path / file_path_str
+            # Check if the file exists relative to the genes directory first,
+            # then fall back to project root for shared resources
+            genes_path = Path("genes") / file_path_str
+            root_path = Path(file_path_str)
 
-            if not full_path.exists():
+            # Determine which path to use
+            if genes_path.exists():
+                full_path = genes_path
+            elif root_path.exists():
+                full_path = root_path
+            else:
                 report.add_issue(
                     ValidationSeverity.ERROR,
                     f"File reference points to non-existent file: {file_path_str}",
                     path=path,
-                    suggestion=f"Ensure the file exists at: genes/{file_path_str}",
+                    suggestion=f"Ensure the file exists at: genes/{file_path_str} or {file_path_str}",
                     validation_category="ReferenceValidator",
                     check_type="file_not_found"
                 )
-            elif not full_path.is_file():
+                return
+
+            if not full_path.is_file():
                 report.add_issue(
                     ValidationSeverity.ERROR,
                     f"File reference points to a directory, not a file: {file_path_str}",
