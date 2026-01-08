@@ -1746,7 +1746,7 @@ def render_rule_review_html(
         >>> from pathlib import Path
         >>> rule_id = "ARBA00026249"
         >>> cache_dir = Path("rules/arba")
-        >>> # html_path = render_rule_review_html(rule_id, cache_dir)  # doctest: +SKIP
+        >>> # html_path = render_rule_review_html(rule_id, cache_dir)
     """
     from jinja2 import Environment, FileSystemLoader, select_autoescape
 
