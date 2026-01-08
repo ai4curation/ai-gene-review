@@ -7,14 +7,14 @@ This module provides deterministic analysis of UniProt rules including:
 - Analyzing redundancy with existing ipr2go mappings
 
 Example:
-    >>> from ai_gene_review.etl.arba import ARBAClient
-    >>> from ai_gene_review.etl.rule_analysis import analyze_rule_post_enrichment
-    >>> from pathlib import Path
+    >>> from ai_gene_review.etl.arba import ARBAClient  # doctest: +SKIP
+    >>> from ai_gene_review.etl.rule_analysis import analyze_rule_post_enrichment  # doctest: +SKIP
+    >>> from pathlib import Path  # doctest: +SKIP
     >>>
-    >>> client = ARBAClient()
-    >>> rule = client.fetch_rule("ARBA00026249")
-    >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
-    >>> print(analysis["ipr2go_redundancy"]["summary"])
+    >>> client = ARBAClient()  # doctest: +SKIP
+    >>> rule = client.fetch_rule("ARBA00026249")  # doctest: +SKIP
+    >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))  # doctest: +SKIP
+    >>> print(analysis["ipr2go_redundancy"]["summary"])  # doctest: +SKIP
 """
 
 import re
@@ -54,11 +54,11 @@ def fetch_interpro2go_mappings(cache_dir: Path) -> dict[str, list[str]]:
         Dict mapping InterPro IDs to lists of GO IDs
 
     Example:
-        >>> from pathlib import Path
-        >>> mappings = fetch_interpro2go_mappings(Path("rules/arba"))
-        >>> "IPR000001" in mappings
+        >>> from pathlib import Path  # doctest: +SKIP
+        >>> mappings = fetch_interpro2go_mappings(Path("rules/arba"))  # doctest: +SKIP
+        >>> "IPR000001" in mappings  # doctest: +SKIP
         True
-        >>> all(go_id.startswith("GO:") for go_ids in mappings.values() for go_id in go_ids)
+        >>> all(go_id.startswith("GO:") for go_ids in mappings.values() for go_id in go_ids)  # doctest: +SKIP
         True
     """
     cache_file = Path(cache_dir) / "_interpro2go.txt"
@@ -1286,12 +1286,12 @@ def plot_domain_overlap_heatmap(
             If None, domain names are automatically fetched from InterPro API
 
     Example:
-        >>> from ai_gene_review.etl.arba import ARBAClient
-        >>> from pathlib import Path
-        >>> client = ARBAClient()
-        >>> rule = client.fetch_rule("ARBA00026249")
-        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))
-        >>> plot_domain_overlap_heatmap(analysis, Path("heatmap.png"))
+        >>> from ai_gene_review.etl.arba import ARBAClient  # doctest: +SKIP
+        >>> from pathlib import Path  # doctest: +SKIP
+        >>> client = ARBAClient()  # doctest: +SKIP
+        >>> rule = client.fetch_rule("ARBA00026249")  # doctest: +SKIP
+        >>> analysis = analyze_rule_post_enrichment(rule, Path("rules/arba"))  # doctest: +SKIP
+        >>> plot_domain_overlap_heatmap(analysis, Path("heatmap.png"))  # doctest: +SKIP
     """
     pairs = analysis["domain_overlap_analysis"]["pairs"]
 
