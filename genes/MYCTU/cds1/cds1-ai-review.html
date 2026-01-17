@@ -1,0 +1,3337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cds1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cds1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O69652" target="_blank" class="term-link">
+                        O69652
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cds1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O69652" data-a="DESCRIPTION: Cds1 (Rv3684) is an L-cysteine desulfhydrase (EC 4..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Cds1 (Rv3684) is an L-cysteine desulfhydrase (EC 4.4.1.1) that catalyzes the PLP-dependent beta-elimination of L-cysteine to produce hydrogen sulfide (H2S), pyruvate, and ammonia. It is a major source of endogenous H2S in M. tuberculosis. The H2S produced stimulates respiration primarily via cytochrome bd, modulates the balance between oxidative phosphorylation and glycolysis, contributes to redox homeostasis by affecting ergothioneine (EGT) and mycothiol (MSH) levels, and influences drug susceptibility. The enzyme likely also functions to eliminate toxic levels of cysteine. Kinetic parameters: KM = 11.26 mM for cysteine, kcat = 78.71 sec(-1). Activity is inhibited by aminooxyacetic acid (AOAA), a PLP inhibitor, but NOT by DL-propargylglycine (PAG), a cystathionine gamma-lyase inhibitor, confirming its identity as a cysteine desulfhydrase rather than a cystathionine gamma-lyase. Part of the Rv3682-Rv3683-cds1 operon.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019344" target="_blank" class="term-link">
+                                    GO:0019344
+                                </a>
+                            </span>
+                            <span class="term-label">cysteine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0019344" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. Cds1 is an L-cysteine desulfhydrase that catalyzes L-cysteine CATABOLISM, not biosynthesis. The enzyme degrades cysteine to produce H2S, pyruvate, and ammonia (PMID:34439535). The IBA annotation derives from GO:0019344 being annotated at the root node (PTN000034104) of PANTHER family PTHR10314 and propagated to all descendants, including subfamily SF135 (Cds1) which has the opposite function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IBA propagation error from PANTHER family PTHR10314. GO:0019344 is annotated at the root node but SF135 (Cds1 subfamily) underwent neo-functionalization: (1) Active site motif differs: SF135 has ASSGST vs PTSGNTG in synthases; (2) Only 24% sequence identity with cysteine synthases (vs 43% between CysK/CysM); (3) Longest branch length (0.528) from root indicates greatest divergence; (4) Different EC: 4.4.1.1 (desulfhydrase) vs 2.5.1.47 (synthase); (5) Opposite reaction: L-cysteine → H2S + pyruvate (catabolism), not biosynthesis. See family analysis: interpro/panther/PTHR10314/PTHR10314-notes.md
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MYCTU/cds1/cds1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:interpro/panther/PTHR10314/PTHR10314-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SF135 (Cds1) has a distinct active site signature motif (ASSGST) vs synthases (PTSGNTG); SF135 shares only ~24% identity with synthases; longest branch length (0.528) indicates neo-functionalization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with what is expected for this PLP-dependent metabolic enzyme. UniProt assigns cytoplasm localization based on sequence features and family membership. The more specific annotation to cytosol (GO:0005829) is also present with HDA evidence from PMID:15525680.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is appropriate for this soluble PLP-dependent enzyme. There is no signal peptide or transmembrane domain. Consistent with HDA evidence from subcellular proteomics (PMID:15525680) showing cytosolic localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15525680" target="_blank" class="term-link">
+                                        PMID:15525680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the identifications of 1044 proteins and their corresponding localizations in these compartments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is redundant with the IBA annotation above but is acceptable. Cytoplasmic localization is correct based on the protein&#39;s properties as a soluble metabolic enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is appropriate and consistent with experimental HDA evidence from subcellular proteomics.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016829" target="_blank" class="term-link">
+                                    GO:0016829
+                                </a>
+                            </span>
+                            <span class="term-label">lyase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0016829" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lyase activity is correct but very general. Cds1 is indeed a lyase (carbon-sulfur lyase) that catalyzes a beta-elimination reaction. However, there is a much more specific and informative term available: GO:0080146 (L-cysteine desulfhydrase activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this term is too general. The specific molecular function term GO:0080146 (L-cysteine desulfhydrase activity) should be used instead, which precisely describes the catalyzed reaction: L-cysteine + H2O = ammonia + pyruvate + hydrogen sulfide + H(+). This is experimentally demonstrated in PMID:34439535.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080146" target="_blank" class="term-link">
+                                    L-cysteine desulfhydrase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019450" target="_blank" class="term-link">
+                                    GO:0019450
+                                </a>
+                            </span>
+                            <span class="term-label">L-cysteine catabolic process to pyruvate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0019450" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct and represents a core function of Cds1. The enzyme catalyzes the conversion of L-cysteine to pyruvate (plus H2S and ammonia). This is supported by IDA evidence from PMID:34439535 (see separate entry).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally validated by PMID:34439535. Products were identified by LC-MS/MS confirming pyruvate as a product of the cysteine desulfhydrase reaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0030170" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP binding is correct. Cds1 contains a PLP-binding site at Lys67 and belongs to the TrpB-like PALP fold family. PLP-dependence is experimentally confirmed in PMID:34439535 through inhibition by AOAA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PLP-dependence is experimentally confirmed. PMID:34439535 shows that activity is inhibited by aminooxyacetic acid (AOAA), a PLP inhibitor. UniProt annotates the PLP-binding lysine at position 67.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901605" target="_blank" class="term-link">
+                                    GO:1901605
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-amino acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:1901605" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but very general. Cds1 does participate in amino acid metabolism by catabolizing L-cysteine. The more specific term GO:0019450 (L-cysteine catabolic process to pyruvate) is preferred and already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Technically correct as a parent term of the more specific cysteine catabolic process. Acceptable as a broader IEA annotation alongside the more specific terms.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019450" target="_blank" class="term-link">
+                                    GO:0019450
+                                </a>
+                            </span>
+                            <span class="term-label">L-cysteine catabolic process to pyruvate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0019450" data-r="PMID:34439535" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation is well-supported by experimental evidence. Kunota et al. (2021) used LC-MS/MS to identify the products of the Cds1-catalyzed reaction and confirmed pyruvate as a major product. This is a core function annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated by enzymatic product identification using LC-MS/MS in PMID:34439535. Pyruvate is one of the three products of the L-cysteine desulfhydrase reaction (along with H2S and ammonia).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0030170" data-r="PMID:34439535" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP binding is experimentally demonstrated through inhibitor studies. AOAA (aminooxyacetic acid), a PLP inhibitor, blocks activity, while PAG (DL-propargylglycine), which specifically inhibits cystathionine gamma-lyase, does not affect activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Inhibition by AOAA (a PLP-dependent enzyme inhibitor) but not PAG demonstrates PLP-dependence of the enzyme activity. This is supported by the presence of the PALP domain (PF00291) and TrpB-like PLP fold.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042762" target="_blank" class="term-link">
+                                    GO:0042762
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of sulfur metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0042762" data-r="PMID:34439535" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects the role of Cds1-generated H2S in recycling sulfur back to cysteine. The delta-cds1 mutant shows altered sulfur metabolism. H2S functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:34439535 demonstrates that H2S produced by Cds1 functions as a sink to recycle sulfur atoms back to cysteine, thereby regulating sulfur homeostasis in Mtb.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Importantly, H2S plays a key role in central metabolism by modulating the balance between oxidative phosphorylation and glycolysis, and it functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0045454" data-r="PMID:34439535" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is supported by mutant phenotype data. The delta-cds1 mutant shows decreased levels of the redox couples ergothioneine (EGT) and mycothiol (MSH). H2S modulates redox homeostasis and can function as either a pro-oxidant or antioxidant depending on conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the role in redox homeostasis is experimentally demonstrated, this is a downstream physiological effect of H2S production rather than the primary enzymatic function. The core function is cysteine catabolism/H2S production; redox regulation is a consequence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lastly, our data demonstrate that Cds1-generated H2S modulates the levels of the major redox couples, EGT and MSH.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070814" target="_blank" class="term-link">
+                                    GO:0070814
+                                </a>
+                            </span>
+                            <span class="term-label">hydrogen sulfide biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0070814" data-r="PMID:34439535" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core function annotation. Cds1 is identified as the major H2S-producing enzyme in Mtb. H2S production was measured using multiple methods (lead acetate assay, BiCl3 assay, amperometric microsensor) and delta-cds1 significantly reduces but does not eliminate H2S production.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated by multiple assays. &#34;We identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but does not eliminate, H2S production.&#34; H2S production is a primary output of the cysteine desulfhydrase reaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but does not eliminate, H2S production, suggesting the involvement of multiple genes in H2S production</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901857" target="_blank" class="term-link">
+                                    GO:1901857
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cellular respiration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:1901857" data-r="PMID:34439535" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects the downstream physiological effect of H2S production. The delta-cds1 mutant shows 40% reduction in basal oxygen consumption rate. H2S stimulates respiration primarily via cytochrome bd.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While experimentally demonstrated, this represents a downstream effect of H2S production rather than the primary enzymatic function. The connection is: Cds1 -&gt; H2S production -&gt; stimulation of respiration via cytochrome bd. This is a physiological effect rather than core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Importantly, H2S plays a key role in central metabolism by modulating the balance between oxidative phosphorylation and glycolysis, and it functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15525680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15525680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis functional network analysis by gl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0005829" data-r="PMID:15525680" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization identified by global subcellular proteomics profiling of M. tuberculosis. This is more specific than cytoplasm and is appropriate for this soluble PLP-dependent enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput subcellular proteomics study identified Cds1 in the cytosol fraction. Consistent with the protein being a soluble metabolic enzyme without signal peptide or transmembrane domains.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15525680" target="_blank" class="term-link">
+                                        PMID:15525680
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the identifications of 1044 proteins and their corresponding localizations in these compartments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14532352" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14532352
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic profiling of the membrane constituen...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0005886" data-r="PMID:14532352" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected in membrane proteomics study. This may represent peripheral membrane association or contamination from the abundant cytosolic pool. The protein lacks transmembrane domains or known membrane-anchoring motifs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While detected in membrane fraction by proteomics, this is likely peripheral association or contamination given the protein&#39;s characteristics. The primary localization is cytosolic. The HDA evidence from a membrane proteomics study should be retained but not considered as representing core localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14532352" target="_blank" class="term-link">
+                                        PMID:14532352
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">739 proteins have been identified by two or more distinct peptide sequences and have been characterized</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080146" target="_blank" class="term-link">
+                                    GO:0080146
+                                </a>
+                            </span>
+                            <span class="term-label">L-cysteine desulfhydrase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34439535
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mycobacterium tuberculosis H(2)S Functions as a Sink to Modu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O69652" data-a="GO:0080146" data-r="PMID:34439535" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the primary molecular function of Cds1 and should be annotated. GO:0080146 describes the catalysis of: L-cysteine + H2O = ammonia + pyruvate + hydrogen sulfide + H(+). This is exactly the reaction catalyzed by Cds1 as demonstrated by product identification via LC-MS/MS. Kinetic parameters: KM = 11.26 mM for cysteine, kcat = 78.71 sec(-1).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing annotations lack the specific molecular function term for this enzyme. GO:0080146 (L-cysteine desulfhydrase activity) precisely describes the catalyzed reaction. This is the most informative MF term for this enzyme and should be the primary molecular function annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                        PMID:34439535
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PLP-dependent L-cysteine desulfhydrase catalyzing beta-elimination of L-cysteine to produce hydrogen sulfide (H2S), pyruvate, and ammonia. This is the major H2S-producing enzyme in M. tuberculosis. The H2S produced serves as a sulfur recycling sink, returning sulfur atoms back to the cysteine biosynthetic pathway to maintain sulfur homeostasis. Kinetics: KM = 11.26 mM for cysteine, kcat = 78.71 sec(-1). Activity is inhibited by AOAA (PLP inhibitor) but NOT by PAG (cystathionine gamma-lyase inhibitor), confirming identity as a true cysteine desulfhydrase.</h3>
+                <span class="vote-buttons" data-g="O69652" data-a="FUNCTION: PLP-dependent L-cysteine desulfhydrase catalyzing ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080146" target="_blank" class="term-link">
+                            L-cysteine desulfhydrase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019450" target="_blank" class="term-link">
+                                L-cysteine catabolic process to pyruvate
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070814" target="_blank" class="term-link">
+                                hydrogen sulfide biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042762" target="_blank" class="term-link">
+                                regulation of sulfur metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                PMID:34439535
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                PMID:34439535
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                                PMID:34439535
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">H2S...functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference led to incorrect assignment of cysteine biosynthetic process</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Lyase keyword mapped to GO:0016829</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PLP binding transferred based on PALP domain</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alpha-amino acid metabolic process inferred</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytoplasm and L-cysteine catabolic process annotations</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14532352" target="_blank" class="term-link">
+                            PMID:14532352
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Comprehensive proteomic profiling of the membrane constituents of a Mycobacterium tuberculosis strain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv3684 detected in membrane fraction by mass spectrometry</div>
+                        
+                        <div class="finding-text">"739 proteins have been identified by two or more distinct peptide sequences and have been characterized"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15525680" target="_blank" class="term-link">
+                            PMID:15525680
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mycobacterium tuberculosis functional network analysis by global subcellular protein profiling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Rv3684 identified in cytosol fraction by subcellular proteomics</div>
+                        
+                        <div class="finding-text">"We report the identifications of 1044 proteins and their corresponding localizations in these compartments"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34439535" target="_blank" class="term-link">
+                            PMID:34439535
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mycobacterium tuberculosis H(2)S Functions as a Sink to Modulate Central Metabolism, Bioenergetics, and Drug Susceptibility.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb</div>
+                        
+                        <div class="finding-text">"We identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but does not eliminate, H2S production, suggesting the involvement of multiple genes in H2S production"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated cysteine desulfhydrase activity producing H2S and pyruvate</div>
+                        
+                        <div class="finding-text">"Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Showed PLP-dependence through AOAA inhibition</div>
+                        
+                        <div class="finding-text">"We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinetic parameters KM = 11.26 mM, kcat = 78.71 sec(-1)</div>
+                        
+                        <div class="finding-text">"we determined the Km of Rv3684 to be 11.26 ± 0.75 mM with a kcat of 78.71 ± 12.72 S−1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Delta-cds1 reduces H2S production and basal oxygen consumption</div>
+                        
+                        <div class="finding-text">"cds1 disruption reduces, but does not eliminate, H2S production"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">H2S stimulates respiration via cytochrome bd</div>
+                        
+                        <div class="finding-text">"maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">H2S modulates redox homeostasis (EGT, MSH levels)</div>
+                        
+                        <div class="finding-text">"Lastly, our data demonstrate that Cds1-generated H2S modulates the levels of the major redox couples, EGT and MSH."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cds1 likely eliminates toxic levels of cysteine</div>
+                        
+                        <div class="finding-text">"Cds1 can mitigate toxic levels of Cys by converting excess Cys into H2S"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Part of Rv3682-Rv3683-cds1 operon</div>
+                        
+                        <div class="finding-text">"cds1 is in an operon with rv3682 (ponA2) and rv3683"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MYCTU/cds1/cds1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research for cds1 gene function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine</div>
+                        
+                        <div class="finding-text">"Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What other enzymes contribute to H2S production in Mtb (since delta-cds1 does not completely eliminate H2S)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="Q: What other enzymes contribute to H2S production in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Cds1 regulated at the transcriptional or post-translational level under different growth conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="Q: Is Cds1 regulated at the transcriptional or post-t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the strain variation in H2S production?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="Q: What is the functional significance of the strain ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural characterization of Cds1 to understand substrate binding and catalytic mechanism</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Crystal structure will reveal active site architecture and substrate binding mode</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="EXPERIMENT: Structural characterization of Cds1 to understand ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Investigation of potential allosteric regulation of Cds1 activity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Cds1 activity may be regulated by metabolites or redox state</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="EXPERIMENT: Investigation of potential allosteric regulation o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identification of other H2S-producing enzymes through genetic screening</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Additional genes contribute to residual H2S production in delta-cds1</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="EXPERIMENT: Identification of other H2S-producing enzymes thro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vivo studies to assess Cds1 contribution to virulence and drug susceptibility</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Cds1-mediated H2S production affects Mtb survival in host</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O69652" data-a="EXPERIMENT: In vivo studies to assess Cds1 contribution to vir..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cds1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O69652" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-05T22:25:55.309842'<br />
+end_time: '2026-01-05T22:28:10.824816'<br />
+duration_seconds: 135.52<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: MYCTU<br />
+  gene_id: cds1<br />
+  gene_symbol: cds1<br />
+  uniprot_accession: O69652<br />
+  protein_description: 'RecName: Full=L-cysteine desulfhydrase Cds1 {ECO:0000255|HAMAP-Rule:MF_00868,<br />
+    ECO:0000303|PubMed:34439535}; EC=4.4.1.1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000269|PubMed:34439535};'<br />
+  gene_info: Name=cds1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000303|PubMed:34439535};<br />
+    OrderedLocusNames=Rv3684 {ECO:0000312|EMBL:CCP46508.1};<br />
+  organism_full: Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv).<br />
+  protein_family: Belongs to the cysteine synthase/cystathionine beta-<br />
+  protein_domains: Cds1. (IPR047586); Cys_Synth/Cystath_Beta-Synth. (IPR050214); TrpB-like_PALP.<br />
+    (IPR001926); TrpB-like_PALP_sf. (IPR036052); PALP (PF00291)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O69652</li>
+<li><strong>Protein Description:</strong> RecName: Full=L-cysteine desulfhydrase Cds1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000303|PubMed:34439535}; EC=4.4.1.1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000269|PubMed:34439535};</li>
+<li><strong>Gene Information:</strong> Name=cds1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000303|PubMed:34439535}; OrderedLocusNames=Rv3684 {ECO:0000312|EMBL:CCP46508.1};</li>
+<li><strong>Organism (full):</strong> Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv).</li>
+<li><strong>Protein Family:</strong> Belongs to the cysteine synthase/cystathionine beta-</li>
+<li><strong>Key Domains:</strong> Cds1. (IPR047586); Cys_Synth/Cystath_Beta-Synth. (IPR050214); TrpB-like_PALP. (IPR001926); TrpB-like_PALP_sf. (IPR036052); PALP (PF00291)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cds1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cds1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cds1</strong> (gene ID: cds1, UniProt: O69652) in MYCTU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O69652</li>
+<li><strong>Protein Description:</strong> RecName: Full=L-cysteine desulfhydrase Cds1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000303|PubMed:34439535}; EC=4.4.1.1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000269|PubMed:34439535};</li>
+<li><strong>Gene Information:</strong> Name=cds1 {ECO:0000255|HAMAP-Rule:MF_00868, ECO:0000303|PubMed:34439535}; OrderedLocusNames=Rv3684 {ECO:0000312|EMBL:CCP46508.1};</li>
+<li><strong>Organism (full):</strong> Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv).</li>
+<li><strong>Protein Family:</strong> Belongs to the cysteine synthase/cystathionine beta-</li>
+<li><strong>Key Domains:</strong> Cds1. (IPR047586); Cys_Synth/Cystath_Beta-Synth. (IPR050214); TrpB-like_PALP. (IPR001926); TrpB-like_PALP_sf. (IPR036052); PALP (PF00291)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "cds1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'cds1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>cds1</strong> (gene ID: cds1, UniProt: O69652) in MYCTU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan summary: We verified the target identity, attempted multiple literature searches with priority on 2023–2024 sources, but retrieved no accessible papers through the tools. Because the gene symbol “cds1” is potentially ambiguous across organisms and accessible literature for the specific Mycobacterium tuberculosis protein could not be obtained via the tools, we provide a partial report grounded in the UniProt entry provided and functional inference from established protein family/domain annotations. Where we discuss broader biological roles (e.g., H2S in M. tuberculosis), these are framed as inferences consistent with the enzyme class and domain membership rather than claims tied to specific studies.</p>
+<p>Verification of target identity and scope<br />
+- Gene/protein: cds1 (ordered locus Rv3684) in Mycobacterium tuberculosis (strain H37Rv). UniProt accession O69652. Enzyme name: L-cysteine desulfhydrase Cds1; EC 4.4.1.1. Protein family/domains: Cds1 (IPR047586); Cys_Synth/Cystath_Beta-Synth (IPR050214); TrpB-like_PALP (IPR001926); TrpB-like_PALP_sf (IPR036052); PFAM PALP (PF00291). The PALP superfamily membership indicates a pyridoxal 5′-phosphate (PLP)-dependent enzyme, consistent with cystathionine β-synthase/cysteine synthase fold enzymes. This matches the provided UniProt description. No alternate organism or unrelated “CDS1” symbols are considered in this report.</p>
+<p>Key concepts and current understanding<br />
+- Primary function (inferred): L-cysteine desulfhydrase (EC 4.4.1.1) catalyzes β-elimination of L-cysteine to produce hydrogen sulfide (H2S), pyruvate, and ammonia, using PLP as a cofactor. This reaction and product profile are canonical for cysteine desulfhydrases within the PLP-dependent fold family noted by the provided domain annotations. The Cys_Synth/Cystath_Beta-Synth superfamily and TrpB-like PLP domains (IPR001926; IPR036052; PF00291) support this enzymatic chemistry.<br />
+- Substrate specificity (inferred): The primary substrate is L-cysteine. Some PLP-dependent cysteine desulfhydrases in bacteria may also act on related sulfur-containing amino acids or analogs, but the strongest expectation for Cds1 is L-cysteine β-elimination.<br />
+- Cofactor and active site (inferred): PLP is covalently bound via a conserved lysine (Schiff base/internal aldimine) in PLP enzymes of the TrpB-like PLP fold. The presence of the PALP domain (PF00291) and TrpB-like PLP superfamily entries implies the typical catalytic lysine and motifs required for PLP binding and catalysis.<br />
+- Cellular localization (inferred): The enzyme is expected to be cytosolic in M. tuberculosis, as with most PLP-dependent metabolic enzymes of the cystathionine β-synthase/cysteine synthase family, unless a signal peptide or transmembrane segment is present (not indicated in the provided domain list).</p>
+<p>Pathway context and biology in M. tuberculosis (inferred)<br />
+- Metabolic pathway: Cds1 most plausibly participates in sulfur metabolism and cysteine catabolism by degrading L-cysteine to H2S, pyruvate, and ammonia. The reaction links sulfur flux to core carbon metabolism (pyruvate) and nitrogen metabolism (ammonia).<br />
+- H2S physiology (inferred from enzyme class and TB biology): Endogenously produced H2S in mycobacteria is associated with modulation of redox balance and respiratory chain electron flow. A dedicated cysteine desulfhydrase would be a major cellular source of H2S under cysteine-replete conditions, thus coupling sulfur availability to respiration and oxidative stress responses.</p>
+<p>Recent developments and latest research (tools-limited)<br />
+- Despite multiple tool-based searches prioritizing 2023–2024 literature, we were unable to retrieve accessible publications. Given the UniProt note citing PubMed:34439535 in the protein naming evidence, recent primary literature likely exists that biochemically characterizes M. tuberculosis Cds1 (Rv3684) as an L-cysteine desulfhydrase and connects it to H2S-mediated physiological effects. However, those sources could not be fetched through the tools in this session. Therefore, specific recent findings, URLs, and dates cannot be provided here.</p>
+<p>Current applications and real-world implementations (inferred/state of the field)<br />
+- Drug target potential: Enzymatic sources of H2S in bacterial pathogens are being explored as targets to modulate antibiotic susceptibility, respiration, and redox stress tolerance. By analogy with bacterial cysteine desulfhydrases, M. tuberculosis Cds1 may be considered a putative target for small-molecule inhibition to attenuate H2S production and potentially influence drug responses or host-pathogen interactions.<br />
+- Biomarker/diagnostics: H2S production or metabolic signatures of cysteine catabolism could, in principle, serve as functional readouts in culture-based diagnostics or phenotypic susceptibility testing, though specific validated implementations for Cds1 in M. tuberculosis are not available from the tools in this session.</p>
+<p>Expert opinions and authoritative perspectives (tools-limited)<br />
+- Given lack of accessible sources via the tools, we cannot quote or attribute expert commentary. Nevertheless, the enzyme’s domain architecture and EC assignment align with the consensus view that M. tuberculosis encodes PLP-dependent enzymes mediating H2S production from cysteine; such enzymes are commonly discussed as modulators of bacterial bioenergetics and redox physiology.</p>
+<p>Relevant statistics and data (tools-limited)<br />
+- Kinetic parameters, substrate ranges, mutant phenotypes (Δcds1), impacts on oxygen consumption, ATP levels, or antibiotic susceptibility in M. tuberculosis have been reported in primary studies in the field of TB H2S biology; however, the tools did not retrieve these datasets. As such, we refrain from stating numerical values without accessible citations.</p>
+<p>Conclusions (partial, based on UniProt and domain inference)<br />
+- Identity verification: cds1 (Rv3684), UniProt O69652, in M. tuberculosis H37Rv, annotated as L-cysteine desulfhydrase (EC 4.4.1.1) with PLP-dependent domains, is consistent with the cystathionine β-synthase/cysteine synthase superfamily. The family/domain assignments strongly support catalytic production of H2S, pyruvate, and ammonia from L-cysteine in the cytosol.<br />
+- Biological role: Cds1 likely contributes to sulfur metabolism and H2S-linked regulation of redox and respiration. Precise pathway integration, regulation, kinetics, and in vivo phenotypes require consultation of the underlying primary literature, which was not retrievable via the tools in this session.</p>
+<p>Limitations and next steps<br />
+- The gene symbol “cds1” is indeed ambiguous across taxa; this report is restricted to the M. tuberculosis H37Rv protein specified by UniProt O69652. Because our searches returned no retrievable sources, we recommend targeted follow-up using PubMed/Google Scholar for: “Mycobacterium tuberculosis Rv3684 Cds1 cysteine desulfhydrase hydrogen sulfide”, checking the cited PubMed record (PMID:34439535) in the UniProt evidence trail, and reviewing recent TB redox/bioenergetics literature for genetic and biochemical characterization of Cds1.</p>
+<p>Note: No context-linked citations are included because the tools did not return accessible documents. This answer is therefore explicitly marked as a partial report based on the UniProt entry and domain/family inference, per the instructions for cases with limited literature access.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cds1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O69652" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="notes-for-myctu-cds1-o69652">Notes for MYCTU cds1 (O69652)</h1>
+<h2 id="gene-summary">Gene Summary</h2>
+<ul>
+<li><strong>UniProt</strong>: O69652 (Reviewed Swiss-Prot)</li>
+<li><strong>Gene</strong>: cds1 (Rv3684)</li>
+<li><strong>Protein</strong>: L-cysteine desulfhydrase Cds1</li>
+<li><strong>EC</strong>: 4.4.1.1</li>
+<li><strong>Organism</strong>: Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv)</li>
+</ul>
+<h2 id="panther-family">PANTHER Family</h2>
+<p>This gene belongs to PANTHER subfamily <strong>PTHR10314:SF135</strong> within family <strong>PTHR10314</strong>.</p>
+<p>See family-level analysis: <a href="../../../interpro/panther/PTHR10314/PTHR10314-notes.md">interpro/panther/PTHR10314/PTHR10314-notes.md</a></p>
+<h3 id="key-finding-iba-annotation-error">Key Finding: IBA Annotation Error</h3>
+<p>The IBA annotation <strong>GO:0019344 (L-cysteine biosynthetic process)</strong> is INCORRECT for this gene.</p>
+<ul>
+<li><strong>Reason</strong>: SF135 (Cds1 subfamily) performs cysteine CATABOLISM (EC 4.4.1.1), not biosynthesis</li>
+<li><strong>Branch length</strong>: 0.528 from root - longest branch, indicating significant functional divergence</li>
+<li><strong>Correct annotations</strong>: GO:0019450 (cysteine catabolic process), GO:0080146 (L-cysteine desulfhydrase activity)</li>
+</ul>
+<h3 id="important-m-tuberculosis-has-multiple-cysteine-related-enzymes">Important: M. tuberculosis has multiple cysteine-related enzymes</h3>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Subfamily</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>cds1 (Rv3684)</strong></td>
+<td>O69652</td>
+<td>SF135</td>
+<td>Cysteine DESULFHYDRASE (catabolism)</td>
+</tr>
+<tr>
+<td>cysK1 (Rv2334)</td>
+<td>P9WP55</td>
+<td>SF194</td>
+<td>Cysteine SYNTHASE (biosynthesis)</td>
+</tr>
+<tr>
+<td>cysM (Rv1336)</td>
+<td>P9WP53</td>
+<td>SF162</td>
+<td>Cysteine SYNTHASE (biosynthesis)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gene-specific-notes">Gene-Specific Notes</h2>
+<h3 id="experimental-evidence-pmid34439535-kunota-et-al-2021">Experimental Evidence (PMID:34439535 - Kunota et al. 2021)</h3>
+<ol>
+<li>Identified Rv3684 (Cds1) as an <strong>H2S-producing enzyme</strong> in Mtb</li>
+<li>Δcds1 disruption significantly reduces H2S production in all media tested</li>
+<li>H2S production confirmed using lead acetate assay, BiCl3 assay, and amperometric microsensor</li>
+<li>Products identified by LC-MS/MS: H2S + pyruvate (confirms desulfhydrase activity)</li>
+</ol>
+<h3 id="biochemical-characterization">Biochemical Characterization</h3>
+<ul>
+<li><strong>Kinetics</strong>: KM = 11.26 mM for cysteine, kcat = 78.71 sec-1</li>
+<li><strong>Cofactor</strong>: PLP (pyridoxal 5'-phosphate) at Lys67</li>
+<li><strong>Inhibitors</strong>: AOAA (PLP inhibitor) - YES; PAG (CGL inhibitor) - NO</li>
+<li>This confirms Cds1 is a true cysteine desulfhydrase, NOT a cystathionine gamma-lyase</li>
+</ul>
+<h3 id="physiological-role">Physiological Role</h3>
+<ol>
+<li><strong>H2S stimulates respiration</strong> via cytochrome bd</li>
+<li>Modulates balance between respiration and glycolysis</li>
+<li>Contributes to <strong>redox homeostasis</strong> (affects ergothioneine and mycothiol levels)</li>
+<li>Δcds1 shows 40% reduction in basal oxygen consumption rate</li>
+<li>Δcds1 cells grow poorly with 4 mM cysteine (enzyme eliminates toxic cysteine)</li>
+<li>Δcds1 shows <strong>increased survival</strong> after clofazimine or rifampicin treatment</li>
+<li>H2S may contribute to antibiotic sensitivity</li>
+</ol>
+<h3 id="drug-target-potential">Drug Target Potential</h3>
+<p>The finding that Δcds1 shows increased antibiotic sensitivity suggests Cds1 could be a drug target for TB treatment in combination with existing antibiotics.</p>
+<hr />
+<p><em>Last updated: 2026-01-06</em></p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O69652
+gene_symbol: cds1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:83332
+  label: Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv)
+description: &gt;-
+  Cds1 (Rv3684) is an L-cysteine desulfhydrase (EC 4.4.1.1) that catalyzes the
+  PLP-dependent beta-elimination of L-cysteine to produce hydrogen sulfide (H2S),
+  pyruvate, and ammonia. It is a major source of endogenous H2S in M. tuberculosis.
+  The H2S produced stimulates respiration primarily via cytochrome bd, modulates
+  the balance between oxidative phosphorylation and glycolysis, contributes to
+  redox homeostasis by affecting ergothioneine (EGT) and mycothiol (MSH) levels,
+  and influences drug susceptibility. The enzyme likely also functions to eliminate
+  toxic levels of cysteine. Kinetic parameters: KM = 11.26 mM for cysteine,
+  kcat = 78.71 sec(-1). Activity is inhibited by aminooxyacetic acid (AOAA),
+  a PLP inhibitor, but NOT by DL-propargylglycine (PAG), a cystathionine gamma-lyase
+  inhibitor, confirming its identity as a cysteine desulfhydrase rather than a
+  cystathionine gamma-lyase. Part of the Rv3682-Rv3683-cds1 operon.
+existing_annotations:
+- term:
+    id: GO:0019344
+    label: cysteine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT. Cds1 is an L-cysteine desulfhydrase that
+      catalyzes L-cysteine CATABOLISM, not biosynthesis. The enzyme degrades
+      cysteine to produce H2S, pyruvate, and ammonia (PMID:34439535). The IBA
+      annotation derives from GO:0019344 being annotated at the root node
+      (PTN000034104) of PANTHER family PTHR10314 and propagated to all descendants,
+      including subfamily SF135 (Cds1) which has the opposite function.
+    action: REMOVE
+    reason: &gt;-
+      IBA propagation error from PANTHER family PTHR10314. GO:0019344 is annotated
+      at the root node but SF135 (Cds1 subfamily) underwent neo-functionalization:
+      (1) Active site motif differs: SF135 has ASSGST vs PTSGNTG in synthases;
+      (2) Only 24% sequence identity with cysteine synthases (vs 43% between CysK/CysM);
+      (3) Longest branch length (0.528) from root indicates greatest divergence;
+      (4) Different EC: 4.4.1.1 (desulfhydrase) vs 2.5.1.47 (synthase);
+      (5) Opposite reaction: L-cysteine → H2S + pyruvate (catabolism), not biosynthesis.
+      See family analysis: interpro/panther/PTHR10314/PTHR10314-notes.md
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+      - reference_id: file:MYCTU/cds1/cds1-deep-research-falcon.md
+        supporting_text: &#34;Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine&#34;
+      - reference_id: file:interpro/panther/PTHR10314/PTHR10314-notes.md
+        supporting_text: &#34;SF135 (Cds1) has a distinct active site signature motif (ASSGST) vs synthases (PTSGNTG); SF135 shares only ~24% identity with synthases; longest branch length (0.528) indicates neo-functionalization&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is consistent with what is expected for this
+      PLP-dependent metabolic enzyme. UniProt assigns cytoplasm localization
+      based on sequence features and family membership. The more specific
+      annotation to cytosol (GO:0005829) is also present with HDA evidence
+      from PMID:15525680.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is appropriate for this soluble PLP-dependent
+      enzyme. There is no signal peptide or transmembrane domain. Consistent
+      with HDA evidence from subcellular proteomics (PMID:15525680) showing
+      cytosolic localization.
+    supported_by:
+      - reference_id: PMID:15525680
+        supporting_text: &#34;We report the identifications of 1044 proteins and their corresponding localizations in these compartments&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This IEA annotation is redundant with the IBA annotation above but is
+      acceptable. Cytoplasmic localization is correct based on the protein&#39;s
+      properties as a soluble metabolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is appropriate and consistent with experimental
+      HDA evidence from subcellular proteomics.
+- term:
+    id: GO:0016829
+    label: lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Lyase activity is correct but very general. Cds1 is indeed a lyase (carbon-sulfur
+      lyase) that catalyzes a beta-elimination reaction. However, there is a much more
+      specific and informative term available: GO:0080146 (L-cysteine desulfhydrase
+      activity).
+    action: MODIFY
+    reason: &gt;-
+      While technically correct, this term is too general. The specific molecular
+      function term GO:0080146 (L-cysteine desulfhydrase activity) should be used
+      instead, which precisely describes the catalyzed reaction: L-cysteine + H2O =
+      ammonia + pyruvate + hydrogen sulfide + H(+). This is experimentally demonstrated
+      in PMID:34439535.
+    proposed_replacement_terms:
+      - id: GO:0080146
+        label: L-cysteine desulfhydrase activity
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+- term:
+    id: GO:0019450
+    label: L-cysteine catabolic process to pyruvate
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation is correct and represents a core function of Cds1. The enzyme
+      catalyzes the conversion of L-cysteine to pyruvate (plus H2S and ammonia).
+      This is supported by IDA evidence from PMID:34439535 (see separate entry).
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally validated by PMID:34439535. Products were identified by LC-MS/MS
+      confirming pyruvate as a product of the cysteine desulfhydrase reaction.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      PLP binding is correct. Cds1 contains a PLP-binding site at Lys67 and belongs
+      to the TrpB-like PALP fold family. PLP-dependence is experimentally confirmed
+      in PMID:34439535 through inhibition by AOAA.
+    action: ACCEPT
+    reason: &gt;-
+      PLP-dependence is experimentally confirmed. PMID:34439535 shows that activity
+      is inhibited by aminooxyacetic acid (AOAA), a PLP inhibitor. UniProt annotates
+      the PLP-binding lysine at position 67.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.&#34;
+- term:
+    id: GO:1901605
+    label: alpha-amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      This annotation is correct but very general. Cds1 does participate in amino
+      acid metabolism by catabolizing L-cysteine. The more specific term GO:0019450
+      (L-cysteine catabolic process to pyruvate) is preferred and already annotated.
+    action: ACCEPT
+    reason: &gt;-
+      Technically correct as a parent term of the more specific cysteine catabolic
+      process. Acceptable as a broader IEA annotation alongside the more specific terms.
+- term:
+    id: GO:0019450
+    label: L-cysteine catabolic process to pyruvate
+  evidence_type: IDA
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This IDA annotation is well-supported by experimental evidence. Kunota et al.
+      (2021) used LC-MS/MS to identify the products of the Cds1-catalyzed reaction
+      and confirmed pyruvate as a major product. This is a core function annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Directly demonstrated by enzymatic product identification using LC-MS/MS
+      in PMID:34439535. Pyruvate is one of the three products of the L-cysteine
+      desulfhydrase reaction (along with H2S and ammonia).
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IDA
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      PLP binding is experimentally demonstrated through inhibitor studies.
+      AOAA (aminooxyacetic acid), a PLP inhibitor, blocks activity, while PAG
+      (DL-propargylglycine), which specifically inhibits cystathionine gamma-lyase,
+      does not affect activity.
+    action: ACCEPT
+    reason: &gt;-
+      Inhibition by AOAA (a PLP-dependent enzyme inhibitor) but not PAG demonstrates
+      PLP-dependence of the enzyme activity. This is supported by the presence of
+      the PALP domain (PF00291) and TrpB-like PLP fold.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.&#34;
+- term:
+    id: GO:0042762
+    label: regulation of sulfur metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This annotation reflects the role of Cds1-generated H2S in recycling sulfur
+      back to cysteine. The delta-cds1 mutant shows altered sulfur metabolism. H2S
+      functions as a sink to recycle sulfur atoms back to cysteine to maintain
+      sulfur homeostasis.
+    action: ACCEPT
+    reason: &gt;-
+      PMID:34439535 demonstrates that H2S produced by Cds1 functions as a sink
+      to recycle sulfur atoms back to cysteine, thereby regulating sulfur
+      homeostasis in Mtb.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Importantly, H2S plays a key role in central metabolism by modulating the balance between oxidative phosphorylation and glycolysis, and it functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis&#34;
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IMP
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This annotation is supported by mutant phenotype data. The delta-cds1 mutant
+      shows decreased levels of the redox couples ergothioneine (EGT) and mycothiol
+      (MSH). H2S modulates redox homeostasis and can function as either a pro-oxidant
+      or antioxidant depending on conditions.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While the role in redox homeostasis is experimentally demonstrated, this is
+      a downstream physiological effect of H2S production rather than the primary
+      enzymatic function. The core function is cysteine catabolism/H2S production;
+      redox regulation is a consequence.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Lastly, our data demonstrate that Cds1-generated H2S modulates the levels of the major redox couples, EGT and MSH.&#34;
+- term:
+    id: GO:0070814
+    label: hydrogen sulfide biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This is a core function annotation. Cds1 is identified as the major
+      H2S-producing enzyme in Mtb. H2S production was measured using multiple
+      methods (lead acetate assay, BiCl3 assay, amperometric microsensor) and
+      delta-cds1 significantly reduces but does not eliminate H2S production.
+    action: ACCEPT
+    reason: &gt;-
+      Directly demonstrated by multiple assays. &#34;We identified Rv3684 (Cds1) as
+      an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but
+      does not eliminate, H2S production.&#34; H2S production is a primary output
+      of the cysteine desulfhydrase reaction.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;We identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but does not eliminate, H2S production, suggesting the involvement of multiple genes in H2S production&#34;
+      - reference_id: PMID:34439535
+        supporting_text: &#34;maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd&#34;
+- term:
+    id: GO:1901857
+    label: positive regulation of cellular respiration
+  evidence_type: IMP
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This annotation reflects the downstream physiological effect of H2S production.
+      The delta-cds1 mutant shows 40% reduction in basal oxygen consumption rate. H2S
+      stimulates respiration primarily via cytochrome bd.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While experimentally demonstrated, this represents a downstream effect of
+      H2S production rather than the primary enzymatic function. The connection
+      is: Cds1 -&gt; H2S production -&gt; stimulation of respiration via cytochrome bd.
+      This is a physiological effect rather than core function.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd&#34;
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Importantly, H2S plays a key role in central metabolism by modulating the balance between oxidative phosphorylation and glycolysis, and it functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: HDA
+  original_reference_id: PMID:15525680
+  review:
+    summary: &gt;-
+      Cytosolic localization identified by global subcellular proteomics profiling
+      of M. tuberculosis. This is more specific than cytoplasm and is appropriate
+      for this soluble PLP-dependent enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      High-throughput subcellular proteomics study identified Cds1 in the cytosol
+      fraction. Consistent with the protein being a soluble metabolic enzyme
+      without signal peptide or transmembrane domains.
+    supported_by:
+      - reference_id: PMID:15525680
+        supporting_text: &#34;We report the identifications of 1044 proteins and their corresponding localizations in these compartments&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: HDA
+  original_reference_id: PMID:14532352
+  review:
+    summary: &gt;-
+      Detected in membrane proteomics study. This may represent peripheral
+      membrane association or contamination from the abundant cytosolic pool.
+      The protein lacks transmembrane domains or known membrane-anchoring motifs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While detected in membrane fraction by proteomics, this is likely peripheral
+      association or contamination given the protein&#39;s characteristics. The
+      primary localization is cytosolic. The HDA evidence from a membrane proteomics
+      study should be retained but not considered as representing core localization.
+    additional_reference_ids:
+      - PMID:15525680
+    supported_by:
+      - reference_id: PMID:14532352
+        supporting_text: &#34;739 proteins have been identified by two or more distinct peptide sequences and have been characterized&#34;
+# NEW annotation - L-cysteine desulfhydrase activity
+- term:
+    id: GO:0080146
+    label: L-cysteine desulfhydrase activity
+  evidence_type: IDA
+  original_reference_id: PMID:34439535
+  review:
+    summary: &gt;-
+      This is the primary molecular function of Cds1 and should be annotated.
+      GO:0080146 describes the catalysis of: L-cysteine + H2O = ammonia + pyruvate +
+      hydrogen sulfide + H(+). This is exactly the reaction catalyzed by Cds1 as
+      demonstrated by product identification via LC-MS/MS. Kinetic parameters:
+      KM = 11.26 mM for cysteine, kcat = 78.71 sec(-1).
+    action: NEW
+    reason: &gt;-
+      The existing annotations lack the specific molecular function term for this
+      enzyme. GO:0080146 (L-cysteine desulfhydrase activity) precisely describes
+      the catalyzed reaction. This is the most informative MF term for this enzyme
+      and should be the primary molecular function annotation.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+      - reference_id: PMID:34439535
+        supporting_text: &#34;We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Phylogenetic inference led to incorrect assignment of cysteine biosynthetic process
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Lyase keyword mapped to GO:0016829
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings:
+    - statement: PLP binding transferred based on PALP domain
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+    - statement: Alpha-amino acid metabolic process inferred
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Cytoplasm and L-cysteine catabolic process annotations
+- id: PMID:14532352
+  title: Comprehensive proteomic profiling of the membrane constituents of a Mycobacterium tuberculosis strain.
+  findings:
+    - statement: Rv3684 detected in membrane fraction by mass spectrometry
+      supporting_text: &#34;739 proteins have been identified by two or more distinct peptide sequences and have been characterized&#34;
+- id: PMID:15525680
+  title: Mycobacterium tuberculosis functional network analysis by global subcellular protein profiling.
+  findings:
+    - statement: Rv3684 identified in cytosol fraction by subcellular proteomics
+      supporting_text: &#34;We report the identifications of 1044 proteins and their corresponding localizations in these compartments&#34;
+- id: PMID:34439535
+  title: Mycobacterium tuberculosis H(2)S Functions as a Sink to Modulate Central Metabolism, Bioenergetics, and Drug Susceptibility.
+  findings:
+    - statement: Identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb
+      supporting_text: &#34;We identified Rv3684 (Cds1) as an H2S-producing enzyme in Mtb and show that cds1 disruption reduces, but does not eliminate, H2S production, suggesting the involvement of multiple genes in H2S production&#34;
+    - statement: Demonstrated cysteine desulfhydrase activity producing H2S and pyruvate
+      supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+    - statement: Showed PLP-dependence through AOAA inhibition
+      supporting_text: &#34;We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.&#34;
+    - statement: Kinetic parameters KM = 11.26 mM, kcat = 78.71 sec(-1)
+      supporting_text: &#34;we determined the Km of Rv3684 to be 11.26 ± 0.75 mM with a kcat of 78.71 ± 12.72 S−1&#34;
+    - statement: Delta-cds1 reduces H2S production and basal oxygen consumption
+      supporting_text: &#34;cds1 disruption reduces, but does not eliminate, H2S production&#34;
+    - statement: H2S stimulates respiration via cytochrome bd
+      supporting_text: &#34;maintains bioenergetic homeostasis by stimulating respiration primarily via cytochrome bd&#34;
+    - statement: H2S modulates redox homeostasis (EGT, MSH levels)
+      supporting_text: &#34;Lastly, our data demonstrate that Cds1-generated H2S modulates the levels of the major redox couples, EGT and MSH.&#34;
+    - statement: Cds1 likely eliminates toxic levels of cysteine
+      supporting_text: &#34;Cds1 can mitigate toxic levels of Cys by converting excess Cys into H2S&#34;
+    - statement: Part of Rv3682-Rv3683-cds1 operon
+      supporting_text: &#34;cds1 is in an operon with rv3682 (ponA2) and rv3683&#34;
+- id: file:MYCTU/cds1/cds1-deep-research-falcon.md
+  title: Deep research for cds1 gene function
+  findings:
+    - statement: Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine
+      supporting_text: &#34;Cds1 is a PLP-dependent L-cysteine desulfhydrase that produces H2S, pyruvate, and ammonia from L-cysteine&#34;
+core_functions:
+  - description: &gt;-
+      PLP-dependent L-cysteine desulfhydrase catalyzing beta-elimination of
+      L-cysteine to produce hydrogen sulfide (H2S), pyruvate, and ammonia.
+      This is the major H2S-producing enzyme in M. tuberculosis. The H2S
+      produced serves as a sulfur recycling sink, returning sulfur atoms
+      back to the cysteine biosynthetic pathway to maintain sulfur homeostasis.
+      Kinetics: KM = 11.26 mM for cysteine, kcat = 78.71 sec(-1). Activity is
+      inhibited by AOAA (PLP inhibitor) but NOT by PAG (cystathionine gamma-lyase
+      inhibitor), confirming identity as a true cysteine desulfhydrase.
+    supported_by:
+      - reference_id: PMID:34439535
+        supporting_text: &#34;Identification of the enzymatic products indicates that Cds1 is a cysteine desulfhydrase that generates H2S and pyruvate from Cys.&#34;
+      - reference_id: PMID:34439535
+        supporting_text: &#34;We showed that this activity is PLP-dependent, is inhibited by AOAA and not PAG, and uses Cys as a sulfur source.&#34;
+      - reference_id: PMID:34439535
+        supporting_text: &#34;H2S...functions as a sink to recycle sulfur atoms back to cysteine to maintain sulfur homeostasis&#34;
+    molecular_function:
+      id: GO:0080146
+      label: L-cysteine desulfhydrase activity
+    directly_involved_in:
+      - id: GO:0019450
+        label: L-cysteine catabolic process to pyruvate
+      - id: GO:0070814
+        label: hydrogen sulfide biosynthetic process
+      - id: GO:0042762
+        label: regulation of sulfur metabolic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+proposed_new_terms: []
+suggested_questions:
+  - question: What other enzymes contribute to H2S production in Mtb (since delta-cds1 does not completely eliminate H2S)?
+  - question: Is Cds1 regulated at the transcriptional or post-translational level under different growth conditions?
+  - question: What is the functional significance of the strain variation in H2S production?
+suggested_experiments:
+  - description: Structural characterization of Cds1 to understand substrate binding and catalytic mechanism
+    hypothesis: Crystal structure will reveal active site architecture and substrate binding mode
+  - description: Investigation of potential allosteric regulation of Cds1 activity
+    hypothesis: Cds1 activity may be regulated by metabolites or redox state
+  - description: Identification of other H2S-producing enzymes through genetic screening
+    hypothesis: Additional genes contribute to residual H2S production in delta-cds1
+  - description: In vivo studies to assess Cds1 contribution to virulence and drug susceptibility
+    hypothesis: Cds1-mediated H2S production affects Mtb survival in host
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
