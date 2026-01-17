@@ -25,7 +25,15 @@ just validate human GENE
 ---
 # STATUS
 
-**Project statistics (2025-12-31 - Session Complete):**
+**Project statistics (2026-01-15 - Cyberian batch processing):**
+- Total genes in project: 7,594
+- Genes with gene folders: 325
+- Genes with falcon deep research: 207
+- Genes with cyberian deep research: 10 (ABCB7 completed 2026-01-15, 284 in queue)
+- Batch processing: Running sequentially (~17 min/gene)
+- Estimated completion: ~80 hours for 284 genes
+
+**Previous statistics (2025-12-31 - Session Complete):**
 - Total genes in project: 7,594
 - Genes with gene folders: 1,806 (batches 1-30+, 23.8%)
 - Genes with falcon deep research: 208 (early batches)
@@ -56,6 +64,38 @@ SOCS5, SYNGAP1, RASA4, RASAL3, NF1, RASAL1, RASA1, RASA2, THBS4, THBS2, COMP, IS
 **Note on validation warnings:** The validator reports low "supporting_text coverage" for these reviews, but manual inspection shows they contain comprehensive `supported_by` blocks referencing deep research files and PMIDs. The validator may be counting annotations without inline supporting_text differently from annotations with full supported_by reference blocks.
 
 # NOTES
+
+## 2026-01-15 (Cyberian Deep Research Batch Processing)
+
+### **Session Summary**
+- Started cyberian server (`uv run cyberian server start claude --skip-permissions`)
+- Identified 285 genes in human folder needing cyberian deep research
+- Created batch processing script: `scripts/batch_cyberian_research.sh`
+- Successfully completed first gene: ABCB7 (17 minutes, 31KB output)
+- Started sequential batch processing for remaining 284 genes
+
+### **Technical Notes**
+- Cyberian server runs on port 3284, can only process one job at a time
+- Each gene takes approximately 17 minutes to complete
+- Batch script runs in background: `nohup ./scripts/batch_cyberian_research.sh > /tmp/batch_cyberian.log 2>&1 &`
+- Progress tracked in: `/tmp/batch_cyberian_progress.log`
+
+### **To Monitor Progress**
+```bash
+# Check current progress
+tail -10 /tmp/batch_cyberian_progress.log
+
+# Count completed cyberian files
+find genes/human/ -name "*-deep-research-cyberian.md" | wc -l
+
+# Check server status
+curl -s http://localhost:3284/
+```
+
+### **Stats at Session Start**
+- Gene folders with uniprot: 285
+- Existing cyberian files: 9
+- Existing falcon files: 207
 
 ## 2025-12-31 (Session 3d - Massive Scaling to 50 Batches - COMPLETED)
 

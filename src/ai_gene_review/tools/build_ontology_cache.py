@@ -7,11 +7,10 @@ ontology labels change upstream.
 """
 
 import json
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 import pandas as pd
 import yaml

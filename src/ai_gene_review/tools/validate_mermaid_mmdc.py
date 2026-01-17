@@ -4,7 +4,6 @@
 This validator uses the official mermaid-cli (mmdc) parser for accurate validation.
 Requires @mermaid-js/mermaid-cli to be installed via npm.
 """
-import json
 import re
 import subprocess
 import sys
@@ -129,7 +128,7 @@ def validate_file(file_path: Path, puppeteer_config: Optional[Path] = None) -> b
         print(f"  Summary: {errors}/{len(blocks)} blocks have errors")
         return False
     else:
-        print(f"  Summary: All blocks valid!")
+        print("  Summary: All blocks valid!")
         return True
 
 
@@ -200,7 +199,7 @@ def main():
             print(f"\n✅ All mermaid blocks in {len(files_with_mermaid)} files are valid!")
             sys.exit(0)
         else:
-            print(f"\n❌ Some mermaid blocks have validation errors")
+            print("\n❌ Some mermaid blocks have validation errors")
             sys.exit(1)
     else:
         print(f"Error: {path} is not a file or directory")

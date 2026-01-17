@@ -37,7 +37,6 @@ from linkml.validator import Validator as LinkMLValidator
 from linkml_term_validator.plugins import BindingValidationPlugin
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text_validator import (
-    SupportingTextValidator,
     SupportingTextSubstringValidator,
 )
 

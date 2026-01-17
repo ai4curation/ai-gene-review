@@ -9,7 +9,6 @@ import yaml
 
 from ai_gene_review.validation import (
     TermValidator,
-    TermValidationResult,
     validate_gene_review,
     ValidationSeverity,
 )

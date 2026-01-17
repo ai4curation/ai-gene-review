@@ -5,7 +5,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import pytest
 
 from ai_gene_review.etl.rule_export import (
     COLUMNS,

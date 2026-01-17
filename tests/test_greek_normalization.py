@@ -185,36 +185,36 @@ class TestChemicalIonNotation:
 
     def test_calcium_ion_notation(self, validator):
         """Test calcium ion notation with spaces."""
-        assert validator.is_editorial_bracket("Ca 2+ ") == False
-        assert validator.is_editorial_bracket("Ca 2+") == False
-        assert validator.is_editorial_bracket("Ca2+") == False
+        assert not validator.is_editorial_bracket("Ca 2+ ")
+        assert not validator.is_editorial_bracket("Ca 2+")
+        assert not validator.is_editorial_bracket("Ca2+")
 
     def test_common_ion_notation(self, validator):
         """Test common biological ions."""
         # Common cations
-        assert validator.is_editorial_bracket("Mg 2+ ") == False
-        assert validator.is_editorial_bracket("Fe 3+ ") == False
-        assert validator.is_editorial_bracket("Na+") == False
-        assert validator.is_editorial_bracket("K+") == False
-        assert validator.is_editorial_bracket("H+") == False
+        assert not validator.is_editorial_bracket("Mg 2+ ")
+        assert not validator.is_editorial_bracket("Fe 3+ ")
+        assert not validator.is_editorial_bracket("Na+")
+        assert not validator.is_editorial_bracket("K+")
+        assert not validator.is_editorial_bracket("H+")
 
         # Common anions
-        assert validator.is_editorial_bracket("Cl-") == False
-        assert validator.is_editorial_bracket("OH-") == False
+        assert not validator.is_editorial_bracket("Cl-")
+        assert not validator.is_editorial_bracket("OH-")
 
     def test_complex_ions(self, validator):
         """Test complex polyatomic ions."""
-        assert validator.is_editorial_bracket("NH4+") == False
-        assert validator.is_editorial_bracket("SO4 2-") == False
-        assert validator.is_editorial_bracket("PO4 3-") == False
-        assert validator.is_editorial_bracket("CO3 2-") == False
+        assert not validator.is_editorial_bracket("NH4+")
+        assert not validator.is_editorial_bracket("SO4 2-")
+        assert not validator.is_editorial_bracket("PO4 3-")
+        assert not validator.is_editorial_bracket("CO3 2-")
 
     def test_editorial_content_still_detected(self, validator):
         """Ensure editorial content is still correctly identified."""
-        assert validator.is_editorial_bracket("The protein") == True
-        assert validator.is_editorial_bracket("important") == True
-        assert validator.is_editorial_bracket("according to studies") == True
-        assert validator.is_editorial_bracket("cytoplasmic") == True
+        assert validator.is_editorial_bracket("The protein")
+        assert validator.is_editorial_bracket("important")
+        assert validator.is_editorial_bracket("according to studies")
+        assert validator.is_editorial_bracket("cytoplasmic")
 
     def test_calcium_in_full_text(self, validator):
         """Test that [Ca 2+ ] is preserved in full supporting text."""
@@ -235,7 +235,7 @@ class TestChemicalIonNotation:
         is_valid, error_msg = validator.validate_substring_match(query, source)
 
         # Should be valid after the fix
-        assert is_valid == True, f"Validation failed: {error_msg}"
+        assert is_valid, f"Validation failed: {error_msg}"
 
 
 class TestUnicodeQuoteNormalization:
@@ -295,7 +295,7 @@ class TestUnicodeQuoteNormalization:
         is_valid, error_msg = validator.validate_substring_match(yaml_text, pub_text)
 
         # Should be valid after quote normalization
-        assert is_valid == True, f"Validation failed: {error_msg}"
+        assert is_valid, f"Validation failed: {error_msg}"
 
     def test_low_9_quotation_marks(self, validator):
         """Test normalization of low-9 quotation marks (used in some languages)."""
@@ -320,7 +320,7 @@ class TestUnicodeQuoteNormalization:
         is_valid, error_msg = validator.validate_substring_match(yaml_text, pub_text)
 
         # Should be valid after normalization
-        assert is_valid == True, f"Validation failed: {error_msg}"
+        assert is_valid, f"Validation failed: {error_msg}"
 
 
 if __name__ == "__main__":

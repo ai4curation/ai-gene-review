@@ -80,6 +80,15 @@ deep-research-falcon organism gene_id *args="":
 deep-research-cyberian organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
 
+# Deep research using Codex via agentapi (yolo mode)
+# Uses cyberian provider with agent_type=codex for autonomous research
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-codex human TP53
+#   just deep-research-codex METEA C5B1I4 --alias mllA
+deep-research-codex organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}

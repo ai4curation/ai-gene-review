@@ -1,7 +1,7 @@
 """GO Slim mapper for organizing GO terms into hierarchical categories."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 from oaklib import get_adapter
 from oaklib.datamodels.vocabulary import IS_A
 
@@ -60,7 +60,7 @@ class GOSlimMapper:
                     label = self._go_adapter.label(term_id)
                     if label:
                         self._term_labels[term_id] = label
-        except Exception as e:
+        except Exception:
             # If we can't load slims dynamically, use a default set
             self._load_default_slim_terms()
     

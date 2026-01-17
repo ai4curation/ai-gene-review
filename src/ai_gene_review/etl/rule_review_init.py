@@ -5,7 +5,7 @@ that include all necessary fields and TODO placeholders for AI-assisted review.
 """
 
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Union
 import yaml
 from ai_gene_review.etl.arba import ARBAClient
 from ai_gene_review.etl.unirule import UniRuleClient
@@ -42,6 +42,7 @@ def init_rule_review(
         PosixPath('rules/arba/ARBA00026249/ARBA00026249-review.yaml')
     """
     # Determine rule type from ID
+    client: Union[ARBAClient, UniRuleClient]
     if rule_id.startswith('ARBA'):
         rule_type = 'ARBA'
         client = ARBAClient(cache_dir=cache_dir)
@@ -70,6 +71,8 @@ def init_rule_review(
     if not enriched_path.exists():
         print(f"Fetching rule {rule_id}...")
         rule = client.fetch_rule(rule_id)
+        if rule is None:
+            raise ValueError(f"Rule {rule_id} not found")
 
         print(f"Enriching rule {rule_id}...")
         enriched_rule = enrich_rule_json(rule.to_json(), enricher=None)
@@ -91,7 +94,7 @@ def init_rule_review(
         yaml.dump(review_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
     print(f"✓ Created {review_path}")
-    print(f"\nNext steps:")
+    print("\nNext steps:")
     print(f"  1. Run: just analyze-rule {rule_id}")
     print(f"  2. Run: just sync-rule-review-single {rule_id}")
     print(f"  3. Run: just rules-deep-research-perplexity {rule_id}")
