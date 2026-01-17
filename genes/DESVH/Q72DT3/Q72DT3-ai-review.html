@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aprB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aprB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q72DT3" target="_blank" class="term-link">
+                        Q72DT3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris) Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aprB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q72DT3" data-a="DESCRIPTION: AprB is the beta subunit of adenylylsulfate (APS) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AprB is the beta subunit of adenylylsulfate (APS) reductase (EC 1.8.99.2) in the sulfate-reducing bacterium Desulfovibrio vulgaris Hildenborough. The AprAB heterodimer catalyzes the two-electron reduction of adenosine 5&#39;-phosphosulfate (APS) to sulfite and AMP, a central step in dissimilatory sulfate reduction. AprB is a small ferredoxin-like protein containing two [4Fe-4S] clusters that function as an intramolecular electron relay, transferring electrons from the membrane-associated QmoABC complex to the FAD cofactor in the catalytic alpha subunit AprA. AprB is a soluble cytoplasmic protein that transiently interacts with the membrane Qmo complex during electron transfer (KD approximately 90 nM).</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009973" target="_blank" class="term-link">
+                                    GO:0009973
+                                </a>
+                            </span>
+                            <span class="term-label">adenylyl-sulfate reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0009973" data-r="GO_REF:0000003" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is derived from EC number mapping (EC:1.8.99.2). AprB is indeed a subunit of the APS reductase enzyme, but AprB itself is the electron-transfer subunit containing two [4Fe-4S] clusters, not the catalytic subunit. The catalytic activity (APS reduction to sulfite and AMP) resides in AprA which contains the FAD cofactor. AprB&#39;s function is to relay electrons to AprA&#39;s FAD active site (Meyer &amp; Kuever 2007, Meyer &amp; Kuever 2008).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While AprB is essential for APS reductase function, the catalytic activity per se is mediated by the FAD-containing AprA subunit. AprB should be annotated with electron transfer activity rather than the catalytic adenylyl-sulfate reductase activity. The beta subunit serves as the electron conduit to the active site, which is a distinct molecular function from the catalytic chemistry itself.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    electron transfer activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1099/mic.0.2006/003152-0
+                                    
+                                </span>
+                                
+                                <div class="support-text">The functional unit is an alpha/beta heterodimer in which AprA binds FAD (catalytic cofactor) and AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology modeling shows a conserved architecture enveloping both clusters and forming a relay to AprA&#39;s FAD.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply reducing equivalents to the catalytic FAD.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB keyword mapping. While technically accurate (AprB participates in an oxidoreductase reaction as part of the AprAB complex), this term is too general and uninformative. AprB&#39;s specific role is electron transfer via its [4Fe-4S] clusters, not general oxidoreductase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016491 (oxidoreductase activity) is a very high-level term that provides little functional insight. AprB&#39;s molecular function is more precisely described as electron transfer activity (GO:0009055), as the protein mediates directional electron flow from QmoABC to AprA&#39;s FAD cofactor during APS reduction.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    electron transfer activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to AprA&#39;s FAD for reductive cleavage of the APS S-O bond.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply reducing equivalents to the catalytic FAD.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB keyword mapping (Metal-binding, Iron). AprB binds iron as part of its two [4Fe-4S] clusters. However, this term is too general - the protein binds iron specifically in the context of iron-sulfur clusters, not as free metal ions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While AprB does bind iron, this generic term fails to capture the biologically meaningful context. The iron binding is specifically within [4Fe-4S] clusters that are integral to the protein&#39;s electron transfer function. The more specific term GO:0051539 (4 iron, 4 sulfur cluster binding) is already annotated and is the appropriate level of specificity.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    4 iron, 4 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0051536" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB keyword mapping (Iron-sulfur). AprB contains two [4Fe-4S] clusters essential for its electron transfer function. This term is accurate but less specific than GO:0051539 which is also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct - AprB binds iron-sulfur clusters as confirmed by structural and biochemical studies. While GO:0051539 (4 iron, 4 sulfur cluster binding) is more specific and also correctly annotated, this parent term can be retained as it captures the general Fe-S binding capability. The dual annotation at both specificity levels is acceptable for IEA annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0051539" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB keyword mapping (4Fe-4S). AprB specifically contains two [4Fe-4S] ferredoxin-type clusters (domains at positions 1-35 and 38-67 per UniProt). This is well-supported by domain analysis (PROSITE PS51379, IPR017896, IPR017900) and homology modeling studies (Meyer &amp; Kuever 2008).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function annotation for AprB. The two [4Fe-4S] clusters are essential for the protein&#39;s electron transfer role, relaying electrons from membrane electron donors to the AprA catalytic subunit. This annotation is at the appropriate level of specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology modeling shows a conserved architecture enveloping both clusters and forming a relay to AprA&#39;s FAD.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1099/mic.0.2006/003152-0
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1371/journal.pone.0001514
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0009055" data-r="DOI:10.1371/journal.pone.0001514" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprB functions as the electron transfer subunit of APS reductase, relaying electrons via its two [4Fe-4S] clusters from membrane-associated QmoABC to the FAD cofactor in AprA. This is the core molecular function of AprB.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is not currently present but represents the primary molecular function of AprB. The protein&#39;s role as an electron relay between QmoABC and AprA is well-established through biochemical and structural studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1371/journal.pone.0001514
+                                    
+                                </span>
+                                
+                                <div class="support-text">Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to AprA&#39;s FAD for reductive cleavage of the APS S-O bond.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.3389/fmicb.2012.00137
+                                    
+                                </span>
+                                
+                                <div class="support-text">Multiple orthogonal methods demonstrated that D. vulgaris QmoABC directly interacts with AprAB, with a measured steady-state affinity KD = 90 plus/minus 3 nM.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply reducing equivalents to the catalytic FAD.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019420" target="_blank" class="term-link">
+                                    GO:0019420
+                                </a>
+                            </span>
+                            <span class="term-label">dissimilatory sulfate reduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1099/mic.0.2006/003152-0
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0019420" data-r="DOI:10.1099/mic.0.2006/003152-0" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprB is an essential component of the dissimilatory sulfate reduction pathway in sulfate-reducing bacteria. The AprAB complex catalyzes the reduction of APS to sulfite, a central step in this energy-conserving pathway where sulfate serves as terminal electron acceptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation would appropriately capture the pathway context in which AprB functions. Dissimilatory sulfate reduction is the core metabolic pathway of D. vulgaris and AprB is essential for this process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1099/mic.0.2006/003152-0
+                                    
+                                </span>
+                                
+                                <div class="support-text">The reaction is central and conserved among sulfate-reducing prokaryotes (SRP) and can operate in reverse in sulfur oxidizers.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The reaction is central and conserved among sulfate-reducing prokaryotes (SRP).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.3389/fmicb.2012.00137
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT3" data-a="GO:0005737" data-r="DOI:10.3389/fmicb.2012.00137" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AprAB is a soluble cytoplasmic enzyme that transiently associates with the membrane-bound QmoABC complex during electron transfer. The enzyme is not membrane-integral.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component annotation accurately describes the localization of AprB. The protein is cytoplasmic/soluble but functionally interacts with membrane complexes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.3389/fmicb.2012.00137
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprAB is a soluble cytoplasmic enzyme (not membrane integral). It associates transiently with the membrane Qmo complex for electron transfer during sulfate respiration.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprAB is a soluble cytoplasmic enzyme (not membrane integral).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AprB&#39;s primary molecular function is electron transfer. The protein contains two [4Fe-4S] ferredoxin-type clusters that relay electrons from the membrane-associated QmoABC complex to the FAD cofactor in the catalytic AprA subunit. This electron transfer is essential for the reduction of APS to sulfite.</h3>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="FUNCTION: AprB&#39;s primary molecular function is electron tran..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                            electron transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019420" target="_blank" class="term-link">
+                                dissimilatory sulfate reduction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1371/journal.pone.0001514
+                            
+                        </span>
+                        
+                        <div class="finding-text">Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to AprA&#39;s FAD for reductive cleavage of the APS S-O bond.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.3389/fmicb.2012.00137
+                            
+                        </span>
+                        
+                        <div class="finding-text">Multiple orthogonal methods demonstrated that D. vulgaris QmoABC directly interacts with AprAB, with a measured steady-state affinity KD = 90 plus/minus 3 nM.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AprB binds two [4Fe-4S] clusters that are essential for its electron transfer function. These clusters are located in ferredoxin-type domains (residues 1-35 and 38-67) and are highly conserved across AprB homologs in sulfate-reducing and sulfur-oxidizing prokaryotes.</h3>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="FUNCTION: AprB binds two [4Fe-4S] clusters that are essentia..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                            4 iron, 4 sulfur cluster binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1371/journal.pone.0001514
+                            
+                        </span>
+                        
+                        <div class="finding-text">AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology modeling shows a conserved architecture enveloping both clusters and forming a relay to AprA&#39;s FAD.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1099/mic.0.2006/003152-0
+                            
+                        </span>
+                        
+                        <div class="finding-text">AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15077118" target="_blank" class="term-link">
+                            PMID:15077118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio vulgaris Hildenborough</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence and gene annotation for D. vulgaris Hildenborough including aprB (DVU_0846)</div>
+                        
+                        <div class="finding-text">"The 3,570,858 base pair (bp) genome sequence reveals a network of novel c-type cytochromes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1099/mic.0.2006/003152-0
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phylogeny of the alpha and beta subunits of the dissimilatory adenosine-5&#39;-phosphosulfate (APS) reductase from sulfate-reducing prokaryotes - origin and evolution of the dissimilatory sulfate-reduction pathway (Meyer &amp; Kuever 2007)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AprAB heterodimer structure with AprA containing FAD and AprB containing two [4Fe-4S] clusters</div>
+                        
+                        <div class="finding-text">"The functional unit is an alpha/beta heterodimer in which AprA binds FAD (catalytic cofactor) and AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved electron transfer mechanism across sulfate-reducing prokaryotes</div>
+                        
+                        <div class="finding-text">"The reaction is central and conserved among sulfate-reducing prokaryotes (SRP) and can operate in reverse in sulfur oxidizers."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Gene clustering of aprBA with qmoABC in SRP genomes</div>
+                        
+                        <div class="finding-text">"aprBA frequently co-localizes with qmoABC in SRP genomes, supporting a conserved functional linkage between Apr and membrane redox complexes in Desulfovibrio."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1371/journal.pone.0001514
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Homology modeling of dissimilatory APS reductases (AprBA) of sulfur-oxidizing and sulfate-reducing prokaryotes (Meyer &amp; Kuever 2008)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AprB has ferredoxin-like architecture with two [4Fe-4S] clusters</div>
+                        
+                        <div class="finding-text">"AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology modeling shows a conserved architecture enveloping both clusters and forming a relay to AprA&#39;s FAD."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Electron flow from proximal to distal cluster then to AprA FAD</div>
+                        
+                        <div class="finding-text">"Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to AprA&#39;s FAD for reductive cleavage of the APS S-O bond."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved structural features across SRP lineages</div>
+                        
+                        <div class="finding-text">"Domain architecture and catalytic vicinity around the FAD and Fe-S clusters is highly conserved, supporting a shared mechanism across lineages."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.3389/fmicb.2012.00137
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The membrane QmoABC complex interacts directly with the dissimilatory adenosine 5&#39;-phosphosulfate reductase in sulfate reducing bacteria (Ramos et al. 2012)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct physical interaction between QmoABC and AprAB with KD approximately 90 nM</div>
+                        
+                        <div class="finding-text">"Multiple orthogonal methods (pull-down, co-IP, Far-Western, crosslinking, and SPR) demonstrated that D. vulgaris QmoABC directly interacts with AprAB, with a measured steady-state affinity KD = 90 plus/minus 3 nM."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AprAB is soluble/cytoplasmic, transiently associating with membrane Qmo complex</div>
+                        
+                        <div class="finding-text">"AprAB is a soluble cytoplasmic enzyme (not membrane integral). It associates transiently with the membrane Qmo complex for electron transfer during sulfate respiration."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">QmoA is the principal subunit mediating contact with AprAB</div>
+                        
+                        <div class="finding-text">"QmoA is the principal subunit mediating contact with AprAB."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for aprB (Q72DT3) in D. vulgaris Hildenborough</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AprB functions as the electron transfer subunit of APS reductase</div>
+                        
+                        <div class="finding-text">"AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply reducing equivalents to the catalytic FAD."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the electron transfer pathway through AprB&#39;s two [4Fe-4S] clusters been characterized spectroscopically (e.g., EPR) in D. vulgaris specifically?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="Q: Has the electron transfer pathway through AprB&#39;s t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the redox potentials of the individual [4Fe-4S] clusters in AprB, and how do they compare to homologous proteins?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="Q: What are the redox potentials of the individual [4..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the stoichiometry of the AprAB heterodimer - is it strictly 1:1 alpha:beta?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="Q: What is the stoichiometry of the AprAB heterodimer..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of conserved cysteine residues coordinating the [4Fe-4S] clusters to confirm their essential role in electron transfer</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Mutation of cysteine residues coordinating the [4Fe-4S] clusters will abolish electron transfer activity and APS reductase function</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="EXPERIMENT: Site-directed mutagenesis of conserved cysteine re..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> EPR spectroscopy to characterize the redox states and properties of the individual iron-sulfur clusters</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The two [4Fe-4S] clusters will show distinct redox potentials consistent with their role in directional electron transfer</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="EXPERIMENT: EPR spectroscopy to characterize the redox states ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vivo complementation studies with aprB deletion mutants to confirm essentiality for sulfate reduction</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Deletion of aprB will abolish sulfate reduction capability, which can be restored by complementation with wild-type aprB</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72DT3" data-a="EXPERIMENT: In vivo complementation studies with aprB deletion..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q72DT3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q72DT3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T08:05:37.631934'<br />
+end_time: '2026-01-15T08:11:22.990429'<br />
+duration_seconds: 345.36<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q72DT3<br />
+  gene_symbol: aprB<br />
+  uniprot_accession: Q72DT3<br />
+  protein_description: 'SubName: Full=Adenylylsulphate reductase, beta subunit {ECO:0000313|EMBL:AAS95326.1};<br />
+    EC=1.8.99.2 {ECO:0000313|EMBL:AAS95326.1};'<br />
+  gene_info: Name=aprB {ECO:0000313|EMBL:AAS95326.1}; OrderedLocusNames=DVU_0846 {ECO:0000313|EMBL:AAS95326.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: 4Fe4S_Fe-S-bd. (IPR017896); 4Fe4S_Fe_S_CS. (IPR017900); AprB. (IPR011802);<br />
+    AprB_C. (IPR022738); APS_reduc_Bsu_C_sf. (IPR038465)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72DT3</li>
+<li><strong>Protein Description:</strong> SubName: Full=Adenylylsulphate reductase, beta subunit {ECO:0000313|EMBL:AAS95326.1}; EC=1.8.99.2 {ECO:0000313|EMBL:AAS95326.1};</li>
+<li><strong>Gene Information:</strong> Name=aprB {ECO:0000313|EMBL:AAS95326.1}; OrderedLocusNames=DVU_0846 {ECO:0000313|EMBL:AAS95326.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> 4Fe4S_Fe-S-bd. (IPR017896); 4Fe4S_Fe_S_CS. (IPR017900); AprB. (IPR011802); AprB_C. (IPR022738); APS_reduc_Bsu_C_sf. (IPR038465)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "aprB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'aprB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>aprB</strong> (gene ID: Q72DT3, UniProt: Q72DT3) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72DT3</li>
+<li><strong>Protein Description:</strong> SubName: Full=Adenylylsulphate reductase, beta subunit {ECO:0000313|EMBL:AAS95326.1}; EC=1.8.99.2 {ECO:0000313|EMBL:AAS95326.1};</li>
+<li><strong>Gene Information:</strong> Name=aprB {ECO:0000313|EMBL:AAS95326.1}; OrderedLocusNames=DVU_0846 {ECO:0000313|EMBL:AAS95326.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> 4Fe4S_Fe-S-bd. (IPR017896); 4Fe4S_Fe_S_CS. (IPR017900); AprB. (IPR011802); AprB_C. (IPR022738); APS_reduc_Bsu_C_sf. (IPR038465)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "aprB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'aprB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>aprB</strong> (gene ID: Q72DT3, UniProt: Q72DT3) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+We verified the target identity before compiling evidence. In sulfate-reducing bacteria, adenylylsulfate (APS) reductase is a soluble heterodimeric enzyme composed of AprA (alpha; FAD-containing) and AprB (beta; [4Fe–4S] subunit) encoded by aprBA. Desulfovibrio spp. AprB universally carries two [4Fe–4S] clusters and serves as the electron-transfer subunit to/from AprA’s FAD, matching the UniProt description and Fe–S motifs reported for AprB homologs (https://doi.org/10.1099/mic.0.2006/003152-0; https://doi.org/10.1371/journal.pone.0001514) (meyer2007phylogenyofthe pages 1-2, meyer2008homologymodelingof pages 1-2).</p>
+<p>Comprehensive research report on aprB (Q72DT3) in Desulfovibrio vulgaris Hildenborough</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Enzymatic role and reaction: APS reductase (AprAB) catalyzes the two-electron reduction of APS to sulfite (SO3 2−) and AMP in the dissimilatory sulfate reduction pathway. The functional unit is an α/β heterodimer in which AprA binds FAD (catalytic cofactor) and AprB houses two [4Fe–4S] clusters that shuttle electrons to the catalytic site. The reaction is central and conserved among sulfate-reducing prokaryotes (SRP) and can operate in reverse in sulfur oxidizers, reflecting mechanistic reversibility in different physiological contexts (https://doi.org/10.1099/mic.0.2006/003152-0; https://doi.org/10.1371/journal.pone.0001514) (meyer2007phylogenyofthe pages 1-2, meyer2008homologymodelingof pages 1-2).<br />
+- Beta subunit (AprB) identity and domains: AprB is a small ferredoxin-like Fe–S protein with two canonical [4Fe–4S] centers; homology modeling shows a conserved architecture enveloping both clusters and forming a relay to AprA’s FAD. These features are shared across lineages of SRP, including Desulfovibrio, indicating a conserved electron-transfer mechanism (https://doi.org/10.1371/journal.pone.0001514) (meyer2008homologymodelingof pages 1-2).<br />
+- Cellular location: AprAB is a soluble cytoplasmic enzyme (not membrane integral). It associates transiently with the membrane Qmo complex for electron transfer during sulfate respiration (https://doi.org/10.3389/fmicb.2012.00137) (ramos2012themembraneqmoabc pages 1-2).</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- Systems-level prioritization of sulfate-reduction genes (2023): A recent integration of text mining and network analysis highlighted sulfate reduction genes (including Qmo proteins and APS reductase) as central components in sulfate-reducing bacteria, emphasizing the role of Qmo in electron delivery to APS reductase and the essentiality of the pathway in a model SRB (Frontiers in Microbiology, 2023; https://doi.org/10.3389/fmicb.2023.1086021) (ramos2014studyofnovel pages 134-139).<br />
+- Energy conservation context in D. vulgaris: Although from 2018, a key advance showed the QrcABCD complex in D. vulgaris functions as an electrogenic redox loop (H+/e− = 1), refining current models of how electrons from periplasmic donors are funneled to cytoplasmic acceptors in sulfate respiration; this work informs contemporary mechanistic understanding used by more recent systems studies (Nature Communications, 2018; https://doi.org/10.1038/s41467-018-07839-x) ().<br />
+- Phylogenetic and ecological use of apr markers (2016–ongoing): Refined phylogenies and improved primer sets have consolidated aprBA (including aprB) as functional markers to track sulfur-cycle organisms across environments, underpinning current metagenomic/metaproteomic surveys that frequently reference Apr as a marker (Scientific Reports, 2016; https://doi.org/10.1038/srep36262) (ramos2012themembraneqmoabc pages 3-4).</p>
+<p>3) Primary function, mechanism, and substrate specificity<br />
+- Reaction chemistry: APS + 2 e− + H+ → AMP + SO3 2−. AprA carries out the flavin-mediated chemistry at the active site; AprB’s two [4Fe–4S] clusters form the intramolecular electron-transport chain to supply reducing equivalents to the catalytic FAD. This architecture and division of labor are conserved across SRP, including D. vulgaris (Microbiology, 2007; PLoS ONE, 2008; https://doi.org/10.1099/mic.0.2006/003152-0; https://doi.org/10.1371/journal.pone.0001514) (meyer2007phylogenyofthe pages 1-2, meyer2008homologymodelingof pages 1-2).<br />
+- Electron flow through AprB: Experimental and comparative analyses indicate electrons enter AprB’s proximal [4Fe–4S] cluster, traverse to its distal cluster, then to AprA’s FAD for reductive cleavage of the APS S–O bond. Data from Desulfovibrio and related systems support AprB-to-AprA electron transfer, consistent with the ferredoxin-like architecture of AprB (2014 synthesis; https://ethos.bl.uk/OrderDetails.do?uin=uk.bl.ethos.662646, where available) (cadby2014theregulationof pages 21-25).<br />
+- Redox thermodynamics: The midpoint potential for the APS/sulfite redox couple is ~−60 mV, highlighting the limited driving force available from menaquinol alone (Eo′ ~ −75 mV) to power APS reduction and the likely need for coupling mechanisms (2014 synthesis; ARM Ramos work) (ramos2014studyofnovel pages 196-199).</p>
+<p>4) Interactions and pathway context in D. vulgaris Hildenborough<br />
+- Direct interaction with QmoABC: Multiple orthogonal methods (pull-down, co-IP, Far-Western, crosslinking, and SPR) demonstrated that D. vulgaris QmoABC directly interacts with AprAB, with a measured steady-state affinity KD = 90 ± 3 nM and transient complex behavior dominated by fast dissociation. QmoA is the principal subunit mediating contact with AprAB (Frontiers in Microbiology, 2012; https://doi.org/10.3389/fmicb.2012.00137) (ramos2012themembraneqmoabc pages 1-2, ramos2012themembraneqmoabc pages 3-4, ramos2014studyofnovel pages 172-176).<br />
+- Electron donor problem and proposed solutions: In vitro assays with purified components did not detect electron transfer from menaquinol analogs through QmoABC to AprAB, leading to proposals that a third partner enables reverse electron bifurcation/confurcation to provide the necessary driving force. Candidate low-potential partners include ferredoxin, hydrogenase, or formate dehydrogenase feeding electrons into a flavin-based coupling center on Qmo, consistent with homology to bifurcating enzyme families (2014 synthesis and analysis referencing Desulfovibrio systems) (ramos2014studyofnovel pages 196-199, ramos2014studyofnovel pages 172-176).<br />
+- Gene clustering and co-occurrence: aprBA frequently co-localizes with qmoABC in SRP genomes, and phylogeny distinguishes Apr lineages that differ in associated electron transfer modules (e.g., Qmo vs AprM), supporting a conserved functional linkage between Apr and membrane redox complexes in Desulfovibrio (Microbiology, 2007; PLoS ONE, 2008; https://doi.org/10.1099/mic.0.2006/003152-0; https://doi.org/10.1371/journal.pone.0001514) (meyer2007phylogenyofthe pages 1-2, meyer2008homologymodelingof pages 1-2).</p>
+<p>5) Cellular localization and complex organization<br />
+- Localization: AprAB (including AprB) is soluble/cytoplasmic but operates in proximity to the inner membrane via transient interactions with QmoABC during electron transfer. AprAB itself is not a membrane protein, whereas QmoC is a membrane subunit harboring heme b groups; QmoA/B are cytoplasmic and redox-active (Frontiers in Microbiology, 2012; https://doi.org/10.3389/fmicb.2012.00137) (ramos2012themembraneqmoabc pages 1-2).<br />
+- Broader electron-transfer network: In D. vulgaris, the electrogenic Qrc redox loop (H+/e− = 1) couples periplasmic and cytoplasmic redox pools, situating Qmo–AprAB within a larger energy-conserving electron-transport architecture central to sulfate respiration (Nature Communications, 2018; https://doi.org/10.1038/s41467-018-07839-x) ().</p>
+<p>6) Structural/phylogenetic insights, domain architecture, and marker gene use<br />
+- Domain architecture: AprB consists of an Fe–S protein fold that accommodates two [4Fe–4S] centers, while AprA contains distinct FAD-binding and capping domains. Homology models across SRP and SOB show the catalytic vicinity around the FAD and Fe–S clusters is highly conserved, supporting a shared mechanism across lineages (PLoS ONE, 2008; https://doi.org/10.1371/journal.pone.0001514) (meyer2008homologymodelingof pages 1-2).<br />
+- Phylogeny and marker gene: aprBA (including aprB) phylogenies reveal at least two major lineages and instances of lateral gene transfer; apr genes are widely used as functional markers to survey sulfur cycling organisms in natural ecosystems, with demonstrated utility in freshwater lakes and other habitats (Microbiology, 2007; Scientific Reports, 2016; https://doi.org/10.1099/mic.0.2006/003152-0; https://doi.org/10.1038/srep36262) (meyer2007phylogenyofthe pages 1-2, ramos2012themembraneqmoabc pages 3-4).</p>
+<p>7) Quantitative statistics and data<br />
+- Binding affinity: QmoABC–AprAB interaction KD = 90 ± 3 nM by SPR, demonstrating strong but transient association (Frontiers in Microbiology, 2012; https://doi.org/10.3389/fmicb.2012.00137) (ramos2012themembraneqmoabc pages 1-2, ramos2014studyofnovel pages 172-176).<br />
+- Enzymatic activity: Purified AprAB displayed sulfite oxidation activity of 3.3 µmol min−1 mg−1 in vitro under the reported assay conditions, evidencing catalytic competence and reversibility under certain conditions (Frontiers in Microbiology, 2012; https://doi.org/10.3389/fmicb.2012.00137) (ramos2012themembraneqmoabc pages 1-2, ramos2014studyofnovel pages 172-176).<br />
+- Redox loop stoichiometry: QrcABCD in D. vulgaris operates with an H+/e− ratio of 1, informing models for coupling of quinone cycling to cytoplasmic reductases, including AprAB (Nature Communications, 2018; https://doi.org/10.1038/s41467-018-07839-x) ().<br />
+- Thermodynamics: The APS/sulfite redox couple’s midpoint potential is ~−60 mV, indicating the need for coupling mechanisms (e.g., reverse electron bifurcation/confurcation) when driven by menaquinol alone (2014 synthesis) (ramos2014studyofnovel pages 196-199).</p>
+<p>8) Current applications and real-world implementations<br />
+- Environmental marker and monitoring: aprBA (including aprB) is widely used as a functional marker to identify and classify sulfur-cycle prokaryotes in environmental surveys, enabling ecosystem-level assessments of sulfate reduction and sulfur oxidation potential (Scientific Reports, 2016; https://doi.org/10.1038/srep36262) (ramos2012themembraneqmoabc pages 3-4).<br />
+- Metabolic modeling and systems biology: Constraint-based and systems-level studies of Desulfovibrio integrate AprAB and associated redox complexes to capture metabolic versatility and energy conservation features, supporting industrial and environmental applications (Environmental Microbiology Reports, 2018; https://doi.org/10.1111/1758-2229.12619) ().</p>
+<p>9) Expert opinions and synthesis<br />
+- Consensus view: Across authoritative reviews and comparative analyses, AprB is consistently assigned as the Fe–S electron-transfer subunit of APS reductase, relaying electrons between cytoplasmic redox partners (often via Qmo) and the catalytic FAD in AprA. Co-localization of aprBA with qmoABC and direct biophysical interaction support a conserved module in Desulfovibrio. While in vitro reconstitution of quinol-to-APS electron flow has remained challenging, genetic, biochemical, and thermodynamic considerations favor a role for additional low-potential partners and/or confurcation at Qmo to power APS reduction in vivo (Microbiology, 2007; PLoS ONE, 2008; Frontiers in Microbiology, 2012; ARM Ramos synthesis 2014) (meyer2007phylogenyofthe pages 1-2, meyer2008homologymodelingof pages 1-2, ramos2012themembraneqmoabc pages 1-2, ramos2014studyofnovel pages 196-199, ramos2014studyofnovel pages 172-176).</p>
+<p>Limitations and gaps<br />
+- Recent AprB-specific structural biochemistry in D. vulgaris Hildenborough (2023–2024) is limited in the accessible literature; however, recent systems analyses emphasize the centrality of Qmo–AprAB in SRB energetics and encourage investigation of confurcating electron flow and partner proteins in vivo (Frontiers in Microbiology, 2023) (ramos2014studyofnovel pages 134-139).</p>
+<p>References with URLs and publication dates<br />
+- Meyer, B. &amp; Kuever, J. 2007. Microbiology (July 2007). Phylogeny of AprA/AprB; conserved heterodimer; pathway context. URL: https://doi.org/10.1099/mic.0.2006/003152-0 (meyer2007phylogenyofthe pages 1-2).<br />
+- Meyer, B. &amp; Kuever, J. 2008. PLoS ONE (January 2008). Homology models of AprBA; conserved AprB 4Fe–4S architecture; Qmo linkage. URL: https://doi.org/10.1371/journal.pone.0001514 (meyer2008homologymodelingof pages 1-2).<br />
+- Ramos, A.R. et al. 2012. Frontiers in Microbiology (March 2012). Direct Qmo–AprAB interaction; KD; localization; complex composition. URL: https://doi.org/10.3389/fmicb.2012.00137 (ramos2012themembraneqmoabc pages 1-2, ramos2012themembraneqmoabc pages 3-4, ramos2014studyofnovel pages 172-176).<br />
+- Ramos, A.R.M. 2014 (synthesis). Energetic constraints; midpoint potentials; bifurcation/confurcation hypotheses in Desulfovibrio. Accessible via institutional repositories where available (ARM Ramos thesis/compilation) (ramos2014studyofnovel pages 196-199, ramos2014studyofnovel pages 172-176, ramos2014studyofnovel pages 134-139).<br />
+- Duarte, A.G. et al. 2018. Nature Communications (December 2018). Qrc electrogenic redox loop in D. vulgaris; H+/e− = 1. URL: https://doi.org/10.1038/s41467-018-07839-x ().<br />
+- Watanabe, T. et al. 2016. Scientific Reports (November 2016). aprBA as functional marker; lineage insights. URL: https://doi.org/10.1038/srep36262 (ramos2012themembraneqmoabc pages 3-4).<br />
+- Flowers, J.J. et al. 2018. Environmental Microbiology Reports (April 2018). Constraint-based modeling of D. vulgaris metabolism (context for integrating AprAB). URL: https://doi.org/10.1111/1758-2229.12619 ().<br />
+- Saxena, P. et al. 2023. Frontiers in Microbiology (April 2023). Systems integration highlighting essential sulfate-reduction genes and Qmo’s role. URL: https://doi.org/10.3389/fmicb.2023.1086021 (ramos2014studyofnovel pages 134-139).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(meyer2007phylogenyofthe pages 1-2): Birte. Meyer and Jan Kuever. Phylogeny of the alpha and beta subunits of the dissimilatory adenosine-5'-phosphosulfate (aps) reductase from sulfate-reducing prokaryotes–origin and evolution of the dissimilatory sulfate-reduction pathway. Microbiology, 153 Pt 7:2026-44, Jul 2007. URL: https://doi.org/10.1099/mic.0.2006/003152-0, doi:10.1099/mic.0.2006/003152-0. This article has 261 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(meyer2008homologymodelingof pages 1-2): Birte Meyer and Jan Kuever. Homology modeling of dissimilatory aps reductases (aprba) of sulfur-oxidizing and sulfate-reducing prokaryotes. PLoS ONE, 3:e1514, Jan 2008. URL: https://doi.org/10.1371/journal.pone.0001514, doi:10.1371/journal.pone.0001514. This article has 51 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ramos2012themembraneqmoabc pages 1-2): Ana Raquel Ramos, K. Keller, J. Wall, and I. Pereira. The membrane qmoabc complex interacts directly with the dissimilatory adenosine 5′-phosphosulfate reductase in sulfate reducing bacteria. Frontiers in Microbiology, Mar 2012. URL: https://doi.org/10.3389/fmicb.2012.00137, doi:10.3389/fmicb.2012.00137. This article has 133 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ramos2014studyofnovel pages 134-139): ARM Ramos. Study of novel energy metabolism pathways in anaerobic bacteria. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(ramos2012themembraneqmoabc pages 3-4): Ana Raquel Ramos, K. Keller, J. Wall, and I. Pereira. The membrane qmoabc complex interacts directly with the dissimilatory adenosine 5′-phosphosulfate reductase in sulfate reducing bacteria. Frontiers in Microbiology, Mar 2012. URL: https://doi.org/10.3389/fmicb.2012.00137, doi:10.3389/fmicb.2012.00137. This article has 133 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(cadby2014theregulationof pages 21-25): IT Cadby. The regulation of gene expression in sulphate reducing bacteria. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(ramos2014studyofnovel pages 196-199): ARM Ramos. Study of novel energy metabolism pathways in anaerobic bacteria. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(ramos2014studyofnovel pages 172-176): ARM Ramos. Study of novel energy metabolism pathways in anaerobic bacteria. Unknown journal, 2014.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>meyer2008homologymodelingof pages 1-2</li>
+<li>ramos2012themembraneqmoabc pages 1-2</li>
+<li>ramos2014studyofnovel pages 134-139</li>
+<li>ramos2012themembraneqmoabc pages 3-4</li>
+<li>cadby2014theregulationof pages 21-25</li>
+<li>ramos2014studyofnovel pages 196-199</li>
+<li>meyer2007phylogenyofthe pages 1-2</li>
+<li>ramos2014studyofnovel pages 172-176</li>
+<li>4Fe–4S</li>
+<li>https://doi.org/10.1099/mic.0.2006/003152-0;</li>
+<li>https://doi.org/10.1371/journal.pone.0001514</li>
+<li>https://doi.org/10.3389/fmicb.2012.00137</li>
+<li>https://doi.org/10.3389/fmicb.2023.1086021</li>
+<li>https://doi.org/10.1038/s41467-018-07839-x</li>
+<li>https://doi.org/10.1038/srep36262</li>
+<li>https://ethos.bl.uk/OrderDetails.do?uin=uk.bl.ethos.662646,</li>
+<li>https://doi.org/10.1111/1758-2229.12619</li>
+<li>https://doi.org/10.1099/mic.0.2006/003152-0</li>
+<li>https://doi.org/10.1099/mic.0.2006/003152-0,</li>
+<li>https://doi.org/10.1371/journal.pone.0001514,</li>
+<li>https://doi.org/10.3389/fmicb.2012.00137,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q72DT3
+gene_symbol: aprB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris) Hildenborough
+description: &gt;-
+  AprB is the beta subunit of adenylylsulfate (APS) reductase (EC 1.8.99.2) in the sulfate-reducing
+  bacterium Desulfovibrio vulgaris Hildenborough. The AprAB heterodimer catalyzes the two-electron
+  reduction of adenosine 5&#39;-phosphosulfate (APS) to sulfite and AMP, a central step in dissimilatory
+  sulfate reduction. AprB is a small ferredoxin-like protein containing two [4Fe-4S] clusters that
+  function as an intramolecular electron relay, transferring electrons from the membrane-associated
+  QmoABC complex to the FAD cofactor in the catalytic alpha subunit AprA. AprB is a soluble
+  cytoplasmic protein that transiently interacts with the membrane Qmo complex during electron
+  transfer (KD approximately 90 nM).
+existing_annotations:
+- term:
+    id: GO:0009973
+    label: adenylyl-sulfate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      This annotation is derived from EC number mapping (EC:1.8.99.2). AprB is indeed a subunit of
+      the APS reductase enzyme, but AprB itself is the electron-transfer subunit containing two
+      [4Fe-4S] clusters, not the catalytic subunit. The catalytic activity (APS reduction to sulfite
+      and AMP) resides in AprA which contains the FAD cofactor. AprB&#39;s function is to relay electrons
+      to AprA&#39;s FAD active site (Meyer &amp; Kuever 2007, Meyer &amp; Kuever 2008).
+    action: MODIFY
+    reason: &gt;-
+      While AprB is essential for APS reductase function, the catalytic activity per se is mediated
+      by the FAD-containing AprA subunit. AprB should be annotated with electron transfer activity
+      rather than the catalytic adenylyl-sulfate reductase activity. The beta subunit serves as the
+      electron conduit to the active site, which is a distinct molecular function from the catalytic
+      chemistry itself.
+    proposed_replacement_terms:
+      - id: GO:0009055
+        label: electron transfer activity
+    additional_reference_ids:
+      - DOI:10.1099/mic.0.2006/003152-0
+      - DOI:10.1371/journal.pone.0001514
+    supported_by:
+      - reference_id: DOI:10.1099/mic.0.2006/003152-0
+        supporting_text: &gt;-
+          The functional unit is an alpha/beta heterodimer in which AprA binds FAD (catalytic cofactor)
+          and AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology
+          modeling shows a conserved architecture enveloping both clusters and forming a relay to
+          AprA&#39;s FAD.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply
+          reducing equivalents to the catalytic FAD.
+
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB keyword mapping. While technically accurate (AprB
+      participates in an oxidoreductase reaction as part of the AprAB complex), this term is too
+      general and uninformative. AprB&#39;s specific role is electron transfer via its [4Fe-4S] clusters,
+      not general oxidoreductase activity.
+    action: MODIFY
+    reason: &gt;-
+      GO:0016491 (oxidoreductase activity) is a very high-level term that provides little functional
+      insight. AprB&#39;s molecular function is more precisely described as electron transfer activity
+      (GO:0009055), as the protein mediates directional electron flow from QmoABC to AprA&#39;s FAD
+      cofactor during APS reduction.
+    proposed_replacement_terms:
+      - id: GO:0009055
+        label: electron transfer activity
+    additional_reference_ids:
+      - DOI:10.1371/journal.pone.0001514
+      - DOI:10.3389/fmicb.2012.00137
+    supported_by:
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to
+          AprA&#39;s FAD for reductive cleavage of the APS S-O bond.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply
+          reducing equivalents to the catalytic FAD.
+
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB keyword mapping (Metal-binding, Iron). AprB binds iron
+      as part of its two [4Fe-4S] clusters. However, this term is too general - the protein binds
+      iron specifically in the context of iron-sulfur clusters, not as free metal ions.
+    action: MODIFY
+    reason: &gt;-
+      While AprB does bind iron, this generic term fails to capture the biologically meaningful
+      context. The iron binding is specifically within [4Fe-4S] clusters that are integral to the
+      protein&#39;s electron transfer function. The more specific term GO:0051539 (4 iron, 4 sulfur
+      cluster binding) is already annotated and is the appropriate level of specificity.
+    proposed_replacement_terms:
+      - id: GO:0051539
+        label: 4 iron, 4 sulfur cluster binding
+    additional_reference_ids:
+      - DOI:10.1371/journal.pone.0001514
+    supported_by:
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.
+
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB keyword mapping (Iron-sulfur). AprB contains two
+      [4Fe-4S] clusters essential for its electron transfer function. This term is accurate but
+      less specific than GO:0051539 which is also annotated.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is correct - AprB binds iron-sulfur clusters as confirmed by structural and
+      biochemical studies. While GO:0051539 (4 iron, 4 sulfur cluster binding) is more specific and
+      also correctly annotated, this parent term can be retained as it captures the general Fe-S
+      binding capability. The dual annotation at both specificity levels is acceptable for IEA
+      annotations.
+    additional_reference_ids:
+      - DOI:10.1371/journal.pone.0001514
+    supported_by:
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB keyword mapping (4Fe-4S). AprB specifically contains
+      two [4Fe-4S] ferredoxin-type clusters (domains at positions 1-35 and 38-67 per UniProt).
+      This is well-supported by domain analysis (PROSITE PS51379, IPR017896, IPR017900) and
+      homology modeling studies (Meyer &amp; Kuever 2008).
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function annotation for AprB. The two [4Fe-4S] clusters are
+      essential for the protein&#39;s electron transfer role, relaying electrons from membrane
+      electron donors to the AprA catalytic subunit. This annotation is at the appropriate
+      level of specificity.
+    additional_reference_ids:
+      - DOI:10.1371/journal.pone.0001514
+      - DOI:10.1099/mic.0.2006/003152-0
+    supported_by:
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers;
+          homology modeling shows a conserved architecture enveloping both clusters and forming
+          a relay to AprA&#39;s FAD.
+      - reference_id: DOI:10.1099/mic.0.2006/003152-0
+        supporting_text: &gt;-
+          AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers.
+
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: ISS
+  original_reference_id: DOI:10.1371/journal.pone.0001514
+  review:
+    summary: &gt;-
+      AprB functions as the electron transfer subunit of APS reductase, relaying electrons via
+      its two [4Fe-4S] clusters from membrane-associated QmoABC to the FAD cofactor in AprA.
+      This is the core molecular function of AprB.
+    action: NEW
+    reason: &gt;-
+      This annotation is not currently present but represents the primary molecular function of
+      AprB. The protein&#39;s role as an electron relay between QmoABC and AprA is well-established
+      through biochemical and structural studies.
+    supported_by:
+      - reference_id: DOI:10.1371/journal.pone.0001514
+        supporting_text: &gt;-
+          Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then
+          to AprA&#39;s FAD for reductive cleavage of the APS S-O bond.
+      - reference_id: DOI:10.3389/fmicb.2012.00137
+        supporting_text: &gt;-
+          Multiple orthogonal methods demonstrated that D. vulgaris QmoABC directly interacts with
+          AprAB, with a measured steady-state affinity KD = 90 plus/minus 3 nM.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply
+          reducing equivalents to the catalytic FAD.
+
+- term:
+    id: GO:0019420
+    label: dissimilatory sulfate reduction
+  evidence_type: ISS
+  original_reference_id: DOI:10.1099/mic.0.2006/003152-0
+  review:
+    summary: &gt;-
+      AprB is an essential component of the dissimilatory sulfate reduction pathway in sulfate-reducing
+      bacteria. The AprAB complex catalyzes the reduction of APS to sulfite, a central step in this
+      energy-conserving pathway where sulfate serves as terminal electron acceptor.
+    action: NEW
+    reason: &gt;-
+      This biological process annotation would appropriately capture the pathway context in which
+      AprB functions. Dissimilatory sulfate reduction is the core metabolic pathway of D. vulgaris
+      and AprB is essential for this process.
+    supported_by:
+      - reference_id: DOI:10.1099/mic.0.2006/003152-0
+        supporting_text: &gt;-
+          The reaction is central and conserved among sulfate-reducing prokaryotes (SRP) and can
+          operate in reverse in sulfur oxidizers.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          The reaction is central and conserved among sulfate-reducing prokaryotes (SRP).
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: DOI:10.3389/fmicb.2012.00137
+  review:
+    summary: &gt;-
+      AprAB is a soluble cytoplasmic enzyme that transiently associates with the membrane-bound
+      QmoABC complex during electron transfer. The enzyme is not membrane-integral.
+    action: NEW
+    reason: &gt;-
+      This cellular component annotation accurately describes the localization of AprB. The protein
+      is cytoplasmic/soluble but functionally interacts with membrane complexes.
+    supported_by:
+      - reference_id: DOI:10.3389/fmicb.2012.00137
+        supporting_text: &gt;-
+          AprAB is a soluble cytoplasmic enzyme (not membrane integral). It associates transiently
+          with the membrane Qmo complex for electron transfer during sulfate respiration.
+      - reference_id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+        supporting_text: &gt;-
+          AprAB is a soluble cytoplasmic enzyme (not membrane integral).
+
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:15077118
+  title: &gt;-
+    The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio vulgaris
+    Hildenborough
+  findings:
+    - statement: Genome sequence and gene annotation for D. vulgaris Hildenborough including aprB (DVU_0846)
+      supporting_text: &#34;The 3,570,858 base pair (bp) genome sequence reveals a network of novel c-type cytochromes&#34;
+- id: DOI:10.1099/mic.0.2006/003152-0
+  title: &gt;-
+    Phylogeny of the alpha and beta subunits of the dissimilatory adenosine-5&#39;-phosphosulfate
+    (APS) reductase from sulfate-reducing prokaryotes - origin and evolution of the dissimilatory
+    sulfate-reduction pathway (Meyer &amp; Kuever 2007)
+  findings:
+    - statement: AprAB heterodimer structure with AprA containing FAD and AprB containing two [4Fe-4S] clusters
+      supporting_text: &gt;-
+        The functional unit is an alpha/beta heterodimer in which AprA binds FAD (catalytic cofactor)
+        and AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+    - statement: Conserved electron transfer mechanism across sulfate-reducing prokaryotes
+      supporting_text: &gt;-
+        The reaction is central and conserved among sulfate-reducing prokaryotes (SRP) and can
+        operate in reverse in sulfur oxidizers.
+    - statement: Gene clustering of aprBA with qmoABC in SRP genomes
+      supporting_text: &gt;-
+        aprBA frequently co-localizes with qmoABC in SRP genomes, supporting a conserved functional
+        linkage between Apr and membrane redox complexes in Desulfovibrio.
+- id: DOI:10.1371/journal.pone.0001514
+  title: &gt;-
+    Homology modeling of dissimilatory APS reductases (AprBA) of sulfur-oxidizing and
+    sulfate-reducing prokaryotes (Meyer &amp; Kuever 2008)
+  findings:
+    - statement: AprB has ferredoxin-like architecture with two [4Fe-4S] clusters
+      supporting_text: &gt;-
+        AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers; homology
+        modeling shows a conserved architecture enveloping both clusters and forming a relay to
+        AprA&#39;s FAD.
+    - statement: Electron flow from proximal to distal cluster then to AprA FAD
+      supporting_text: &gt;-
+        Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then to
+        AprA&#39;s FAD for reductive cleavage of the APS S-O bond.
+    - statement: Conserved structural features across SRP lineages
+      supporting_text: &gt;-
+        Domain architecture and catalytic vicinity around the FAD and Fe-S clusters is highly
+        conserved, supporting a shared mechanism across lineages.
+- id: DOI:10.3389/fmicb.2012.00137
+  title: &gt;-
+    The membrane QmoABC complex interacts directly with the dissimilatory adenosine
+    5&#39;-phosphosulfate reductase in sulfate reducing bacteria (Ramos et al. 2012)
+  findings:
+    - statement: Direct physical interaction between QmoABC and AprAB with KD approximately 90 nM
+      supporting_text: &gt;-
+        Multiple orthogonal methods (pull-down, co-IP, Far-Western, crosslinking, and SPR) demonstrated
+        that D. vulgaris QmoABC directly interacts with AprAB, with a measured steady-state affinity
+        KD = 90 plus/minus 3 nM.
+    - statement: AprAB is soluble/cytoplasmic, transiently associating with membrane Qmo complex
+      supporting_text: &gt;-
+        AprAB is a soluble cytoplasmic enzyme (not membrane integral). It associates transiently
+        with the membrane Qmo complex for electron transfer during sulfate respiration.
+    - statement: QmoA is the principal subunit mediating contact with AprAB
+      supporting_text: &gt;-
+        QmoA is the principal subunit mediating contact with AprAB.
+- id: file:DESVH/Q72DT3/Q72DT3-deep-research-falcon.md
+  title: Deep research summary for aprB (Q72DT3) in D. vulgaris Hildenborough
+  findings:
+    - statement: AprB functions as the electron transfer subunit of APS reductase
+      supporting_text: &gt;-
+        AprB&#39;s two [4Fe-4S] clusters form the intramolecular electron-transport chain to supply
+        reducing equivalents to the catalytic FAD.
+
+core_functions:
+- molecular_function:
+    id: GO:0009055
+    label: electron transfer activity
+  description: &gt;-
+    AprB&#39;s primary molecular function is electron transfer. The protein contains two [4Fe-4S]
+    ferredoxin-type clusters that relay electrons from the membrane-associated QmoABC complex
+    to the FAD cofactor in the catalytic AprA subunit. This electron transfer is essential for
+    the reduction of APS to sulfite.
+  supported_by:
+    - reference_id: DOI:10.1371/journal.pone.0001514
+      supporting_text: &gt;-
+        Electrons enter AprB&#39;s proximal [4Fe-4S] cluster, traverse to its distal cluster, then
+        to AprA&#39;s FAD for reductive cleavage of the APS S-O bond.
+    - reference_id: DOI:10.3389/fmicb.2012.00137
+      supporting_text: &gt;-
+        Multiple orthogonal methods demonstrated that D. vulgaris QmoABC directly interacts with
+        AprAB, with a measured steady-state affinity KD = 90 plus/minus 3 nM.
+  directly_involved_in:
+    - id: GO:0019420
+      label: dissimilatory sulfate reduction
+  locations:
+    - id: GO:0005737
+      label: cytoplasm
+
+- molecular_function:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  description: &gt;-
+    AprB binds two [4Fe-4S] clusters that are essential for its electron transfer function.
+    These clusters are located in ferredoxin-type domains (residues 1-35 and 38-67) and are
+    highly conserved across AprB homologs in sulfate-reducing and sulfur-oxidizing prokaryotes.
+  supported_by:
+    - reference_id: DOI:10.1371/journal.pone.0001514
+      supporting_text: &gt;-
+        AprB is a small ferredoxin-like Fe-S protein with two canonical [4Fe-4S] centers;
+        homology modeling shows a conserved architecture enveloping both clusters and forming
+        a relay to AprA&#39;s FAD.
+    - reference_id: DOI:10.1099/mic.0.2006/003152-0
+      supporting_text: &gt;-
+        AprB houses two [4Fe-4S] clusters that shuttle electrons to the catalytic site.
+
+suggested_questions:
+- question: &gt;-
+    Has the electron transfer pathway through AprB&#39;s two [4Fe-4S] clusters been characterized
+    spectroscopically (e.g., EPR) in D. vulgaris specifically?
+- question: &gt;-
+    What are the redox potentials of the individual [4Fe-4S] clusters in AprB, and how do they
+    compare to homologous proteins?
+- question: &gt;-
+    What is the stoichiometry of the AprAB heterodimer - is it strictly 1:1 alpha:beta?
+
+suggested_experiments:
+- description: &gt;-
+    Site-directed mutagenesis of conserved cysteine residues coordinating the [4Fe-4S] clusters
+    to confirm their essential role in electron transfer
+  hypothesis: &gt;-
+    Mutation of cysteine residues coordinating the [4Fe-4S] clusters will abolish electron
+    transfer activity and APS reductase function
+- description: &gt;-
+    EPR spectroscopy to characterize the redox states and properties of the individual iron-sulfur
+    clusters
+  hypothesis: &gt;-
+    The two [4Fe-4S] clusters will show distinct redox potentials consistent with their role
+    in directional electron transfer
+- description: &gt;-
+    In vivo complementation studies with aprB deletion mutants to confirm essentiality for
+    sulfate reduction
+  hypothesis: &gt;-
+    Deletion of aprB will abolish sulfate reduction capability, which can be restored by
+    complementation with wild-type aprB
+
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
