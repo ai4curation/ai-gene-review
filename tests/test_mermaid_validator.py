@@ -1,6 +1,6 @@
 """Tests for mermaid diagram validation."""
 import pytest
-from ai_gene_review.tools.validate_mermaid import MermaidValidator, ValidationIssue
+from ai_gene_review.tools.validate_mermaid import MermaidValidator
 
 
 class TestMermaidValidator:

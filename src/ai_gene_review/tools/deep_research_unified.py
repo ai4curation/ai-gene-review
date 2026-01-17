@@ -245,7 +245,7 @@ def research_gene_unified(
             click.echo(f"✅ Resolved to UniProt ID: {uniprot_id}")
         except ValueError as e:
             click.echo(f"❌ Error: {e}", err=True)
-            click.echo(f"If you have the UniProt ID, you can provide it directly:", err=True)
+            click.echo("If you have the UniProt ID, you can provide it directly:", err=True)
             click.echo(f"  just deep-research {organism} <UNIPROT_ID> --alias {gene_symbol} --provider {provider or 'openai'}", err=True)
             sys.exit(1)
 

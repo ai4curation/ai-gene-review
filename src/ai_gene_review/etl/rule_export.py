@@ -30,7 +30,7 @@ Example:
 import csv
 import json
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 
 # Column order for CSV output
@@ -271,7 +271,7 @@ def export_rules_to_csv(
     output_path: Path,
     rule_type: str = "all",
     use_enriched: bool = True,
-    progress_callback: Optional[callable] = None
+    progress_callback: Optional[Callable[[int, int], None]] = None
 ) -> int:
     """Export rules to CSV with one row per condition set.
 

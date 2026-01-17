@@ -8,7 +8,7 @@ This module provides functions to update rule review YAML files with:
 
 import json
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, cast
 
 import yaml
 
@@ -49,7 +49,7 @@ def categorize_relationship(
         'PREDICTED_BY': containment_b_in_a
     }
 
-    return max(scores, key=scores.get)
+    return max(scores, key=lambda k: scores[k])
 
 
 def infer_entry_type(entry_id: str) -> str:
@@ -104,8 +104,8 @@ def generate_entries(
         protein_count, and related_entries
     """
     # Collect all unique entities (domains/families + GO terms)
-    entities = {}  # id -> {label, type, appears_in_sets, protein_count}
-    relationships = {}  # id -> list of (target_id, relationship, metrics)
+    entities: Dict[str, Dict] = {}  # id -> {label, type, appears_in_sets, protein_count}
+    relationships: Dict[str, List[Dict]] = {}  # id -> list of relationship dicts
 
     # Extract domain conditions from condition sets
     # Only include INTERPRO, FUNFAM, PANTHER (not TAXON, PROTEIN, etc.)
@@ -304,7 +304,7 @@ def sync_review_with_analysis(
         analysis_data = json.load(f)
 
     # Track changes
-    stats = {
+    stats: Dict[str, str | int] = {
         'status': 'updated',
         'condition_sets_updated': 0,
         'condition_sets_populated': 0,
@@ -362,7 +362,7 @@ def sync_review_with_analysis(
     stats['total_pairs_in_analysis'] = len(all_pairs)
 
     # Organize pairs by condition set membership
-    pairs_by_cs = {}  # cs_index -> list of pairs
+    pairs_by_cs: Dict[int, List[Dict]] = {}  # cs_index -> list of pairs
 
     for pair in all_pairs:
         # Get which condition sets each condition appears in
@@ -411,7 +411,7 @@ def sync_review_with_analysis(
                 })
 
             cs['pairwise_overlap'] = pairwise_overlap
-            stats['condition_sets_updated'] += 1
+            stats['condition_sets_updated'] = cast(int, stats['condition_sets_updated']) + 1
 
     # Remove deprecated global_pairwise_overlap fields if present
     if 'rule' in review_data:

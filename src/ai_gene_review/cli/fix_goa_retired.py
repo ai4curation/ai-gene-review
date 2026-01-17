@@ -102,9 +102,9 @@ def fix_retired_annotations(yaml_file: Path, dry_run: bool = False) -> int:
 
         # Clean up reference
         if 'PMID:' in str(ref):
-            pmid = ref
+            pass
         else:
-            pmid = ref
+            pass
 
         # Check if annotation exists in GOA
         found_in_goa = False

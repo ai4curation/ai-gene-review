@@ -13,7 +13,6 @@ Key features:
 
 from typing import Optional, List, Tuple
 from rapidfuzz import fuzz
-from rapidfuzz.distance import Levenshtein
 import re
 
 
@@ -207,7 +206,6 @@ def find_fuzzy_match_with_context(
     best_end = None
 
     sentences = split_into_sentences(text)
-    current_pos = 0
 
     for sentence in sentences:
         sentence_norm = normalize_whitespace(sentence)

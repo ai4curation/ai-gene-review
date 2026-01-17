@@ -54,7 +54,7 @@ def fetch_wikicrow_with_browser(gene_symbol: str) -> Optional[str]:
                 next_data_match = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', content, re.DOTALL)
                 if next_data_match:
                     try:
-                        json_data = json.loads(next_data_match.group(1))
+                        json.loads(next_data_match.group(1))
                         # Extract relevant content from JSON structure
                         # This would need to be adapted based on actual structure
                         return f"# Wikicrow: {gene_symbol}\n\nSource: {url}\n\nNote: Content requires JavaScript rendering. Please visit the URL directly in a browser to view the full content."

@@ -1002,7 +1002,6 @@ def refresh_publications(
     if force_all:
         # Get ALL publications for forced refresh
         import re
-        from pathlib import Path
         
         candidates = []
         for file_path in sorted(publications_dir.glob("PMID_*.md")):
@@ -1155,7 +1154,7 @@ def visualize(
         visualizer = ReviewVisualizer(layout_config=config, slim_subset=slim)
         
         # Load and visualize the file
-        drawing = visualizer.visualize_file(yaml_file)
+        visualizer.visualize_file(yaml_file)
         
         # Show statistics if requested
         if show_stats:
@@ -1297,7 +1296,7 @@ def update_status(
         typer.echo(f"  Files with validation warnings: {has_warnings}")
 
         if dry_run and (missing > 0 or mismatched > 0):
-            typer.echo(f"\nRun without --dry-run to apply updates")
+            typer.echo("\nRun without --dry-run to apply updates")
 
     # Exit with error if there are mismatches
     if mismatched > 0:
@@ -1467,7 +1466,7 @@ def arba_lookup(
         typer.echo(f"Version: {rule.version}")
         typer.echo(f"Created: {rule.created_date}")
         typer.echo(f"Modified: {rule.modified_date}")
-        typer.echo(f"Statistics:")
+        typer.echo("Statistics:")
         typer.echo(f"  Reviewed proteins: {rule.statistics.reviewed_count}")
         typer.echo(f"  Unreviewed proteins: {rule.statistics.unreviewed_count}")
 
@@ -1550,7 +1549,7 @@ def arba_search(
         typer.echo(f"  {rule.uni_rule_id}: {ann_summary} [{rule.statistics.total_count} proteins]")
 
     if next_cursor:
-        typer.echo(f"\n(More results available, increase --limit to see more)")
+        typer.echo("\n(More results available, increase --limit to see more)")
 
 
 # ============== UniRule Commands ==============
@@ -1696,7 +1695,7 @@ def unirule_lookup(
             typer.echo(f"Data Class: {rule.info.data_class}")
         typer.echo(f"Created: {rule.created_date}")
         typer.echo(f"Modified: {rule.modified_date}")
-        typer.echo(f"Statistics:")
+        typer.echo("Statistics:")
         typer.echo(f"  Reviewed proteins: {rule.statistics.reviewed_count}")
         typer.echo(f"  Unreviewed proteins: {rule.statistics.unreviewed_count}")
 

@@ -149,27 +149,24 @@ def validate_file(file_path: Path, verbose: bool = True) -> bool:
 
     if is_valid:
         if verbose:
-            print(f"  ✅ All PMID citations are valid and present in the review file")
+            print("  ✅ All PMID citations are valid and present in the review file")
         return True
     else:
-        error_found = False
 
         if invalid_pmids:
-            error_found = True
             if verbose:
-                print(f"  ❌ Invalid PMID format(s) found:")
+                print("  ❌ Invalid PMID format(s) found:")
                 for pmid in sorted(invalid_pmids):
                     print(f"    - {pmid} (PMIDs must contain only digits)")
-                print(f"  Please fix the PMID format - PMIDs should only contain numbers.")
+                print("  Please fix the PMID format - PMIDs should only contain numbers.")
 
         if missing_pmids:
-            error_found = True
             if verbose:
-                print(f"  ❌ Missing PMIDs in review file:")
+                print("  ❌ Missing PMIDs in review file:")
                 for pmid in sorted(missing_pmids):
                     print(f"    - {pmid}")
-                print(f"  These PMIDs are cited in the markdown but not found in the references section of the review YAML.")
-                print(f"  Please add them to the review file or remove the citations.")
+                print("  These PMIDs are cited in the markdown but not found in the references section of the review YAML.")
+                print("  Please add them to the review file or remove the citations.")
 
         return False
 
@@ -223,7 +220,7 @@ def validate_directory(dir_path: Path) -> bool:
             validate_file(md_file, verbose=True)
         print(f"\n{'='*60}")
         print(f"❌ {len(invalid_files)} file(s) have missing PMID references in their review files")
-        print(f"   Please update the review YAML files to include all cited PMIDs")
+        print("   Please update the review YAML files to include all cited PMIDs")
 
     return all_valid
 

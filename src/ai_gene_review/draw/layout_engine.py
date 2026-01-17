@@ -1,7 +1,7 @@
 """Layout engine for calculating positions of visual elements."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Tuple, Any
 from ai_gene_review.datamodel.gene_review_model import ActionEnum
 
 
@@ -221,7 +221,7 @@ class LayoutEngine:
     
     def _layout_namespace_header(self, namespace: str, y: float) -> BoundingBox:
         """Layout a namespace header."""
-        label = namespace.replace("_", " ").title()
+        namespace.replace("_", " ").title()
         width = self.config.canvas_width - self.config.margin_left - self.config.margin_right
         height = 35
         

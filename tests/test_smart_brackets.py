@@ -60,7 +60,6 @@ class TestSmartBracketDetection:
     def test_explicit_editorial_with_ellipsis(self, validator):
         """Test that [...] is treated as editorial."""
         supporting_text = "protein [unclear mechanism ...] binds [directly] to target molecule"
-        source_text = "protein binds to target molecule in cells"
         
         # This should work - editorial removed
         norm = validator.normalize_whitespace(supporting_text)

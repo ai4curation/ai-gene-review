@@ -184,13 +184,12 @@ class PaperBlastClient:
 
             # Extract PMID/PMCID from URL
             pmid = None
-            pmcid = None
             href = paper_link.get("href", "")  # type: ignore[union-attr]
 
             # Try to extract PMC ID
             pmc_match = re.search(r"PMC(\d+)", href)
             if pmc_match:
-                pmcid = pmc_match.group(1)
+                pmc_match.group(1)
 
             # Try to extract PMID from URL or text
             pmid_match = re.search(r"pubmed/(\d{7,})", href)

@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoN - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoN</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q72BK7" target="_blank" class="term-link">
+                        Q72BK7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoN";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q72BK7" data-a="DESCRIPTION: RpoN (sigma-54) is an alternative sigma factor tha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RpoN (sigma-54) is an alternative sigma factor that directs bacterial RNA polymerase to recognize -24/-12 type promoters. Unlike the housekeeping sigma-70, sigma-54 forms a transcriptionally inactive closed complex with RNAP that absolutely requires ATP hydrolysis by enhancer-binding proteins (EBPs) to transition to the open complex and initiate transcription. In D. vulgaris Hildenborough, sigma-54 regulates an extensive regulon of 36 regulons covering 201 protein-coding genes, including flagellar assembly, nitrogen fixation/assimilation, biofilm formation, the anaerobe-specific Orange Protein (ORP) complex, and various metabolic pathways. The protein contains three characteristic domains: an N-terminal activator-interaction domain (AID) that contacts EBPs, a central core-binding domain (CBD) that associates with RNAP core, and a C-terminal DNA-binding domain (DBD) for -24/-12 promoter recognition.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma factor activity is the core molecular function of rpoN. Sigma-54 acts as the promoter specificity subunit for -24/-12 class promoters in bacteria. The protein combines with the RNAP core to form a holoenzyme that recognizes specific promoter elements.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of sigma-54. The deep research confirms that rpoN encodes the sigma-54 factor that directs RNAP to -24/-12 promoters. The D. vulgaris sigma-54 promoter consensus is tGGcacg (-24) and tTGCt (-12). This annotation directly reflects the core biochemical activity of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sigma54 is a promoter specificity factor for -24/-12 class promoters that, unlike sigma70, forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001216" target="_blank" class="term-link">
+                                    GO:0001216
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0001216" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is mechanistically incorrect for sigma-54. Unlike sigma-70, sigma-54 does NOT have intrinsic transcription activator activity. Instead, sigma-54 forms a CLOSED complex that actively blocks transcription initiation until EBPs provide the ATP-dependent remodeling signal. Sigma-54 is better characterized as a transcription specificity factor that gates promoter access.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The deep research clearly establishes that sigma-54 forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs to form the open complex. This is fundamentally different from transcription activators which directly enhance transcription. Sigma-54 actually INHIBITS transcription until EBPs activate it. The IEA annotation from InterPro domains IPR000394 and IPR007634 conflates promoter recognition with transcription activation, which are mechanistically distinct for sigma-54. GO:0016987 (sigma factor activity) correctly captures this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sigma54 forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural work shows sigma54 occludes DNA loading and must be reorganized by EBP contact with the sigma54 N-terminus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma-54 has a C-terminal DNA-binding domain (DBD, Pfam PF04552) that recognizes -24/-12 promoter elements. However, this DNA binding occurs only in the context of the RNAP holoenzyme - sigma-54 does not bind DNA on its own.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt entry documents the RNA polymerase sigma factor 54 DNA-binding domain (residues 315-473). This is a legitimate function, although the GO term definition notes that sigma does not bind DNA on its own, but when combined with the core to form the holoenzyme, the sigma factor binds specifically to promoter elements. The deep research confirms sigma-54 recognizes specific -24/-12 promoter elements in D. vulgaris.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D. vulgaris-specific sigma54 promoter consensus: derived -24/-12 elements are tGGcacg (-24) and tTGCt (-12). A refined set of 87 sigma54-dependent promoters was compiled</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016779" target="_blank" class="term-link">
+                                    GO:0016779
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotidyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0016779" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT. Sigma factors do not have nucleotidyltransferase activity. The catalytic activity of RNA polymerase (RNA synthesis) is performed by the core subunits (beta, beta-prime), not by the sigma factor. Sigma-54 is a promoter specificity subunit that determines WHERE transcription occurs, not an enzyme that catalyzes nucleotide transfer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear over-annotation based on the UniProtKB keyword KW-0548 (Nucleotidyltransferase). The keyword mapping is inappropriate for sigma factors. The sigma subunit provides promoter recognition but does not participate in the catalytic RNA synthesis reaction. The GO term GO:0016987 definition explicitly states that sigma factors bind specifically to promoter elements and are released once elongation begins - they are not catalytic subunits. Sigma-54 lacks any nucleotidyltransferase domain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-54 factor family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT for the same reason as nucleotidyltransferase activity. Sigma-54 has no catalytic transferase function. It is a regulatory subunit that provides promoter specificity, not an enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a parent term of nucleotidyltransferase activity and is equally inappropriate. Sigma factors are NOT enzymes. The UniProtKB keyword mapping (KW-0808, Transferase) is incorrect for sigma factors, which function as promoter specificity factors rather than catalytic subunits. No transferase domain is present in sigma-54 domain architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-54 factor family</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                                    GO:0000428
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0000428" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma-54 is a subunit of the bacterial RNA polymerase holoenzyme complex. When associated with the core RNAP (alpha2-beta-beta-prime), it forms the sigma-54 holoenzyme that recognizes -24/-12 promoters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular component annotation is correct. Sigma-54 associates with the RNAP core via its central core-binding domain (CBD, Pfam PF04963) to form the holoenzyme. The deep research confirms sigma-54 operates in the bacterial nucleoid as part of the RNAP holoenzyme, acting at chromosomal promoters.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sigma54 operates in the bacterial nucleoid as part of the RNAP holoenzyme, acting at chromosomal promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0006352" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma-54 is directly involved in transcription initiation at -24/-12 promoters, although its mechanism is distinct from sigma-70 in that it requires EBP activation. Once activated, sigma-54 participates in the transition from closed to open complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation is appropriate. Sigma-54 is essential for transcription initiation at its cognate promoters. The requirement for EBP activation does not negate its role in initiation - it defines the specific mechanism. In D. vulgaris, 87 sigma-54-dependent promoters drive transcription initiation of 85 operons.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs, associated with 87 sigma54-dependent promoters upstream of 85 operons</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0006355" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma-54 regulates transcription by determining which promoters are recognized by RNAP. In D. vulgaris, sigma-54 regulates 201 protein-coding genes across 36 regulons covering diverse functions including motility, nitrogen metabolism, and biofilm formation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma-54 is a key transcriptional regulator that controls expression of specific gene sets. The D. vulgaris sigma-54 regulon is well characterized and includes flagellar genes, nitrogen fixation, amino acid catabolism, and stress responses. This is a core function of sigma factors.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Enriched functions include flagellar assembly and cell-exterior structures</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    GO:0045893
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:0045893" data-r="GO_REF:0000108" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is problematic because sigma-54 does not positively regulate transcription in isolation - it forms a CLOSED complex that blocks transcription until activated by EBPs. The positive regulation comes from the EBPs, not from sigma-54 itself.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The logical inference from GO:0001216 (DNA-binding transcription activator activity) to GO:0045893 is based on the incorrect premise that sigma-54 has activator activity. Sigma-54 actually forms a closed complex that must be opened by EBPs. The more accurate annotation is GO:0006355 (regulation of DNA-templated transcription), which is already present. Sigma-54 enables transcription of specific genes when activated, but the positive regulation comes from the EBP signal, not sigma-54.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sigma54 forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BK7" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sigma-54 does regulate transcription initiation by determining which promoters are recognized and by controlling the transition from closed to open complex (via EBP requirement). This is more specific than GO:0006355 but accurately reflects sigma-54 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures that sigma-54 regulates the initiation step of transcription. The sigma-54-dependent promoters require both sigma-54 for recognition and EBPs for activation, representing a regulatory checkpoint at initiation. The logical inference from GO:0016987 (sigma factor activity) to this term is valid.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sigma54 is a promoter specificity factor for -24/-12 class promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The primary molecular function of rpoN is sigma factor activity, directing RNA polymerase to -24/-12 type promoters. This is supported by domain architecture (AID, CBD, DBD domains), sequence family membership (sigma-54 family), and functional characterization in D. vulgaris showing 87 sigma-54-dependent promoters with consensus tGGcacg/-24 and tTGCt/-12.</h3>
+                <span class="vote-buttons" data-g="Q72BK7" data-a="FUNCTION: The primary molecular function of rpoN is sigma fa..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link">
+                            DNA-directed RNA polymerase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">sigma54 is a promoter specificity factor for -24/-12 class promoters</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on rpoN (Q72BK7) sigma-54 in Desulfovibrio vulgaris</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D. vulgaris sigma-54 regulome includes 36 regulons, 201 protein-coding genes, 87 promoters</div>
+                        
+                        <div class="finding-text">"The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs, associated with 87 sigma54-dependent promoters upstream of 85 operons"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Sigma-54 promoter consensus is tGGcacg (-24) and tTGCt (-12)</div>
+                        
+                        <div class="finding-text">"derived -24/-12 elements are tGGcacg (-24) and tTGCt (-12)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D. vulgaris encodes 37 sigma-54-associated EBPs</div>
+                        
+                        <div class="finding-text">"D. vulgaris encodes 37 sigma54-associated EBPs; 25 harbor the canonical GAFTGA sigma54-interaction motif"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Regulated processes include flagella, nitrogen metabolism, biofilm, type III secretion</div>
+                        
+                        <div class="finding-text">"Enriched functions include flagellar assembly and cell-exterior structures"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q72BK7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q72BK7" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:26:28.797259'<br />
+end_time: '2026-01-15T10:34:24.101205'<br />
+duration_seconds: 475.3<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q72BK7<br />
+  gene_symbol: rpoN<br />
+  uniprot_accession: Q72BK7<br />
+  protein_description: 'SubName: Full=RNA polymerase sigma-54 factor {ECO:0000313|EMBL:AAS96106.1};'<br />
+  gene_info: Name=rpoN {ECO:0000313|EMBL:AAS96106.1}; OrderedLocusNames=DVU_1628 {ECO:0000313|EMBL:AAS96106.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Belongs to the sigma-54 factor family.<br />
+  protein_domains: RNA_pol_sigma_54. (IPR000394); RNA_pol_sigma_54_core-bd. (IPR007046);<br />
+    RNA_pol_sigma_54_DNA-bd. (IPR007634); RpoN_core-bd_sf. (IPR038709); Sigma54_AID<br />
+    (PF00309)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72BK7</li>
+<li><strong>Protein Description:</strong> SubName: Full=RNA polymerase sigma-54 factor {ECO:0000313|EMBL:AAS96106.1};</li>
+<li><strong>Gene Information:</strong> Name=rpoN {ECO:0000313|EMBL:AAS96106.1}; OrderedLocusNames=DVU_1628 {ECO:0000313|EMBL:AAS96106.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-54 factor family.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma_54. (IPR000394); RNA_pol_sigma_54_core-bd. (IPR007046); RNA_pol_sigma_54_DNA-bd. (IPR007634); RpoN_core-bd_sf. (IPR038709); Sigma54_AID (PF00309)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rpoN" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rpoN' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rpoN</strong> (gene ID: Q72BK7, UniProt: Q72BK7) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72BK7</li>
+<li><strong>Protein Description:</strong> SubName: Full=RNA polymerase sigma-54 factor {ECO:0000313|EMBL:AAS96106.1};</li>
+<li><strong>Gene Information:</strong> Name=rpoN {ECO:0000313|EMBL:AAS96106.1}; OrderedLocusNames=DVU_1628 {ECO:0000313|EMBL:AAS96106.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-54 factor family.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma_54. (IPR000394); RNA_pol_sigma_54_core-bd. (IPR007046); RNA_pol_sigma_54_DNA-bd. (IPR007634); RpoN_core-bd_sf. (IPR038709); Sigma54_AID (PF00309)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rpoN" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rpoN' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rpoN</strong> (gene ID: Q72BK7, UniProt: Q72BK7) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Title: Functional annotation of rpoN (Q72BK7) from Nitratidesulfovibrio (Desulfovibrio) vulgaris Hildenborough: σ54-dependent transcription, regulons, and EBPs</p>
+<p>Abstract<br />
+We verified the identity of rpoN (UniProt Q72BK7) from Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris) Hildenborough as encoding the σ54 (RpoN) alternative sigma factor, characterized by conserved activator interaction and DNA-binding domains typical of the σ54 family. We synthesize organism-specific evidence for σ54-dependent regulation, enhancer-binding proteins (EBPs), motif features, and processes regulated in D. vulgaris, and we integrate 2023–2024 developments relevant to sulfate-reducing bacteria (SRB). Where appropriate, cross-species mechanistic studies anchor definitions and mechanisms.</p>
+<ol>
+<li>
+<p>Identity verification and domains<br />
+• Gene symbol and organism: rpoN encodes σ54 (RpoN) in D. vulgaris Hildenborough (also known as Nitratidesulfovibrio vulgaris Hildenborough), a model SRB (Kazakov et al., 2015). (kazakov2015σ54dependentregulomein pages 1-3)<br />
+• Domain architecture: σ54 comprises an N-terminal activator-interaction domain (AID; PF00309), a central core-binding domain (CBD; PF04963), and a C-terminal DNA-binding domain (DBD; PF04552). These assignments and the σ54 promoter recognition properties are corroborated by comparative analyses of σ54 domains and promoters across bacteria. (carrerareyna2025analysisandcomparison pages 2-4, carrerareyna2025analysisandcomparison pages 28-30, carrerareyna2025analysisandcomparison pages 1-2)</p>
+</li>
+<li>
+<p>Molecular function, mechanism, and localization<br />
+• Function: σ54 is a promoter specificity factor for −24/−12 class promoters that, unlike σ70, forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription. (kazakov2015σ54dependentregulomein pages 1-3, carrerareyna2025analysisandcomparison pages 1-2, bush2014interdomainrepressionin pages 67-68)<br />
+• Mechanism: EBPs bind upstream activating sequences (UASs), assemble (typically hexamers), and, upon signal-dependent activation, hydrolyze ATP to remodel σ54 within the closed complex. DNA looping, often aided by IHF/HU, brings EBPs to σ54-RNAP. Structural work shows σ54 occludes DNA loading and must be reorganized by EBP contact with the σ54 N-terminus. (bush2014interdomainrepressionin pages 67-68, kazakov2015σ54dependentregulomein pages 1-3)<br />
+• Localization: σ54 operates in the bacterial nucleoid as part of the RNAP holoenzyme, acting at chromosomal promoters; EBPs bind UASs typically ≥100 bp upstream and contact the σ54-RNAP via looping. (kazakov2015σ54dependentregulomein pages 1-3)</p>
+</li>
+<li>
+<p>Promoter motif features<br />
+• D. vulgaris-specific σ54 promoter consensus: derived −24/−12 elements are tGGcacg (−24) and tTGCt (−12). A refined set of 87 σ54-dependent promoters was compiled by combining comparative genomics with 5′-RNA-seq and motif analysis. (kazakov2015σ54dependentregulomein pages 13-14)</p>
+</li>
+<li>
+<p>σ54 regulome size and composition in D. vulgaris<br />
+• Counts: The reconstructed D. vulgaris σ54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs, associated with 87 σ54-dependent promoters upstream of 85 operons. Most regulons are small (1–4 operons), but some EBPs regulate larger sets (e.g., 6–12 operons). (kazakov2015σ54dependentregulomein pages 1-3, kazakov2015σ54dependentregulomein pages 5-7)<br />
+• Process categories: Enriched functions include flagellar assembly and cell-exterior structures (~37 operons), and metabolic/transport modules (~24 operons) such as ammonia assimilation, nitrogen fixation, amino acid/amide catabolism, carboxylic-acid metabolism; direct σ54 control was also inferred for pyruvate metabolism and a type III secretion system. (kazakov2015σ54dependentregulomein pages 5-7, kazakov2015σ54dependentregulomein pages 1-3)</p>
+</li>
+<li>
+<p>Key σ54-dependent systems and EBPs in D. vulgaris<br />
+• Orange Protein (ORP) complex operons: Two divergent operons (orp1: DVU2107–DVU2109; orp2: DVU2103–DVU2105) are transcribed by σ54-RNAP and co-regulated by a cognate EBP, DVU2106. IHF is required for robust transcription, with two functional IHF sites identified between the promoters. DVU2106 contains PAS-like sensory domain features and retrocontrols its expression; ORP complex composition (DVU2103/2104/2105/2108/2109) was validated by pulldown. (Fiévet et al., 2011, J. Bacteriol.; Fiévet et al., 2014, PLoS ONE). (fievet2011theanaerobespecificorange pages 1-2, fievet2011theanaerobespecificorange pages 12-13, fievet2014ihfisrequired pages 1-2, fievet2014ihfisrequired pages 8-9)<br />
+• DVU2956 EBP (σ54-dependent): Controls a biofilm-to-planktonic switch; overexpression reduces biofilm formation by ~70%, deletion increases biofilm and raises H2S production by ~131%. Mechanistically influences the Hmc complex (DVU0531–DVU0536) and Fe-only hydrogenase (hydA/hydB; DVU1769/DVU1770). Also regulates DVU2960 and DVU2962 downstream. (Zhu et al., 2019, Environ. Microbiol.). (zhu2019σ54dependentregulator pages 1-2)<br />
+• Additional EBPs and targets: D. vulgaris encodes 37 σ54-associated EBPs; 25 harbor the canonical GAFTGA σ54-interaction motif, with variants in others. Examples include DVU0110 (linked to exopolysaccharide/biofilm and transport), DVUA0057 (exopolysaccharide/biofilm), DVUA0143 (nitrogenase operon), and DVU2894 (flagellar module; conserved inverted repeat yGTCA–N6–TGACr). Many EBP genes co-localize with σ54 promoters. (kazakov2015σ54dependentregulomein pages 3-4, kazakov2015σ54dependentregulomein pages 13-14, kazakov2015σ54dependentregulomein pages 4-5)</p>
+</li>
+<li>
+<p>Current applications and real-world implementations (SRB context)<br />
+• Biofilm control and corrosion: DVU2956’s σ54-dependent regulation modulates biofilm and H2S outputs, pointing to genetic control points with potential to mitigate microbiologically influenced corrosion by SRB. (zhu2019σ54dependentregulator pages 1-2)<br />
+• Anaerobe-specific systems: ORP σ54/IHF-dependent operons exemplify anaerobe-specific regulation that may modulate cell division/morphology and redox-related protein complexes under strict anaerobiosis. (fievet2011theanaerobespecificorange pages 1-2, fievet2011theanaerobespecificorange pages 12-13)</p>
+</li>
+<li>
+<p>2023–2024 updates relevant to SRB/deltaproteobacteria<br />
+• SRB biofilm studies (2024): RpoN (σ54) was explicitly monitored in Oleidesulfovibrio alaskensis G20 biofilms on copper and graphene-coated copper, framed as a key activator of stress, motility, and survival-associated genes; the study described σ54-dependent two-component signaling as central to adaptation under surface/biofilm contexts. (Gopalakrishnan et al., 2024, Microorganisms, Aug 2024). (gopalakrishnan2024impactofgraphene pages 5-8)<br />
+• Comparative cross-phyla perspective (2025, included for motif/domain currency): Large-scale analysis across 16 phyla confirmed σ54 promoter architecture, domain composition, and broad process coverage (nitrogen, motility, secretion, biofilms), providing updated reference PSSMs and an online database (aRpoNDB). (carrerareyna2025analysisandcomparison pages 2-4, carrerareyna2025analysisandcomparison pages 28-30, carrerareyna2025analysisandcomparison pages 1-2)</p>
+</li>
+<li>
+<p>Expert consensus and mechanistic reviews<br />
+• EBPs as specialized σ54 activators: EBPs universally use a central AAA+ ATPase with the σ54-interacting GAFTGA loop; regulation is typically via phosphorylation (NtrC-like), ligand sensing (PAS/GAF/V4R), or partner proteins (e.g., PspA–PspF). (bush2014interdomainrepressionin pages 67-68)<br />
+• σ54 structural mechanism: σ54 stabilizes a closed RNAP–promoter complex; EBP ATPase action is required to reorganize σ54 and enable DNA melting and template loading. (kazakov2015σ54dependentregulomein pages 1-3)</p>
+</li>
+<li>
+<p>Relevant statistics and specific examples<br />
+• Network size: 36 regulons; 201 protein-coding genes + 4 ncRNAs; 87 σ54 promoters upstream of 85 operons; 37 EBPs in D. vulgaris Hildenborough; 25 EBPs with exact GAFTGA motif. (kazakov2015σ54dependentregulomein pages 1-3, kazakov2015σ54dependentregulomein pages 5-7, kazakov2015σ54dependentregulomein pages 3-4)<br />
+• Functional distribution: ≈37 operons for flagella/cell exterior; ≈24 operons for metabolism/transport, including nitrogen fixation/assimilation and carboxylic-acid metabolism; additional modules in amino acid/amide catabolism and type III secretion. (kazakov2015σ54dependentregulomein pages 5-7)<br />
+• Promoter consensus: tGGcacg (−24), tTGCt (−12); UASs upstream, with IHF sites facilitating looping at ORP promoters. (kazakov2015σ54dependentregulomein pages 13-14, fievet2014ihfisrequired pages 1-2)<br />
+• EBP exemplars: DVU2106 (ORP; PAS-type; σ54/IHF dependent), DVU2956 (biofilm/planktonic/H2S; Hmc and hydrogenase), DVU0110 and DVUA0057 (EPS/biofilm), DVUA0143 (nitrogenase), DVU2894 (flagella). (fievet2011theanaerobespecificorange pages 1-2, fievet2011theanaerobespecificorange pages 12-13, zhu2019σ54dependentregulator pages 1-2, kazakov2015σ54dependentregulomein pages 3-4, kazakov2015σ54dependentregulomein pages 13-14, kazakov2015σ54dependentregulomein pages 4-5)</p>
+</li>
+<li>
+<p>Conclusions and functional annotation for rpoN (Q72BK7)<br />
+• Primary function: rpoN encodes σ54, the alternative sigma factor that directs RNAP to −24/−12 promoters and absolutely requires EBP ATPase activity for transcription initiation; it broadly controls motility/flagella, extracellular structures, nitrogen and carbon metabolism, secretion, and stress-adaptive systems in D. vulgaris. (kazakov2015σ54dependentregulomein pages 1-3, kazakov2015σ54dependentregulomein pages 5-7)<br />
+• Localization: cytosolic, acting at chromosomal promoters within the nucleoid as part of the RNAP holoenzyme; function requires DNA looping and EBP contact. (kazakov2015σ54dependentregulomein pages 1-3)<br />
+• Pathways: σ54-dependent operons include ORP (DVU2103–2105; DVU2107–2109) with EBP DVU2106 and IHF; biofilm/H2S control via EBP DVU2956 targeting Hmc and Fe-only hydrogenase; broader regulons encompass nitrogen fixation/assimilation and motility. (fievet2011theanaerobespecificorange pages 1-2, fievet2011theanaerobespecificorange pages 12-13, fievet2014ihfisrequired pages 1-2, zhu2019σ54dependentregulator pages 1-2, kazakov2015σ54dependentregulomein pages 5-7)<br />
+• 2023–2024 perspective: SRB biofilm studies continued to track σ54 as a central stress/biofilm regulator in deltaproteobacteria, supporting its relevance to corrosion and surface-associated growth. (gopalakrishnan2024impactofgraphene pages 5-8)</p>
+</li>
+</ol>
+<p>Data availability, URLs, dates<br />
+• Kazakov et al., 2015, BMC Genomics, Nov 2015. DOI: 10.1186/s12864-015-2176-y; URL: https://doi.org/10.1186/s12864-015-2176-y. (kazakov2015σ54dependentregulomein pages 5-7, kazakov2015σ54dependentregulomein pages 3-4, kazakov2015σ54dependentregulomein pages 1-3, kazakov2015σ54dependentregulomein pages 13-14, kazakov2015σ54dependentregulomein pages 4-5)<br />
+• Fiévet et al., 2011, J. Bacteriol., Jul 2011; DOI: 10.1128/JB.00044-11; URL: https://doi.org/10.1128/JB.00044-11. (fievet2011theanaerobespecificorange pages 1-2, fievet2011theanaerobespecificorange pages 12-13)<br />
+• Fiévet et al., 2014, PLoS ONE, Jan 21, 2014; DOI: 10.1371/journal.pone.0086507; URL: https://doi.org/10.1371/journal.pone.0086507. (fievet2014ihfisrequired pages 1-2, fievet2014ihfisrequired pages 8-9)<br />
+• Zhu et al., 2019, Environmental Microbiology, May 2019; DOI: 10.1111/1462-2920.14679; URL: https://doi.org/10.1111/1462-2920.14679. (zhu2019σ54dependentregulator pages 1-2)<br />
+• Gopalakrishnan et al., 2024, Microorganisms, Aug 2024; DOI: 10.3390/microorganisms12091759; URL: https://doi.org/10.3390/microorganisms12091759. (gopalakrishnan2024impactofgraphene pages 5-8)<br />
+• Carrera-Reyna et al., 2025, PLOS ONE, Aug 2025; DOI: 10.1371/journal.pone.0327805; URL: https://doi.org/10.1371/journal.pone.0327805. (carrerareyna2025analysisandcomparison pages 2-4, carrerareyna2025analysisandcomparison pages 28-30, carrerareyna2025analysisandcomparison pages 1-2)</p>
+<p>Limitations<br />
+Direct experimental characterization of Q72BK7 in D. vulgaris Hildenborough at the protein level is limited in the cited set; most functional assertions are based on the well-established σ54 mechanism and organism-level regulon mapping coupled with EBP functional studies. Additional 2023–2024 D. vulgaris-specific experiments on σ54 per se were not identified in this search, though SRB-level studies tracked RpoN expression in biofilm contexts.</p>
+<p>Overall, rpoN (Q72BK7) encodes σ54, a central transcriptional regulator in D. vulgaris Hildenborough with an extensive sigmulon controlling motility, extracellular structures, nitrogen/carbon metabolism, secretion, and stress/biofilm-associated pathways, activated exclusively by specialized σ54 EBPs.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(kazakov2015σ54dependentregulomein pages 1-3): Alexey E. Kazakov, Lara Rajeev, Amy Chen, Eric G. Luning, Inna Dubchak, Aindrila Mukhopadhyay, and Pavel S. Novichkov. Σ54-dependent regulome in desulfovibrio vulgaris hildenborough. BMC Genomics, Nov 2015. URL: https://doi.org/10.1186/s12864-015-2176-y, doi:10.1186/s12864-015-2176-y. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carrerareyna2025analysisandcomparison pages 2-4): Maricela Carrera-Reyna, Edna Cruz-Flores, and Enrique Merino. Analysis and comparison of the bacterial σ54 regulon: evidence of phylogenetic trends in gene regulation. PLOS One, Aug 2025. URL: https://doi.org/10.1371/journal.pone.0327805, doi:10.1371/journal.pone.0327805. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carrerareyna2025analysisandcomparison pages 28-30): Maricela Carrera-Reyna, Edna Cruz-Flores, and Enrique Merino. Analysis and comparison of the bacterial σ54 regulon: evidence of phylogenetic trends in gene regulation. PLOS One, Aug 2025. URL: https://doi.org/10.1371/journal.pone.0327805, doi:10.1371/journal.pone.0327805. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carrerareyna2025analysisandcomparison pages 1-2): Maricela Carrera-Reyna, Edna Cruz-Flores, and Enrique Merino. Analysis and comparison of the bacterial σ54 regulon: evidence of phylogenetic trends in gene regulation. PLOS One, Aug 2025. URL: https://doi.org/10.1371/journal.pone.0327805, doi:10.1371/journal.pone.0327805. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bush2014interdomainrepressionin pages 67-68): M Bush. Interdomain repression in the enhancer binding protein norr. Unknown journal, 2014.</p>
+</li>
+<li>
+<p>(kazakov2015σ54dependentregulomein pages 13-14): Alexey E. Kazakov, Lara Rajeev, Amy Chen, Eric G. Luning, Inna Dubchak, Aindrila Mukhopadhyay, and Pavel S. Novichkov. Σ54-dependent regulome in desulfovibrio vulgaris hildenborough. BMC Genomics, Nov 2015. URL: https://doi.org/10.1186/s12864-015-2176-y, doi:10.1186/s12864-015-2176-y. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kazakov2015σ54dependentregulomein pages 5-7): Alexey E. Kazakov, Lara Rajeev, Amy Chen, Eric G. Luning, Inna Dubchak, Aindrila Mukhopadhyay, and Pavel S. Novichkov. Σ54-dependent regulome in desulfovibrio vulgaris hildenborough. BMC Genomics, Nov 2015. URL: https://doi.org/10.1186/s12864-015-2176-y, doi:10.1186/s12864-015-2176-y. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fievet2011theanaerobespecificorange pages 1-2): Anouchka Fiévet, Laetitia My, Eric Cascales, Mireille Ansaldi, Sofia R. Pauleta, Isabel Moura, Zorah Dermoun, Christophe S. Bernard, Alain Dolla, and Corinne Aubert. The anaerobe-specific orange protein complex of desulfovibrio vulgaris hildenborough is encoded by two divergent operons coregulated by σ <sup>54</sup> and a cognate transcriptional regulator. Journal of Bacteriology, 193:3207-3219, Jul 2011. URL: https://doi.org/10.1128/jb.00044-11, doi:10.1128/jb.00044-11. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fievet2011theanaerobespecificorange pages 12-13): Anouchka Fiévet, Laetitia My, Eric Cascales, Mireille Ansaldi, Sofia R. Pauleta, Isabel Moura, Zorah Dermoun, Christophe S. Bernard, Alain Dolla, and Corinne Aubert. The anaerobe-specific orange protein complex of desulfovibrio vulgaris hildenborough is encoded by two divergent operons coregulated by σ <sup>54</sup> and a cognate transcriptional regulator. Journal of Bacteriology, 193:3207-3219, Jul 2011. URL: https://doi.org/10.1128/jb.00044-11, doi:10.1128/jb.00044-11. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fievet2014ihfisrequired pages 1-2): Anouchka Fiévet, Eric Cascales, Odile Valette, Alain Dolla, and Corinne Aubert. Ihf is required for the transcriptional regulation of the desulfovibrio vulgaris hildenborough orp operons. PLoS ONE, 9:e86507, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0086507, doi:10.1371/journal.pone.0086507. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fievet2014ihfisrequired pages 8-9): Anouchka Fiévet, Eric Cascales, Odile Valette, Alain Dolla, and Corinne Aubert. Ihf is required for the transcriptional regulation of the desulfovibrio vulgaris hildenborough orp operons. PLoS ONE, 9:e86507, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0086507, doi:10.1371/journal.pone.0086507. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2019σ54dependentregulator pages 1-2): Lei Zhu, Ting Gong, Thammajun L. Wood, Ryota Yamasaki, and Thomas K. Wood. Σ54 -dependent regulator dvu2956 switches desulfovibrio vulgaris from biofilm formation to planktonic growth and regulates hydrogen sulfide production. Environmental microbiology, 21:3564-3576, May 2019. URL: https://doi.org/10.1111/1462-2920.14679, doi:10.1111/1462-2920.14679. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kazakov2015σ54dependentregulomein pages 3-4): Alexey E. Kazakov, Lara Rajeev, Amy Chen, Eric G. Luning, Inna Dubchak, Aindrila Mukhopadhyay, and Pavel S. Novichkov. Σ54-dependent regulome in desulfovibrio vulgaris hildenborough. BMC Genomics, Nov 2015. URL: https://doi.org/10.1186/s12864-015-2176-y, doi:10.1186/s12864-015-2176-y. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kazakov2015σ54dependentregulomein pages 4-5): Alexey E. Kazakov, Lara Rajeev, Amy Chen, Eric G. Luning, Inna Dubchak, Aindrila Mukhopadhyay, and Pavel S. Novichkov. Σ54-dependent regulome in desulfovibrio vulgaris hildenborough. BMC Genomics, Nov 2015. URL: https://doi.org/10.1186/s12864-015-2176-y, doi:10.1186/s12864-015-2176-y. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gopalakrishnan2024impactofgraphene pages 5-8): Vinoj Gopalakrishnan, Priya Saxena, Payal Thakur, Alexey Lipatov, and Rajesh K. Sani. Impact of graphene layers on genetic expression and regulation within sulfate-reducing biofilms. Microorganisms, 12:1759, Aug 2024. URL: https://doi.org/10.3390/microorganisms12091759, doi:10.3390/microorganisms12091759. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gopalakrishnan2024impactofgraphene pages 5-8</li>
+<li>bush2014interdomainrepressionin pages 67-68</li>
+<li>carrerareyna2025analysisandcomparison pages 2-4</li>
+<li>carrerareyna2025analysisandcomparison pages 28-30</li>
+<li>carrerareyna2025analysisandcomparison pages 1-2</li>
+<li>fievet2011theanaerobespecificorange pages 1-2</li>
+<li>fievet2011theanaerobespecificorange pages 12-13</li>
+<li>fievet2014ihfisrequired pages 1-2</li>
+<li>fievet2014ihfisrequired pages 8-9</li>
+<li>https://doi.org/10.1186/s12864-015-2176-y.</li>
+<li>https://doi.org/10.1128/JB.00044-11.</li>
+<li>https://doi.org/10.1371/journal.pone.0086507.</li>
+<li>https://doi.org/10.1111/1462-2920.14679.</li>
+<li>https://doi.org/10.3390/microorganisms12091759.</li>
+<li>https://doi.org/10.1371/journal.pone.0327805.</li>
+<li>https://doi.org/10.1186/s12864-015-2176-y,</li>
+<li>https://doi.org/10.1371/journal.pone.0327805,</li>
+<li>https://doi.org/10.1128/jb.00044-11,</li>
+<li>https://doi.org/10.1371/journal.pone.0086507,</li>
+<li>https://doi.org/10.1111/1462-2920.14679,</li>
+<li>https://doi.org/10.3390/microorganisms12091759,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q72BK7
+gene_symbol: rpoN
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris Hildenborough
+description: &gt;-
+  RpoN (sigma-54) is an alternative sigma factor that directs bacterial RNA polymerase
+  to recognize -24/-12 type promoters. Unlike the housekeeping sigma-70, sigma-54 forms
+  a transcriptionally inactive closed complex with RNAP that absolutely requires ATP
+  hydrolysis by enhancer-binding proteins (EBPs) to transition to the open complex and
+  initiate transcription. In D. vulgaris Hildenborough, sigma-54 regulates an extensive
+  regulon of 36 regulons covering 201 protein-coding genes, including flagellar assembly,
+  nitrogen fixation/assimilation, biofilm formation, the anaerobe-specific Orange Protein
+  (ORP) complex, and various metabolic pathways. The protein contains three characteristic
+  domains: an N-terminal activator-interaction domain (AID) that contacts EBPs, a central
+  core-binding domain (CBD) that associates with RNAP core, and a C-terminal DNA-binding
+  domain (DBD) for -24/-12 promoter recognition.
+existing_annotations:
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Sigma factor activity is the core molecular function of rpoN. Sigma-54 acts as the
+      promoter specificity subunit for -24/-12 class promoters in bacteria. The protein
+      combines with the RNAP core to form a holoenzyme that recognizes specific promoter
+      elements.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary molecular function of sigma-54. The deep research confirms that
+      rpoN encodes the sigma-54 factor that directs RNAP to -24/-12 promoters. The D. vulgaris
+      sigma-54 promoter consensus is tGGcacg (-24) and tTGCt (-12). This annotation directly
+      reflects the core biochemical activity of the protein.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 is a promoter specificity factor for -24/-12 class promoters that, unlike sigma70, forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription&#34;
+- term:
+    id: GO:0001216
+    label: DNA-binding transcription activator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is mechanistically incorrect for sigma-54. Unlike sigma-70, sigma-54
+      does NOT have intrinsic transcription activator activity. Instead, sigma-54 forms a
+      CLOSED complex that actively blocks transcription initiation until EBPs provide the
+      ATP-dependent remodeling signal. Sigma-54 is better characterized as a transcription
+      specificity factor that gates promoter access.
+    action: REMOVE
+    reason: &gt;-
+      The deep research clearly establishes that sigma-54 forms a transcriptionally inactive
+      closed complex with RNAP and requires ATP-dependent remodeling by EBPs to form the open
+      complex. This is fundamentally different from transcription activators which directly
+      enhance transcription. Sigma-54 actually INHIBITS transcription until EBPs activate it.
+      The IEA annotation from InterPro domains IPR000394 and IPR007634 conflates promoter
+      recognition with transcription activation, which are mechanistically distinct for sigma-54.
+      GO:0016987 (sigma factor activity) correctly captures this function.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription&#34;
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;Structural work shows sigma54 occludes DNA loading and must be reorganized by EBP contact with the sigma54 N-terminus&#34;
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Sigma-54 has a C-terminal DNA-binding domain (DBD, Pfam PF04552) that recognizes
+      -24/-12 promoter elements. However, this DNA binding occurs only in the context
+      of the RNAP holoenzyme - sigma-54 does not bind DNA on its own.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt entry documents the RNA polymerase sigma factor 54 DNA-binding domain
+      (residues 315-473). This is a legitimate function, although the GO term definition
+      notes that sigma does not bind DNA on its own, but when combined with the core to form
+      the holoenzyme, the sigma factor binds specifically to promoter elements. The deep
+      research confirms sigma-54 recognizes specific -24/-12 promoter elements in D. vulgaris.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;D. vulgaris-specific sigma54 promoter consensus: derived -24/-12 elements are tGGcacg (-24) and tTGCt (-12). A refined set of 87 sigma54-dependent promoters was compiled&#34;
+- term:
+    id: GO:0016779
+    label: nucleotidyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT. Sigma factors do not have nucleotidyltransferase activity.
+      The catalytic activity of RNA polymerase (RNA synthesis) is performed by the core subunits
+      (beta, beta-prime), not by the sigma factor. Sigma-54 is a promoter specificity subunit
+      that determines WHERE transcription occurs, not an enzyme that catalyzes nucleotide transfer.
+    action: REMOVE
+    reason: &gt;-
+      This is a clear over-annotation based on the UniProtKB keyword KW-0548 (Nucleotidyltransferase).
+      The keyword mapping is inappropriate for sigma factors. The sigma subunit provides promoter
+      recognition but does not participate in the catalytic RNA synthesis reaction. The GO term
+      GO:0016987 definition explicitly states that sigma factors bind specifically to promoter
+      elements and are released once elongation begins - they are not catalytic subunits.
+      Sigma-54 lacks any nucleotidyltransferase domain.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-uniprot.txt
+        supporting_text: &#34;Belongs to the sigma-54 factor family&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation is INCORRECT for the same reason as nucleotidyltransferase activity.
+      Sigma-54 has no catalytic transferase function. It is a regulatory subunit that provides
+      promoter specificity, not an enzyme.
+    action: REMOVE
+    reason: &gt;-
+      This is a parent term of nucleotidyltransferase activity and is equally inappropriate.
+      Sigma factors are NOT enzymes. The UniProtKB keyword mapping (KW-0808, Transferase) is
+      incorrect for sigma factors, which function as promoter specificity factors rather than
+      catalytic subunits. No transferase domain is present in sigma-54 domain architecture.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-uniprot.txt
+        supporting_text: &#34;Belongs to the sigma-54 factor family&#34;
+- term:
+    id: GO:0000428
+    label: DNA-directed RNA polymerase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Sigma-54 is a subunit of the bacterial RNA polymerase holoenzyme complex. When associated
+      with the core RNAP (alpha2-beta-beta-prime), it forms the sigma-54 holoenzyme that
+      recognizes -24/-12 promoters.
+    action: ACCEPT
+    reason: &gt;-
+      This cellular component annotation is correct. Sigma-54 associates with the RNAP core
+      via its central core-binding domain (CBD, Pfam PF04963) to form the holoenzyme. The
+      deep research confirms sigma-54 operates in the bacterial nucleoid as part of the
+      RNAP holoenzyme, acting at chromosomal promoters.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 operates in the bacterial nucleoid as part of the RNAP holoenzyme, acting at chromosomal promoters&#34;
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Sigma-54 is directly involved in transcription initiation at -24/-12 promoters,
+      although its mechanism is distinct from sigma-70 in that it requires EBP activation.
+      Once activated, sigma-54 participates in the transition from closed to open complex.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation is appropriate. Sigma-54 is essential for
+      transcription initiation at its cognate promoters. The requirement for EBP activation
+      does not negate its role in initiation - it defines the specific mechanism. In D. vulgaris,
+      87 sigma-54-dependent promoters drive transcription initiation of 85 operons.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;requires ATP-dependent remodeling by EBPs (AAA+ ATPases) to form the open complex and initiate transcription&#34;
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs, associated with 87 sigma54-dependent promoters upstream of 85 operons&#34;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Sigma-54 regulates transcription by determining which promoters are recognized by RNAP.
+      In D. vulgaris, sigma-54 regulates 201 protein-coding genes across 36 regulons covering
+      diverse functions including motility, nitrogen metabolism, and biofilm formation.
+    action: ACCEPT
+    reason: &gt;-
+      Sigma-54 is a key transcriptional regulator that controls expression of specific gene
+      sets. The D. vulgaris sigma-54 regulon is well characterized and includes flagellar
+      genes, nitrogen fixation, amino acid catabolism, and stress responses. This is a core
+      function of sigma factors.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs&#34;
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;Enriched functions include flagellar assembly and cell-exterior structures&#34;
+- term:
+    id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      This annotation is problematic because sigma-54 does not positively regulate transcription
+      in isolation - it forms a CLOSED complex that blocks transcription until activated by EBPs.
+      The positive regulation comes from the EBPs, not from sigma-54 itself.
+    action: MODIFY
+    reason: &gt;-
+      The logical inference from GO:0001216 (DNA-binding transcription activator activity) to
+      GO:0045893 is based on the incorrect premise that sigma-54 has activator activity. Sigma-54
+      actually forms a closed complex that must be opened by EBPs. The more accurate annotation
+      is GO:0006355 (regulation of DNA-templated transcription), which is already present.
+      Sigma-54 enables transcription of specific genes when activated, but the positive regulation
+      comes from the EBP signal, not sigma-54.
+    proposed_replacement_terms:
+      - id: GO:0006355
+        label: regulation of DNA-templated transcription
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 forms a transcriptionally inactive closed complex with RNAP and requires ATP-dependent remodeling by EBPs&#34;
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      Sigma-54 does regulate transcription initiation by determining which promoters are
+      recognized and by controlling the transition from closed to open complex (via EBP
+      requirement). This is more specific than GO:0006355 but accurately reflects sigma-54
+      function.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation correctly captures that sigma-54 regulates the initiation step of
+      transcription. The sigma-54-dependent promoters require both sigma-54 for recognition
+      and EBPs for activation, representing a regulatory checkpoint at initiation. The
+      logical inference from GO:0016987 (sigma factor activity) to this term is valid.
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 is a promoter specificity factor for -24/-12 class promoters&#34;
+references:
+- id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+  title: &#34;Deep research report on rpoN (Q72BK7) sigma-54 in Desulfovibrio vulgaris&#34;
+  findings:
+    - statement: D. vulgaris sigma-54 regulome includes 36 regulons, 201 protein-coding genes, 87 promoters
+      supporting_text: &#34;The reconstructed D. vulgaris sigma54 sigmulon includes 36 regulons covering 201 protein-coding genes and 4 non-coding RNAs, associated with 87 sigma54-dependent promoters upstream of 85 operons&#34;
+    - statement: Sigma-54 promoter consensus is tGGcacg (-24) and tTGCt (-12)
+      supporting_text: &#34;derived -24/-12 elements are tGGcacg (-24) and tTGCt (-12)&#34;
+    - statement: D. vulgaris encodes 37 sigma-54-associated EBPs
+      supporting_text: &#34;D. vulgaris encodes 37 sigma54-associated EBPs; 25 harbor the canonical GAFTGA sigma54-interaction motif&#34;
+    - statement: Regulated processes include flagella, nitrogen metabolism, biofilm, type III secretion
+      supporting_text: &#34;Enriched functions include flagellar assembly and cell-exterior structures&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+core_functions:
+  - description: &gt;-
+      The primary molecular function of rpoN is sigma factor activity, directing RNA polymerase
+      to -24/-12 type promoters. This is supported by domain architecture (AID, CBD, DBD domains),
+      sequence family membership (sigma-54 family), and functional characterization in D. vulgaris
+      showing 87 sigma-54-dependent promoters with consensus tGGcacg/-24 and tTGCt/-12.
+    molecular_function:
+      id: GO:0016987
+      label: sigma factor activity
+    directly_involved_in:
+      - id: GO:2000142
+        label: regulation of DNA-templated transcription initiation
+      - id: GO:0006352
+        label: DNA-templated transcription initiation
+    in_complex:
+      id: GO:0000428
+      label: DNA-directed RNA polymerase complex
+    supported_by:
+      - reference_id: file:DESVH/Q72BK7/Q72BK7-deep-research-falcon.md
+        supporting_text: &#34;sigma54 is a promoter specificity factor for -24/-12 class promoters&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -248,7 +248,7 @@
 
         .results-grid {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
 
@@ -310,6 +310,54 @@
             padding: 60px 20px;
             color: #718096;
             grid-column: 1 / -1;
+        }
+
+        .load-more-container {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .load-more-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .load-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .load-more-info {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .facet-show-more {
+            padding: 8px 12px;
+            margin-top: 8px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.15s ease;
+        }
+
+        .facet-show-more:hover {
+            background: #e5e7eb;
         }
 
         /* Numeric filter styles */
@@ -407,12 +455,22 @@
                 this.schema = schema;
                 this.currentFilters = {};
                 this.currentQuery = '';
-                
+
                 // Track collapsed facets
                 this.collapsedFacets = new Set();
-                
+
                 // Track slider timeout
                 this.sliderTimeout = null;
+
+                // Pagination settings
+                this.itemsPerPage = schema.itemsPerPage || 50;
+                this.displayedCount = this.itemsPerPage;
+                this.currentFilteredData = [];
+
+                // Facet pagination settings
+                this.facetItemsToShow = schema.facetItemsToShow || 10;
+                this.expandedFacets = new Set();
+                this.currentFacetCounts = null;
                 
                 try {
                     console.log('📚 Building search index...');
@@ -563,6 +621,26 @@
                 
                 document.getElementById('clearFilters').addEventListener('click', () => {
                     this.clearAllFilters();
+                });
+
+                // Load more button (delegated since it's dynamically created)
+                document.addEventListener('click', (e) => {
+                    if (e.target.id === 'loadMoreBtn') {
+                        this.loadMore();
+                    }
+                    // Facet show more button
+                    if (e.target.classList.contains('facet-show-more')) {
+                        const field = e.target.dataset.field;
+                        if (this.expandedFacets.has(field)) {
+                            this.expandedFacets.delete(field);
+                        } else {
+                            this.expandedFacets.add(field);
+                        }
+                        // Re-render facets with cached counts
+                        if (this.currentFacetCounts) {
+                            this.renderFacets(this.currentFacetCounts);
+                        }
+                    }
                 });
             }
             
@@ -757,16 +835,26 @@
                 
                 // Get actual data objects
                 const filteredData = Array.from(resultIndices).map(idx => this.originalData[idx]);
-                
-                // Generate facet counts for current result set
-                const facetCounts = this.generateFacetCounts(resultIndices);
-                
+
+                // Store for pagination and reset displayed count on new search
+                this.currentFilteredData = filteredData;
+                this.displayedCount = this.itemsPerPage;
+
+                // Generate facet counts for current result set and cache them
+                this.currentFacetCounts = this.generateFacetCounts(resultIndices);
+                const facetCounts = this.currentFacetCounts;
+
                 const endTime = performance.now();
-                document.getElementById('performanceInfo').textContent = 
+                document.getElementById('performanceInfo').textContent =
                     `Search: ${(endTime - startTime).toFixed(2)}ms`;
-                
-                this.renderResults(filteredData);
+
+                this.renderResults();
                 this.renderFacets(facetCounts);
+            }
+
+            loadMore() {
+                this.displayedCount += this.itemsPerPage;
+                this.renderResults();
             }
             
             generateFacetCounts(resultIndices) {
@@ -808,13 +896,16 @@
                 return counts;
             }
             
-            renderResults(items) {
+            renderResults() {
+                const items = this.currentFilteredData;
                 const resultsCount = document.getElementById('resultsCount');
                 const resultsGrid = document.getElementById('resultsGrid');
-                
-                resultsCount.textContent = `${items.length} items found`;
-                
-                if (items.length === 0) {
+
+                const totalCount = items.length;
+                const showingCount = Math.min(this.displayedCount, totalCount);
+                resultsCount.textContent = `Showing ${showingCount} of ${totalCount} items`;
+
+                if (totalCount === 0) {
                     resultsGrid.innerHTML = `
                         <div class="no-results">
                             <div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>
@@ -824,16 +915,19 @@
                     `;
                     return;
                 }
-                
+
+                // Only render up to displayedCount items
+                const itemsToRender = items.slice(0, this.displayedCount);
+
                 // Generic rendering based on schema displayFields
-                resultsGrid.innerHTML = items.map(item => {
+                let html = itemsToRender.map(item => {
                     const fieldsHtml = this.schema.displayFields.map(fieldConfig => {
                         const value = item[fieldConfig.field];
-                        
+
                         if (value === undefined || value === null) {
                             return '';
                         }
-                        
+
                         if (fieldConfig.type === 'array') {
                             if (Array.isArray(value)) {
                                 return `
@@ -857,7 +951,7 @@
                             if (fieldConfig.format === 'currency') {
                                 displayValue = `${value}`;
                             }
-                            
+
                             // Generic handling for CURIE type fields
                             if (fieldConfig.type === 'curie' && value.includes(':')) {
                                 // Create hyperlink for any CURIE (Compact URI)
@@ -872,7 +966,7 @@
                                 const target = isLocalUrl ? '_blank' : '_blank';  // Open both in new tab
                                 displayValue = `<a href="${value}" target="${target}" style="color: #10b981; text-decoration: none; border-bottom: 1px dashed #10b981;">${fieldConfig.label}</a>`;
                             }
-                            
+
                             return `
                                 <div class="field-display">
                                     <span class="field-label">${fieldConfig.label}:</span>
@@ -881,9 +975,24 @@
                             `;
                         }
                     }).join('');
-                    
+
                     return `<div class="result-card">${fieldsHtml}</div>`;
                 }).join('');
+
+                // Add "Load More" button if there are more items
+                if (this.displayedCount < totalCount) {
+                    const remaining = totalCount - this.displayedCount;
+                    html += `
+                        <div class="load-more-container">
+                            <button class="load-more-btn" id="loadMoreBtn">
+                                Load More Results
+                            </button>
+                            <div class="load-more-info">${remaining.toLocaleString()} more items available</div>
+                        </div>
+                    `;
+                }
+
+                resultsGrid.innerHTML = html;
             }
             
             renderFacets(facetCounts) {
@@ -958,21 +1067,27 @@
                                 return a.key.localeCompare(b.key);
                             }
                         });
-                    
-                    const itemsHtml = buckets.map(bucket => {
-                        const isActive = this.currentFilters[facetConfig.field] && 
+
+                    // Determine how many facet items to show
+                    const isExpanded = this.expandedFacets.has(facetConfig.field);
+                    const maxToShow = isExpanded ? buckets.length : this.facetItemsToShow;
+                    const bucketsToShow = buckets.slice(0, maxToShow);
+                    const hasMore = buckets.length > this.facetItemsToShow;
+
+                    const itemsHtml = bucketsToShow.map(bucket => {
+                        const isActive = this.currentFilters[facetConfig.field] &&
                                         this.currentFilters[facetConfig.field].includes(bucket.key);
-                        
+
                         // Create hyperlink for CURIE type facets
                         let displayValue = bucket.key;
                         if (facetConfig.type === 'curie' && bucket.key.includes(':')) {
                             const curieUrl = `https://bioregistry.io/${bucket.key}`;
                             displayValue = `<a href="${curieUrl}" target="_blank" style="color: inherit; text-decoration: none;" onclick="event.stopPropagation();">${bucket.key}</a>`;
                         }
-                        
+
                         return `
-                            <div class="facet-item ${isActive ? 'active' : ''}" 
-                                 data-filter="${facetConfig.field}" 
+                            <div class="facet-item ${isActive ? 'active' : ''}"
+                                 data-filter="${facetConfig.field}"
                                  data-value="${bucket.key}">
                                 <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
                                 <span>${displayValue}</span>
@@ -980,7 +1095,18 @@
                             </div>
                         `;
                     }).join('');
-                    
+
+                    // Add show more/less button if needed
+                    let showMoreBtn = '';
+                    if (hasMore) {
+                        const remaining = buckets.length - this.facetItemsToShow;
+                        showMoreBtn = `
+                            <button class="facet-show-more" data-field="${facetConfig.field}">
+                                ${isExpanded ? 'Show Less' : `Show ${remaining} More`}
+                            </button>
+                        `;
+                    }
+
                     return `
                         <div class="facet-group">
                             <div class="facet-header" data-field="${facetConfig.field}">
@@ -989,6 +1115,7 @@
                             </div>
                             <div class="facet-content ${isCollapsed ? 'collapsed' : ''}">
                                 ${itemsHtml}
+                                ${showMoreBtn}
                             </div>
                         </div>
                     `;
@@ -1077,6 +1204,13 @@
             // Set search placeholder
             if (schema.searchPlaceholder) {
                 document.getElementById('searchBox').placeholder = schema.searchPlaceholder;
+            }
+
+            // Inject custom CSS if provided
+            if (schema.customCss) {
+                const styleEl = document.createElement('style');
+                styleEl.textContent = schema.customCss;
+                document.head.appendChild(styleEl);
             }
             
             console.log('📊 Data check:', {

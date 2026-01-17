@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Test script for PMID validation functionality."""
-import tempfile
 from pathlib import Path
 import sys
 sys.path.insert(0, 'src')
@@ -79,7 +78,7 @@ def test_jak1_pathway():
     print(f"  Found {len(invalid)} invalid PMIDs")
     
     if invalid:
-        print(f"  ❌ Invalid PMIDs detected:")
+        print("  ❌ Invalid PMIDs detected:")
         for pmid in sorted(invalid):
             # Find line number
             lines = content.split('\n')
@@ -89,7 +88,7 @@ def test_jak1_pathway():
                     break
         return False
     else:
-        print(f"  ✅ All PMIDs are valid")
+        print("  ✅ All PMIDs are valid")
         return True
 
 def main():
