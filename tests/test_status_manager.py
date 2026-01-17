@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 import yaml
 
-import pytest
 
 from ai_gene_review.status_manager import (
     compute_status_from_data,

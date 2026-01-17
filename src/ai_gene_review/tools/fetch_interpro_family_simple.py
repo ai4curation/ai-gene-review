@@ -12,7 +12,6 @@ Usage:
 
 import argparse
 import csv
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -65,7 +64,7 @@ class InterProFamilyFetcherSimple:
 
         # Optionally add protein members
         if include_proteins:
-            print(f"🧬 Fetching reviewed protein members...")
+            print("🧬 Fetching reviewed protein members...")
             proteins = self._fetch_protein_members(database, family_id)
             result["reviewed_proteins"] = proteins
 

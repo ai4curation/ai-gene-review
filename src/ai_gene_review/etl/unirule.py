@@ -21,23 +21,17 @@ import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 import requests
 
 # Reuse data classes from ARBA module
 from ai_gene_review.etl.arba import (
     Annotation,
-    ARBARule,
     Condition,
     ConditionSet,
     ConditionValue,
-    DBReference,
-    Keyword,
-    Reaction,
-    ReactionCrossReference,
     Statistics,
-    SubcellularLocation,
     _parse_annotation,
     _annotation_to_json,
 )
@@ -234,7 +228,7 @@ class UniRuleClient:
     def get_total_count(self) -> int:
         """Get the total number of UniRules."""
         url = f"{self.base_url}/search"
-        params = {"query": "*", "size": 1}
+        params: dict[str, str | int] = {"query": "*", "size": 1}
         response = self._session.get(url, params=params, timeout=30)
         response.raise_for_status()
         return int(response.headers.get("X-Total-Results", 0))
@@ -270,7 +264,7 @@ class UniRuleClient:
     ) -> tuple[list[UniRule], Optional[str]]:
         """Search for UniRules."""
         url = f"{self.base_url}/search"
-        params = {"query": query, "size": min(size, 500)}
+        params: dict[str, str | int] = {"query": query, "size": min(size, 500)}
         if cursor:
             params["cursor"] = cursor
 
@@ -296,7 +290,7 @@ class UniRuleClient:
         batch_size: int = 500,
         cache: bool = True,
         go_only: bool = False,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[Callable[[int, int, int], None]] = None
     ) -> Iterator[UniRule]:
         """Iterate over all UniRules.
 

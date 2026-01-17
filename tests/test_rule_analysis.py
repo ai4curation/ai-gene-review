@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_gene_review.etl.arba import ARBAClient, ARBARule
+from ai_gene_review.etl.arba import ARBARule
 from ai_gene_review.etl.rule_analysis import (
     analyze_interpro_overlap_in_condition_set,
     analyze_ipr2go_redundancy,

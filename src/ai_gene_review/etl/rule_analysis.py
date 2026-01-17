@@ -22,15 +22,13 @@ import time
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import seaborn as sns
 import yaml
-from scipy.cluster import hierarchy
-from scipy.spatial.distance import squareform
 
 from ai_gene_review.etl.arba import ARBARule, ConditionSet
 
@@ -146,7 +144,7 @@ def get_swissprot_count_for_interpro(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -192,7 +190,7 @@ def get_swissprot_count_for_funfam(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -238,7 +236,7 @@ def get_swissprot_count_for_panther(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -286,7 +284,7 @@ def get_swissprot_count_for_interpro_intersection(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -333,7 +331,7 @@ def get_swissprot_count_for_go(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -398,7 +396,7 @@ def get_swissprot_count_for_mixed_conditions(
 
     query = " AND ".join(query_parts)
 
-    params = {
+    params: dict[str, str | int] = {
         "query": query,
         "size": 1  # Only need count from header
     }
@@ -650,7 +648,7 @@ def analyze_interpro_overlap_in_condition_set(
         }
 
     # Analyze all pairwise combinations
-    pairs_analysis = []
+    pairs_analysis: list[dict[str, Any]] = []
     for (type_a, id_a), (type_b, id_b) in combinations(domain_conditions, 2):
         # Get individual counts
         if type_a == "interpro":
@@ -824,8 +822,8 @@ def analyze_all_domain_pairs(
         True
     """
     # Collect all domain conditions from all condition sets
-    all_domain_conditions = []
-    condition_set_membership = {}  # Maps (type, id) -> list of 1-based condition set indices
+    all_domain_conditions: list[tuple[str, str]] = []
+    condition_set_membership: dict[tuple[str, str], list[int]] = {}  # Maps (type, id) -> list of 1-based condition set indices
 
     for cs_idx, cs in enumerate(rule.condition_sets, start=1):
         for condition in cs.conditions:
@@ -883,7 +881,7 @@ def analyze_all_domain_pairs(
         }
 
     # Analyze all pairwise combinations
-    pairs_analysis = []
+    pairs_analysis: list[dict[str, Any]] = []
     for (type_a, id_a), (type_b, id_b) in combinations(all_domain_conditions, 2):
         # Get individual counts
         if type_a == "interpro":
@@ -1593,7 +1591,7 @@ def build_heatmap_table_data(
     cs_groups = []
     cs_boundary_cols = set()  # Columns that start a new CS
     current_cs = None
-    current_group = {'cs_label': None, 'domains': [], 'taxon_label': None}
+    current_group: dict[str, Any] = {'cs_label': None, 'domains': [], 'taxon_label': None}
     external_domains = []  # Collect external IPRs (empty condition_sets, not GO terms)
 
     # Only process domains (not GO term) for CS grouping
@@ -1665,6 +1663,7 @@ def build_heatmap_table_data(
             })
     elif external_domains:
         # Only external domains, no GO term in pairs
+        assert first_ext_idx is not None  # Guaranteed when external_domains is non-empty
         cs_boundary_cols.add(first_ext_idx)
         cs_groups.append({
             'cs_label': 'EXT',
@@ -1693,7 +1692,7 @@ def build_heatmap_table_data(
 
     # Build matrix: matrix[i][j] = containment of domain i in domain j (i PREDICTS j)
     n = len(domain_ids)
-    matrix = [[None for _ in range(n)] for _ in range(n)]
+    matrix: list[list[dict[str, Any] | None]] = [[None for _ in range(n)] for _ in range(n)]
 
     # Fill matrix from pairs
     for pair in pairs:

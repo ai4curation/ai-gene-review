@@ -20,7 +20,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Callable, Iterator, Optional
 
 import requests
 
@@ -528,7 +528,7 @@ class ARBAClient:
             True
         """
         url = f"{self.base_url}/search"
-        params = {"query": "*", "size": 1}
+        params: dict[str, str | int] = {"query": "*", "size": 1}
         response = self._session.get(url, params=params, timeout=30)
         response.raise_for_status()
         return int(response.headers.get("X-Total-Results", 0))
@@ -587,7 +587,7 @@ class ARBAClient:
             Tuple of (list of rules, next cursor or None if no more results)
         """
         url = f"{self.base_url}/search"
-        params = {"query": query, "size": min(size, 500)}
+        params: dict[str, str | int] = {"query": query, "size": min(size, 500)}
         if cursor:
             params["cursor"] = cursor
 
@@ -615,7 +615,7 @@ class ARBAClient:
         batch_size: int = 500,
         cache: bool = True,
         go_only: bool = False,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[Callable[[int, int, int], None]] = None
     ) -> Iterator[ARBARule]:
         """Iterate over all ARBA rules.
 
@@ -668,7 +668,7 @@ class ARBAClient:
         query: str = "*",
         batch_size: int = 500,
         force: bool = False,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[Callable[[int, int], None]] = None
     ) -> dict:
         """Sync all ARBA rules to local cache.
 

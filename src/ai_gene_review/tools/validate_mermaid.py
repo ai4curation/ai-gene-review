@@ -7,7 +7,7 @@ mermaid-cli (mmdc) or puppeteer, avoiding npm dependency issues.
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -115,7 +115,6 @@ class MermaidValidator:
     def _validate_graph(self, lines: List[str]):
         """Validate graph/flowchart specific syntax."""
         has_direction = False
-        has_nodes = False
         has_connections = False
 
         for i, line in enumerate(lines, 1):
@@ -140,7 +139,6 @@ class MermaidValidator:
                 if any(arrow in line for arrow in self.GRAPH_ARROWS):
                     has_connections = True
             elif '[' in line or '(' in line or '{' in line or '>' in line:
-                has_nodes = True
                 self._validate_node_definition(line, i)
 
         if not has_direction and self.diagram_type == DiagramType.GRAPH:
@@ -260,14 +258,13 @@ class MermaidValidator:
 
     def _validate_pie(self, lines: List[str]):
         """Validate pie chart specific syntax."""
-        has_title = False
         has_data = False
 
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
 
             if stripped.startswith('title'):
-                has_title = True
+                pass
             elif ':' in stripped and not stripped.startswith('%%'):
                 has_data = True
                 # Check for valid number after colon
@@ -378,7 +375,7 @@ def validate_file(file_path: Path) -> bool:
         print(f"  Summary: {errors}/{len(blocks)} blocks have errors")
         return False
     else:
-        print(f"  Summary: All blocks valid!")
+        print("  Summary: All blocks valid!")
         return True
 
 def main():
@@ -424,7 +421,7 @@ def main():
             print(f"\n✅ All mermaid blocks in {len(files_with_mermaid)} files are valid!")
             sys.exit(0)
         else:
-            print(f"\n❌ Some mermaid blocks have errors")
+            print("\n❌ Some mermaid blocks have errors")
             sys.exit(1)
     else:
         print(f"Error: {path} is not a file or directory")
