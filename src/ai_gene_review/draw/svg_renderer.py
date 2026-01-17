@@ -2,7 +2,7 @@
 
 import drawsvg as draw
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 from .layout_engine import LayoutConfig, BoundingBox, Position
 
 

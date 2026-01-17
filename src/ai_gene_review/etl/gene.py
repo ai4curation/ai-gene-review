@@ -311,7 +311,7 @@ def fetch_gene_data(
             result["panther_family_fetched"] = False
             result["panther_family_id"] = panther_family_id
     else:
-        print(f"  - No PANTHER family found in UniProt data")
+        print("  - No PANTHER family found in UniProt data")
         result["panther_family_fetched"] = False
         result["panther_family_id"] = None
 
@@ -1175,7 +1175,7 @@ def fetch_gene_data_ncRNA(
 
                 if fetched_count > 0:
                     print(f"  ✓ Downloaded {fetched_count} publications to publications/")
-    except (json.JSONDecodeError, Exception) as e:
+    except (json.JSONDecodeError, Exception):
         # Continue if publication download fails
         pass
 

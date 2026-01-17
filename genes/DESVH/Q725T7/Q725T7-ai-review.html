@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kdpB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>kdpB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q725T7" target="_blank" class="term-link">
+                        Q725T7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "kdpB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q725T7" data-a="DESCRIPTION: KdpB is the catalytic ATP-binding subunit of the K..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KdpB is the catalytic ATP-binding subunit of the KdpFABC high-affinity potassium uptake system in N. vulgaris Hildenborough (DVU_3338). As a P-type ATPase (EC 7.2.2.6), KdpB hydrolyzes ATP and forms an aspartyl-phosphate intermediate (Asp302) during the E1/E2 catalytic cycle, driving K+ translocation across the inner membrane. The KdpFABC complex is induced under severe K+ limitation and provides high-affinity K+ uptake (apparent Km ~2 uM). KdpB couples ATP hydrolysis to conformational changes that drive K+ transport through a ~40 A tunnel from the KdpA selectivity filter to the cytoplasmic release site in KdpB.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071805" target="_blank" class="term-link">
+                                    GO:0071805
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0071805" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB is the catalytic subunit of the KdpFABC high-affinity K+ pump that drives potassium ion transmembrane transport. This annotation is correctly inferred from the GO:0008556 molecular function annotation via logical inference.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> KdpB is definitively involved in potassium ion transmembrane transport as the ATP-hydrolyzing catalytic subunit of KdpFABC. The UniProt function annotation explicitly states this is a high-affinity ATP-driven potassium transport system. This is the primary biological process for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">KdpB hydrolyzes ATP and cycles through E1/E2 conformations with a catalytic aspartyl phosphate, driving K+ translocation across the inner membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0000166" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB binds nucleotides (specifically ATP) as part of its P-type ATPase catalytic mechanism. This is correct but overly general - GO:0005524 (ATP binding) is also annotated and is more specific and informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct (KdpB does bind nucleotides), this annotation is redundant with the more specific GO:0005524 (ATP binding) annotation. The protein specifically binds ATP at defined residues. For annotation parsimony, the more specific ATP binding term is preferred.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Nucleotide-binding {ECO:0000256|ARBA:ARBA00022741, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB requires Mg2+ as a cofactor for ATP hydrolysis, as is typical for P-type ATPases. UniProt annotation identifies Mg2+ binding sites at positions 514 and 518. This is a core function required for catalysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium ion binding is essential for P-type ATPase catalytic function. The Mg2+ cofactor is required for ATP hydrolysis. UniProt HAMAP annotation identifies specific Mg2+ binding residues (positions 514 and 518) in KdpB. This represents a genuine molecular function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Magnesium {ECO:0000256|ARBA:ARBA00022842, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB is the ATP-binding catalytic subunit of KdpFABC. ATP binding is essential for its P-type ATPase function. Multiple ATP binding residues are annotated in UniProt (339, 343, 371-378, 389). This is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is fundamental to KdpB&#39;s function as a P-type ATPase. The protein hydrolyzes ATP to drive K+ transport. The catalytic reaction is: ATP + H2O + K+(out) = ADP + phosphate + K+(in) (EC 7.2.2.6). ATP binding is clearly a core molecular function that should be retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB localizes to the inner membrane (equivalent to plasma membrane in bacteria). UniProt annotation confirms cell inner membrane localization as a multi-pass membrane protein with 7 transmembrane helices.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> KdpFABC is an inner membrane complex in bacteria. UniProt explicitly annotates KdpB as localized to the cell inner membrane. The protein has 7 transmembrane helices. For bacteria, plasma membrane and inner membrane are equivalent terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell inner membrane {ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006811" target="_blank" class="term-link">
+                                    GO:0006811
+                                </a>
+                            </span>
+                            <span class="term-label">monoatomic ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0006811" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB is involved in monoatomic ion transport (specifically K+). However, this term is overly general when more specific terms (GO:0006813 potassium ion transport, GO:0071805 potassium ion transmembrane transport) are also annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this annotation is redundant with the more specific GO:0006813 (potassium ion transport) and GO:0071805 (potassium ion transmembrane transport) annotations. KdpB specifically transports K+, not generic ions. The more specific BP terms should be preferred for annotation parsimony.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ion transport {ECO:0000256|ARBA:ARBA00023065, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006813" target="_blank" class="term-link">
+                                    GO:0006813
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0006813" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB is the catalytic subunit of the high-affinity K+ uptake system KdpFABC. Potassium ion transport is the core biological process. GO:0071805 (potassium ion transmembrane transport) is also annotated and is slightly more specific.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Potassium ion transport is definitively the core biological process of KdpB. While GO:0071805 (potassium ion transmembrane transport) is more specific, retaining both annotations is acceptable as GO:0006813 is a broader parent term that captures the general function. The high-affinity Kdp system is expressed under severe K+ limitation to import K+ into the cytoplasm.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Part of the high-affinity ATP-driven potassium transport (or Kdp) system, which catalyzes the hydrolysis of ATP coupled with the electrogenic transport of potassium into the cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008556" target="_blank" class="term-link">
+                                    GO:0008556
+                                </a>
+                            </span>
+                            <span class="term-label">P-type potassium transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0008556" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0008556 is the most specific and appropriate molecular function term for KdpB. It precisely describes the P-type ATPase mechanism that couples ATP hydrolysis to K+ transport via aspartyl-phosphate intermediate formation. This is the core molecular function annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct and most informative molecular function term for KdpB. The GO definition matches exactly: &#34;Enables the transfer of K+ from one side of a membrane to the other according to the reaction: ATP + H2O + K+(out) = ADP + phosphate + K+(in).&#34; KdpB forms a 4-aspartylphosphate intermediate at Asp302 during the E1/E2 catalytic cycle, characteristic of P-type ATPases.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=K(+)(out) + ATP + H2O = K(+)(in) + ADP + phosphate + H(+)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB is a membrane protein with 7 transmembrane helices. However, GO:0005886 (plasma membrane) is more specific and is already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While correct, this term is redundant with the more specific GO:0005886 (plasma membrane) annotation. The protein is specifically localized to the inner/plasma membrane, not just generically associated with membranes. For annotation parsimony, the more specific CC term is preferred.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Membrane {ECO:0000256|ARBA:ARBA00023136, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB has hydrolase activity (hydrolyzes ATP). However, this is an overly generic term when GO:0016887 (ATP hydrolysis activity) is also annotated and provides much more specific information.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is technically correct but uninformative. KdpB specifically hydrolyzes ATP, not generic substrates. GO:0016887 (ATP hydrolysis activity) is already annotated and is far more informative. The generic &#34;hydrolase activity&#34; term should be avoided in favor of more specific enzyme activity terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Hydrolase {ECO:0000313|EMBL:AAS97806.1}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB hydrolyzes ATP to drive K+ transport. This molecular function is core to the protein&#39;s role as a P-type ATPase. The annotation is correct and informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis is the energy-providing reaction that drives K+ transport in KdpFABC. KdpB is the catalytic subunit responsible for this hydrolysis. The reaction (ATP + H2O = ADP + phosphate) is coupled to conformational changes that translocate K+. This is a core molecular function that should be retained alongside GO:0008556.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">catalyzes the hydrolysis of ATP coupled with the electrogenic transport of potassium into the cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725T7" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KdpB binds metal ions (specifically Mg2+ as a cofactor). However, GO:0000287 (magnesium ion binding) is more specific and is already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is redundant with the more specific GO:0000287 (magnesium ion binding) annotation. KdpB specifically binds Mg2+ as a catalytic cofactor, not generic metal ions. The specific term provides more informative annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725T7/Q725T7-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Metal-binding {ECO:0000256|ARBA:ARBA00022723, ECO:0000256|HAMAP-Rule:MF_00285}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Primary molecular function. KdpB catalyzes ATP hydrolysis coupled to K+ translocation via the P-type ATPase mechanism with aspartyl-phosphate intermediate.</h3>
+                <span class="vote-buttons" data-g="Q725T7" data-a="FUNCTION: Primary molecular function. KdpB catalyzes ATP hyd..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008556" target="_blank" class="term-link">
+                            P-type potassium transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071805" target="_blank" class="term-link">
+                                potassium ion transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Infers GO:0016887 (ATP hydrolysis activity) from InterPro:IPR001757 (P-type ATPase)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps UniProtKB keywords to broad GO terms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of redundant general terms (hydrolase, metal ion binding, ion transport)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic GO annotations transferred based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of GO:0000287 (magnesium ion binding) via UniRule</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Infers GO:0071805 (potassium ion transmembrane transport) from GO:0008556 MF annotation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combines InterPro, UniRule, and keyword-based annotations</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Primary source for most IEA annotations on this protein</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q725T7/Q725T7-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on KdpB function based on literature review</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KdpB is the catalytic P-type ATPase subunit of the KdpFABC high-affinity K+ uptake system</div>
+                        
+                        <div class="finding-text">"kdpB encodes the catalytic P-type ATPase subunit of the KdpFABC high-affinity K+ uptake system"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">K+ is selected in KdpA selectivity filter and delivered to KdpB via a 40 A tunnel</div>
+                        
+                        <div class="finding-text">"K+ is selected in KdpA&#39;s channel-like selectivity filter and delivered to the KdpB transmembrane ion-binding site via a ~40 A tunnel"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The functional complex resides in the inner membrane</div>
+                        
+                        <div class="finding-text">"The functional complex resides in the inner membrane and requires KdpA/B/C plus the small stabilizer KdpF"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q725T7/Q725T7-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for Q725T7 (KdpB) from N. vulgaris Hildenborough</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EC 7.2.2.6 P-type potassium ATPase</div>
+                        
+                        <div class="finding-text">"EC=7.2.2.6 {ECO:0000256|HAMAP-Rule:MF_00285}"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Asp302 is 4-aspartylphosphate intermediate site</div>
+                        
+                        <div class="finding-text">"ACT_SITE        302 /note=&#34;4-aspartylphosphate intermediate&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP binding residues at positions 339, 343, 371-378, 389</div>
+                        
+                        <div class="finding-text">"BINDING         339 /ligand=&#34;ATP&#34; /ligand_id=&#34;ChEBI:CHEBI:30616&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mg2+ binding residues at positions 514 and 518</div>
+                        
+                        <div class="finding-text">"BINDING         514 /ligand=&#34;Mg(2+)&#34; /ligand_id=&#34;ChEBI:CHEBI:18420&#34;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cell inner membrane localization with 7 transmembrane helices</div>
+                        
+                        <div class="finding-text">"Cell inner membrane {ECO:0000256|HAMAP-Rule:MF_00285}; Multi-pass membrane protein"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q725T7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q725T7" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:40:08.378399'<br />
+end_time: '2026-01-15T10:45:09.408426'<br />
+duration_seconds: 301.03<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q725T7<br />
+  gene_symbol: kdpB<br />
+  uniprot_accession: Q725T7<br />
+  protein_description: 'RecName: Full=Potassium-transporting ATPase ATP-binding subunit<br />
+    {ECO:0000256|HAMAP-Rule:MF_00285}; EC=7.2.2.6 {ECO:0000256|HAMAP-Rule:MF_00285};<br />
+    AltName: Full=ATP phosphohydrolase [potassium-transporting] B chain {ECO:0000256|HAMAP-Rule:MF_00285};<br />
+    AltName: Full=Potassium-binding and translocating subunit B {ECO:0000256|HAMAP-Rule:MF_00285};<br />
+    AltName: Full=Potassium-translocating ATPase B chain {ECO:0000256|HAMAP-Rule:MF_00285};'<br />
+  gene_info: Name=kdpB {ECO:0000256|HAMAP-Rule:MF_00285, ECO:0000313|EMBL:AAS97806.1};<br />
+    OrderedLocusNames=DVU_3338 {ECO:0000313|EMBL:AAS97806.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Belongs to the cation transport ATPase (P-type) (TC 3.A.3)<br />
+  protein_domains: ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303);<br />
+    ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250);<br />
+    HAD-like_sf. (IPR036412)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q725T7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Potassium-transporting ATPase ATP-binding subunit {ECO:0000256|HAMAP-Rule:MF_00285}; EC=7.2.2.6 {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=ATP phosphohydrolase [potassium-transporting] B chain {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=Potassium-binding and translocating subunit B {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=Potassium-translocating ATPase B chain {ECO:0000256|HAMAP-Rule:MF_00285};</li>
+<li><strong>Gene Information:</strong> Name=kdpB {ECO:0000256|HAMAP-Rule:MF_00285, ECO:0000313|EMBL:AAS97806.1}; OrderedLocusNames=DVU_3338 {ECO:0000313|EMBL:AAS97806.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the cation transport ATPase (P-type) (TC 3.A.3)</li>
+<li><strong>Key Domains:</strong> ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303); ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250); HAD-like_sf. (IPR036412)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "kdpB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'kdpB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>kdpB</strong> (gene ID: Q725T7, UniProt: Q725T7) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q725T7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Potassium-transporting ATPase ATP-binding subunit {ECO:0000256|HAMAP-Rule:MF_00285}; EC=7.2.2.6 {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=ATP phosphohydrolase [potassium-transporting] B chain {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=Potassium-binding and translocating subunit B {ECO:0000256|HAMAP-Rule:MF_00285}; AltName: Full=Potassium-translocating ATPase B chain {ECO:0000256|HAMAP-Rule:MF_00285};</li>
+<li><strong>Gene Information:</strong> Name=kdpB {ECO:0000256|HAMAP-Rule:MF_00285, ECO:0000313|EMBL:AAS97806.1}; OrderedLocusNames=DVU_3338 {ECO:0000313|EMBL:AAS97806.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the cation transport ATPase (P-type) (TC 3.A.3)</li>
+<li><strong>Key Domains:</strong> ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303); ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250); HAD-like_sf. (IPR036412)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "kdpB" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'kdpB' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>kdpB</strong> (gene ID: Q725T7, UniProt: Q725T7) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive Research Report: kdpB (UniProt Q725T7; DVU_3338) in Desulfovibrio vulgaris Hildenborough</p>
+<p>Identity verification and domain/family consistency<br />
+- Gene/protein identity: The target is kdpB from Desulfovibrio vulgaris Hildenborough (DVU_3338), annotated as the ATP-binding/catalytic subunit of the high-affinity K+ pump KdpFABC, a hybrid complex that combines a K+ channel-like subunit (KdpA) with a P-type ATPase subunit (KdpB). Recent primary literature and reviews consistently define KdpB as the catalytic P-type ATPase subunit of the KdpFABC system, in line with the UniProt description for Q725T7 (P-type ATPase, EC 7.2.2.6; domains consistent with P-type ATPases) (silberberg2023sensorykinasekdpd pages 1-4, hussein2025conductionpathwayfor pages 1-4). <br />
+- Organismal context: Specific primary literature on kdpB in D. vulgaris Hildenborough (DVU_3338) is limited. Given this, functional annotation is inferred from strong conservation of the KdpFABC system across bacteria and from P-type ATPase/domain conservation that matches UniProt annotations. Where organism-specific data are lacking, we base conclusions on well-supported mechanistic studies from model bacteria (e.g., E. coli) and on general regulatory paradigms that are broadly conserved (KdpDE, c-di-AMP) (silberberg2023sensorykinasekdpd pages 1-4, silberberg2024kdpdisa pages 1-2, silberberg2024kdpdisa pages 2-4, hussein2025conductionpathwayfor pages 1-4).</p>
+<p>1) Key concepts and definitions<br />
+- Complex and composition: KdpFABC is a hetero-oligomeric K+ uptake pump. KdpA forms the K+-selective path, KdpB is the catalytic P-type ATPase that hydrolyzes ATP and forms the aspartyl phosphate intermediate, KdpC is an accessory subunit, and KdpF is a small membrane protein that stabilizes the complex (KdpFABC). Small-protein reviews and recent mechanistic/structural work support these roles (silberberg2023sensorykinasekdpd pages 1-4, hussein2025conductionpathwayfor pages 1-4, nanatani2015comparativeanalysisof pages 1-2). <br />
+- Enzymatic class and mechanism: KdpB is a P-type ATPase catalytic subunit that drives K+ transport via the Post–Albers reaction cycle (E1/E2 transitions) and an aspartyl-phosphate intermediate on a conserved aspartate (Asp307 in E. coli KdpB). ATP binding/hydrolysis at the cytosolic N/P/A domains is coupled to conformational changes in the transmembrane region to move K+ across the membrane (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18). <br />
+- Substrate specificity: The transported substrate for the KdpFABC system is K+. Kdp is a high-affinity K+ uptake system induced under severe K+ limitation, distinct from lower-affinity, higher-capacity systems such as Ktr/Trk in many bacteria (nanatani2015comparativeanalysisof pages 1-2, silberberg2023sensorykinasekdpd pages 1-4). <br />
+- Cellular localization: KdpFABC is an inner-membrane complex; KdpA provides a membrane-embedded selectivity filter and KdpB’s transmembrane region contains the canonical ion-binding pocket typical of P-type ATPases (hussein2025conductionpathwayfor pages 1-4).</p>
+<p>2) Recent developments and latest research (priority to 2023–2024)<br />
+- Tandem serine–histidine kinase regulation by KdpD: In 2024, a Nature Communications study established that KdpD is a tandem serine–histidine kinase. Beyond the canonical HK function that activates KdpE to induce kdpFABC transcription under low K+, an N-terminal atypical serine kinase (ASK) domain in KdpD directly phosphorylates KdpB at Ser162 under high K+. This post-translational phosphorylation rapidly and apparently irreversibly inhibits KdpFABC activity in E. coli, preventing K+ toxicity. Full inhibition occurs within ~2 minutes upon K+ upshift; preventing the KdpB S162 phosphorylation (S162A) increases ATP hydrolysis ~6-fold. The KdpD ASK requires a Walker A/B nucleotide-binding module, and the ASK control mechanism varies among species (direct K+ sensing in E. coli; c-di-AMP control in some shorter KdpD variants). These findings substantially expand the regulatory framework for K+ homeostasis (Nature Communications, Apr 2024; https://doi.org/10.1038/s41467-024-47526-8) (silberberg2024kdpdisa pages 1-2, silberberg2024kdpdisa pages 2-4). <br />
+- Conduction pathway and turnover-state structures: A 2025 cryo-EM preprint captured E. coli KdpFABC in lipid nanodiscs under turnover, resolving an E1~P·ADP conformation at 2.1 Å. The data support K+ entry via the KdpA selectivity filter, passage through a ~40 Å tunnel parallel to the membrane, and occupancy of a canonical ion-binding site within KdpB’s transmembrane domain coincident with phosphorylation of KdpB Asp307. The tunnel appears water-filled proximally but hydrophobic and dewetted near the KdpA–KdpB interface, suggesting an energy landscape shaped for vectorial K+ transfer. Mutational and transport assays (SSME) support K+ flux through the tunnel and point to a low-affinity release site in KdpB for cytoplasmic release. These structural/functional data refine the coupling between KdpA selectivity and KdpB catalysis (bioRxiv, May 2025; https://doi.org/10.1101/2025.05.05.652293) (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18). <br />
+- c-di-AMP as a master regulator of cell volume and K+ uptake: A 2024 MMBR review synthesizes quantitative evidence that c-di-AMP broadly regulates potassium transport systems and cell volume across diverse bacteria, highlighting KdpFABC as a high-affinity K+ import system induced under severe K+ limitation and dependent on ATP hydrolysis by KdpB (MMBR, Jun 2024; https://doi.org/10.1128/mmbr.00181-23) (). <br />
+- c-di-AMP inhibits Kdp via KdpD and riboswitch: In Bacillus anthracis, c-di-AMP accumulation downregulates Kdp (and other K+ importers) by binding to KdpD and to a ydaO-type riboswitch, linking second-messenger signaling to virulence regulation via control of intracellular K+ (Microbiology Spectrum, Aug 2024; https://doi.org/10.1128/spectrum.03786-23) (hussein2025conductionpathwayfor pages 1-4, silberberg2023sensorykinasekdpd pages 1-4). <br />
+- Preprint precursor (2023): The 2023 preprint that preceded the 2024 Nature Communications paper similarly demonstrated KdpD’s ASK-dependent phosphorylation of KdpB S162 as a rapid inhibitory mechanism at high K+ and suggested species diversification in regulatory inputs (K+ vs c-di-AMP) (bioRxiv, Nov 2023; https://doi.org/10.1101/2023.11.09.566405) (silberberg2023sensorykinasekdpd pages 13-16, silberberg2023sensorykinasekdpd pages 4-7, silberberg2023sensorykinasekdpd pages 1-4).</p>
+<p>3) Current applications and real-world implementations<br />
+- Regulatory modules as biosensing/engineering targets: The KdpDE–KdpFABC axis and its newly discovered serine phosphorylation branch offer modular control points for synthetic biology and biosensing platforms responsive to K+ and to second messengers such as c-di-AMP. General frameworks on engineering bacterial transmembrane signaling underscore the practicality of rewiring two-component systems to alter outputs, including K+ homeostasis modules (Open Biology review, 2018; https://doi.org/10.1098/rsob.180023) (). <br />
+- Pathogenesis and stress physiology: c-di-AMP’s inhibition of Kdp via KdpD and riboswitches links K+ homeostasis to virulence factor expression in pathogens (B. anthracis), suggesting translational routes to attenuate virulence by perturbing K+ uptake regulatory networks (Microbiology Spectrum, 2024; https://doi.org/10.1128/spectrum.03786-23) (hussein2025conductionpathwayfor pages 1-4). <br />
+- Environmental/physiological resilience: Comparative work in cyanobacteria highlights Kdp’s role in survival under trace K+ and during recovery from osmotic perturbations (slower, high-affinity role vs. Ktr’s rapid capacity), informing ecological modeling and bioprocess designs where K+ limitation is relevant (Journal of Bacteriology, 2015; https://doi.org/10.1128/JB.02276-14) (nanatani2015comparativeanalysisof pages 1-2).</p>
+<p>4) Expert opinions and analysis<br />
+- KdpB catalytic role and KdpF stabilization: Expert reviews on small proteins emphasize KdpF’s stabilizing role in KdpFABC and reaffirm KdpB as the catalytic P-type ATPase subunit, consistent with mechanistic studies and structures (FEMS Microbiol Rev, Nov 2023; https://doi.org/10.1093/femsre/fuad064; FEMS Microbiol Rev, Nov 2023; https://doi.org/10.1093/femsre/fuad063) (nanatani2015comparativeanalysisof pages 1-2). <br />
+- Expanded regulatory paradigm: The 2024 Nature Communications work introduces a paradigm wherein KdpD integrates K+ (and in some species c-di-AMP) to control KdpFABC both transcriptionally and post-translationally, ensuring rapid, energy-efficient adaptation to potassium repletion and averting toxicity. This dual-level control is likely widespread given the conservation of the KdpD ASK module across taxa (Nature Communications, Apr 2024; https://doi.org/10.1038/s41467-024-47526-8) (silberberg2024kdpdisa pages 1-2, silberberg2024kdpdisa pages 2-4). <br />
+- Structural convergence of channel–pump partnership: Turnover-state cryo-EM and functional assays support a continuous K+ conduction path from KdpA’s selectivity filter to KdpB’s ion-binding site via a hydrophobic, partially dewetted tunnel, reconciling channel-like selectivity with P-type ATPase catalysis. This integrated mechanism likely generalizes across KdpFABC systems given the conserved architecture (bioRxiv, May 2025; https://doi.org/10.1101/2025.05.05.652293) (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18).</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Apparent affinity and induction regime: KdpFABC exhibits an apparent K+ affinity of ~2 µM and is expressed under extreme K+ limitation; it must be swiftly inhibited upon K+ repletion to avoid toxicity (Nature Communications, 2024; https://doi.org/10.1038/s41467-024-47526-8) (silberberg2024kdpdisa pages 1-2, silberberg2023sensorykinasekdpd pages 1-4). <br />
+- Rapid post-translational inhibition: In E. coli, KdpB Ser162 phosphorylation fully inhibits the pump within ~2 minutes of K+ increase (&gt;~2 mM). Blocking this phosphorylation (S162A) yields ~6-fold higher ATPase activity versus wild type under the assay conditions, indicating the strength of this regulatory switch (Nature Communications, 2024; https://doi.org/10.1038/s41467-024-47526-8; bioRxiv, 2023; https://doi.org/10.1101/2023.11.09.566405) (silberberg2024kdpdisa pages 1-2, silberberg2023sensorykinasekdpd pages 4-7, silberberg2023sensorykinasekdpd pages 1-4). <br />
+- Catalytic intermediate and state: Turnover-state cryo-EM captured an E1~P·ADP conformation with phosphorylation on Asp307 of KdpB and clear density for K+ at the KdpA selectivity filter and the KdpB canonical site; map resolution 2.1 Å. Data collection: ~50,000 micrographs, total dose ~50 e/Å2; SSME distinguished binding vs transport currents in functional analysis (bioRxiv, 2025; https://doi.org/10.1101/2025.05.05.652293) (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18). <br />
+- c-di-AMP control of K+ transporters: Reviews and primary data support c-di-AMP as a master regulator of bacterial K+ homeostasis and cell volume, including repression of Kdp expression/activity in certain species via binding to KdpD and riboswitch elements (MMBR, 2024; Microbiology Spectrum, 2024) (hussein2025conductionpathwayfor pages 1-4).</p>
+<p>Function, biological process, localization, and pathway (synthesis for DVU_3338)<br />
+- Primary function: kdpB encodes the catalytic P-type ATPase subunit of the KdpFABC high-affinity K+ uptake system. KdpB hydrolyzes ATP and cycles through E1/E2 conformations with a catalytic aspartyl phosphate, driving K+ translocation across the inner membrane. Substrate: K+ (hussein2025conductionpathwayfor pages 1-4, silberberg2023sensorykinasekdpd pages 1-4). <br />
+- Mechanism and conduction: K+ is selected in KdpA’s channel-like selectivity filter and delivered to the KdpB transmembrane ion-binding site via a ~40 Å tunnel; ATP hydrolysis by KdpB (E1~P·ADP state captured) drives conformational changes to translocate and release K+ to the cytoplasm (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18). <br />
+- Localization and complex requirements: The functional complex resides in the inner membrane and requires KdpA/B/C plus the small stabilizer KdpF. KdpB provides catalysis and coupling, KdpA provides selectivity, KdpC/F aid assembly/stability and proper coupling (hussein2025conductionpathwayfor pages 1-4, nanatani2015comparativeanalysisof pages 1-2). <br />
+- Regulation: Under low K+, KdpD (HK) activates KdpE to induce kdpFABC transcription; under high K+, KdpD’s N-terminal ASK directly phosphorylates KdpB at S162 to rapidly inhibit the pump. In some bacteria, c-di-AMP modulates this KdpD serine-kinase branch or reduces kdp expression via KdpD/riboswitch binding, linking K+ homeostasis to broader physiology (Nature Communications, 2024; Microbiology Spectrum, 2024; MMBR, 2024) (silberberg2024kdpdisa pages 1-2, silberberg2024kdpdisa pages 2-4, hussein2025conductionpathwayfor pages 1-4). <br />
+- Organism-specific note for D. vulgaris Hildenborough (DVU_3338): We found no direct experimental literature on kdpB from D. vulgaris Hildenborough in the retrieved 2023–2024 sources. Given the strong conservation of KdpFABC and P-type ATPase features, we infer that DVU_3338 functions analogously to KdpB orthologs in bacteria: the catalytic ATPase subunit of a high-affinity K+ pump localized to the inner membrane and regulated by KdpDE and potentially by c-di-AMP signaling via KdpD, especially under K+ limitation and osmotic stress. Future DV-specific work (transcriptomics/proteomics under K+ limitation or salt stress and targeted mutagenesis) would be needed to confirm regulatory and kinetic specifics in this sulfate-reducing bacterium (silberberg2023sensorykinasekdpd pages 1-4, silberberg2024kdpdisa pages 1-2, hussein2025conductionpathwayfor pages 1-4).</p>
+<p>Ambiguity note<br />
+- The gene symbol kdpB is shared across bacteria and refers to the KdpFABC catalytic subunit; literature is extensive in model organisms (e.g., E. coli) but limited for Desulfovibrio vulgaris Hildenborough. We therefore base the DVU_3338 functional annotation on conserved family/domain features and well-established KdpFABC mechanisms (silberberg2023sensorykinasekdpd pages 1-4, hussein2025conductionpathwayfor pages 1-4, nanatani2015comparativeanalysisof pages 1-2).</p>
+<p>References with URLs and dates<br />
+- Silberberg JM et al. KdpD is a tandem serine histidine kinase that controls K+ pump KdpFABC transcriptionally and post-translationally. Nature Communications. Apr 2024. https://doi.org/10.1038/s41467-024-47526-8 (silberberg2024kdpdisa pages 1-2, silberberg2024kdpdisa pages 2-4).<br />
+- Silberberg JM et al. Sensory kinase KdpD is a tandem serine histidine kinase controlling K+ pump KdpFABC on the translational and post-transcriptional level. bioRxiv. Nov 2023. https://doi.org/10.1101/2023.11.09.566405 (silberberg2023sensorykinasekdpd pages 13-16, silberberg2023sensorykinasekdpd pages 4-7, silberberg2023sensorykinasekdpd pages 1-4).<br />
+- Hussein A et al. Conduction pathway for potassium through the E. coli pump KdpFABC. bioRxiv. May 2025. https://doi.org/10.1101/2025.05.05.652293 (hussein2025conductionpathwayfor pages 1-4, hussein2025conductionpathwayfor pages 16-18).<br />
+- Foster AJ, van den Noort M, Poolman B. Bacterial cell volume regulation and the importance of cyclic di-AMP. Microbiol Mol Biol Rev. Jun 2024. https://doi.org/10.1128/mmbr.00181-23 ().<br />
+- Hu J et al. c-di-AMP accumulation impairs toxin expression of Bacillus anthracis by down-regulating potassium importers. Microbiology Spectrum. Aug 2024. https://doi.org/10.1128/spectrum.03786-23 (hussein2025conductionpathwayfor pages 1-4).<br />
+- Nanatani K et al. Comparative Analysis of kdp and ktr Mutants in Synechocystis sp. PCC 6803. J Bacteriol. Feb 2015. https://doi.org/10.1128/JB.02276-14 (nanatani2015comparativeanalysisof pages 1-2).<br />
+- Brantl S, Haq IU. Small proteins in Gram-positive bacteria. FEMS Microbiol Rev. Nov 2023. https://doi.org/10.1093/femsre/fuad064 (nanatani2015comparativeanalysisof pages 1-2).<br />
+- Simoens L, Fijalkowski I, Van Damme P. Exposing the small protein load of bacterial life. FEMS Microbiol Rev. Nov 2023. https://doi.org/10.1093/femsre/fuad063 (nanatani2015comparativeanalysisof pages 1-2).<br />
+- Jung K et al. Bacterial transmembrane signalling systems and their engineering for biosensing. Open Biology. Apr 2018. https://doi.org/10.1098/rsob.180023 ().</p>
+<p>References</p>
+<ol>
+<li>
+<p>(silberberg2023sensorykinasekdpd pages 1-4): Jakob M Silberberg, Sophie Ketter, Paul JN Böhm, Kristin Jordan, Marcel Wittenberg, Julia Grass, and Inga Hänelt. Sensory kinase kdpd is a tandem serine histidine kinase controlling k+ pump kdpfabc on the translational and post-transcriptional level. bioRxiv, Nov 2023. URL: https://doi.org/10.1101/2023.11.09.566405, doi:10.1101/2023.11.09.566405. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(hussein2025conductionpathwayfor pages 1-4): Adel Hussein, Xihui Zhang, Bjørn Panyella Pedersen, and David L. Stokes. Conduction pathway for potassium through the e. coli pump kdpfabc. bioRxiv, May 2025. URL: https://doi.org/10.1101/2025.05.05.652293, doi:10.1101/2025.05.05.652293. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(silberberg2024kdpdisa pages 1-2): Jakob M. Silberberg, Sophie Ketter, Paul J. N. Böhm, Kristin Jordan, Marcel Wittenberg, Julia Grass, and Inga Hänelt. Kdpd is a tandem serine histidine kinase that controls k+ pump kdpfabc transcriptionally and post-translationally. Nature Communications, Apr 2024. URL: https://doi.org/10.1038/s41467-024-47526-8, doi:10.1038/s41467-024-47526-8. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(silberberg2024kdpdisa pages 2-4): Jakob M. Silberberg, Sophie Ketter, Paul J. N. Böhm, Kristin Jordan, Marcel Wittenberg, Julia Grass, and Inga Hänelt. Kdpd is a tandem serine histidine kinase that controls k+ pump kdpfabc transcriptionally and post-translationally. Nature Communications, Apr 2024. URL: https://doi.org/10.1038/s41467-024-47526-8, doi:10.1038/s41467-024-47526-8. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nanatani2015comparativeanalysisof pages 1-2): Kei Nanatani, Toshiaki Shijuku, Yousuke Takano, Lalu Zulkifli, Tomoko Yamazaki, Akira Tominaga, Satoshi Souma, Kiyoshi Onai, Megumi Morishita, Masahiro Ishiura, Martin Hagemann, Iwane Suzuki, Hisataka Maruyama, Fumihito Arai, and Nobuyuki Uozumi. Comparative analysis of <i>kdp</i> and <i>ktr</i> mutants reveals distinct roles of the potassium transporters in the model cyanobacterium synechocystis sp. strain pcc 6803. Journal of Bacteriology, 197:676-687, Feb 2015. URL: https://doi.org/10.1128/jb.02276-14, doi:10.1128/jb.02276-14. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hussein2025conductionpathwayfor pages 16-18): Adel Hussein, Xihui Zhang, Bjørn Panyella Pedersen, and David L. Stokes. Conduction pathway for potassium through the e. coli pump kdpfabc. bioRxiv, May 2025. URL: https://doi.org/10.1101/2025.05.05.652293, doi:10.1101/2025.05.05.652293. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(silberberg2023sensorykinasekdpd pages 13-16): Jakob M Silberberg, Sophie Ketter, Paul JN Böhm, Kristin Jordan, Marcel Wittenberg, Julia Grass, and Inga Hänelt. Sensory kinase kdpd is a tandem serine histidine kinase controlling k+ pump kdpfabc on the translational and post-transcriptional level. bioRxiv, Nov 2023. URL: https://doi.org/10.1101/2023.11.09.566405, doi:10.1101/2023.11.09.566405. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(silberberg2023sensorykinasekdpd pages 4-7): Jakob M Silberberg, Sophie Ketter, Paul JN Böhm, Kristin Jordan, Marcel Wittenberg, Julia Grass, and Inga Hänelt. Sensory kinase kdpd is a tandem serine histidine kinase controlling k+ pump kdpfabc on the translational and post-transcriptional level. bioRxiv, Nov 2023. URL: https://doi.org/10.1101/2023.11.09.566405, doi:10.1101/2023.11.09.566405. This article has 3 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hussein2025conductionpathwayfor pages 1-4</li>
+<li>nanatani2015comparativeanalysisof pages 1-2</li>
+<li>silberberg2023sensorykinasekdpd pages 1-4</li>
+<li>silberberg2024kdpdisa pages 1-2</li>
+<li>silberberg2024kdpdisa pages 2-4</li>
+<li>hussein2025conductionpathwayfor pages 16-18</li>
+<li>silberberg2023sensorykinasekdpd pages 13-16</li>
+<li>silberberg2023sensorykinasekdpd pages 4-7</li>
+<li>potassium-transporting</li>
+<li>https://doi.org/10.1038/s41467-024-47526-8</li>
+<li>https://doi.org/10.1101/2025.05.05.652293</li>
+<li>https://doi.org/10.1128/mmbr.00181-23</li>
+<li>https://doi.org/10.1128/spectrum.03786-23</li>
+<li>https://doi.org/10.1101/2023.11.09.566405</li>
+<li>https://doi.org/10.1098/rsob.180023</li>
+<li>https://doi.org/10.1128/JB.02276-14</li>
+<li>https://doi.org/10.1093/femsre/fuad064;</li>
+<li>https://doi.org/10.1093/femsre/fuad063</li>
+<li>https://doi.org/10.1038/s41467-024-47526-8;</li>
+<li>https://doi.org/10.1093/femsre/fuad064</li>
+<li>https://doi.org/10.1101/2023.11.09.566405,</li>
+<li>https://doi.org/10.1101/2025.05.05.652293,</li>
+<li>https://doi.org/10.1038/s41467-024-47526-8,</li>
+<li>https://doi.org/10.1128/jb.02276-14,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q725T7
+gene_symbol: kdpB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris Hildenborough
+description: &gt;-
+  KdpB is the catalytic ATP-binding subunit of the KdpFABC high-affinity potassium
+  uptake system in N. vulgaris Hildenborough (DVU_3338). As a P-type ATPase (EC 7.2.2.6),
+  KdpB hydrolyzes ATP and forms an aspartyl-phosphate intermediate (Asp302) during
+  the E1/E2 catalytic cycle, driving K+ translocation across the inner membrane.
+  The KdpFABC complex is induced under severe K+ limitation and provides high-affinity
+  K+ uptake (apparent Km ~2 uM). KdpB couples ATP hydrolysis to conformational changes
+  that drive K+ transport through a ~40 A tunnel from the KdpA selectivity filter
+  to the cytoplasmic release site in KdpB.
+existing_annotations:
+- term:
+    id: GO:0071805
+    label: potassium ion transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      KdpB is the catalytic subunit of the KdpFABC high-affinity K+ pump that drives
+      potassium ion transmembrane transport. This annotation is correctly inferred
+      from the GO:0008556 molecular function annotation via logical inference.
+    action: ACCEPT
+    reason: &gt;-
+      KdpB is definitively involved in potassium ion transmembrane transport as the
+      ATP-hydrolyzing catalytic subunit of KdpFABC. The UniProt function annotation
+      explicitly states this is a high-affinity ATP-driven potassium transport system.
+      This is the primary biological process for this protein.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-deep-research-falcon.md
+        supporting_text: &#34;KdpB hydrolyzes ATP and cycles through E1/E2 conformations with a catalytic aspartyl phosphate, driving K+ translocation across the inner membrane&#34;
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KdpB binds nucleotides (specifically ATP) as part of its P-type ATPase catalytic
+      mechanism. This is correct but overly general - GO:0005524 (ATP binding) is
+      also annotated and is more specific and informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct (KdpB does bind nucleotides), this annotation is
+      redundant with the more specific GO:0005524 (ATP binding) annotation. The
+      protein specifically binds ATP at defined residues. For annotation parsimony,
+      the more specific ATP binding term is preferred.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Nucleotide-binding {ECO:0000256|ARBA:ARBA00022741, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      KdpB requires Mg2+ as a cofactor for ATP hydrolysis, as is typical for P-type
+      ATPases. UniProt annotation identifies Mg2+ binding sites at positions 514
+      and 518. This is a core function required for catalysis.
+    action: ACCEPT
+    reason: &gt;-
+      Magnesium ion binding is essential for P-type ATPase catalytic function. The
+      Mg2+ cofactor is required for ATP hydrolysis. UniProt HAMAP annotation identifies
+      specific Mg2+ binding residues (positions 514 and 518) in KdpB. This represents
+      a genuine molecular function of the protein.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Magnesium {ECO:0000256|ARBA:ARBA00022842, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KdpB is the ATP-binding catalytic subunit of KdpFABC. ATP binding is essential
+      for its P-type ATPase function. Multiple ATP binding residues are annotated
+      in UniProt (339, 343, 371-378, 389). This is a core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is fundamental to KdpB&#39;s function as a P-type ATPase. The protein
+      hydrolyzes ATP to drive K+ transport. The catalytic reaction is: ATP + H2O +
+      K+(out) = ADP + phosphate + K+(in) (EC 7.2.2.6). ATP binding is clearly a core
+      molecular function that should be retained.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;ATP-binding {ECO:0000256|ARBA:ARBA00022840, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KdpB localizes to the inner membrane (equivalent to plasma membrane in bacteria).
+      UniProt annotation confirms cell inner membrane localization as a multi-pass
+      membrane protein with 7 transmembrane helices.
+    action: ACCEPT
+    reason: &gt;-
+      KdpFABC is an inner membrane complex in bacteria. UniProt explicitly annotates
+      KdpB as localized to the cell inner membrane. The protein has 7 transmembrane
+      helices. For bacteria, plasma membrane and inner membrane are equivalent terms.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Cell inner membrane {ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0006811
+    label: monoatomic ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      KdpB is involved in monoatomic ion transport (specifically K+). However, this
+      term is overly general when more specific terms (GO:0006813 potassium ion
+      transport, GO:0071805 potassium ion transmembrane transport) are also annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct, this annotation is redundant with the more specific
+      GO:0006813 (potassium ion transport) and GO:0071805 (potassium ion transmembrane
+      transport) annotations. KdpB specifically transports K+, not generic ions.
+      The more specific BP terms should be preferred for annotation parsimony.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Ion transport {ECO:0000256|ARBA:ARBA00023065, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0006813
+    label: potassium ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KdpB is the catalytic subunit of the high-affinity K+ uptake system KdpFABC.
+      Potassium ion transport is the core biological process. GO:0071805 (potassium
+      ion transmembrane transport) is also annotated and is slightly more specific.
+    action: ACCEPT
+    reason: &gt;-
+      Potassium ion transport is definitively the core biological process of KdpB.
+      While GO:0071805 (potassium ion transmembrane transport) is more specific,
+      retaining both annotations is acceptable as GO:0006813 is a broader parent
+      term that captures the general function. The high-affinity Kdp system is
+      expressed under severe K+ limitation to import K+ into the cytoplasm.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Part of the high-affinity ATP-driven potassium transport (or Kdp) system, which catalyzes the hydrolysis of ATP coupled with the electrogenic transport of potassium into the cytoplasm&#34;
+- term:
+    id: GO:0008556
+    label: P-type potassium transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      GO:0008556 is the most specific and appropriate molecular function term for
+      KdpB. It precisely describes the P-type ATPase mechanism that couples ATP
+      hydrolysis to K+ transport via aspartyl-phosphate intermediate formation.
+      This is the core molecular function annotation.
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct and most informative molecular function term for KdpB.
+      The GO definition matches exactly: &#34;Enables the transfer of K+ from one side
+      of a membrane to the other according to the reaction: ATP + H2O + K+(out) =
+      ADP + phosphate + K+(in).&#34; KdpB forms a 4-aspartylphosphate intermediate at
+      Asp302 during the E1/E2 catalytic cycle, characteristic of P-type ATPases.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Reaction=K(+)(out) + ATP + H2O = K(+)(in) + ADP + phosphate + H(+)&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KdpB is a membrane protein with 7 transmembrane helices. However, GO:0005886
+      (plasma membrane) is more specific and is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While correct, this term is redundant with the more specific GO:0005886
+      (plasma membrane) annotation. The protein is specifically localized to the
+      inner/plasma membrane, not just generically associated with membranes.
+      For annotation parsimony, the more specific CC term is preferred.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Membrane {ECO:0000256|ARBA:ARBA00023136, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      KdpB has hydrolase activity (hydrolyzes ATP). However, this is an overly
+      generic term when GO:0016887 (ATP hydrolysis activity) is also annotated
+      and provides much more specific information.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This annotation is technically correct but uninformative. KdpB specifically
+      hydrolyzes ATP, not generic substrates. GO:0016887 (ATP hydrolysis activity)
+      is already annotated and is far more informative. The generic &#34;hydrolase
+      activity&#34; term should be avoided in favor of more specific enzyme activity
+      terms.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Hydrolase {ECO:0000313|EMBL:AAS97806.1}&#34;
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      KdpB hydrolyzes ATP to drive K+ transport. This molecular function is core
+      to the protein&#39;s role as a P-type ATPase. The annotation is correct and
+      informative.
+    action: ACCEPT
+    reason: &gt;-
+      ATP hydrolysis is the energy-providing reaction that drives K+ transport
+      in KdpFABC. KdpB is the catalytic subunit responsible for this hydrolysis.
+      The reaction (ATP + H2O = ADP + phosphate) is coupled to conformational
+      changes that translocate K+. This is a core molecular function that should
+      be retained alongside GO:0008556.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;catalyzes the hydrolysis of ATP coupled with the electrogenic transport of potassium into the cytoplasm&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      KdpB binds metal ions (specifically Mg2+ as a cofactor). However, GO:0000287
+      (magnesium ion binding) is more specific and is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This annotation is redundant with the more specific GO:0000287 (magnesium
+      ion binding) annotation. KdpB specifically binds Mg2+ as a catalytic cofactor,
+      not generic metal ions. The specific term provides more informative annotation.
+    supported_by:
+      - reference_id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+        supporting_text: &#34;Metal-binding {ECO:0000256|ARBA:ARBA00022723, ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Infers GO:0016887 (ATP hydrolysis activity) from InterPro:IPR001757 (P-type ATPase)
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Maps UniProtKB keywords to broad GO terms
+    - statement: Source of redundant general terms (hydrolase, metal ion binding, ion transport)
+- id: GO_REF:0000104
+  title: Electronic GO annotations transferred based on shared sequence features
+  findings:
+    - statement: Source of GO:0000287 (magnesium ion binding) via UniRule
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference
+  findings:
+    - statement: Infers GO:0071805 (potassium ion transmembrane transport) from GO:0008556 MF annotation
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Combines InterPro, UniRule, and keyword-based annotations
+    - statement: Primary source for most IEA annotations on this protein
+- id: file:DESVH/Q725T7/Q725T7-deep-research-falcon.md
+  title: Deep research on KdpB function based on literature review
+  findings:
+    - statement: KdpB is the catalytic P-type ATPase subunit of the KdpFABC high-affinity K+ uptake system
+      supporting_text: &#34;kdpB encodes the catalytic P-type ATPase subunit of the KdpFABC high-affinity K+ uptake system&#34;
+    - statement: K+ is selected in KdpA selectivity filter and delivered to KdpB via a 40 A tunnel
+      supporting_text: &#34;K+ is selected in KdpA&#39;s channel-like selectivity filter and delivered to the KdpB transmembrane ion-binding site via a ~40 A tunnel&#34;
+    - statement: The functional complex resides in the inner membrane
+      supporting_text: &#34;The functional complex resides in the inner membrane and requires KdpA/B/C plus the small stabilizer KdpF&#34;
+- id: file:DESVH/Q725T7/Q725T7-uniprot.txt
+  title: UniProt entry for Q725T7 (KdpB) from N. vulgaris Hildenborough
+  findings:
+    - statement: EC 7.2.2.6 P-type potassium ATPase
+      supporting_text: &#34;EC=7.2.2.6 {ECO:0000256|HAMAP-Rule:MF_00285}&#34;
+    - statement: Asp302 is 4-aspartylphosphate intermediate site
+      supporting_text: &#34;ACT_SITE        302 /note=\&#34;4-aspartylphosphate intermediate\&#34;&#34;
+    - statement: ATP binding residues at positions 339, 343, 371-378, 389
+      supporting_text: &#34;BINDING         339 /ligand=\&#34;ATP\&#34; /ligand_id=\&#34;ChEBI:CHEBI:30616\&#34;&#34;
+    - statement: Mg2+ binding residues at positions 514 and 518
+      supporting_text: &#34;BINDING         514 /ligand=\&#34;Mg(2+)\&#34; /ligand_id=\&#34;ChEBI:CHEBI:18420\&#34;&#34;
+    - statement: Cell inner membrane localization with 7 transmembrane helices
+      supporting_text: &#34;Cell inner membrane {ECO:0000256|HAMAP-Rule:MF_00285}; Multi-pass membrane protein&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0008556
+      label: P-type potassium transmembrane transporter activity
+    description: &gt;-
+      Primary molecular function. KdpB catalyzes ATP hydrolysis coupled to K+
+      translocation via the P-type ATPase mechanism with aspartyl-phosphate intermediate.
+    directly_involved_in:
+      - id: GO:0071805
+        label: potassium ion transmembrane transport
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

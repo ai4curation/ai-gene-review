@@ -1,8 +1,6 @@
 """Tests for PMC override functionality."""
 
-import tempfile
 from pathlib import Path
-from typing import Dict, Optional
 from unittest.mock import patch
 
 import pytest

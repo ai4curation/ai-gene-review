@@ -80,6 +80,15 @@ deep-research-falcon organism gene_id *args="":
 deep-research-cyberian organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
 
+# Deep research using Codex via agentapi (yolo mode)
+# Uses cyberian provider with agent_type=codex for autonomous research
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-codex human TP53
+#   just deep-research-codex METEA C5B1I4 --alias mllA
+deep-research-codex organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -1012,6 +1021,39 @@ fetch-interpro-family-with-proteins database family_id *args="":
 fetch-gene-panther-family organism gene:
     @echo "Fetching PANTHER family data for {{organism}}/{{gene}}..."
     uv run python src/ai_gene_review/tools/fetch_gene_panther_family.py {{organism}} {{gene}}
+
+# Deep research for PANTHER/InterPro families using Perplexity
+# Examples:
+#   just family-deep-research-perplexity PTHR10314
+#   just family-deep-research-perplexity PTHR10314 --extra-args --param "model=sonar-pro"
+family-deep-research-perplexity family_id *args="":
+    uv run python scripts/family_deep_research_wrapper.py {{family_id}} perplexity {{args}}
+
+# Deep research for families using Perplexity-lite (faster, cheaper)
+# Example: just family-deep-research-perplexity-lite PTHR10314
+family-deep-research-perplexity-lite family_id *args="":
+    uv run python scripts/family_deep_research_wrapper.py {{family_id}} perplexity-lite {{args}}
+
+# Deep research for families using OpenAI
+# Example: just family-deep-research-openai PTHR10314
+family-deep-research-openai family_id *args="":
+    uv run python scripts/family_deep_research_wrapper.py {{family_id}} openai {{args}}
+
+# Deep research for families using Falcon
+# Example: just family-deep-research-falcon PTHR10314
+family-deep-research-falcon family_id *args="":
+    uv run python scripts/family_deep_research_wrapper.py {{family_id}} falcon {{args}}
+
+# Deep research for families using Cyberian
+# Example: just family-deep-research-cyberian PTHR10314
+family-deep-research-cyberian family_id *args="":
+    uv run python scripts/family_deep_research_wrapper.py {{family_id}} cyberian {{args}}
+
+# Fetch PANTHER family MSA (Multiple Sequence Alignment)
+# Downloads from PANTHER API and converts to aligned FASTA format
+# Example: just family-msa PTHR10314
+family-msa family_id:
+    python3 scripts/fetch_family_msa.py {{family_id}}
 
 # ============== iModulonDB Integration ==============
 

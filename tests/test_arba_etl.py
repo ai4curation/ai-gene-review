@@ -1,6 +1,5 @@
 """Tests for ARBA ETL functionality."""
 
-import json
 import tempfile
 from pathlib import Path
 
@@ -11,7 +10,6 @@ from ai_gene_review.etl.arba import (
     ARBARule,
     Annotation,
     Condition,
-    ConditionSet,
     ConditionValue,
     DBReference,
     Keyword,

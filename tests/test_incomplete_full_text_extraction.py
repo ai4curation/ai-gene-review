@@ -6,15 +6,12 @@ but the extraction is incomplete (e.g., missing Methods/Results sections).
 
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
 from ai_gene_review.etl.publication import (
     Publication,
     FullTextResult,
-    fetch_pmc_fulltext,
-    cache_publication,
 )
 
 
@@ -65,7 +62,6 @@ def test_detect_missing_sections():
             (has_all_sections, missing_sections)
         """
         required_sections = ["methods", "results"]
-        optional_but_expected = ["introduction", "discussion", "conclusion"]
 
         content_lower = content.lower()
         missing = []

@@ -1788,7 +1788,7 @@ class SupportingTextSubstringValidator(SupportingTextValidator):
                     # Moderate match - show it as an option
                     # Don't truncate - user needs full text to copy/paste
                     suggestions.append(f"Partial match found ({similarity:.0f}%): \"{best_match}\"")
-        except Exception as e:
+        except Exception:
             # If fuzzy matching fails, don't let it break suggestion generation
             pass
 

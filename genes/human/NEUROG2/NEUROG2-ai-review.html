@@ -1,0 +1,3419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEUROG2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NEUROG2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H2A3" target="_blank" class="term-link">
+                        Q9H2A3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NEUROG2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H2A3" data-a="DESCRIPTION: NEUROG2 encodes neurogenin-2, a proneural basic he..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NEUROG2 encodes neurogenin-2, a proneural basic helix-loop-helix (bHLH) transcription factor that is the predominant neurogenin in mammalian cortical neurogenesis. The protein functions in the nucleus where it binds E-box DNA motifs (CANNTG), with preference for CAT-containing E-boxes, forming heterodimers with E-proteins to activate transcription. NEUROG2 drives neuronal fate commitment and differentiation by directly activating key neurogenic target genes including Dll1, Dll3, Rnd2, Neurod1, Neurod2, and Lhx2. The protein exhibits context-dependent chromatin binding and pioneer-like activity that is modulated by phosphorylation at T149, which acts as a rheostat between chromatin remodeling and transactivation functions. In cortical progenitors, NEUROG2 is enriched in intermediate progenitors where it initiates neuronal differentiation programs. Its activity is suppressed by LHX2 in progenitors to regulate proper dendritic morphogenesis. NEUROG2 displays human-specific regulatory programs including activation of PPP1R17 and ECM genes. It is also upregulated in MYCN-driven neuroendocrine prostate cancer where it becomes essential for maintaining neuroendocrine differentiation.</p>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>glutamatergic neuron differentiation</h3>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="glutamatergic neuron differentiation" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The process in which a relatively unspecialized cell acquires specialized features of a glutamatergic neuron, an excitatory neuron that uses glutamate as its primary neurotransmitter.</p>
+            
+
+            
+            <p><strong>Justification:</strong> NEUROG2 is known to specify excitatory glutamatergic neuron fate in cortex, but this specific function is not captured in existing annotations. A more specific term than general neuron differentiation would capture this cell type-specific function.</p>
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                    
+                    
+                    : NEUROG2 is the predominant neurogenin in cortical neurogenesis driving excitatory neuron differentiation programs.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>negative regulation of glial cell differentiation</h3>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="negative regulation of glial cell differentiation" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Any process that stops, prevents, or reduces the frequency, rate or extent of glial cell differentiation.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Proneural factors like NEUROG2 promote neuronal fate while suppressing glial fate in neural progenitors. This reciprocal regulation is an important aspect of NEUROG2 function not represented in current annotations.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function annotation for NEUROG2 as a bHLH transcription factor that activates RNA Pol II-dependent transcription
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures NEUROG2&#39;s primary molecular function as a sequence-specific transcription factor that drives RNA polymerase II-mediated transcription. Deep research confirms NEUROG2 binds E-box motifs and activates neurogenic gene expression programs including Dll1, Dll3, Rnd2, Neurod1, Neurod2, and Lhx2. IBA evidence is supported by extensive experimental data showing direct transcriptional activation activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 is a proneural bHLH transcription factor that activates neuronal differentiation programs in the developing cortex. Context-dependent binding of NEUROG2, with direct activation of canonical targets Dll1/Dll3, Rnd2, Neurod1/2, and Lhx2, has been demonstrated.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization annotation for NEUROG2 nuclear function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NEUROG2 functions as a nuclear transcription factor, consistent with its role in binding DNA and activating transcription. Deep research confirms nuclear localization as the site where NEUROG2 regulates gene expression and exhibits chromatin remodeling activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As a transcription factor, NEUROG2 functions in the nucleus to regulate gene expression. In human cortical progenitors, phosphorylation at T149 modulates a pioneer-like mode that increases chromatin accessibility.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007423" target="_blank" class="term-link">
+                                    GO:0007423
+                                </a>
+                            </span>
+                            <span class="term-label">sensory organ development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0007423" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation reflects phylogenetically conserved neurogenin function in sensory neurogenesis but peripheral to NEUROG2 human core function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While neurogenins including NEUROG2 have conserved roles in sensory organ development across vertebrates (particularly in sensory ganglia), the human deep research focuses primarily on cortical neurogenesis. This annotation is based on IBA phylogenetic inference and represents a non-core function for human NEUROG2, which is predominantly expressed in cortical progenitors rather than sensory organs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 is widely recognized as the predominant neurogenin in corticogenesis. In human fetal cortex datasets and human cerebral organoids, NEUROG2 is broadly expressed in neural progenitors, particularly IPCs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030900" target="_blank" class="term-link">
+                                    GO:0030900
+                                </a>
+                            </span>
+                            <span class="term-label">forebrain development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0030900" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation for forebrain development represents one developmental context for NEUROG2 function but not the specific core process
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Forebrain development is one anatomical context where NEUROG2 functions during cortical neurogenesis. However, this annotation is too general and represents a developmental context rather than the core process of neuronal differentiation and fate commitment that NEUROG2 directly mediates. The more specific processes of neuron differentiation and neurogenesis better capture NEUROG2&#39;s core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 enrichment in human cortical progenitors, especially intermediate progenitors (IPCs), and identifies a human-specific NEUROG2 program.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070888" target="_blank" class="term-link">
+                                    GO:0070888
+                                </a>
+                            </span>
+                            <span class="term-label">E-box binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0070888" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function annotation for NEUROG2&#39;s specific DNA binding activity
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> E-box binding (CANNTG motifs) is the fundamental DNA recognition mechanism by which NEUROG2 executes its transcription factor activity. Deep research extensively documents NEUROG2&#39;s preference for CAT-containing E-boxes and direct binding to target gene promoters/enhancers. This is more specific and informative than generic DNA binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 binds E-box (CANNTG) motifs. Human fibroblast reprogramming data report a preference toward CAT E-box variants for NGN2 relative to ASCL1&#39;s CAG preference, corresponding to differential target selection during early conversion.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0045944" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process annotation for NEUROG2&#39;s transcriptional activation function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NEUROG2 positively regulates transcription of its target genes via RNA polymerase II, activating neurogenic programs. This annotation accurately captures the regulatory directionality and mechanism of NEUROG2&#39;s function, consistent with experimental evidence showing upregulation of Dll1, Dll3, Rnd2, Neurod1, Neurod2, and other targets.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Direct activation of proneural targets including Dll1, Rnd2, Lhx2, Neurod1/2. Single-factor NGN2 (NEUROG2) ectopic expression in human LF1 fibroblasts produced the strongest pro-neural transcriptional reconfiguration.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061564" target="_blank" class="term-link">
+                                    GO:0061564
+                                </a>
+                            </span>
+                            <span class="term-label">axon development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0061564" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation reflects downstream consequence of NEUROG2-driven neuronal differentiation rather than core function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Axon development is a cellular morphogenetic process that occurs downstream of neuronal fate specification and differentiation. While NEUROG2-expressing neurons subsequently develop axons, and NEUROG2 targets like Rnd2 affect neurite outgrowth, axon development is not the core function of NEUROG2 itself, which is neuronal fate commitment and differentiation at the progenitor stage.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In human fetal cortex datasets and human cerebral organoids, NEUROG2 is broadly expressed in neural progenitors, particularly IPCs, and is scarce in postmitotic neurons, indicating a progenitor-focused role in fate commitment and program initiation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic DNA binding annotation is too broad; E-box binding is more specific and informative
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While NEUROG2 does bind DNA, this annotation is too generic and uninformative. The more specific GO:0070888 (E-box binding) better captures the actual molecular function. DNA binding alone doesn&#39;t distinguish NEUROG2 from hundreds of other DNA-binding proteins. Should be replaced with the more specific E-box binding annotation already present.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070888" target="_blank" class="term-link">
+                                    E-box binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 binds E-box (CANNTG) motifs with preference for CAT E-box variants.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of nuclear localization with IEA evidence
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate of the IBA annotation for nucleus (GO:0005634). Both annotations are correct. The IEA evidence from UniProt subcellular location mapping complements the IBA phylogenetic evidence. Duplicate annotations with different evidence codes are acceptable in GO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As a transcription factor, NEUROG2 functions in the nucleus to regulate gene expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0007399" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very broad developmental process annotation that lacks specificity
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While NEUROG2 does function in nervous system development, this annotation is too general. More specific terms like neuron differentiation, neurogenesis, or neuron fate commitment better capture NEUROG2&#39;s specific role in generating neurons from progenitors. Nervous system development encompasses many processes beyond neurogenesis where NEUROG2 is not directly involved.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                    neuron differentiation
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022008" target="_blank" class="term-link">
+                                    neurogenesis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 is a proneural bHLH transcription factor that activates neuronal differentiation programs. NEUROG2 is widely recognized as the predominant neurogenin in corticogenesis and a central regulator of neurogenic fate.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Overly generic cell differentiation annotation that should be replaced with neuron-specific differentiation
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is too generic. NEUROG2 specifically drives neuronal differentiation, not general cell differentiation. The term GO:0030182 (neuron differentiation) is far more specific and informative. Cell differentiation applies to thousands of genes across all cell types and provides little functional insight into NEUROG2&#39;s specific role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                    neuron differentiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 activates neuronal differentiation programs. Involved in neuronal differentiation. Activates transcription by binding to the E box.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation for bHLH dimerization activity essential for DNA binding function
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein dimerization is a fundamental aspect of bHLH transcription factor function. NEUROG2 must form heterodimers with E-proteins to bind DNA effectively. This annotation is mechanistically important for understanding how NEUROG2 achieves its DNA binding activity, though it is a supporting function rather than the primary activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Efficient DNA binding requires dimerization with another bHLH protein.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 acts as a bHLH dimer; context-dependent cooperation with other TFs and chromatin regulators is prominent.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990837" target="_blank" class="term-link">
+                                    GO:1990837
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific double-stranded DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:1990837" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate molecular function annotation for sequence-specific DNA binding
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly captures NEUROG2&#39;s ability to bind DNA in a sequence-specific manner (E-box motifs). The sequence-specificity is critical for target gene selectivity. This complements the E-box binding annotation by emphasizing the sequence-dependent nature of the interaction with double-stranded DNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 binds E-box (CANNTG) motifs. Human fibroblast reprogramming data report a preference toward CAT E-box variants.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0005515" data-r="PMID:32296183" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding annotation lacks functional specificity
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, protein binding is uninformative and should be avoided unless no better term exists. This annotation from a high-throughput Y2H screen (HuRI) identifies PFDN5 (Q99471) as an interactor but provides no functional insight. The specific interactor may be biologically relevant, but the generic protein binding term should be removed. More specific molecular function terms like protein dimerization activity or transcription coregulator binding would be more informative if the functional significance of this interaction were established.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990837" target="_blank" class="term-link">
+                                    GO:1990837
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific double-stranded DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28473536
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Impact of cytosine methylation on DNA binding specificities ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:1990837" data-r="PMID:28473536" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence for sequence-specific DNA binding from systematic TF binding study
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is supported by direct experimental evidence from a systematic study of human transcription factor DNA binding specificities using HT-SELEX. The IDA evidence provides strong experimental support for NEUROG2&#39;s sequence-specific DNA binding activity. This is a duplicate of the IEA annotation above but with stronger experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link">
+                                        PMID:28473536
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment), we found that there are also many TFs that prefer CpG-methylated sequences</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000113
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0000785" data-r="GO_REF:0000113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation for chromatin localization reflects pioneer-like chromatin remodeling activity
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NEUROG2 exhibits pioneer-like transcription factor activity, directly engaging chromatin and promoting chromatin accessibility. Deep research shows that NEUROG2 phosphorylation at T149 modulates pioneer-like chromatin remodeling capacity. Chromatin localization is more specific than general nuclear localization and reflects NEUROG2&#39;s ability to bind and remodel chromatin structure.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 displays context-dependent genomic occupancy and can associate with chromatin opening. In human cortical progenitors, phosphorylation at T149 modulates a pioneer-like mode that increases chromatin accessibility. A T149A mutant increased neurogenesis and premature chromatin opening.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000113
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0000981" data-r="GO_REF:0000113" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate core molecular function annotation with ISA evidence from TFClass
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate of the IBA annotation for the same term. The ISA evidence comes from manual assignment based on TFClass database classification of NEUROG2 as a bHLH transcription factor. Multiple lines of evidence for the same annotation strengthen confidence. Duplicate annotations with different evidence types are acceptable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 is a sequence-specific bHLH transcription factor that initiates and propagates neurogenic gene expression programs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070888" target="_blank" class="term-link">
+                                    GO:0070888
+                                </a>
+                            </span>
+                            <span class="term-label">E-box binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2A3" data-a="GO:0070888" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate core molecular function annotation with ISS evidence from ortholog
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a duplicate of the IBA annotation for E-box binding. The ISS evidence indicates manual transfer from mouse ortholog (UniProtKB:P70447), which has experimental evidence for E-box binding. This complements the IBA phylogenetic evidence. Multiple evidence codes strengthen the annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NEUROG2 binds E-box (CANNTG) motifs with demonstrated preference for CAT E-box variants.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds E-box DNA motifs as heterodimer with E-proteins to activate neurogenic transcription programs</h3>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="FUNCTION: Binds E-box DNA motifs as heterodimer with E-prote..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022008" target="_blank" class="term-link">
+                                neurogenesis
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030182" target="_blank" class="term-link">
+                                neuron differentiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                chromatin
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">NEUROG2 is a sequence-specific bHLH transcription factor that initiates and propagates neurogenic gene expression programs. Direct activation of canonical targets Dll1/Dll3, Rnd2, Neurod1/2, and Lhx2.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides IEA annotation for protein dimerization activity based on bHLH domain (InterPro:IPR011598, IPR036638)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Transfers E-box binding annotation from mouse Neurog2 ortholog P70447</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotations based on PANTHER phylogenetic analysis across bHLH transcription factor family</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports core annotations for transcription factor activity, E-box binding, nucleus localization, and neurogenesis processes</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps UniProt keywords (DNA-binding, Neurogenesis, Differentiation) to GO terms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Produces generic annotations that often need refinement to more specific terms</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps nucleus subcellular location from UniProt annotation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000113.md" target="_blank" class="term-link">
+                            GO_REF:0000113
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation of human sequence-specific DNA binding transcription factors based on TFClass database</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns transcription factor activity and chromatin localization based on TFClass classification (tfclass:1.2.3, bHLH group)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Machine learning prediction of sequence-specific double-stranded DNA binding</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28473536" target="_blank" class="term-link">
+                            PMID:28473536
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Impact of cytosine methylation on DNA binding specificities of human transcription factors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic HT-SELEX study profiling DNA binding specificities of 542 human transcription factors</div>
+                        
+                        <div class="finding-text">"By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment), we found that there are also many TFs that prefer CpG-methylated sequences"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides experimental evidence for sequence-specific DNA binding activity</div>
+                        
+                        <div class="finding-text">"systematic examination of the effect of an epigenetic DNA modification on human TF binding specificity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic Y2H screen identifying PFDN5 (prefoldin subunit 5) as NEUROG2 interactor</div>
+                        
+                        <div class="finding-text">"three Y2H assay versions...that showed good sensitivity and low false positive rates when benchmarked against gold-standard positive and random reference sets"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Represents high-throughput protein-protein interaction data</div>
+                        
+                        <div class="finding-text">"The dataset, versioned HI-III-20 (Human Interactome obtained from screening Space III, published in 2020), contains 52,569 verified PPIs involving 8,275 proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on NEUROG2 function in cortical neurogenesis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NEUROG2 is the predominant neurogenin in cortical neurogenesis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Binds E-box motifs (CANNTG) with preference for CAT-containing sequences</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Forms heterodimers with E-proteins for DNA binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct targets include Dll1, Dll3, Rnd2, Neurod1, Neurod2, Lhx2</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Functions in nucleus with pioneer-like chromatin activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phosphorylation at T149 modulates chromatin remodeling versus transactivation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LHX2 suppresses NEUROG2 in progenitors to regulate dendritic morphogenesis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human-specific targets include PPP1R17 and ECM genes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Upregulated in MYCN-driven neuroendocrine prostate cancer</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Enriched in cortical intermediate progenitors, scarce in postmitotic neurons</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the NEUROG2-PFDN5 interaction identified in the HuRI interactome?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: What is the functional significance of the NEUROG2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there specific E-protein partners (e.g., TCF3, TCF4, TCF12) that preferentially heterodimerize with NEUROG2 in cortical progenitors?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: Are there specific E-protein partners (e.g., TCF3,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do the human-specific NEUROG2 targets (PPP1R17, ECM genes) contribute to human cortical expansion?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: How do the human-specific NEUROG2 targets (PPP1R17..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanism by which LHX2 suppresses NEUROG2 expression in progenitors?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: What is the mechanism by which LHX2 suppresses NEU..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NEUROG2 regulate astrocyte versus neuron fate decisions, and if so, through what molecular mechanism?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: Does NEUROG2 regulate astrocyte versus neuron fate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific glutamatergic neuron subtypes generated by NEUROG2 in different cortical layers?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="Q: What are the specific glutamatergic neuron subtype..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq in human cortical organoids to identify direct NEUROG2 genomic targets in human progenitors</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: ChIP-seq in human cortical organoids to identify d..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Single-cell RNA-seq time course of NEUROG2+ progenitors through differentiation to define the complete NEUROG2-driven transcriptional cascade</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: Single-cell RNA-seq time course of NEUROG2+ progen..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR screen in NEUROG2-expressing progenitors to identify cofactors and modulators of NEUROG2 activity</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: CRISPR screen in NEUROG2-expressing progenitors to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical purification and mass spectrometry to identify NEUROG2 protein complexes and E-protein partners in cortical tissue</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: Biochemical purification and mass spectrometry to ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Functional analysis of T149 phosphorylation site mutants to dissect pioneer activity versus transactivation functions</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: Functional analysis of T149 phosphorylation site m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CUT&amp;RUN or CUT&amp;Tag to map NEUROG2 chromatin binding at high resolution</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: CUT&amp;RUN or CUT&amp;Tag to map NEUROG2 chromatin bindin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Lineage tracing experiments to definitively map the neuronal subtypes produced by NEUROG2+ progenitors</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2A3" data-a="EXPERIMENT: Lineage tracing experiments to definitively map th..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NEUROG2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H2A3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-11T23:22:02.393352'<br />
+end_time: '2026-01-11T23:30:48.070257'<br />
+duration_seconds: 525.68<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: NEUROG2<br />
+  gene_symbol: NEUROG2<br />
+  uniprot_accession: Q9H2A3<br />
+  protein_description: 'RecName: Full=Neurogenin-2; Short=NGN-2; AltName: Full=Class<br />
+    A basic helix-loop-helix protein 8; Short=bHLHa8; AltName: Full=Protein atonal<br />
+    homolog 4;'<br />
+  gene_info: Name=NEUROG2; Synonyms=ATOH4, BHLHA8, NGN2;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: bHLH_dom. (IPR011598); bHLH_transcription_factors. (IPR050359);<br />
+    HLH_DNA-bd_sf. (IPR036638); Ngn-2_bHLH. (IPR032655); HLH (PF00010)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 22</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9H2A3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Neurogenin-2; Short=NGN-2; AltName: Full=Class A basic helix-loop-helix protein 8; Short=bHLHa8; AltName: Full=Protein atonal homolog 4;</li>
+<li><strong>Gene Information:</strong> Name=NEUROG2; Synonyms=ATOH4, BHLHA8, NGN2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> bHLH_dom. (IPR011598); bHLH_transcription_factors. (IPR050359); HLH_DNA-bd_sf. (IPR036638); Ngn-2_bHLH. (IPR032655); HLH (PF00010)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "NEUROG2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'NEUROG2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>NEUROG2</strong> (gene ID: NEUROG2, UniProt: Q9H2A3) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9H2A3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Neurogenin-2; Short=NGN-2; AltName: Full=Class A basic helix-loop-helix protein 8; Short=bHLHa8; AltName: Full=Protein atonal homolog 4;</li>
+<li><strong>Gene Information:</strong> Name=NEUROG2; Synonyms=ATOH4, BHLHA8, NGN2;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> bHLH_dom. (IPR011598); bHLH_transcription_factors. (IPR050359); HLH_DNA-bd_sf. (IPR036638); Ngn-2_bHLH. (IPR032655); HLH (PF00010)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "NEUROG2" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'NEUROG2' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>NEUROG2</strong> (gene ID: NEUROG2, UniProt: Q9H2A3) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity/domain verification: The target is Homo sapiens NEUROG2 (neurogenin‑2), a proneural basic helix‑loop‑helix (bHLH) transcription factor. Recent studies consistently describe NEUROG2 as a bHLH TF that binds E‑box motifs and drives cortical neurogenesis; motif preferences and dimerization characteristics are discussed below. Organism- and symbol-level ambiguity was not encountered in the cited human-focused works, which explicitly analyze NEUROG2/NGN2 in human organoids and human cells (Q9H2A3 context) or use cross-species models to infer conserved functions (mouse ES/NPC lines, cortical tissue) (chinchalongporn2024neurog2regulatesa pages 4-6, manelli2024contextdependentepigenomerewiring pages 1-3).</p>
+<p>Comprehensive research report</p>
+<p>1) Key concepts and definitions<br />
+- Molecular identity: NEUROG2 is a proneural bHLH transcription factor that activates neuronal differentiation programs in the developing cortex and related neural contexts. It is widely recognized as the predominant neurogenin in corticogenesis and a central regulator of neurogenic fate (chinchalongporn2024neurog2regulatesa pages 4-6, manelli2024contextdependentepigenomerewiring pages 1-3).<br />
+- DNA recognition and motif preferences: NEUROG2 binds E‑box (CANNTG) motifs. Human fibroblast reprogramming data report a preference toward “CAT” E‑box variants for NGN2 relative to ASCL1’s “CAG” preference, corresponding to differential target selection during early conversion (Nov 2024) (samoilova2024asnapshotof pages 9-11). Context-dependent binding of NEUROG2, with direct activation of canonical targets Dll1/Dll3, Rnd2, Neurod1/2, and Lhx2, has been demonstrated, consistent with E‑box targeting modulated by cell state (Oct 2024) (manelli2024contextdependentepigenomerewiring pages 1-3).<br />
+- Dimerization and co-factors: NEUROG2 acts as a bHLH dimer; context-dependent cooperation with other TFs and chromatin regulators is prominent. Direct evidence in the included papers emphasizes co-regulation of downstream bHLH cascades (e.g., NEUROD1/2), and signaling/cis-regulatory modules that tune NEUROG2 function (manelli2024contextdependentepigenomerewiring pages 1-3). Specific E-protein/ID-protein interactions are classical for bHLH factors but not directly quantified in the 2023–2024 human-focused sources cited here.<br />
+- Subcellular localization: As a transcription factor, NEUROG2 functions in the nucleus to regulate gene expression. While nuclear localization is expected for bHLH TFs, the included 2023–2024 sources focus on function and targets rather than direct localization assays; this point is an inference consistent with function (manelli2024contextdependentepigenomerewiring pages 1-3, chinchalongporn2024neurog2regulatesa pages 4-6).</p>
+<p>2) Recent developments and latest research (prioritizing 2023–2024)<br />
+- Human/primate cortical programs: A Jan 2024 human organoid and fetal cortex study shows NEUROG2 enrichment in human cortical progenitors, especially intermediate progenitors (IPCs), and identifies a human-specific NEUROG2 program including PPP1R17 and extracellular matrix (ECM) genes that may modulate progenitor dynamics; NEUROG2-mCherry–high human organoid cells upregulated ECM signatures and linked to OPC-like expression. A phospho-dead Neurog2 variant more strongly induced canonical proneural targets (Dll3, Rnd2, Neurod1) in gain-of-function assays (bioRxiv, Jan 11, 2024; doi:10.1101/2024.01.11.575174) (chinchalongporn2024neurog2regulatesa pages 4-6, chinchalongporn2024neurog2regulatesa pages 31-32).<br />
+- Context-dependent epigenome targeting: A 2024 mouse ES-to-NPC system with inducible Neurog2 reports thousands of differentially expressed genes and extensive, context-dependent Neurog2 binding (ES-specific, NPC-specific, and shared peaks), with binding associated with increased chromatin accessibility and direct activation of proneural targets including Dll1, Rnd2, Lhx2, Neurod1/2 (bioRxiv, Oct 18, 2024; doi:10.1101/2024.10.18.618996) (manelli2024contextdependentepigenomerewiring pages 1-3).<br />
+- LHX2–NEUROG2 axis in corticogenesis: Loss of Lhx2 in progenitors causes a “massive” increase of Neurog2 and dendritic/spine defects in layer II/III neurons; shRNA knockdown of Neurog2 in this context completely rescued apical dendrite defects and partially rescued basal dendrite defects, indicating LHX2 suppresses Neurog2 in progenitors to tune neuronal morphogenesis (bioRxiv, Jan 30, 2024; doi:10.1101/2024.01.30.577728) (bose2024lhx2regulatesdendritic pages 15-20).<br />
+- Post-translational tuning and pioneer-like activity: Human iPSC cortical organoid work shows phosphorylation of NEUROG2 at T149 acts as a rheostat between pioneer-like chromatin remodeling and transactivation; a T149A mutant increased neurogenesis and premature chromatin opening enriched for AP‑1 motifs, while AP‑1 inhibition partially rescued the phenotype, supporting a cooperative module between NEUROG2 chromatin activity and AP‑1 (bioRxiv, Nov 2025; doi:10.1101/2025.10.27.684791) (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38). Although 2025, this builds directly on 2023–2024 insights that NEUROG2’s phosphorylation state modulates activity (chinchalongporn2024neurog2regulatesa pages 31-32).<br />
+- Disease/oncogenic setting (2024): NEUROG2 emerged as a synthetic vulnerability in MYCN‑overexpressing neuroendocrine prostate cancer (NEPC). NEUROG2 knockdown selectively reduced colony formation and viability in MYCN+ lines, suppressed neuroendocrine differentiation marker expression (SYP, CHGA, NSE), and significantly reduced orthotopic NEPC tumor growth in vivo (preprints: Nov 2024 and Aug 19, 2024) (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27).</p>
+<p>3) Primary molecular function, pathways, and cellular context<br />
+- Molecular role: NEUROG2 is a sequence-specific bHLH transcription factor that initiates and propagates neurogenic gene expression programs. Direct targets and effector cascades include Delta/Notch pathway components (Dll1/Dll3), actin/cytoskeleton and migration factors (Rnd2), and downstream neuronal bHLH factors (Neurod1/2), consistent with inducing neuronal differentiation and neurite outgrowth programs (manelli2024contextdependentepigenomerewiring pages 1-3, chinchalongporn2024neurog2regulatesa pages 31-32).<br />
+- Cellular and developmental context in human systems: In human fetal cortex datasets and human cerebral organoids, NEUROG2 is broadly expressed in neural progenitors, particularly IPCs, and is scarce in postmitotic neurons, indicating a progenitor-focused role in fate commitment and program initiation. Reported percentages: 72.06% of neural progenitor cells (NPCs) expressed NEUROG2; 38.62% co-expressed NEUROG1 and 33.4% were NEUROG2-only (chinchalongporn2024neurog2regulatesa pages 4-6).<br />
+- Cross-regulatory interactions: LHX2 suppresses Neurog2 in progenitors; reducing NEUROG2 can rescue Lhx2-deficient dendritic arborization defects, indicating a developmental pathway where LHX2 tempers NEUROG2 to properly orchestrate dendrite morphogenesis and spine maturation. In postmitotic neurons, LHX2 impacts Wnt/β‑catenin signaling independently, underscoring stage-specific pathway crosstalk (bose2024lhx2regulatesdendritic pages 15-20).<br />
+- Chromatin and pioneer-like activity: NEUROG2 displays context-dependent genomic occupancy and can associate with chromatin opening. In human cortical progenitors, phosphorylation at T149 modulates a pioneer-like mode that increases chromatin accessibility with enrichment for AP‑1 (JUN/FOS) motifs; inhibition of AP‑1 activity partially reverses premature neurogenesis, demonstrating cooperation with AP‑1 in NEUROG2-driven chromatin remodeling (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13).</p>
+<p>4) Post-transcriptional/post-translational regulation<br />
+- Phospho-regulation: Human/primate-focused work indicates proline-directed SP/TP phosphorylation can constrain NEUROG2 transactivation, while phospho-dead variants enhance activation of classical targets and can reprogram target selection. The T149 site in the bHLH region is a key regulatory node; T149A increases neurogenesis and chromatin opening yet can reduce classical transactivation in reporter assays, evidencing functional uncoupling between chromatin remodeling and transactivation (chinchalongporn2024neurog2regulatesa pages 31-32, pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13).</p>
+<p>5) Human/primate-specific programs and evolutionary considerations<br />
+- Human-specific regulatory outputs: In human organoids, NEUROG2-mCherry–high cells showed increased ECM gene expression and PPP1R17 induction, which is associated with human-accelerated regulatory regions. These outputs were not equivalently enriched in mouse Neurog2:mCherry cortical cells, suggesting human-biased NEUROG2 circuitry that may influence basal progenitor expansion and developmental tempo (bioRxiv, Jan 2024) (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6).</p>
+<p>6) Direct neuronal reprogramming and implementations<br />
+- Human fibroblast reprogramming: Single-factor NGN2 (NEUROG2) ectopic expression in human LF1 fibroblasts produced the strongest pro-neural transcriptional reconfiguration among tested factors at day 5, with increased nestin and β‑III‑tubulin protein levels and activation of neuronal ion channel and synaptic programs. TF activity analysis confirmed robust NEUROG2 activity; pathway analyses suggested concurrent induction of neural stem/progenitor and neuronal lineage signatures (IJMS, Nov 2024; doi:10.3390/ijms252212385) (samoilova2024asnapshotof pages 3-7, samoilova2024asnapshotof pages 9-11). While detailed conversion efficiencies were not provided in the excerpt, early marker kinetics support NEUROG2’s potency in initiating neural programs in human cells.<br />
+- Chromatin context in reprogramming: Broader proneural literature places NEUROG2 as a potent driver whose activity can be enhanced or shifted by chromatin modifiers and co-factors. The included 2024–2025 sources support a model where NEUROG2’s chromatin engagement and pioneer-like features are tunable via phosphorylation and cooperating TFs (e.g., AP‑1), with implications for optimizing reprogramming cocktails (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, manelli2024contextdependentepigenomerewiring pages 1-3).</p>
+<p>7) Disease associations and oncogenic contexts<br />
+- Neuroendocrine prostate cancer (NEPC): NEUROG2 is upregulated in NEPC compared to CRPC and becomes selectively essential in MYCN-overexpressing contexts. Knockdown reduced colony formation more strongly in MYCN+ 22‑MYC cells than in 22Rv1, suppressed viability in N‑Myc+/myrAKT1+ LASCPC‑01 cells, and downregulated neuroendocrine markers SYP, CHGA, NSE. Correlations in NEPC cohorts: NEUROG2 vs SYP r = 0.72 (p = 0.003), vs INSM1 r = 0.79 (p = 0.0006). In orthotopic mouse models, NEUROG2 silencing significantly suppressed NEPC tumor growth (Research Square, Nov 2024; bioRxiv, Aug 19, 2024) (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27).</p>
+<p>8) Relevant statistics and quantitative outcomes (selected)<br />
+- Human organoids/fetal cortex: 72.06% of NPCs expressed NEUROG2; 38.62% co-expressed NEUROG1, 33.4% NEUROG2-only. mCherry‑high human organoid cells: neuronal markers Stmn2 log2FC 4.65; Gap43 log2FC 2.41 (chinchalongporn2024neurog2regulatesa pages 4-6, chinchalongporn2024neurog2regulatesa pages 31-32).<br />
+- Context-dependent ES/NPC binding: Neurog2 ChIP‑seq peaks: 1,946 ES-specific, 2,537 NPC-specific, 15,199 shared; DEGs: 3,707 (ES), 3,072 (NPC); 557 commonly upregulated genes including Dll1/Rnd2/Lhx2/Neurod1/2 (manelli2024contextdependentepigenomerewiring pages 1-3).<br />
+- Phosphorylation effects: In human cortical organoids, T149A (“TA/TA”) increased DCX+ cells by ~4-fold relative to WT; AP‑1 inhibitor (SR11302) reduced DCX+ cells by ~1.8‑fold and partially rescued premature neurogenesis. Large-scale quantification encompassed ~400 tracked RGCs and ~100 million cells across ~200 organoids (pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38).<br />
+- NEPC oncogenic context: Strong correlation between NEUROG2 and NE markers in NEPC but not CRPC (e.g., SYP r = 0.72, p = 0.003 in NEPC); selective loss of colony formation/viability upon NEUROG2 knockdown in MYCN+ lines; significant suppression of orthotopic tumor growth upon NEUROG2 silencing (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27).</p>
+<p>Expert opinions and analysis<br />
+- The convergence of human organoid data and chromatin-binding studies suggests NEUROG2’s function depends on both its phosphorylation state and available co-factors, producing distinct outputs across progenitor states. The human-specific association with PPP1R17 and ECM programs posits a role for NEUROG2 in tuning cortical progenitor niche properties unique to primates (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6). The LHX2–NEUROG2 balance underscores that precise repression of NEUROG2 in progenitors is required for appropriate dendrite morphogenesis, situating NEUROG2 within a stage-specific, modular regulatory network (bose2024lhx2regulatesdendritic pages 15-20). Finally, the NEPC data indicate that adult oncogenic contexts can co‑opt a NEUROG2-driven neuroendocrine gene network, and that targeting NEUROG2 might be therapeutically beneficial in MYCN‑driven NEPC while sparing non-malignant tissues with minimal NEUROG2 expression (vizeacoumar2024anovelrole pages 10-13).</p>
+<p>Current applications and implementations<br />
+- Forward programming and disease modeling: NGN2 is widely used to rapidly generate induced neurons from human cells; the 2024 RNA‑seq study confirms potent early activation of neuronal programs and markers, informing protocol timing and companion factors (samoilova2024asnapshotof pages 3-7, samoilova2024asnapshotof pages 9-11). In developmental modeling, NEUROG2‑tagged human organoids enable lineage tracing and discovery of human‑specific targets pertinent to cortical expansion and timing (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6).<br />
+- Oncology: Functional genomics and in vivo models point to NEUROG2 as a targetable dependency in MYCN‑overexpressing NEPC; translational development would need to balance on‑target effects in neuroendocrine tissues versus low expression in non-malignant prostate (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27).</p>
+<p>Limitations and gaps<br />
+- Subcellular localization and detailed E‑protein/ID‑protein interaction data were not directly quantified in the included 2023–2024 human-centered excerpts; statements are inferred from function and general bHLH biology.<br />
+- Some mechanistic work (e.g., AP‑1 cooperation and T149 rheostat) is from late‑2025 preprints but is complementary to 2024 phosphorylation findings and is included here for completeness with clear dating (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38, chinchalongporn2024neurog2regulatesa pages 31-32).</p>
+<p>Key artifact summarizing recent evidence<br />
+| Area / Theme | Key finding | Model / system | Quantitative / statistical outcomes | URL / DOI | Publication date | Citation ID |<br />
+|---|---|---|---:|---|---|---|<br />
+| Human organoids &amp; fetal cortex (NEUROG2 expression &amp; targets) | NEUROG2 enriched in cortical progenitors/IPCs; human-specific targets include PPP1R17 and ECM genes; phospho-dead Neurog2SA9TA1 shows stronger induction of neurogenic targets | NEUROG2-mCherry knock-in hESC cerebral organoids; human fetal scRNA-seq | 72.06% of NPCs express NEUROG2 (38.62% co-express NEUROG1; 33.4% NEUROG2-only); Stmn2 log2FC = 4.65; Gap43 log2FC = 2.41; phospho-dead mutant = "significantly better" induction of Dll3/Rnd2/Neurod1 (qual.) | https://doi.org/10.1101/2024.01.11.575174 | 2024-01-11 | (chinchalongporn2024neurog2regulatesa pages 4-6, chinchalongporn2024neurog2regulatesa pages 31-32) |<br />
+| Context-dependent binding &amp; chromatin accessibility | NEUROG2 exhibits context-dependent binding and activates neurogenic targets (Dll1, Rnd2, Lhx2, Neurod1/2); binding correlates with chromatin opening | Flag-Neurog2 doxycycline-inducible Tet-ON ES line (mouse); ChIP-seq, RNA-seq, ATAC | DEGs: 3707 (ES), 3072 (NPC); 557 commonly upregulated genes; ChIP-seq peaks: 1,946 ES-specific, 2,537 NPC-specific, 15,199 shared peaks | https://doi.org/10.1101/2024.10.18.618996 | 2024-10 (preprint) | (manelli2024contextdependentepigenomerewiring pages 1-3) |<br />
+| Post-translational regulation — T149 phosphorylation (tuning pioneer-like activity) | Phosphorylation at T149 modulates NEUROG2's pioneer-like chromatin activity vs transactivation: phospho-dead increases chromatin opening and neurogenesis but can reduce transactivation in reporters | Human iPSC cortical organoids and CRISPR NEUROG2 T149A/KO lines; lineage tracing, snRNA-seq/ATAC | TA/TA (T149A) RGCs show ~4-fold higher DCX expression; tracked ~400 RGCs; organoid quantification across ~200 hCOs (~100 million cells); AP-1 inhibitor SR11302 reduced DCX+ cells by ~1.8-fold (partial rescue) | https://doi.org/10.1101/2025.10.27.684791 | 2025-11 (preprint) | (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38) |<br />
+| LHX2 → NEUROG2 axis in corticogenesis | LHX2 represses Neurog2 in progenitors; loss of Lhx2 causes large Neurog2 upregulation and dendritic/morphology defects that are partially/completely rescued by Neurog2 knockdown | Mouse neocortex; Lhx2 conditional mutants (progenitor and postmitotic perturbations); in vivo/in vitro neuronal analyses | Loss of Lhx2 → "massive" Neurog2 increase; Neurog2 knockdown: complete rescue of apical dendrite defects and partial rescue of basal dendrites (statistical tests reported; rescue significant) | https://doi.org/10.1101/2024.01.30.577728 | 2024-01-30 | (bose2024lhx2regulatesdendritic pages 15-20) |<br />
+| Oncogenic / disease context — NEPC (MYCN-driven) | NEUROG2 is selectively required for survival and neuroendocrine plasticity of MYCN-overexpressing prostate cancer cells; knockdown reduces colony formation, viability, NED markers, and orthotopic tumor growth | Human prostate cancer cell lines (22-MYC, 22Rv1, LASCPC-01); orthotopic NEPC mouse models; shRNA/CRISPR knockdown | NEPC correlations: NEUROG2 vs SYP r = 0.72, p = 0.003; NEUROG2 knockdown reduced colony formation preferentially in 22-MYC vs 22Rv1; orthotopic tumor growth significantly suppressed by NEUROG2 silencing | https://doi.org/10.21203/rs.3.rs-5313977/v1 ; https://doi.org/10.1101/2024.08.16.607954 | 2024 (preprints); Aug 19, 2024 (Walke bioRxiv) | (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27) |</p>
+<p><em>Table: Compact table summarizing 2024–2025 experimental evidence on human NEUROG2 (Q9H2A3), including expression, targets, chromatin activity, phosphorylation effects, developmental interactions, and oncogenic roles, with DOIs and context citations for each finding.</em></p>
+<p>References with URLs and dates<br />
+- Chinchalongporn V et al. NEUROG2 regulates a human-specific neurodevelopmental gene regulatory program. bioRxiv. Posted 2024-01-11. doi:10.1101/2024.01.11.575174. https://doi.org/10.1101/2024.01.11.575174 (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6)<br />
+- Manelli V et al. Context-dependent epigenome rewiring during neuronal differentiation. bioRxiv. Posted 2024-10-18. doi:10.1101/2024.10.18.618996. https://doi.org/10.1101/2024.10.18.618996 (manelli2024contextdependentepigenomerewiring pages 1-3)<br />
+- Bose M et al. LHX2 regulates dendritic morphogenesis… via Neurog2 suppression in progenitors. bioRxiv. Posted 2024-01-30. doi:10.1101/2024.01.30.577728. https://doi.org/10.1101/2024.01.30.577728 (bose2024lhx2regulatesdendritic pages 15-20)<br />
+- Pigeon J et al. Post-translational Tuning of Human Cortical Progenitor Neuronal Output. bioRxiv. Posted 2025-11-03. doi:10.1101/2025.10.27.684791. https://doi.org/10.1101/2025.10.27.684791 (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38)<br />
+- Vizeacoumar F et al. A novel role for Neurog2 in MYCN driven neuroendocrine plasticity of prostate cancer. Research Square preprint. Posted 2024-11. doi:10.21203/rs.3.rs-5313977/v1. https://doi.org/10.21203/rs.3.rs-5313977/v1 (vizeacoumar2024anovelrole pages 10-13)<br />
+- Walke P et al. A novel role for Neurog2 in MYCN driven neuroendocrine plasticity of prostate cancer. bioRxiv. Posted 2024-08-19. doi:10.1101/2024.08.16.607954. https://doi.org/10.1101/2024.08.16.607954 (walke2025anovelrole pages 20-27)<br />
+- Samoilova EM et al. A Snapshot of Early Transcriptional Changes… NGN2 in human fibroblasts. Int J Mol Sci. Published 2024-11-21. doi:10.3390/ijms252212385. https://doi.org/10.3390/ijms252212385 (samoilova2024asnapshotof pages 9-11, samoilova2024asnapshotof pages 3-7)</p>
+<p>Citations by section<br />
+- Key concepts/definitions and motif preference: (samoilova2024asnapshotof pages 9-11, manelli2024contextdependentepigenomerewiring pages 1-3, chinchalongporn2024neurog2regulatesa pages 4-6)<br />
+- Recent developments: human/primate programs (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6); context-dependent binding (manelli2024contextdependentepigenomerewiring pages 1-3); LHX2–NEUROG2 axis (bose2024lhx2regulatesdendritic pages 15-20); phospho/pioneer-like activity (pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13); NEPC (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27)<br />
+- Molecular function and pathways: (manelli2024contextdependentepigenomerewiring pages 1-3, chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6, bose2024lhx2regulatesdendritic pages 15-20)<br />
+- Post-translational regulation: (chinchalongporn2024neurog2regulatesa pages 31-32, pigeon2025posttranslationaltuningof pages 1-3, pigeon2025posttranslationaltuningof pages 11-13)<br />
+- Human/primate-specific programs: (chinchalongporn2024neurog2regulatesa pages 31-32, chinchalongporn2024neurog2regulatesa pages 4-6)<br />
+- Reprogramming and applications: (samoilova2024asnapshotof pages 3-7, samoilova2024asnapshotof pages 9-11)<br />
+- Disease associations: (vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27)<br />
+- Quantitative/statistical outcomes: (chinchalongporn2024neurog2regulatesa pages 4-6, chinchalongporn2024neurog2regulatesa pages 31-32, manelli2024contextdependentepigenomerewiring pages 1-3, pigeon2025posttranslationaltuningof pages 11-13, pigeon2025posttranslationaltuningof pages 37-38, vizeacoumar2024anovelrole pages 10-13, walke2025anovelrole pages 20-27)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(chinchalongporn2024neurog2regulatesa pages 4-6): Vorapin Chinchalongporn, Lakshmy Vasan, Fermisk Saleh, Dawn Zinyk, Hussein Ghazale, Ana-Maria Oproescu, Shruti Patel, Matthew Rozak, Yutaka Amemiya, Sisu Han, Alexandra Moffat, Sandra E Black, JoAnne McLaurin, Jamie Near, Arun Seth, Maged Goubran, Orly Reiner, Satoshi Okawa, and Carol Schuurmans. Neurog2 regulates a human-specific neurodevelopmental gene regulatory program. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575174, doi:10.1101/2024.01.11.575174. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(manelli2024contextdependentepigenomerewiring pages 1-3): Vera Manelli, Jeisimhan Diwakar, Sude Beşkardeş, Dácil Alonso-Gil, Ignasi Forné, Faye Chong, Axel Imhof, and Boyan Bonev. Context-dependent epigenome rewiring during neuronal differentiation. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.18.618996, doi:10.1101/2024.10.18.618996. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(samoilova2024asnapshotof pages 9-11): Ekaterina M. Samoilova, Daria A. Chudakova, Erdem B. Dashinimaev, Anastasiya V. Snezhkina, Olga M. Kudryashova, Anastasia V. Lipatova, Alesya V. Soboleva, Pavel O. Vorob’yev, Vladimir T. Valuev-Elliston, Natalia F. Zakirova, Alexander V. Ivanov, and Vladimir P. Baklaushev. A snapshot of early transcriptional changes accompanying the pro-neural phenotype switch by ngn2, ascl1, sox2, and msi1 in human fibroblasts: an rna-seq study. International Journal of Molecular Sciences, 25:12385, Nov 2024. URL: https://doi.org/10.3390/ijms252212385, doi:10.3390/ijms252212385. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(chinchalongporn2024neurog2regulatesa pages 31-32): Vorapin Chinchalongporn, Lakshmy Vasan, Fermisk Saleh, Dawn Zinyk, Hussein Ghazale, Ana-Maria Oproescu, Shruti Patel, Matthew Rozak, Yutaka Amemiya, Sisu Han, Alexandra Moffat, Sandra E Black, JoAnne McLaurin, Jamie Near, Arun Seth, Maged Goubran, Orly Reiner, Satoshi Okawa, and Carol Schuurmans. Neurog2 regulates a human-specific neurodevelopmental gene regulatory program. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2024.01.11.575174, doi:10.1101/2024.01.11.575174. This article has 2 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(bose2024lhx2regulatesdendritic pages 15-20): Mahima Bose, Sreenath Ravindran, Sanjna Kumari, Achintya Srivastava, Archana Iyer, Binita Vedak, Ishita Talwar, Rishikesh Narayanan, and Shubha Tole. Lhx2 regulates dendritic morphogenesis in layer ii/iii of the neocortex via distinct pathways in progenitors and postmitotic neurons. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.01.30.577728, doi:10.1101/2024.01.30.577728. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(pigeon2025posttranslationaltuningof pages 1-3): Julien Pigeon, Tamina Dietl, Myriame Abou Mrad, Ludovico Rizzuti, Miguel V. Silva, Natasha Danda, Corentine Marie, Clarisse Brunet Avalos, Hayat Mokrani, Laila El Khattabi, Alexandre D. Baffet, Diogo S. Castro, Carlos Parras, Boyan Bonev, and Bassem A. Hassan. Post-translational tuning of human cortical progenitor neuronal output. bioRxiv, Nov 2025. URL: https://doi.org/10.1101/2025.10.27.684791, doi:10.1101/2025.10.27.684791. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(pigeon2025posttranslationaltuningof pages 11-13): Julien Pigeon, Tamina Dietl, Myriame Abou Mrad, Ludovico Rizzuti, Miguel V. Silva, Natasha Danda, Corentine Marie, Clarisse Brunet Avalos, Hayat Mokrani, Laila El Khattabi, Alexandre D. Baffet, Diogo S. Castro, Carlos Parras, Boyan Bonev, and Bassem A. Hassan. Post-translational tuning of human cortical progenitor neuronal output. bioRxiv, Nov 2025. URL: https://doi.org/10.1101/2025.10.27.684791, doi:10.1101/2025.10.27.684791. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(pigeon2025posttranslationaltuningof pages 37-38): Julien Pigeon, Tamina Dietl, Myriame Abou Mrad, Ludovico Rizzuti, Miguel V. Silva, Natasha Danda, Corentine Marie, Clarisse Brunet Avalos, Hayat Mokrani, Laila El Khattabi, Alexandre D. Baffet, Diogo S. Castro, Carlos Parras, Boyan Bonev, and Bassem A. Hassan. Post-translational tuning of human cortical progenitor neuronal output. bioRxiv, Nov 2025. URL: https://doi.org/10.1101/2025.10.27.684791, doi:10.1101/2025.10.27.684791. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(vizeacoumar2024anovelrole pages 10-13): Franco Vizeacoumar, Prachi Walke, Jared Price, Frederick Vizeacoumar, Nickson Joseph, Vincent Maranda, Bari Chowdhury, Jay Patel, Yue Zhang, He Dong, Lara New, Ashtalakshmi Ganapathysamy, Li Hui Gong, Hussain Elhasasna, Kalpana Bhanumathy, Yuliang Wu, Andrew Freywald, and Anand Krishnan. A novel role for neurog2 in mycn driven neuroendocrine plasticity of prostate cancer. Nov 2024. URL: https://doi.org/10.21203/rs.3.rs-5313977/v1, doi:10.21203/rs.3.rs-5313977/v1.</p>
+</li>
+<li>
+<p>(walke2025anovelrole pages 20-27): Prachi Walke, Jared D.W. Price, Frederick S. Vizeacoumar, Nickson Joseph, Vincent Maranda, Bari Chowdhury, Jay Patel, Yue Zhang, He Dong, Lara New, Ashtalakshmi Ganapathysamy, Li Hui Gong, Hussain Elhasasna, Kalpana K. Bhanumathy, Yuliang Wu, Andrew Freywald, Anand Krishnan, and Franco J. Vizeacoumar. A novel role for neurog2 in mycn driven neuroendocrine plasticity of prostate cancer. Oncogene, 44:2460-2473, Aug 2025. URL: https://doi.org/10.1101/2024.08.16.607954, doi:10.1101/2024.08.16.607954. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(samoilova2024asnapshotof pages 3-7): Ekaterina M. Samoilova, Daria A. Chudakova, Erdem B. Dashinimaev, Anastasiya V. Snezhkina, Olga M. Kudryashova, Anastasia V. Lipatova, Alesya V. Soboleva, Pavel O. Vorob’yev, Vladimir T. Valuev-Elliston, Natalia F. Zakirova, Alexander V. Ivanov, and Vladimir P. Baklaushev. A snapshot of early transcriptional changes accompanying the pro-neural phenotype switch by ngn2, ascl1, sox2, and msi1 in human fibroblasts: an rna-seq study. International Journal of Molecular Sciences, 25:12385, Nov 2024. URL: https://doi.org/10.3390/ijms252212385, doi:10.3390/ijms252212385. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>samoilova2024asnapshotof pages 9-11</li>
+<li>manelli2024contextdependentepigenomerewiring pages 1-3</li>
+<li>vizeacoumar2024anovelrole pages 10-13</li>
+<li>walke2025anovelrole pages 20-27</li>
+<li>pigeon2025posttranslationaltuningof pages 1-3</li>
+<li>pigeon2025posttranslationaltuningof pages 11-13</li>
+<li>pigeon2025posttranslationaltuningof pages 37-38</li>
+<li>samoilova2024asnapshotof pages 3-7</li>
+<li>https://doi.org/10.1101/2024.01.11.575174</li>
+<li>https://doi.org/10.1101/2024.10.18.618996</li>
+<li>https://doi.org/10.1101/2025.10.27.684791</li>
+<li>https://doi.org/10.1101/2024.01.30.577728</li>
+<li>https://doi.org/10.21203/rs.3.rs-5313977/v1</li>
+<li>https://doi.org/10.1101/2024.08.16.607954</li>
+<li>https://doi.org/10.3390/ijms252212385</li>
+<li>https://doi.org/10.1101/2024.01.11.575174,</li>
+<li>https://doi.org/10.1101/2024.10.18.618996,</li>
+<li>https://doi.org/10.3390/ijms252212385,</li>
+<li>https://doi.org/10.1101/2024.01.30.577728,</li>
+<li>https://doi.org/10.1101/2025.10.27.684791,</li>
+<li>https://doi.org/10.21203/rs.3.rs-5313977/v1,</li>
+<li>https://doi.org/10.1101/2024.08.16.607954,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H2A3
+gene_symbol: NEUROG2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &#39;NEUROG2 encodes neurogenin-2, a proneural basic helix-loop-helix (bHLH) transcription factor that is the predominant neurogenin in mammalian cortical neurogenesis. The protein functions in the nucleus where it binds E-box DNA motifs (CANNTG), with preference for CAT-containing E-boxes, forming heterodimers with E-proteins to activate transcription. NEUROG2 drives neuronal fate commitment and differentiation by directly activating key neurogenic target genes including Dll1, Dll3, Rnd2, Neurod1, Neurod2, and Lhx2. The protein exhibits context-dependent chromatin binding and pioneer-like activity that is modulated by phosphorylation at T149, which acts as a rheostat between chromatin remodeling and transactivation functions. In cortical progenitors, NEUROG2 is enriched in intermediate progenitors where it initiates neuronal differentiation programs. Its activity is suppressed by LHX2 in progenitors to regulate proper dendritic morphogenesis. NEUROG2 displays human-specific regulatory programs including activation of PPP1R17 and ECM genes. It is also upregulated in MYCN-driven neuroendocrine prostate cancer where it becomes essential for maintaining neuroendocrine differentiation.&#39;
+existing_annotations:
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core molecular function annotation for NEUROG2 as a bHLH transcription factor that activates RNA Pol II-dependent transcription
+    action: ACCEPT
+    reason: This annotation correctly captures NEUROG2&#39;s primary molecular function as a sequence-specific transcription factor that drives RNA polymerase II-mediated transcription. Deep research confirms NEUROG2 binds E-box motifs and activates neurogenic gene expression programs including Dll1, Dll3, Rnd2, Neurod1, Neurod2, and Lhx2. IBA evidence is supported by extensive experimental data showing direct transcriptional activation activity.
+    additional_reference_ids:
+      - file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 is a proneural bHLH transcription factor that activates neuronal differentiation programs in the developing cortex. Context-dependent binding of NEUROG2, with direct activation of canonical targets Dll1/Dll3, Rnd2, Neurod1/2, and Lhx2, has been demonstrated.&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core localization annotation for NEUROG2 nuclear function
+    action: ACCEPT
+    reason: NEUROG2 functions as a nuclear transcription factor, consistent with its role in binding DNA and activating transcription. Deep research confirms nuclear localization as the site where NEUROG2 regulates gene expression and exhibits chromatin remodeling activity.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;As a transcription factor, NEUROG2 functions in the nucleus to regulate gene expression. In human cortical progenitors, phosphorylation at T149 modulates a pioneer-like mode that increases chromatin accessibility.&#34;
+- term:
+    id: GO:0007423
+    label: sensory organ development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Annotation reflects phylogenetically conserved neurogenin function in sensory neurogenesis but peripheral to NEUROG2 human core function
+    action: KEEP_AS_NON_CORE
+    reason: While neurogenins including NEUROG2 have conserved roles in sensory organ development across vertebrates (particularly in sensory ganglia), the human deep research focuses primarily on cortical neurogenesis. This annotation is based on IBA phylogenetic inference and represents a non-core function for human NEUROG2, which is predominantly expressed in cortical progenitors rather than sensory organs.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 is widely recognized as the predominant neurogenin in corticogenesis. In human fetal cortex datasets and human cerebral organoids, NEUROG2 is broadly expressed in neural progenitors, particularly IPCs.&#34;
+- term:
+    id: GO:0030900
+    label: forebrain development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Annotation for forebrain development represents one developmental context for NEUROG2 function but not the specific core process
+    action: KEEP_AS_NON_CORE
+    reason: Forebrain development is one anatomical context where NEUROG2 functions during cortical neurogenesis. However, this annotation is too general and represents a developmental context rather than the core process of neuronal differentiation and fate commitment that NEUROG2 directly mediates. The more specific processes of neuron differentiation and neurogenesis better capture NEUROG2&#39;s core function.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 enrichment in human cortical progenitors, especially intermediate progenitors (IPCs), and identifies a human-specific NEUROG2 program.&#34;
+- term:
+    id: GO:0070888
+    label: E-box binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core molecular function annotation for NEUROG2&#39;s specific DNA binding activity
+    action: ACCEPT
+    reason: E-box binding (CANNTG motifs) is the fundamental DNA recognition mechanism by which NEUROG2 executes its transcription factor activity. Deep research extensively documents NEUROG2&#39;s preference for CAT-containing E-boxes and direct binding to target gene promoters/enhancers. This is more specific and informative than generic DNA binding.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 binds E-box (CANNTG) motifs. Human fibroblast reprogramming data report a preference toward CAT E-box variants for NGN2 relative to ASCL1&#39;s CAG preference, corresponding to differential target selection during early conversion.&#34;
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Core biological process annotation for NEUROG2&#39;s transcriptional activation function
+    action: ACCEPT
+    reason: NEUROG2 positively regulates transcription of its target genes via RNA polymerase II, activating neurogenic programs. This annotation accurately captures the regulatory directionality and mechanism of NEUROG2&#39;s function, consistent with experimental evidence showing upregulation of Dll1, Dll3, Rnd2, Neurod1, Neurod2, and other targets.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;Direct activation of proneural targets including Dll1, Rnd2, Lhx2, Neurod1/2. Single-factor NGN2 (NEUROG2) ectopic expression in human LF1 fibroblasts produced the strongest pro-neural transcriptional reconfiguration.&#34;
+- term:
+    id: GO:0061564
+    label: axon development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Annotation reflects downstream consequence of NEUROG2-driven neuronal differentiation rather than core function
+    action: KEEP_AS_NON_CORE
+    reason: Axon development is a cellular morphogenetic process that occurs downstream of neuronal fate specification and differentiation. While NEUROG2-expressing neurons subsequently develop axons, and NEUROG2 targets like Rnd2 affect neurite outgrowth, axon development is not the core function of NEUROG2 itself, which is neuronal fate commitment and differentiation at the progenitor stage.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;In human fetal cortex datasets and human cerebral organoids, NEUROG2 is broadly expressed in neural progenitors, particularly IPCs, and is scarce in postmitotic neurons, indicating a progenitor-focused role in fate commitment and program initiation.&#34;
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Generic DNA binding annotation is too broad; E-box binding is more specific and informative
+    action: MODIFY
+    reason: While NEUROG2 does bind DNA, this annotation is too generic and uninformative. The more specific GO:0070888 (E-box binding) better captures the actual molecular function. DNA binding alone doesn&#39;t distinguish NEUROG2 from hundreds of other DNA-binding proteins. Should be replaced with the more specific E-box binding annotation already present.
+    proposed_replacement_terms:
+      - id: GO:0070888
+        label: E-box binding
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 binds E-box (CANNTG) motifs with preference for CAT E-box variants.&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Duplicate annotation of nuclear localization with IEA evidence
+    action: ACCEPT
+    reason: This is a duplicate of the IBA annotation for nucleus (GO:0005634). Both annotations are correct. The IEA evidence from UniProt subcellular location mapping complements the IBA phylogenetic evidence. Duplicate annotations with different evidence codes are acceptable in GO.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;As a transcription factor, NEUROG2 functions in the nucleus to regulate gene expression.&#34;
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Very broad developmental process annotation that lacks specificity
+    action: MODIFY
+    reason: While NEUROG2 does function in nervous system development, this annotation is too general. More specific terms like neuron differentiation, neurogenesis, or neuron fate commitment better capture NEUROG2&#39;s specific role in generating neurons from progenitors. Nervous system development encompasses many processes beyond neurogenesis where NEUROG2 is not directly involved.
+    proposed_replacement_terms:
+      - id: GO:0030182
+        label: neuron differentiation
+      - id: GO:0022008
+        label: neurogenesis
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 is a proneural bHLH transcription factor that activates neuronal differentiation programs. NEUROG2 is widely recognized as the predominant neurogenin in corticogenesis and a central regulator of neurogenic fate.&#34;
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Overly generic cell differentiation annotation that should be replaced with neuron-specific differentiation
+    action: MODIFY
+    reason: This annotation is too generic. NEUROG2 specifically drives neuronal differentiation, not general cell differentiation. The term GO:0030182 (neuron differentiation) is far more specific and informative. Cell differentiation applies to thousands of genes across all cell types and provides little functional insight into NEUROG2&#39;s specific role.
+    proposed_replacement_terms:
+      - id: GO:0030182
+        label: neuron differentiation
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 activates neuronal differentiation programs. Involved in neuronal differentiation. Activates transcription by binding to the E box.&#34;
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Annotation for bHLH dimerization activity essential for DNA binding function
+    action: ACCEPT
+    reason: Protein dimerization is a fundamental aspect of bHLH transcription factor function. NEUROG2 must form heterodimers with E-proteins to bind DNA effectively. This annotation is mechanistically important for understanding how NEUROG2 achieves its DNA binding activity, though it is a supporting function rather than the primary activity.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-uniprot.txt
+        supporting_text: &#34;Efficient DNA binding requires dimerization with another bHLH protein.&#34;
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 acts as a bHLH dimer; context-dependent cooperation with other TFs and chromatin regulators is prominent.&#34;
+- term:
+    id: GO:1990837
+    label: sequence-specific double-stranded DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Accurate molecular function annotation for sequence-specific DNA binding
+    action: ACCEPT
+    reason: This annotation correctly captures NEUROG2&#39;s ability to bind DNA in a sequence-specific manner (E-box motifs). The sequence-specificity is critical for target gene selectivity. This complements the E-box binding annotation by emphasizing the sequence-dependent nature of the interaction with double-stranded DNA.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 binds E-box (CANNTG) motifs. Human fibroblast reprogramming data report a preference toward CAT E-box variants.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Generic protein binding annotation lacks functional specificity
+    action: REMOVE
+    reason: Per curation guidelines, protein binding is uninformative and should be avoided unless no better term exists. This annotation from a high-throughput Y2H screen (HuRI) identifies PFDN5 (Q99471) as an interactor but provides no functional insight. The specific interactor may be biologically relevant, but the generic protein binding term should be removed. More specific molecular function terms like protein dimerization activity or transcription coregulator binding would be more informative if the functional significance of this interaction were established.
+    additional_reference_ids:
+      - PMID:32296183
+- term:
+    id: GO:1990837
+    label: sequence-specific double-stranded DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:28473536
+  review:
+    summary: Experimental evidence for sequence-specific DNA binding from systematic TF binding study
+    action: ACCEPT
+    reason: This annotation is supported by direct experimental evidence from a systematic study of human transcription factor DNA binding specificities using HT-SELEX. The IDA evidence provides strong experimental support for NEUROG2&#39;s sequence-specific DNA binding activity. This is a duplicate of the IEA annotation above but with stronger experimental evidence.
+    additional_reference_ids:
+      - PMID:28473536
+    supported_by:
+      - reference_id: PMID:28473536
+        supporting_text: &#34;By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment), we found that there are also many TFs that prefer CpG-methylated sequences&#34;
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: ISA
+  original_reference_id: GO_REF:0000113
+  review:
+    summary: Annotation for chromatin localization reflects pioneer-like chromatin remodeling activity
+    action: ACCEPT
+    reason: NEUROG2 exhibits pioneer-like transcription factor activity, directly engaging chromatin and promoting chromatin accessibility. Deep research shows that NEUROG2 phosphorylation at T149 modulates pioneer-like chromatin remodeling capacity. Chromatin localization is more specific than general nuclear localization and reflects NEUROG2&#39;s ability to bind and remodel chromatin structure.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 displays context-dependent genomic occupancy and can associate with chromatin opening. In human cortical progenitors, phosphorylation at T149 modulates a pioneer-like mode that increases chromatin accessibility. A T149A mutant increased neurogenesis and premature chromatin opening.&#34;
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: ISA
+  original_reference_id: GO_REF:0000113
+  review:
+    summary: Duplicate core molecular function annotation with ISA evidence from TFClass
+    action: ACCEPT
+    reason: This is a duplicate of the IBA annotation for the same term. The ISA evidence comes from manual assignment based on TFClass database classification of NEUROG2 as a bHLH transcription factor. Multiple lines of evidence for the same annotation strengthen confidence. Duplicate annotations with different evidence types are acceptable.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 is a sequence-specific bHLH transcription factor that initiates and propagates neurogenic gene expression programs.&#34;
+- term:
+    id: GO:0070888
+    label: E-box binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Duplicate core molecular function annotation with ISS evidence from ortholog
+    action: ACCEPT
+    reason: This is a duplicate of the IBA annotation for E-box binding. The ISS evidence indicates manual transfer from mouse ortholog (UniProtKB:P70447), which has experimental evidence for E-box binding. This complements the IBA phylogenetic evidence. Multiple evidence codes strengthen the annotation.
+    supported_by:
+      - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+        supporting_text: &#34;NEUROG2 binds E-box (CANNTG) motifs with demonstrated preference for CAT E-box variants.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Provides IEA annotation for protein dimerization activity based on bHLH domain (InterPro:IPR011598, IPR036638)
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings:
+    - statement: Transfers E-box binding annotation from mouse Neurog2 ortholog P70447
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: IBA annotations based on PANTHER phylogenetic analysis across bHLH transcription factor family
+    - statement: Supports core annotations for transcription factor activity, E-box binding, nucleus localization, and neurogenesis processes
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Maps UniProt keywords (DNA-binding, Neurogenesis, Differentiation) to GO terms
+    - statement: Produces generic annotations that often need refinement to more specific terms
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: Maps nucleus subcellular location from UniProt annotation
+- id: GO_REF:0000113
+  title: Gene Ontology annotation of human sequence-specific DNA binding transcription factors based on TFClass database
+  findings:
+    - statement: Assigns transcription factor activity and chromatin localization based on TFClass classification (tfclass:1.2.3, bHLH group)
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+    - statement: Machine learning prediction of sequence-specific double-stranded DNA binding
+- id: PMID:28473536
+  title: Impact of cytosine methylation on DNA binding specificities of human transcription factors
+  findings:
+    - statement: Systematic HT-SELEX study profiling DNA binding specificities of 542 human transcription factors
+      supporting_text: &#34;By analysis of 542 human TFs with methylation-sensitive SELEX (systematic evolution of ligands by exponential enrichment), we found that there are also many TFs that prefer CpG-methylated sequences&#34;
+    - statement: Provides experimental evidence for sequence-specific DNA binding activity
+      supporting_text: &#34;systematic examination of the effect of an epigenetic DNA modification on human TF binding specificity&#34;
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome
+  findings:
+    - statement: Systematic Y2H screen identifying PFDN5 (prefoldin subunit 5) as NEUROG2 interactor
+      supporting_text: &#34;three Y2H assay versions...that showed good sensitivity and low false positive rates when benchmarked against gold-standard positive and random reference sets&#34;
+    - statement: Represents high-throughput protein-protein interaction data
+      supporting_text: &#34;The dataset, versioned HI-III-20 (Human Interactome obtained from screening Space III, published in 2020), contains 52,569 verified PPIs involving 8,275 proteins&#34;
+- id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+  title: Deep research on NEUROG2 function in cortical neurogenesis
+  findings:
+    - statement: NEUROG2 is the predominant neurogenin in cortical neurogenesis
+    - statement: Binds E-box motifs (CANNTG) with preference for CAT-containing sequences
+    - statement: Forms heterodimers with E-proteins for DNA binding
+    - statement: Direct targets include Dll1, Dll3, Rnd2, Neurod1, Neurod2, Lhx2
+    - statement: Functions in nucleus with pioneer-like chromatin activity
+    - statement: Phosphorylation at T149 modulates chromatin remodeling versus transactivation
+    - statement: LHX2 suppresses NEUROG2 in progenitors to regulate dendritic morphogenesis
+    - statement: Human-specific targets include PPP1R17 and ECM genes
+    - statement: Upregulated in MYCN-driven neuroendocrine prostate cancer
+    - statement: Enriched in cortical intermediate progenitors, scarce in postmitotic neurons
+core_functions:
+- description: Binds E-box DNA motifs as heterodimer with E-proteins to activate neurogenic transcription programs
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+    - id: GO:0022008
+      label: neurogenesis
+    - id: GO:0030182
+      label: neuron differentiation
+  locations:
+    - id: GO:0005634
+      label: nucleus
+    - id: GO:0000785
+      label: chromatin
+  supported_by:
+    - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+      supporting_text: &#34;NEUROG2 is a sequence-specific bHLH transcription factor that initiates and propagates neurogenic gene expression programs. Direct activation of canonical targets Dll1/Dll3, Rnd2, Neurod1/2, and Lhx2.&#34;
+proposed_new_terms:
+- proposed_name: glutamatergic neuron differentiation
+  proposed_definition: The process in which a relatively unspecialized cell acquires specialized features of a glutamatergic neuron, an excitatory neuron that uses glutamate as its primary neurotransmitter.
+  justification: NEUROG2 is known to specify excitatory glutamatergic neuron fate in cortex, but this specific function is not captured in existing annotations. A more specific term than general neuron differentiation would capture this cell type-specific function.
+  supported_by:
+    - reference_id: file:genes/human/NEUROG2/NEUROG2-deep-research-falcon.md
+      supporting_text: &#34;NEUROG2 is the predominant neurogenin in cortical neurogenesis driving excitatory neuron differentiation programs.&#34;
+- proposed_name: negative regulation of glial cell differentiation
+  proposed_definition: Any process that stops, prevents, or reduces the frequency, rate or extent of glial cell differentiation.
+  justification: Proneural factors like NEUROG2 promote neuronal fate while suppressing glial fate in neural progenitors. This reciprocal regulation is an important aspect of NEUROG2 function not represented in current annotations.
+suggested_questions:
+- question: What is the functional significance of the NEUROG2-PFDN5 interaction identified in the HuRI interactome?
+- question: Are there specific E-protein partners (e.g., TCF3, TCF4, TCF12) that preferentially heterodimerize with NEUROG2 in cortical progenitors?
+- question: How do the human-specific NEUROG2 targets (PPP1R17, ECM genes) contribute to human cortical expansion?
+- question: What is the mechanism by which LHX2 suppresses NEUROG2 expression in progenitors?
+- question: Does NEUROG2 regulate astrocyte versus neuron fate decisions, and if so, through what molecular mechanism?
+- question: What are the specific glutamatergic neuron subtypes generated by NEUROG2 in different cortical layers?
+suggested_experiments:
+- description: ChIP-seq in human cortical organoids to identify direct NEUROG2 genomic targets in human progenitors
+- description: Single-cell RNA-seq time course of NEUROG2+ progenitors through differentiation to define the complete NEUROG2-driven transcriptional cascade
+- description: CRISPR screen in NEUROG2-expressing progenitors to identify cofactors and modulators of NEUROG2 activity
+- description: Biochemical purification and mass spectrometry to identify NEUROG2 protein complexes and E-protein partners in cortical tissue
+- description: Functional analysis of T149 phosphorylation site mutants to dissect pioneer activity versus transactivation functions
+- description: CUT&amp;RUN or CUT&amp;Tag to map NEUROG2 chromatin binding at high resolution
+- description: Lineage tracing experiments to definitively map the neuronal subtypes produced by NEUROG2+ progenitors
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
