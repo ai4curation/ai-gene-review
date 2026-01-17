@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVU_3335 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DVU_3335</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q725U0" target="_blank" class="term-link">
+                        Q725U0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DVU_3335";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q725U0" data-a="DESCRIPTION: DVU_3335 (Q725U0) is a membrane-associated two-com..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DVU_3335 (Q725U0) is a membrane-associated two-component system (TCS) sensor histidine kinase in Desulfovibrio vulgaris Hildenborough (now Nitratidesulfovibrio vulgaris). The protein contains two predicted transmembrane helices (residues 14-36 and 148-170), a PAS sensory domain (residues 238-283), and a C-terminal histidine kinase catalytic core comprising a dimerization/histidine phosphotransfer (DHp/HisKA) domain and a HATPase_C domain (residues 363-578). It catalyzes ATP-dependent autophosphorylation on a conserved histidine residue and subsequent phosphotransfer to a cognate response regulator. The specific environmental signal detected and the cognate response regulator remain uncharacterized. Based on domain architecture and organism-level TCS studies, it likely participates in adaptive regulation tied to nutrient availability, stress sensing, or biofilm-related behaviors.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0000160" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological process annotation is appropriate for a sensor histidine kinase that functions within a two-component phosphorelay system. The annotation was inferred from GO:0000155 (phosphorelay sensor kinase activity) via logical inference. DVU_3335 contains the canonical HisKA and HATPase_C domains characteristic of TCS sensor kinases, supporting participation in phosphorelay signaling.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The domain architecture (HisKA/DHp + HATPase_C) is diagnostic of two-component system sensor histidine kinases that function via autophosphorylation and phosphotransfer to response regulators. This is the core biological process for TCS sensor kinases. UniProt annotation confirms EC 2.7.13.3 (protein histidine kinase) activity. Genome-wide studies in D. vulgaris Hildenborough have demonstrated TCS roles in regulating substrate-specific functions and stress responses.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">PROSITE; PS50109; HIS_KIN; 1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Large-scale RB-TnSeq links specific phenotypes to genes in DvH, identifying conditional phenotypes for &gt;1,100 non-essential genes and showing examples where nearby two-component systems regulate substrate-specific transporters.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                                    GO:0000155
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay sensor kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0000155" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and appropriate molecular function term for DVU_3335. The protein contains the HisK_dim/P (HisKA/DHp) and HATPase_C domains that define phosphorelay sensor kinase activity. This term specifically describes catalysis of histidine autophosphorylation in response to an extracellular signal, followed by phosphotransfer to a response regulator.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0000155 is the correct specific MF term for two-component sensor histidine kinases. The protein has InterPro domains IPR003661 (HisK_dim/P_dom) and IPR003594 (HATPase_dom) which are the structural basis for this activity. The PAS domain (IPR000014) provides the sensory input module typical of environmental signal-responsive sensor kinases. This term captures both the kinase activity and its functional context in phosphorelay signaling better than more generic kinase terms.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR003661; HisK_dim/P_dom.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The UniProt-listed domains (HATPase_C/HATPase_dom; His_kinase_dom; HisK_dim/P_dom; superfamily annotations HATPase_C_sf, HisK_dim/P_sf) are consistent with a bacterial two-component system (TCS) histidine kinase catalytic core.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004673" target="_blank" class="term-link">
+                                    GO:0004673
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0004673" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on EC 2.7.13.3 mapping and describes the core catalytic activity (ATP + protein L-histidine = ADP + protein phospho-L-histidine). While technically correct, it is less informative than GO:0000155 which captures the same reaction in the context of two-component signaling.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is accurate based on EC number mapping. UniProt explicitly annotates this protein with EC 2.7.13.3. The term describes the biochemical reaction without the functional context. Having both GO:0000155 (more specific, context-aware) and GO:0004673 (based on EC classification) is acceptable as they represent different evidence sources and annotation pipelines.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L-</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation was inferred from InterPro:IPR013767 (PAS_fold). While many TCS sensor kinases ultimately regulate transcription through their cognate response regulators, DVU_3335 is a sensor kinase, not a transcriptional regulator itself. The transcriptional regulation is performed by the downstream response regulator, not the sensor kinase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation represents an over-annotation based on the PAS domain. The PAS domain in DVU_3335 functions as a signal sensor, not as a DNA-binding or transcriptional regulatory domain. The protein lacks any DNA-binding domains and is a membrane-associated sensor with two transmembrane helices. While the phosphorelay cascade may ultimately affect transcription via the response regulator, the sensor kinase itself does not directly regulate transcription. This annotation conflates the downstream effect of phosphorelay signaling with the direct function of the sensor kinase.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">Membrane {ECO:0000256|SAM:Phobius};</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The phosphate is then transferred to an aspartate residue in a downstream response regulator, to trigger a response.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a broad biological process term that accurately describes the general function of DVU_3335 as a signal transduction component. However, GO:0000160 (phosphorelay signal transduction system) is more specific and already present, making this annotation redundant.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While redundant with the more specific GO:0000160, this general annotation is not incorrect. It was inferred from the HisK_dim/P domains (IPR003661, IPR036097) which are hallmarks of signal transducing histidine kinases. Retaining both allows for different levels of annotation granularity in queries. The IEA annotation is valid and consistent with domain-based inference.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR036097; HisK_dim/P_sf.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0016301" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general molecular function term inferred from the UniProt keyword &#34;Kinase&#34;. It is true but uninformative given that more specific terms (GO:0000155, GO:0004673) are already annotated.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this term is too general to be informative. GO:0000155 (phosphorelay sensor kinase activity) and GO:0004673 (protein histidine kinase activity) already provide the specific kinase function. &#34;Kinase activity&#34; alone does not distinguish this protein from serine/threonine kinases, tyrosine kinases, or small molecule kinases. The annotation is not wrong but adds no information beyond what is captured by the more specific annotations.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">Kinase {ECO:0000313|EMBL:AAS97803.1};</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most general transferase term, inferred from the UniProt keyword &#34;Transferase&#34;. It is an ancestor of all more specific kinase/transferase annotations and provides no useful information.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016740 is a root-level molecular function term that encompasses all transferases. While accurate, it provides no discriminatory information. The more specific annotations (GO:0000155, GO:0004673, GO:0016772) already capture the transferase activity in meaningful detail. This annotation is redundant and uninformative for understanding the specific function of DVU_3335.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transferase {ECO:0000313|EMBL:AAS97803.1};</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016772" target="_blank" class="term-link">
+                                    GO:0016772
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring phosphorus-containing groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q725U0" data-a="GO:0016772" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an intermediate-specificity term describing the transfer of phosphorus groups, inferred from InterPro:IPR004358 (Sig_transdc_His_kin-like_C). It is more specific than GO:0016740 but less specific than the kinase annotations.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation bridges the GO hierarchy between general transferase activity and specific kinase activity. It was correctly inferred from the histidine kinase-like C-terminal domain (IPR004358). While less informative than GO:0000155 or GO:0004673, it is a valid IEA annotation that accurately describes the biochemical class of reaction catalyzed. The annotation is acceptable as part of the annotation hierarchy.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q725U0
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR004358; Sig_transdc_His_kin-like_C.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DVU_3335 is a two-component system sensor histidine kinase with canonical domain architecture (HisKA/DHp + HATPase_C + PAS sensory domain). It functions via ATP-dependent autophosphorylation on a conserved histidine residue followed by phosphotransfer to a cognate response regulator. This is the core molecular function of the protein.
+</h3>
+                <span class="vote-buttons" data-g="Q725U0" data-a="FUNCTION: DVU_3335 is a two-component system sensor histidin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                            phosphorelay sensor kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q725U0-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q725U0" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:40:05.484179'<br />
+end_time: '2026-01-15T10:45:45.994319'<br />
+duration_seconds: 340.51<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q725U0<br />
+  gene_symbol: Q725U0<br />
+  uniprot_accession: Q725U0<br />
+  protein_description: 'RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438};<br />
+    EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};'<br />
+  gene_info: OrderedLocusNames=DVU_3335 {ECO:0000313|EMBL:AAS97803.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom.<br />
+    (IPR005467); HisK_dim/P_dom. (IPR003661); HisK_dim/P_sf. (IPR036097)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 9</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q725U0</li>
+<li><strong>Protein Description:</strong> RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=DVU_3335 {ECO:0000313|EMBL:AAS97803.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom. (IPR005467); HisK_dim/P_dom. (IPR003661); HisK_dim/P_sf. (IPR036097)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q725U0" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q725U0' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q725U0</strong> (gene ID: Q725U0, UniProt: Q725U0) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q725U0</li>
+<li><strong>Protein Description:</strong> RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=DVU_3335 {ECO:0000313|EMBL:AAS97803.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom. (IPR005467); HisK_dim/P_dom. (IPR003661); HisK_dim/P_sf. (IPR036097)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q725U0" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q725U0' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q725U0</strong> (gene ID: Q725U0, UniProt: Q725U0) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Target verified: UniProt Q725U0 corresponds to DVU_3335 in Desulfovibrio vulgaris Hildenborough (now Nitratidesulfovibrio vulgaris Hildenborough), annotated as a sensor histidine kinase (EC 2.7.13.3). The UniProt-listed domains (HATPase_C/HATPase_dom; His_kinase_dom; HisK_dim/P_dom; superfamily annotations HATPase_C_sf, HisK_dim/P_sf) are consistent with a bacterial two-component system (TCS) histidine kinase catalytic core. No conflicting gene symbol usage was found in recent literature. Literature specific to DVU_3335 is limited; functional inference is therefore made from domain architecture and organism-level TCS studies.</p>
+<p>Key concepts and definitions<br />
+- Two-component histidine kinase (HK): membrane-associated or cytosolic sensor enzymes that autophosphorylate a conserved histidine residue using ATP and transfer the phosphoryl group to an aspartate on a cognate response regulator (RR), modulating transcription or behavior. The catalytic core typically comprises a dimerization and histidine phosphotransfer (DHp/HisKA) domain and a C-terminal HATPase (H-box/N/G motifs) domain. Some HK-like systems show domain variations (e.g., GHKL-family HATPase_c_3 fusions) that broaden architecture diversity (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).<br />
+- Reaction chemistry (EC 2.7.13.3): ATP-dependent autophosphorylation on histidine followed by phosphotransfer to RR Asp; regulates adaptive responses to environmental cues.</p>
+<p>Identity and domain architecture of DVU_3335 (Q725U0)<br />
+- Identity: DVU_3335 encodes a histidine kinase by UniProt annotation; locus/organism match confirmed.<br />
+- Domains: Presence of HATPase_C and HisKA/His_kinase_dom implies a canonical cytosolic catalytic core. The “HisK_dim/P” annotations indicate a dimerization/phosphotransfer module typical of HKs. These align with known HK architectures; comparative analyses describe additional HK-like architectures (e.g., HEF_HK associated with HATPase_c_3) that emphasize the diversity of kinase scaffolds, reinforcing the plausibility of Q725U0’s HK assignment (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).<br />
+- Predicted localization: The catalytic HATPase/DHp core is cytosolic. Many HKs possess N-terminal sensory/transmembrane segments to detect periplasmic/extracellular signals; UniProt’s catalytic domain set supports a membrane-associated sensor HK model for DVU_3335, although a precise transmembrane topology and periplasmic domain have not been resolved in the sources consulted (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>Gene-specific evidence and limitations<br />
+- No primary publications were found that experimentally characterize DVU_3335/Q725U0. Consequently, cognate RR identity, specific stimulus, and direct phenotypes remain unresolved in current accessible sources. Inference is based on conserved HK domains and organism-level TCS studies in D. vulgaris Hildenborough (trotter2023largescalegeneticcharacterization pages 4-6, thakur2023textminingtoidentify pages 17-18).</p>
+<p>Broader context: two-component systems in Desulfovibrio vulgaris Hildenborough and SRB<br />
+- Genome-wide functional genetics in DvH (RB-TnSeq, 2023): A randomly barcoded transposon mutant library across DvH yielded 757 genome-wide fitness assays covering 2,741 protein-coding genes and conditional phenotypes for 1,137 non-essential genes. The dataset links TCS modules to regulation of substrate-specific functions, exemplified by a two-component system (DVU0596:DVU0597) showing pyruvate-specific phenotypes and regulation of a nearby transporter (DVU0599/cstA). This directly evidences TCS roles in coordinating metabolic uptake in DvH and provides a resource to test additional HKs like DVU_3335 under diverse conditions (Frontiers in Microbiology, March 2023; https://doi.org/10.3389/fmicb.2023.1095191) (trotter2023largescalegeneticcharacterization pages 4-6).<br />
+- SRB TCS in stress, biofilms, and metabolism (text-mining synthesis, 2023): A semi-automated workflow compiling SRB literature identifies numerous Desulfovibrio TCS genes implicated in stress sensing, biofilm formation, electron transfer, and biocorrosion contexts. The study integrates GO enrichment and network analysis, supporting the involvement of histidine kinases in adaptive responses relevant to SRB ecology and engineering challenges (Microorganisms, January 2023; https://doi.org/10.3390/microorganisms11010119) (thakur2023textminingtoidentify pages 17-18).<br />
+- HK domain diversity (comparative domain analysis, 2021): Genome-wide analysis of novel TCS-like elements across bacteria highlights variant HK-like architectures (e.g., HEF_HK paired with a Response_reg_2 domain and HATPase_c_3), often linked to restriction–modification loci. This underscores the architectural and functional breadth of HKs and informs interpretation of kinase domain annotations when precise sensor modules are unannotated (Genome Biology and Evolution, February 2021; https://doi.org/10.1093/gbe/evab024) (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>Current understanding of DVU_3335 function and pathway context (inferred)<br />
+- Primary biochemical function: Based on EC 2.7.13.3 and domain composition, DVU_3335 is predicted to function as a sensor HK that autophosphorylates and transfers phosphate to a RR, thereby regulating gene expression or behavior in response to an environmental or intracellular cue. The specific substrate/signal is unknown; in DvH, TCS commonly regulate nutrient uptake, stress responses, and biofilm/electron-transfer adaptations (trotter2023largescalegeneticcharacterization pages 4-6, thakur2023textminingtoidentify pages 17-18).<br />
+- Likely cellular location: Inner membrane-associated sensor with a cytosolic DHp/HATPase catalytic core; exact transmembrane and periplasmic sensory domain architecture is unresolved in sources used (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).<br />
+- Pathways and processes: By analogy to experimentally supported DvH TCS roles, DVU_3335 plausibly participates in adaptive regulation tied to nutrient availability (e.g., uptake/transport systems), stress sensing (e.g., redox, metals, osmotic), or community behaviors (e.g., biofilm), but gene-specific pathway assignment awaits experimental mapping (trotter2023largescalegeneticcharacterization pages 4-6, thakur2023textminingtoidentify pages 17-18).</p>
+<p>Recent developments and latest research (2023–2024 emphasis)<br />
+- DvH RB-TnSeq resource enables direct testing of DVU_3335: The 2023 dataset provides condition-specific fitness measurements and TCS examples (DVU0596:DVU0597→DVU0599), highlighting an actionable path to interrogate DVU_3335 under targeted stresses or substrates (March 2023; https://doi.org/10.3389/fmicb.2023.1095191) (trotter2023largescalegeneticcharacterization pages 4-6).<br />
+- SRB TCS roles synthesized for applications: 2023 text-mining analysis synthesizes evidence linking Desulfovibrio HKs to stress and biocorrosion phenotypes, prioritizing gene sets for further validation in industrially relevant settings (January 2023; https://doi.org/10.3390/microorganisms11010119) (thakur2023textminingtoidentify pages 17-18).<br />
+- Domain-level advances: Novel HK-like systems illuminate architectural breadth relevant to hidden/atypical domains that might occur in poorly annotated SRB HKs; useful when interpreting Q725U0 in absence of experimentally defined sensor modules (February 2021; https://doi.org/10.1093/gbe/evab024) (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>Current applications and real-world implementations<br />
+- Biocorrosion and biofilms: Desulfovibrio spp. are central to sulfate-reducing biofilms and pipeline/corrosion contexts. Compiled SRB literature identifies histidine kinases/TCS among gene sets implicated in biofilm formation, stress response, and electron transfer, marking these regulators as potential targets for mitigation/monitoring strategies (thakur2023textminingtoidentify pages 17-18).<br />
+- Systems-level functional genomics: The DvH RB-TnSeq resource can be applied to define condition-specific roles for uncharacterized HKs (including DVU_3335), accelerating hypothesis-driven intervention points in SRB management (trotter2023largescalegeneticcharacterization pages 4-6).</p>
+<p>Expert opinions and analyses from authoritative sources<br />
+- The RB-TnSeq authors emphasize that specific phenotypes in DvH can be mapped to nearby TCS modules, revealing regulatory wiring for substrate uptake and stress adaptation, thus advocating the use of high-throughput genetics to resolve functions of uncharacterized regulators (trotter2023largescalegeneticcharacterization pages 4-6).<br />
+- Comparative domain work argues for broad HK architectural diversity beyond canonical HisKA/HATPase_C, advising caution and comprehensive domain evaluation in annotations, which is particularly pertinent for SRB HKs with sparse experimental data (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>Relevant statistics and datasets<br />
+- DvH RB-TnSeq: 757 assays; 2,741 protein-coding genes; conditional phenotypes for 1,137 non-essential genes; example: DVU0596:DVU0597 TCS regulating DVU0599/cstA in pyruvate conditions (trotter2023largescalegeneticcharacterization pages 4-6).<br />
+- SRB text-mining: 227 SRB genes compiled with enrichment of functions in metal binding, electron transfer, and sulfur metabolism; Desulfovibrio histidine kinases included among implicated regulators in biocorrosion-relevant contexts (thakur2023textminingtoidentify pages 17-18).</p>
+<p>Outstanding gaps and recommendations for DVU_3335 (Q725U0)<br />
+- Cognate RR and operon context: Not resolved in available sources; recommend mining the DvH genome neighborhood and RB-TnSeq cofitness/conditional phenotypes to identify candidate RR(s) and operonic links (trotter2023largescalegeneticcharacterization pages 4-6).<br />
+- Stimulus and phenotype: Test DVU_3335 mutants (or barcoded transposon insertions) across substrate and stress panels where SRB TCS are implicated (nutrient shifts, metal stress, redox perturbations) to detect condition-specific fitness signatures, following the strategy that revealed DVU0596:DVU0597→DVU0599 regulation (trotter2023largescalegeneticcharacterization pages 4-6, thakur2023textminingtoidentify pages 17-18).<br />
+- Domain mapping: Verify transmembrane segments and potential periplasmic sensor domain via updated predictive tools; consider atypical HK-like domain architectures described for bacterial HKs (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>Embedded evidence summary<br />
+| Source (short citation) | Year | URL | DvH/DVU locus relevance (yes/no and details) | Key findings relevant to histidine kinases/TCS | Notes |<br />
+|---|---:|---|---|---|---|<br />
+| Trotter et al., Front. Microbiol. (trotter2023largescalegeneticcharacterization pages 4-6) | 2023 | https://doi.org/10.3389/fmicb.2023.1095191 | Yes — DvH RB‑TnSeq resource; reports TCS-related phenotypes (example: DVU0596:DVU0597); DVU_3335 not specifically characterized. | Large-scale RB‑TnSeq links specific phenotypes to genes in DvH, identifying conditional phenotypes for &gt;1,100 non-essential genes and showing examples where nearby two-component systems regulate substrate-specific transporters. | Genome-wide fitness data and RB‑TnSeq mutant library available (figshare/SRA); valuable for hypothesis-driven functional tests of TCS. |<br />
+| Thakur et al., Microorganisms (thakur2023textminingtoidentify pages 17-18) | 2023 | https://doi.org/10.3390/microorganisms11010119 | Yes — Text‑mining retrieved Desulfovibrio vulgaris Hildenborough and highlights numerous histidine kinases/TCS involved in biocorrosion and stress response; no DVU_3335-specific evidence. | Semi-automated literature mining implicates TCS in stress sensing, biofilm regulation, and electron-transfer processes relevant to SRB biocorrosion, compiling a gene list that includes many Desulfovibrio histidine kinases. | Identified 227 SRB genes linked to biocorrosion processes; supports organism-level inference when gene-specific data are lacking. |<br />
+| Bellieny-Rabelo et al., Genome Biol. Evol. (bellienyrabelo2021noveltwocomponentsystemlike pages 10-11) | 2021 | https://doi.org/10.1093/gbe/evab024 | No — Pan-bacterial analysis of novel TCS-like elements; not DvH-specific but informs HK domain diversity and atypical architectures. | Describes novel domains (HEF_HK, Response_reg_2) and frequent association with HATPase_c_3 (GHKL family), revealing alternative histidine-kinase–like architectures and genomic linkages useful to interpret variant domain compositions in bacterial HKs. | Provides comparative domain context helpful for interpreting UniProt domain annotations (HATPase_C, HisKA, HATPase_c_3) in proteins such as Q725U0. |</p>
+<p><em>Table: A concise table summarizing three key sources (RB‑TnSeq resource, literature text‑mining, and domain‑architecture analysis) that inform histidine kinase/TCS function and domain context in Desulfovibrio vulgaris Hildenborough; includes URLs and notes for follow‑up.</em></p>
+<p>Mandatory ambiguity statement<br />
+- The gene symbol “Q725U0” itself is a UniProt accession, not a conventional gene symbol; gene-specific literature for DVU_3335 is currently limited. The functional description above relies on UniProt-provided domain annotations and inference from recent organism-level and domain-level studies of Desulfovibrio TCS. Further experimental validation in DvH is needed to establish DVU_3335’s precise signal, cognate RR, and regulatory targets (trotter2023largescalegeneticcharacterization pages 4-6, thakur2023textminingtoidentify pages 17-18, bellienyrabelo2021noveltwocomponentsystemlike pages 10-11).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bellienyrabelo2021noveltwocomponentsystemlike pages 10-11): Daniel Bellieny-Rabelo, Willem J S Pretorius, and Lucy N Moleleki. Novel two-component system-like elements reveal functional domains associated with restriction–modification systems and paramorc atpases in bacteria. Genome Biology and Evolution, Feb 2021. URL: https://doi.org/10.1093/gbe/evab024, doi:10.1093/gbe/evab024. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(trotter2023largescalegeneticcharacterization pages 4-6): Valentine V. Trotter, Maxim Shatsky, Morgan N. Price, Thomas R. Juba, Grant M. Zane, Kara B. De León, Erica L.-W. Majumder, Qin Gui, Rida Ali, Kelly M. Wetmore, Jennifer V. Kuehl, Adam P. Arkin, Judy D. Wall, Adam M. Deutschbauer, John-Marc Chandonia, and Gareth P. Butland. Large-scale genetic characterization of the model sulfate-reducing bacterium, desulfovibrio vulgaris hildenborough. Frontiers in Microbiology, Mar 2023. URL: https://doi.org/10.3389/fmicb.2023.1095191, doi:10.3389/fmicb.2023.1095191. This article has 11 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(thakur2023textminingtoidentify pages 17-18): Payal Thakur, Mathew O. Alaba, Shailabh Rauniyar, Ram Nageena Singh, Priya Saxena, Alain Bomgni, Etienne Z. Gnimpieba, Carol Lushbough, Kian Mau Goh, and Rajesh Kumar Sani. Text-mining to identify gene sets involved in biocorrosion by sulfate-reducing bacteria: a semi-automated workflow. Microorganisms, 11:119, Jan 2023. URL: https://doi.org/10.3390/microorganisms11010119, doi:10.3390/microorganisms11010119. This article has 17 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bellienyrabelo2021noveltwocomponentsystemlike pages 10-11</li>
+<li>trotter2023largescalegeneticcharacterization pages 4-6</li>
+<li>thakur2023textminingtoidentify pages 17-18</li>
+<li>https://doi.org/10.3389/fmicb.2023.1095191</li>
+<li>https://doi.org/10.3390/microorganisms11010119</li>
+<li>https://doi.org/10.1093/gbe/evab024</li>
+<li>https://doi.org/10.1093/gbe/evab024,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1095191,</li>
+<li>https://doi.org/10.3390/microorganisms11010119,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q725U0
+gene_symbol: DVU_3335
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris Hildenborough
+description: &gt;
+  DVU_3335 (Q725U0) is a membrane-associated two-component system (TCS) sensor histidine kinase
+  in Desulfovibrio vulgaris Hildenborough (now Nitratidesulfovibrio vulgaris). The protein contains
+  two predicted transmembrane helices (residues 14-36 and 148-170), a PAS sensory domain (residues 238-283),
+  and a C-terminal histidine kinase catalytic core comprising a dimerization/histidine phosphotransfer
+  (DHp/HisKA) domain and a HATPase_C domain (residues 363-578). It catalyzes ATP-dependent autophosphorylation
+  on a conserved histidine residue and subsequent phosphotransfer to a cognate response regulator.
+  The specific environmental signal detected and the cognate response regulator remain uncharacterized.
+  Based on domain architecture and organism-level TCS studies, it likely participates in adaptive
+  regulation tied to nutrient availability, stress sensing, or biofilm-related behaviors.
+existing_annotations:
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;
+      This biological process annotation is appropriate for a sensor histidine kinase that functions
+      within a two-component phosphorelay system. The annotation was inferred from GO:0000155
+      (phosphorelay sensor kinase activity) via logical inference. DVU_3335 contains the canonical
+      HisKA and HATPase_C domains characteristic of TCS sensor kinases, supporting participation
+      in phosphorelay signaling.
+    action: ACCEPT
+    reason: &gt;
+      The domain architecture (HisKA/DHp + HATPase_C) is diagnostic of two-component system sensor
+      histidine kinases that function via autophosphorylation and phosphotransfer to response regulators.
+      This is the core biological process for TCS sensor kinases. UniProt annotation confirms EC 2.7.13.3
+      (protein histidine kinase) activity. Genome-wide studies in D. vulgaris Hildenborough have
+      demonstrated TCS roles in regulating substrate-specific functions and stress responses.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;PROSITE; PS50109; HIS_KIN; 1.&#34;
+      - reference_id: file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+        supporting_text: &#34;Large-scale RB-TnSeq links specific phenotypes to genes in DvH, identifying conditional phenotypes for &gt;1,100 non-essential genes and showing examples where nearby two-component systems regulate substrate-specific transporters.&#34;
+- term:
+    id: GO:0000155
+    label: phosphorelay sensor kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is the most specific and appropriate molecular function term for DVU_3335. The protein
+      contains the HisK_dim/P (HisKA/DHp) and HATPase_C domains that define phosphorelay sensor
+      kinase activity. This term specifically describes catalysis of histidine autophosphorylation
+      in response to an extracellular signal, followed by phosphotransfer to a response regulator.
+    action: ACCEPT
+    reason: &gt;
+      GO:0000155 is the correct specific MF term for two-component sensor histidine kinases.
+      The protein has InterPro domains IPR003661 (HisK_dim/P_dom) and IPR003594 (HATPase_dom)
+      which are the structural basis for this activity. The PAS domain (IPR000014) provides
+      the sensory input module typical of environmental signal-responsive sensor kinases.
+      This term captures both the kinase activity and its functional context in phosphorelay
+      signaling better than more generic kinase terms.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;InterPro; IPR003661; HisK_dim/P_dom.&#34;
+      - reference_id: file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+        supporting_text: &#34;The UniProt-listed domains (HATPase_C/HATPase_dom; His_kinase_dom; HisK_dim/P_dom; superfamily annotations HATPase_C_sf, HisK_dim/P_sf) are consistent with a bacterial two-component system (TCS) histidine kinase catalytic core.&#34;
+- term:
+    id: GO:0004673
+    label: protein histidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;
+      This annotation is based on EC 2.7.13.3 mapping and describes the core catalytic activity
+      (ATP + protein L-histidine = ADP + protein phospho-L-histidine). While technically correct,
+      it is less informative than GO:0000155 which captures the same reaction in the context
+      of two-component signaling.
+    action: ACCEPT
+    reason: &gt;
+      The annotation is accurate based on EC number mapping. UniProt explicitly annotates
+      this protein with EC 2.7.13.3. The term describes the biochemical reaction without
+      the functional context. Having both GO:0000155 (more specific, context-aware) and
+      GO:0004673 (based on EC classification) is acceptable as they represent different
+      evidence sources and annotation pipelines.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};&#34;
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L-&#34;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This annotation was inferred from InterPro:IPR013767 (PAS_fold). While many TCS sensor
+      kinases ultimately regulate transcription through their cognate response regulators,
+      DVU_3335 is a sensor kinase, not a transcriptional regulator itself. The transcriptional
+      regulation is performed by the downstream response regulator, not the sensor kinase.
+    action: REMOVE
+    reason: &gt;
+      This annotation represents an over-annotation based on the PAS domain. The PAS domain
+      in DVU_3335 functions as a signal sensor, not as a DNA-binding or transcriptional
+      regulatory domain. The protein lacks any DNA-binding domains and is a membrane-associated
+      sensor with two transmembrane helices. While the phosphorelay cascade may ultimately
+      affect transcription via the response regulator, the sensor kinase itself does not
+      directly regulate transcription. This annotation conflates the downstream effect of
+      phosphorelay signaling with the direct function of the sensor kinase.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;Membrane {ECO:0000256|SAM:Phobius};&#34;
+      - reference_id: file:DESVH/Q725U0/Q725U0-deep-research-falcon.md
+        supporting_text: &#34;The phosphate is then transferred to an aspartate residue in a downstream response regulator, to trigger a response.&#34;
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This is a broad biological process term that accurately describes the general function
+      of DVU_3335 as a signal transduction component. However, GO:0000160 (phosphorelay signal
+      transduction system) is more specific and already present, making this annotation redundant.
+    action: ACCEPT
+    reason: &gt;
+      While redundant with the more specific GO:0000160, this general annotation is not
+      incorrect. It was inferred from the HisK_dim/P domains (IPR003661, IPR036097) which
+      are hallmarks of signal transducing histidine kinases. Retaining both allows for
+      different levels of annotation granularity in queries. The IEA annotation is valid
+      and consistent with domain-based inference.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;InterPro; IPR036097; HisK_dim/P_sf.&#34;
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is a very general molecular function term inferred from the UniProt keyword &#34;Kinase&#34;.
+      It is true but uninformative given that more specific terms (GO:0000155, GO:0004673)
+      are already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      While technically correct, this term is too general to be informative. GO:0000155
+      (phosphorelay sensor kinase activity) and GO:0004673 (protein histidine kinase activity)
+      already provide the specific kinase function. &#34;Kinase activity&#34; alone does not distinguish
+      this protein from serine/threonine kinases, tyrosine kinases, or small molecule kinases.
+      The annotation is not wrong but adds no information beyond what is captured by the
+      more specific annotations.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;Kinase {ECO:0000313|EMBL:AAS97803.1};&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      This is the most general transferase term, inferred from the UniProt keyword &#34;Transferase&#34;.
+      It is an ancestor of all more specific kinase/transferase annotations and provides
+      no useful information.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GO:0016740 is a root-level molecular function term that encompasses all transferases.
+      While accurate, it provides no discriminatory information. The more specific annotations
+      (GO:0000155, GO:0004673, GO:0016772) already capture the transferase activity in
+      meaningful detail. This annotation is redundant and uninformative for understanding
+      the specific function of DVU_3335.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;Transferase {ECO:0000313|EMBL:AAS97803.1};&#34;
+- term:
+    id: GO:0016772
+    label: transferase activity, transferring phosphorus-containing groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This is an intermediate-specificity term describing the transfer of phosphorus groups,
+      inferred from InterPro:IPR004358 (Sig_transdc_His_kin-like_C). It is more specific
+      than GO:0016740 but less specific than the kinase annotations.
+    action: ACCEPT
+    reason: &gt;
+      This annotation bridges the GO hierarchy between general transferase activity and
+      specific kinase activity. It was correctly inferred from the histidine kinase-like
+      C-terminal domain (IPR004358). While less informative than GO:0000155 or GO:0004673,
+      it is a valid IEA annotation that accurately describes the biochemical class of
+      reaction catalyzed. The annotation is acceptable as part of the annotation hierarchy.
+    supported_by:
+      - reference_id: UniProt:Q725U0
+        supporting_text: &#34;InterPro; IPR004358; Sig_transdc_His_kin-like_C.&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0000155
+      label: phosphorelay sensor kinase activity
+    description: &gt;
+      DVU_3335 is a two-component system sensor histidine kinase with canonical domain architecture
+      (HisKA/DHp + HATPase_C + PAS sensory domain). It functions via ATP-dependent autophosphorylation
+      on a conserved histidine residue followed by phosphotransfer to a cognate response regulator.
+      This is the core molecular function of the protein.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpoD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpoD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q72B50" target="_blank" class="term-link">
+                        Q72B50
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpoD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q72B50" data-a="DESCRIPTION: RNA polymerase sigma factor SigA (RpoD) is the pri..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RNA polymerase sigma factor SigA (RpoD) is the primary/housekeeping sigma-70 factor in Nitratidesulfovibrio vulgaris (formerly Desulfovibrio vulgaris) Hildenborough. Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released. RpoD is the principal sigma factor during exponential growth, directing RNA polymerase to housekeeping gene promoters. The protein contains conserved sigma-70 domains: region 2 (recognizes -10 promoter element and promotes DNA melting), region 4 (contains helix-turn-helix motif that recognizes -35 promoter element), region 1.2 (contributes to promoter escape), and region 1.1 (modulates promoter complex formation). RpoD interacts transiently with the RNA polymerase catalytic core to form the holoenzyme and functions in the cytoplasm during transcription initiation.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is appropriate but represents an indirect consequence of sigma factor function rather than the core activity. Sigma factors directly participate in transcription initiation rather than regulating it. The term describes modulation of the frequency/rate of transcription initiation, whereas sigma factors are essential components of the transcription initiation machinery itself.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While RpoD does influence transcription initiation rates by directing RNAP to promoters, this is a downstream effect of its primary sigma factor activity (GO:0016987). The core function is sigma factor activity enabling promoter recognition and transcription initiation, not regulation of that process. This annotation captures a true aspect of sigma factor biology but at a less precise level than the more specific terms.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Primary sigma factor (RpoD/SigA): The sigma-70-type primary sigma factor enables bacterial RNA polymerase (RNAP) to initiate transcription at housekeeping promoters under normal growth conditions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct but very general. RpoD binds DNA specifically at promoter sequences through its sigma-70 domains. Region 2 recognizes the -10 element and region 4 recognizes the -35 element via a helix-turn-helix motif (residues 550-569 in Q72B50). However, sigma factors do not bind DNA independently - they only recognize promoter DNA when complexed with RNAP core as part of the holoenzyme.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding is a fundamental activity of sigma factors, although it occurs in the context of the holoenzyme complex. The UniProt entry documents a DNA_BIND region (H-T-H motif at residues 550-569) which directly supports this annotation. This is appropriately general for an IEA annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">DNA_BIND 550..569 /note=&#34;H-T-H motif&#34; /evidence=&#34;ECO:0000256|HAMAP-Rule:MF_00963&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">region 2 recognizes the -10 element and promotes DNA melting; region 4 contains a helix-turn-helix that recognizes the -35 element</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is INCORRECT for sigma factors. The GO term definition states that DNA-binding transcription factors modulate transcription via &#34;selective and non-covalent binding to a specific double-stranded genomic DNA sequence within a cis-regulatory region.&#34; While sigma factors do recognize promoter elements, they do not function as transcription factors that independently bind DNA to regulate transcription. Sigma factors are integral components of the transcription machinery, not regulatory factors.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma factors have a distinct molecular function (GO:0016987 sigma factor activity) that is fundamentally different from transcription factor activity. Sigma factors do not bind DNA independently - they only bind promoter DNA when part of the RNAP holoenzyme. The GO guidelines explicitly note that sigma factors should be annotated to sigma factor activity, not transcription factor activity. This InterPro-derived annotation is an over-generalization.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO:0016987
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors act as the promoter specificity subunit of eubacterial and plant plastid multisubunit RNA polymerases... Although sigma does not bind DNA on its own, when combined with the core to form the holoenzyme, the sigma factor binds specifically to promoter elements.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This cellular component annotation is correct. RpoD functions in the bacterial cytoplasm as part of the RNAP holoenzyme, binding core RNAP to engage promoter DNA during transcription initiation. This is consistent with UniProt subcellular location annotation and structural studies.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is well-established for bacterial sigma factors. The UniProt entry explicitly states &#34;SUBCELLULAR LOCATION: Cytoplasm&#34; based on HAMAP rule MF_00963. The deep research confirms &#34;Cellular localization: Cytoplasmic; functions within the RNAP holoenzyme engaging cytoplasmic DNA during transcription initiation.&#34;
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000256|HAMAP-Rule:MF_00963}</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cellular localization: Cytoplasmic; functions within the RNAP holoenzyme engaging cytoplasmic DNA during transcription initiation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0006352" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an excellent and appropriate biological process annotation for sigma factors. The primary function of RpoD is to enable transcription initiation by directing RNAP to promoters. The GO term describes &#34;The initial step of transcription, consisting of the assembly of the RNA polymerase preinitiation complex (PIC) at a gene promoter, as well as the formation of the first few bonds of the RNA transcript.&#34;
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process annotation that accurately captures the essential role of sigma factors in transcription. RpoD directly participates in transcription initiation by forming the holoenzyme with RNAP core and recognizing promoter elements, which is precisely what this term describes. UniProt function annotation states sigma factors &#34;promote the attachment of RNA polymerase to specific initiation sites.&#34;
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Primary sigma factor (RpoD/SigA): The sigma-70-type primary sigma factor enables bacterial RNA polymerase (RNAP) to initiate transcription at housekeeping promoters under normal growth conditions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is redundant and less specific than GO:0006352 (DNA-templated transcription initiation). While sigma factors do influence transcription, they are more precisely involved in the initiation process itself rather than regulation of transcription broadly. This term is an ancestor of more specific transcription-related terms.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a broader parent term that is technically true but not the most informative annotation for sigma factors. The more specific GO:0006352 (DNA-templated transcription initiation) better captures the precise role of sigma factors. This annotation is acceptable for completeness but represents an over-generalization of sigma factor function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Central to transcription initiation of core cellular processes (housekeeping gene expression); thereby indirectly influences growth, metabolism, and stress-responsive regulons by setting basal transcriptional regimes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0010468" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very high-level annotation that is technically correct but not very informative. All sigma factors influence gene expression by directing RNAP to specific promoters, but this term is too general to be useful for understanding sigma factor function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While sigma factors do affect gene expression by determining which promoters are recognized by RNAP, this annotation is at too high a level of abstraction to be informative. More specific terms (GO:0006352, GO:0016987) better capture the actual molecular role of sigma factors. This annotation adds little value beyond the more specific terms.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">directs transcription initiation at housekeeping promoters during normal growth</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most precise and appropriate molecular function annotation for RpoD. Sigma factor activity is defined as the promoter specificity subunit of bacterial RNA polymerases that, when combined with the core enzyme to form the holoenzyme, binds specifically to promoter elements. This exactly describes the function of RpoD.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is the core molecular function of RpoD. The GO term definition states &#34;Sigma factors act as the promoter specificity subunit of eubacterial and plant plastid multisubunit RNA polymerases... Although sigma does not bind DNA on its own, when combined with the core to form the holoenzyme, the sigma factor binds specifically to promoter elements.&#34; This precisely matches the known function of RpoD as the primary sigma factor.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released. This sigma factor is the primary sigma factor during exponential growth.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">SIMILARITY: Belongs to the sigma-70 factor family. RpoD/SigA subfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters during normal growth</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26873250" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26873250
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bacterial Interactomes: Interacting Protein Partners Share S...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72B50" data-a="GO:0005515" data-r="PMID:26873250" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on high-throughput AP-MS (affinity purification-mass spectrometry) data from the Butland et al. D. vulgaris interactome study. The UniProt entry shows RpoD interacts with DVU_1368 (Q72CB5) with 2 experiments in IntAct. However, &#34;protein binding&#34; is an uninformative term that should be replaced with a more specific binding term if possible.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the protein-protein interaction is experimentally supported, &#34;protein binding&#34; (GO:0005515) is explicitly discouraged in GO annotation guidelines as uninformative. For sigma factors, the known protein interactions are with RNAP core subunits (RpoA, RpoB, RpoC). The UniProt entry notes &#34;Interacts transiently with the RNA polymerase catalytic core&#34; and shows a motif for &#34;Interaction with polymerase core subunit RpoC&#34; at residues 380-383. A more appropriate term would be RNA polymerase binding or a related term.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001000" target="_blank" class="term-link">
+                                    bacterial-type RNA polymerase core enzyme binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBUNIT: Interacts transiently with the RNA polymerase catalytic core.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q72B50
+                                    
+                                </span>
+                                
+                                <div class="support-text">MOTIF 380..383 /note=&#34;Interaction with polymerase core subunit RpoC&#34; /evidence=&#34;ECO:0000256|HAMAP-Rule:MF_00963&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26873250" target="_blank" class="term-link">
+                                        PMID:26873250
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Numerous affinity purification-mass spectrometry (AP-MS) and yeast two-hybrid screens have each defined thousands of pairwise protein-protein interactions (PPIs)... We have identified 459 high confidence PPIs from D. vulgaris</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RpoD (SigA) is the primary housekeeping sigma factor in N. vulgaris, belonging to the sigma-70 factor family RpoD/SigA subfamily. It contains all conserved sigma-70 domains (regions 1.1, 1.2, 2, 3, and 4) with documented helix-turn-helix DNA binding motif (residues 550-569). UniProt annotation and HAMAP rule MF_00963 confirm sigma factor function. The protein promotes RNAP attachment to specific promoter initiation sites and is the primary sigma factor during exponential growth.
+</h3>
+                <span class="vote-buttons" data-g="Q72B50" data-a="FUNCTION: RpoD (SigA) is the primary housekeeping sigma fact..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q72B50
+                            
+                        </span>
+                        
+                        <div class="finding-text">FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released. This sigma factor is the primary sigma factor during exponential growth.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters during normal growth</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26873250" target="_blank" class="term-link">
+                            PMID:26873250
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacterial Interactomes: Interacting Protein Partners Share Similar Function and Are Validated in Independent Assays More Frequently Than Previously Reported.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput AP-MS study identifying protein-protein interactions in D. vulgaris</div>
+                        
+                        <div class="finding-text">"Here, we present an AP-MS survey of the bacterium Desulfovibrio vulgaris together with a critical reanalysis of nine published bacterial yeast two-hybrid and AP-MS screens"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified 459 high confidence PPIs from D. vulgaris</div>
+                        
+                        <div class="finding-text">"We have identified 459 high confidence PPIs from D. vulgaris and 391 from Escherichia coli"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15077118" target="_blank" class="term-link">
+                            PMID:15077118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio vulgaris Hildenborough</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequence establishing DVU_1788 locus for rpoD</div>
+                        
+                        <div class="finding-text">"Desulfovibrio vulgaris Hildenborough is a model organism for studying the energy metabolism of sulfate-reducing bacteria"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1186/s12864-024-10415-x
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The modular architecture of sigma factors in cyanobacteria</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirms essential domain set for primary sigma-70 factors (r1_2, r2, r3, r4)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Documents conserved roles in promoter recognition</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Organism-specific mapping of rpoD to DVU_1788 in D. vulgaris</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.3390/microorganisms11041077
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural analysis of Bacillus subtilis sigma factors</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural insights into sigma-70 family domain architecture</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirms sigma-2 and sigma-4 as primary DNA-recognition modules</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the specific promoter sequence motifs recognized by RpoD in N. vulgaris?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="Q: What are the specific promoter sequence motifs rec..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there alternative sigma factors in N. vulgaris that compete with RpoD under stress conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="Q: Are there alternative sigma factors in N. vulgaris..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the identity and function of DVU_1368 (Q72CB5) that interacts with RpoD?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="Q: What is the identity and function of DVU_1368 (Q72..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq analysis to map RpoD binding sites genome-wide and identify the RpoD regulon</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RpoD binds to canonical -10/-35 promoter elements in N. vulgaris housekeeping genes</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="EXPERIMENT: ChIP-seq analysis to map RpoD binding sites genome..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro transcription assays with purified components to confirm promoter recognition specificity</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Purified RpoD enables RNAP to initiate transcription at predicted housekeeping promoters</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: In vitro transcription assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="EXPERIMENT: In vitro transcription assays with purified compon..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Protein interaction studies to characterize the RpoD-RNAP core interaction interface</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RpoD interacts with RNAP core via the conserved sigma-70 region 2 and region 4 domains</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Co-immunoprecipitation or crosslinking mass spectrometry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72B50" data-a="EXPERIMENT: Protein interaction studies to characterize the Rp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q72B50-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q72B50" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:26:29.384461'<br />
+end_time: '2026-01-15T10:30:37.395119'<br />
+duration_seconds: 248.01<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q72B50<br />
+  gene_symbol: rpoD<br />
+  uniprot_accession: Q72B50<br />
+  protein_description: 'RecName: Full=RNA polymerase sigma factor SigA {ECO:0000256|HAMAP-Rule:MF_00963};'<br />
+  gene_info: Name=rpoD {ECO:0000313|EMBL:AAS96265.1}; Synonyms=sigA {ECO:0000256|HAMAP-Rule:MF_00963};<br />
+    OrderedLocusNames=DVU_1788 {ECO:0000313|EMBL:AAS96265.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Belongs to the sigma-70 factor family. RpoD/SigA subfamily.<br />
+  protein_domains: RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943);<br />
+    RNA_pol_sigma70_r1_2. (IPR009042); RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r3.<br />
+    (IPR007624)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72B50</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma factor SigA {ECO:0000256|HAMAP-Rule:MF_00963};</li>
+<li><strong>Gene Information:</strong> Name=rpoD {ECO:0000313|EMBL:AAS96265.1}; Synonyms=sigA {ECO:0000256|HAMAP-Rule:MF_00963}; OrderedLocusNames=DVU_1788 {ECO:0000313|EMBL:AAS96265.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. RpoD/SigA subfamily.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r1_2. (IPR009042); RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r3. (IPR007624)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rpoD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rpoD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rpoD</strong> (gene ID: Q72B50, UniProt: Q72B50) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72B50</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma factor SigA {ECO:0000256|HAMAP-Rule:MF_00963};</li>
+<li><strong>Gene Information:</strong> Name=rpoD {ECO:0000313|EMBL:AAS96265.1}; Synonyms=sigA {ECO:0000256|HAMAP-Rule:MF_00963}; OrderedLocusNames=DVU_1788 {ECO:0000313|EMBL:AAS96265.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family. RpoD/SigA subfamily.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r1_2. (IPR009042); RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r3. (IPR007624)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "rpoD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'rpoD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>rpoD</strong> (gene ID: Q72B50, UniProt: Q72B50) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity check: The target is rpoD (DVU_1788) encoding the primary sigma factor (SigA/RpoD) in Desulfovibrio vulgaris Hildenborough; organism-specific mapping of rpoD to locus DVU_1788 is reported in primary literature (D. vulgaris Hildenborough) (gevin2024themodulararchitecture pages 17-17). Family and domains: housekeeping σ70 (RpoD/SigA) with conserved regions 1.2, 2, 3, and 4 characteristic of the RpoD/SigA subfamily; domains 2 and 4 recognize the −10 and −35 promoter elements, respectively, consistent with sigma-70 family annotations (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 2-4). No conflicting usage of the symbol rpoD in a different organism is used as a surrogate here; all subsequent functional inferences are restricted to σ70 biology and the D. vulgaris mapping cited above (gevin2024themodulararchitecture pages 17-17).</p>
+<table>
+<thead>
+<tr>
+<th>Source (authors, title, citation)</th>
+<th style="text-align: right;">Year</th>
+<th>Focus / Organism</th>
+<th>Key relevance to RpoD/SigA (function/domains/promoter recognition/organism mapping)</th>
+<th>URL / DOI</th>
+<th>Publication month</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rajeev et al., "Regulation of Nitrite Stress Response in Desulfovibrio vulgaris Hildenborough" (rajeev2015) (gevin2024themodulararchitecture pages 17-17)</td>
+<td style="text-align: right;">2015</td>
+<td>Desulfovibrio vulgaris Hildenborough</td>
+<td>Reports rpoD (DVU1788) in D. vulgaris Hildenborough; supports organism-specific gene mapping and use of rpoD as a reference/housekeeping sigma factor.</td>
+<td>https://doi.org/10.1128/jb.00319-15</td>
+<td>Nov</td>
+</tr>
+<tr>
+<td>Collins et al., "Structural Analysis of Bacillus subtilis Sigma Factors" (collins2023) (collins2023structuralanalysisof pages 11-12, collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9)</td>
+<td style="text-align: right;">2023</td>
+<td>Bacillus subtilis (structural review)</td>
+<td>Provides experimental and AlphaFold-based structural insights into sigma-70 family domains (region 1.1, 2, 3, 4), DNA-binding (–10/–35) interactions, and methodological context for interpreting RpoD/SigA structure–function.</td>
+<td>https://doi.org/10.3390/microorganisms11041077</td>
+<td>Apr</td>
+</tr>
+<tr>
+<td>Gevin et al., "The modular architecture of sigma factors in cyanobacteria" (gevin2024) (gevin2024themodulararchitecture pages 17-17, gevin2024themodulararchitecture pages 2-4, gevin2024themodulararchitecture pages 1-2)</td>
+<td style="text-align: right;">2024</td>
+<td>Cyanobacteria (comparative genomics)</td>
+<td>Large-scale classification of sigma-70 homologs; identifies essential domains (r1_2, r2, r3, r4), reports modular patterns and evolutionary scenarios relevant for annotating primary sigma factors like RpoD/SigA.</td>
+<td>https://doi.org/10.1186/s12864-024-10415-x</td>
+<td>May</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact reference table of primary sources used to annotate Desulfovibrio vulgaris rpoD (DVU_1788) and general sigma‑70 (RpoD/SigA) domain–function relationships, with context IDs for cited evidence.</em></p>
+<p>Comprehensive research report<br />
+1. Key concepts and definitions<br />
+- Primary sigma factor (RpoD/SigA): The σ70-type primary sigma factor enables bacterial RNA polymerase (RNAP) to initiate transcription at housekeeping promoters under normal growth conditions. It recognizes specific promoter elements and recruits/positions RNAP for open complex formation and start-site selection (gevin2024themodulararchitecture pages 1-2). In D. vulgaris Hildenborough, rpoD is mapped to locus DVU_1788 (gevin2024themodulararchitecture pages 17-17).<br />
+- Conserved domains and their roles: Canonical σ70 proteins contain conserved regions that enable RNAP binding and promoter recognition: region 2 recognizes the −10 element and promotes DNA melting; region 4 contains a helix–turn–helix that recognizes the −35 element; region 1.2 contributes to promoter escape and DNA unwinding downstream of the start site; region 1.1 modulates promoter complex formation (where present) (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 17-17). Structural studies and reviews further establish σ2 and σ4 as the primary DNA-recognition modules and highlight how these domains are organized in the sigma-70 fold (collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 9-11).<br />
+- Cellular localization: RpoD functions in the bacterial cytoplasm as part of the RNAP holoenzyme, binding core RNAP to form Eσ70 and engaging promoter DNA during transcription initiation (collins2023structuralanalysisof pages 9-11).</p>
+<ol>
+<li>Recent developments and latest research (emphasis 2023–2024)</li>
+<li>Structural insights and modeling: Recent analyses combining experimental structures with AlphaFold models clarify full-length and domain-level architectures of sigma factors. For Bacillus sigma factors (extrapolatable to σ70 family), NMR and crystallography of σ1.1, σ2, and σ4 domains and cryo-EM complexes underscore reliable modeling of structured cores, confirm σ4–DNA (−35) interactions, and contextualize dynamic loops; AlphaFold is generally accurate for core helices but may overbuild in flexible regions (Apr 2023; URL: https://doi.org/10.3390/microorganisms11041077) (collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 11-12).</li>
+<li>Modular architecture and evolution of σ70: A 2024 comparative genomic analysis across cyanobacteria (a broad bacterial reference for σ70 diversity) proposes a robust modular classification of σ70 proteins and catalogs extensive diversity: 4,193 σ70 homologs, 59 modular patterns, with essential domains including r1_2, r2, r3, r4. The study reinforces the conserved functional roles of r2 (−10 recognition/melting) and r4 (−35 recognition) and emphasizes accessory domains that may tune regulatory interactions (May 2024; URL: https://doi.org/10.1186/s12864-024-10415-x) (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 2-4, gevin2024themodulararchitecture pages 17-17).</li>
+<li>
+<p>Mechanistic updates: Contemporary reviews and structural summaries highlighted in 2023 work synthesize how σ70 domains coordinate promoter binding, DNA melting, and interactions with transcription activators. They point to cryo-EM as pivotal for visualizing functional complexes and to computational advances for building testable structural hypotheses for primary sigma factors such as RpoD/SigA (collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 11-12).</p>
+</li>
+<li>
+<p>Current applications and real-world implementations</p>
+</li>
+<li>Housekeeping reference and regulon anchor: In D. vulgaris Hildenborough, rpoD (DVU_1788) features in systems-level studies as a core transcriptional component; organism-specific work on stress responses lists rpoD (DVU_1788) together with essential housekeeping genes, reflecting its central role as the primary sigma factor (Nov 2015; URL: https://doi.org/10.1128/jb.00319-15) (gevin2024themodulararchitecture pages 17-17).</li>
+<li>
+<p>Structure-guided annotation and modeling: Recent structural and AlphaFold-based analyses enable improved annotation of σ70 domains in diverse bacteria and guide hypotheses about promoter recognition and regulatory interfaces for primary sigma factors like RpoD/SigA, which can be leveraged in synthetic biology and systems biology to interpret promoter usage and transcriptional program structure (Apr 2023; URL: https://doi.org/10.3390/microorganisms11041077; May 2024; URL: https://doi.org/10.1186/s12864-024-10415-x) (collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 2-4).</p>
+</li>
+<li>
+<p>Expert opinions and analysis from authoritative sources</p>
+</li>
+<li>Structural reviewers emphasize that σ70 domains are partially disordered outside core helices and that partner-bound structures (RNAP, DNA, regulators) are essential for accurate mechanistic interpretation; AlphaFold is a strong complement but must be validated, especially for loops and flexible linkers (collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 11-12).</li>
+<li>
+<p>Comparative genomics experts propose that the conserved domain core of σ70 underlies universal promoter recognition logic, while accessory domains and modular rearrangements contribute to lineage-specific regulation; this supports confident transfer of functional annotation to uncharacterized primary sigma factors like D. vulgaris RpoD (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 2-4).</p>
+</li>
+<li>
+<p>Relevant statistics and data from recent studies</p>
+</li>
+<li>Sigma-70 modular diversity: 4,193 homologs examined across 361 genomes; 59 modular domain organizations; essential domains include r1_2, r2, r3, r4; accessory domains such as DUF6596 are frequent in some lineages (May 2024; URL: https://doi.org/10.1186/s12864-024-10415-x) (gevin2024themodulararchitecture pages 2-4, gevin2024themodulararchitecture pages 1-2).</li>
+<li>Structural concordance metrics: Cross-structure overlays of σ2 domains show tight alignment (e.g., RMSD ~0.99 over 72 residues in representative comparisons), supporting conserved architecture of DNA-recognition cores (Apr 2023; URL: https://doi.org/10.3390/microorganisms11041077) (collins2023structuralanalysisof pages 7-9).</li>
+</ol>
+<p>Functional annotation for rpoD (DVU_1788) in D. vulgaris Hildenborough<br />
+- Primary function: Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters during normal growth (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 17-17).<br />
+- Substrate/interaction specificity: Not an enzyme; its specificity is for promoter DNA elements: σ region 2 recognizes the −10 element and facilitates promoter melting; σ region 4 recognizes the −35 element via an HTH motif; region 1.2 contributes to promoter escape; region 1.1 modulates promoter complex formation (where present) (gevin2024themodulararchitecture pages 1-2, collins2023structuralanalysisof pages 7-9, collins2023structuralanalysisof pages 9-11).<br />
+- Biological processes and pathways: Central to transcription initiation of core cellular processes (housekeeping gene expression); thereby indirectly influences growth, metabolism, and stress-responsive regulons by setting basal transcriptional regimes (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 17-17).<br />
+- Cellular localization: Cytoplasmic; functions within the RNAP holoenzyme engaging cytoplasmic DNA during transcription initiation (collins2023structuralanalysisof pages 9-11).<br />
+- Domain architecture support: Recent comparative work affirms the essential domain set for primary σ70 factors (r1_2, r2, r3, r4) and their conserved roles in promoter recognition and initiation across bacteria, supporting inference for DVU_1788 (May 2024; URL: https://doi.org/10.1186/s12864-024-10415-x) (gevin2024themodulararchitecture pages 1-2, gevin2024themodulararchitecture pages 2-4).</p>
+<p>Organism-specific note and limitations<br />
+- Desulfovibrio-specific promoter motifs and a full RpoD regulon have not been directly delineated in the cited recent literature. However, the organism-specific locus mapping of rpoD to DVU_1788 is documented (Nov 2015; URL: https://doi.org/10.1128/jb.00319-15). Therefore, functional details are inferred from conserved σ70 mechanisms observed broadly in bacteria and recent structural/genomic syntheses (2023–2024) (gevin2024themodulararchitecture pages 17-17, collins2023structuralanalysisof pages 9-11, gevin2024themodulararchitecture pages 1-2).</p>
+<p>Conclusion<br />
+The D. vulgaris Hildenborough rpoD gene (DVU_1788) encodes the primary σ70 family sigma factor (SigA/RpoD) responsible for directing RNAP to housekeeping promoters. Its conserved domains (r2 and r4) recognize the −10 and −35 elements, with additional roles for r1.2 (escape) and r1.1 (initiation modulation), consistent with modern structural and comparative analyses. Recent advances in structural biology and large-scale modular classification reinforce these assignments and support confident functional annotation, while highlighting the need for organism-specific promoter and regulon mapping to refine DVU_1788’s detailed regulatory scope (gevin2024themodulararchitecture pages 17-17, gevin2024themodulararchitecture pages 1-2, collins2023structuralanalysisof pages 9-11, collins2023structuralanalysisof pages 7-9, gevin2024themodulararchitecture pages 2-4).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gevin2024themodulararchitecture pages 17-17): Marine Gevin, Amel Latifi, and Emmanuel Talla. The modular architecture of sigma factors in cyanobacteria: a framework to assess their diversity and understand their evolution. BMC Genomics, May 2024. URL: https://doi.org/10.1186/s12864-024-10415-x, doi:10.1186/s12864-024-10415-x. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gevin2024themodulararchitecture pages 1-2): Marine Gevin, Amel Latifi, and Emmanuel Talla. The modular architecture of sigma factors in cyanobacteria: a framework to assess their diversity and understand their evolution. BMC Genomics, May 2024. URL: https://doi.org/10.1186/s12864-024-10415-x, doi:10.1186/s12864-024-10415-x. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gevin2024themodulararchitecture pages 2-4): Marine Gevin, Amel Latifi, and Emmanuel Talla. The modular architecture of sigma factors in cyanobacteria: a framework to assess their diversity and understand their evolution. BMC Genomics, May 2024. URL: https://doi.org/10.1186/s12864-024-10415-x, doi:10.1186/s12864-024-10415-x. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 11-12): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 8 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 9-11): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 8 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(collins2023structuralanalysisof pages 7-9): Katherine M. Collins, Nicola J. Evans, James H. Torpey, Jonathon M. Harris, Bethany A. Haynes, Amy H. Camp, and Rivka L. Isaacson. Structural analysis of bacillus subtilis sigma factors. Microorganisms, 11:1077, Apr 2023. URL: https://doi.org/10.3390/microorganisms11041077, doi:10.3390/microorganisms11041077. This article has 8 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gevin2024themodulararchitecture pages 17-17</li>
+<li>gevin2024themodulararchitecture pages 1-2</li>
+<li>collins2023structuralanalysisof pages 9-11</li>
+<li>collins2023structuralanalysisof pages 7-9</li>
+<li>gevin2024themodulararchitecture pages 2-4</li>
+<li>collins2023structuralanalysisof pages 11-12</li>
+<li>https://doi.org/10.1128/jb.00319-15</li>
+<li>https://doi.org/10.3390/microorganisms11041077</li>
+<li>https://doi.org/10.1186/s12864-024-10415-x</li>
+<li>https://doi.org/10.3390/microorganisms11041077;</li>
+<li>https://doi.org/10.1186/s12864-024-10415-x,</li>
+<li>https://doi.org/10.3390/microorganisms11041077,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q72B50
+gene_symbol: rpoD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris Hildenborough
+description: &gt;
+  RNA polymerase sigma factor SigA (RpoD) is the primary/housekeeping sigma-70 factor in
+  Nitratidesulfovibrio vulgaris (formerly Desulfovibrio vulgaris) Hildenborough. Sigma factors
+  are initiation factors that promote the attachment of RNA polymerase to specific initiation
+  sites and are then released. RpoD is the principal sigma factor during exponential growth,
+  directing RNA polymerase to housekeeping gene promoters. The protein contains conserved
+  sigma-70 domains: region 2 (recognizes -10 promoter element and promotes DNA melting),
+  region 4 (contains helix-turn-helix motif that recognizes -35 promoter element), region 1.2
+  (contributes to promoter escape), and region 1.1 (modulates promoter complex formation).
+  RpoD interacts transiently with the RNA polymerase catalytic core to form the holoenzyme
+  and functions in the cytoplasm during transcription initiation.
+existing_annotations:
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;
+      This annotation is appropriate but represents an indirect consequence of sigma factor
+      function rather than the core activity. Sigma factors directly participate in transcription
+      initiation rather than regulating it. The term describes modulation of the frequency/rate
+      of transcription initiation, whereas sigma factors are essential components of the
+      transcription initiation machinery itself.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      While RpoD does influence transcription initiation rates by directing RNAP to promoters,
+      this is a downstream effect of its primary sigma factor activity (GO:0016987). The core
+      function is sigma factor activity enabling promoter recognition and transcription initiation,
+      not regulation of that process. This annotation captures a true aspect of sigma factor
+      biology but at a less precise level than the more specific terms.
+    supported_by:
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Primary sigma factor (RpoD/SigA): The sigma-70-type primary sigma factor enables bacterial RNA polymerase (RNAP) to initiate transcription at housekeeping promoters under normal growth conditions.&#34;
+
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This annotation is correct but very general. RpoD binds DNA specifically at promoter
+      sequences through its sigma-70 domains. Region 2 recognizes the -10 element and region 4
+      recognizes the -35 element via a helix-turn-helix motif (residues 550-569 in Q72B50).
+      However, sigma factors do not bind DNA independently - they only recognize promoter DNA
+      when complexed with RNAP core as part of the holoenzyme.
+    action: ACCEPT
+    reason: &gt;
+      DNA binding is a fundamental activity of sigma factors, although it occurs in the context
+      of the holoenzyme complex. The UniProt entry documents a DNA_BIND region (H-T-H motif at
+      residues 550-569) which directly supports this annotation. This is appropriately general
+      for an IEA annotation.
+    supported_by:
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;DNA_BIND 550..569 /note=\&#34;H-T-H motif\&#34; /evidence=\&#34;ECO:0000256|HAMAP-Rule:MF_00963\&#34;&#34;
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;region 2 recognizes the -10 element and promotes DNA melting; region 4 contains a helix-turn-helix that recognizes the -35 element&#34;
+
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      This annotation is INCORRECT for sigma factors. The GO term definition states that
+      DNA-binding transcription factors modulate transcription via &#34;selective and non-covalent
+      binding to a specific double-stranded genomic DNA sequence within a cis-regulatory region.&#34;
+      While sigma factors do recognize promoter elements, they do not function as transcription
+      factors that independently bind DNA to regulate transcription. Sigma factors are integral
+      components of the transcription machinery, not regulatory factors.
+    action: MODIFY
+    reason: &gt;
+      Sigma factors have a distinct molecular function (GO:0016987 sigma factor activity) that
+      is fundamentally different from transcription factor activity. Sigma factors do not bind
+      DNA independently - they only bind promoter DNA when part of the RNAP holoenzyme. The
+      GO guidelines explicitly note that sigma factors should be annotated to sigma factor
+      activity, not transcription factor activity. This InterPro-derived annotation is an
+      over-generalization.
+    proposed_replacement_terms:
+      - id: GO:0016987
+        label: sigma factor activity
+    supported_by:
+      - reference_id: GO:0016987
+        supporting_text: &#34;Sigma factors act as the promoter specificity subunit of eubacterial and plant plastid multisubunit RNA polymerases... Although sigma does not bind DNA on its own, when combined with the core to form the holoenzyme, the sigma factor binds specifically to promoter elements.&#34;
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters&#34;
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This cellular component annotation is correct. RpoD functions in the bacterial cytoplasm
+      as part of the RNAP holoenzyme, binding core RNAP to engage promoter DNA during
+      transcription initiation. This is consistent with UniProt subcellular location annotation
+      and structural studies.
+    action: ACCEPT
+    reason: &gt;
+      Cytoplasmic localization is well-established for bacterial sigma factors. The UniProt
+      entry explicitly states &#34;SUBCELLULAR LOCATION: Cytoplasm&#34; based on HAMAP rule MF_00963.
+      The deep research confirms &#34;Cellular localization: Cytoplasmic; functions within the
+      RNAP holoenzyme engaging cytoplasmic DNA during transcription initiation.&#34;
+    supported_by:
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000256|HAMAP-Rule:MF_00963}&#34;
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Cellular localization: Cytoplasmic; functions within the RNAP holoenzyme engaging cytoplasmic DNA during transcription initiation&#34;
+
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is an excellent and appropriate biological process annotation for sigma factors.
+      The primary function of RpoD is to enable transcription initiation by directing RNAP
+      to promoters. The GO term describes &#34;The initial step of transcription, consisting of
+      the assembly of the RNA polymerase preinitiation complex (PIC) at a gene promoter, as
+      well as the formation of the first few bonds of the RNA transcript.&#34;
+    action: ACCEPT
+    reason: &gt;
+      This is a core biological process annotation that accurately captures the essential
+      role of sigma factors in transcription. RpoD directly participates in transcription
+      initiation by forming the holoenzyme with RNAP core and recognizing promoter elements,
+      which is precisely what this term describes. UniProt function annotation states sigma
+      factors &#34;promote the attachment of RNA polymerase to specific initiation sites.&#34;
+    supported_by:
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.&#34;
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Primary sigma factor (RpoD/SigA): The sigma-70-type primary sigma factor enables bacterial RNA polymerase (RNAP) to initiate transcription at housekeeping promoters under normal growth conditions.&#34;
+
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This annotation is redundant and less specific than GO:0006352 (DNA-templated transcription
+      initiation). While sigma factors do influence transcription, they are more precisely
+      involved in the initiation process itself rather than regulation of transcription broadly.
+      This term is an ancestor of more specific transcription-related terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      This is a broader parent term that is technically true but not the most informative
+      annotation for sigma factors. The more specific GO:0006352 (DNA-templated transcription
+      initiation) better captures the precise role of sigma factors. This annotation is
+      acceptable for completeness but represents an over-generalization of sigma factor function.
+    supported_by:
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Central to transcription initiation of core cellular processes (housekeeping gene expression); thereby indirectly influences growth, metabolism, and stress-responsive regulons by setting basal transcriptional regimes&#34;
+
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;
+      This is a very high-level annotation that is technically correct but not very informative.
+      All sigma factors influence gene expression by directing RNAP to specific promoters,
+      but this term is too general to be useful for understanding sigma factor function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      While sigma factors do affect gene expression by determining which promoters are
+      recognized by RNAP, this annotation is at too high a level of abstraction to be
+      informative. More specific terms (GO:0006352, GO:0016987) better capture the actual
+      molecular role of sigma factors. This annotation adds little value beyond the more
+      specific terms.
+    supported_by:
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;directs transcription initiation at housekeeping promoters during normal growth&#34;
+
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      This is the most precise and appropriate molecular function annotation for RpoD.
+      Sigma factor activity is defined as the promoter specificity subunit of bacterial
+      RNA polymerases that, when combined with the core enzyme to form the holoenzyme,
+      binds specifically to promoter elements. This exactly describes the function of RpoD.
+    action: ACCEPT
+    reason: &gt;
+      This annotation is the core molecular function of RpoD. The GO term definition states
+      &#34;Sigma factors act as the promoter specificity subunit of eubacterial and plant plastid
+      multisubunit RNA polymerases... Although sigma does not bind DNA on its own, when
+      combined with the core to form the holoenzyme, the sigma factor binds specifically to
+      promoter elements.&#34; This precisely matches the known function of RpoD as the primary
+      sigma factor.
+    supported_by:
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released. This sigma factor is the primary sigma factor during exponential growth.&#34;
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;SIMILARITY: Belongs to the sigma-70 factor family. RpoD/SigA subfamily.&#34;
+      - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+        supporting_text: &#34;Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters during normal growth&#34;
+
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26873250
+  review:
+    summary: &gt;
+      This annotation is based on high-throughput AP-MS (affinity purification-mass spectrometry)
+      data from the Butland et al. D. vulgaris interactome study. The UniProt entry shows
+      RpoD interacts with DVU_1368 (Q72CB5) with 2 experiments in IntAct. However, &#34;protein
+      binding&#34; is an uninformative term that should be replaced with a more specific binding
+      term if possible.
+    action: MODIFY
+    reason: &gt;
+      While the protein-protein interaction is experimentally supported, &#34;protein binding&#34;
+      (GO:0005515) is explicitly discouraged in GO annotation guidelines as uninformative.
+      For sigma factors, the known protein interactions are with RNAP core subunits (RpoA,
+      RpoB, RpoC). The UniProt entry notes &#34;Interacts transiently with the RNA polymerase
+      catalytic core&#34; and shows a motif for &#34;Interaction with polymerase core subunit RpoC&#34;
+      at residues 380-383. A more appropriate term would be RNA polymerase binding or a
+      related term.
+    proposed_replacement_terms:
+      - id: GO:0001000
+        label: bacterial-type RNA polymerase core enzyme binding
+    additional_reference_ids:
+      - PMID:26873250
+    supported_by:
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;SUBUNIT: Interacts transiently with the RNA polymerase catalytic core.&#34;
+      - reference_id: UniProt:Q72B50
+        supporting_text: &#34;MOTIF 380..383 /note=\&#34;Interaction with polymerase core subunit RpoC\&#34; /evidence=\&#34;ECO:0000256|HAMAP-Rule:MF_00963\&#34;&#34;
+      - reference_id: PMID:26873250
+        supporting_text: &#34;Numerous affinity purification-mass spectrometry (AP-MS) and yeast two-hybrid screens have each defined thousands of pairwise protein-protein interactions (PPIs)... We have identified 459 high confidence PPIs from D. vulgaris&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26873250
+  title: &#39;Bacterial Interactomes: Interacting Protein Partners Share Similar Function
+    and Are Validated in Independent Assays More Frequently Than Previously Reported.&#39;
+  findings:
+    - statement: High-throughput AP-MS study identifying protein-protein interactions in D. vulgaris
+      supporting_text: &#34;Here, we present an AP-MS survey of the bacterium Desulfovibrio vulgaris together with a critical reanalysis of nine published bacterial yeast two-hybrid and AP-MS screens&#34;
+    - statement: Identified 459 high confidence PPIs from D. vulgaris
+      supporting_text: &#34;We have identified 459 high confidence PPIs from D. vulgaris and 391 from Escherichia coli&#34;
+- id: PMID:15077118
+  title: The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio
+    vulgaris Hildenborough
+  findings:
+    - statement: Genome sequence establishing DVU_1788 locus for rpoD
+      supporting_text: &#34;Desulfovibrio vulgaris Hildenborough is a model organism for studying the energy metabolism of sulfate-reducing bacteria&#34;
+- id: DOI:10.1186/s12864-024-10415-x
+  title: The modular architecture of sigma factors in cyanobacteria
+  findings:
+    - statement: Confirms essential domain set for primary sigma-70 factors (r1_2, r2, r3, r4)
+    - statement: Documents conserved roles in promoter recognition
+    - statement: Organism-specific mapping of rpoD to DVU_1788 in D. vulgaris
+- id: DOI:10.3390/microorganisms11041077
+  title: Structural analysis of Bacillus subtilis sigma factors
+  findings:
+    - statement: Structural insights into sigma-70 family domain architecture
+    - statement: Confirms sigma-2 and sigma-4 as primary DNA-recognition modules
+
+core_functions:
+- molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  description: &gt;
+    RpoD (SigA) is the primary housekeeping sigma factor in N. vulgaris, belonging to the
+    sigma-70 factor family RpoD/SigA subfamily. It contains all conserved sigma-70 domains
+    (regions 1.1, 1.2, 2, 3, and 4) with documented helix-turn-helix DNA binding motif
+    (residues 550-569). UniProt annotation and HAMAP rule MF_00963 confirm sigma factor
+    function. The protein promotes RNAP attachment to specific promoter initiation sites
+    and is the primary sigma factor during exponential growth.
+  directly_involved_in:
+    - id: GO:0006352
+      label: DNA-templated transcription initiation
+  locations:
+    - id: GO:0005737
+      label: cytoplasm
+  supported_by:
+    - reference_id: UniProt:Q72B50
+      supporting_text: &#34;FUNCTION: Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released. This sigma factor is the primary sigma factor during exponential growth.&#34;
+    - reference_id: file:DESVH/Q72B50/Q72B50-deep-research-falcon.md
+      supporting_text: &#34;Encodes the primary sigma factor (SigA/RpoD) that binds RNAP core to form the holoenzyme and directs transcription initiation at housekeeping promoters during normal growth&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: What are the specific promoter sequence motifs recognized by RpoD in N. vulgaris?
+- question: Are there alternative sigma factors in N. vulgaris that compete with RpoD under stress conditions?
+- question: What is the identity and function of DVU_1368 (Q72CB5) that interacts with RpoD?
+
+suggested_experiments:
+- description: ChIP-seq analysis to map RpoD binding sites genome-wide and identify the RpoD regulon
+  hypothesis: RpoD binds to canonical -10/-35 promoter elements in N. vulgaris housekeeping genes
+  experiment_type: ChIP-seq
+- description: In vitro transcription assays with purified components to confirm promoter recognition specificity
+  hypothesis: Purified RpoD enables RNAP to initiate transcription at predicted housekeeping promoters
+  experiment_type: In vitro transcription assay
+- description: Protein interaction studies to characterize the RpoD-RNAP core interaction interface
+  hypothesis: RpoD interacts with RNAP core via the conserved sigma-70 region 2 and region 4 domains
+  experiment_type: Co-immunoprecipitation or crosslinking mass spectrometry
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

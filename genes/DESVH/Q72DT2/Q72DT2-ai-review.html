@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aprA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aprA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q72DT2" target="_blank" class="term-link">
+                        Q72DT2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris) Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aprA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q72DT2" data-a="DESCRIPTION: AprA is the alpha (catalytic) subunit of adenylyls..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AprA is the alpha (catalytic) subunit of adenylylsulfate (APS) reductase (EC 1.8.99.2), the central enzyme in dissimilatory sulfate reduction. AprA contains the catalytic FAD cofactor and forms an alpha-beta heterodimer with AprB (the beta subunit containing [4Fe-4S] clusters) to constitute the functional AprAB enzyme. AprAB catalyzes the reduction of adenosine 5&#39;-phosphosulfate (APS) to AMP and sulfite, receiving electrons from the membrane-associated QmoABC complex which connects to the quinone pool. This enzyme sits between ATP sulfurylase (Sat) and dissimilatory sulfite reductase (DsrAB) in the dissimilatory sulfate reduction pathway. AprA is a soluble cytoplasmic protein.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000104" target="_blank" class="term-link">
+                                    GO:0000104
+                                </a>
+                            </span>
+                            <span class="term-label">succinate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0000104" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is based on TreeGrafter propagation from a PANTHER node (PTN000908678) that encompasses both succinate dehydrogenase and APS reductase family members due to their shared FAD-binding domain architecture. While AprA shares structural homology with succinate dehydrogenase flavoproteins (both belong to the SdhA/FrdA/AprA family IPR030664), AprA catalyzes a completely different reaction. APS reductase (EC 1.8.99.2) catalyzes APS + 2e- + H+ -&gt; AMP + sulfite. This is mechanistically distinct from succinate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> AprA does not catalyze succinate dehydrogenation. The structural similarity with succinate dehydrogenase flavoproteins (shared FAD-binding domain) does not imply functional equivalence. AprA specifically reduces APS to sulfite and AMP as part of dissimilatory sulfate reduction. This is a clear case of over-annotation from domain-based phylogenetic inference.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">APS reductase (EC 1.8.99.2) catalyzes APS + 2e− + H+ → AMP + sulfite (SO3(2−)). The AprA subunit houses the catalytic FAD, while AprB contains iron-sulfur clusters that mediate electron transfer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0005886" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization annotation from TreeGrafter is incorrect for AprA. The deep research clearly indicates that AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex. While AprAB does interact with the membrane-associated QmoABC complex for electron transfer, AprA itself is not membrane-localized.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> AprA is a soluble cytoplasmic protein, not a plasma membrane protein. The TreeGrafter annotation likely propagated from succinate dehydrogenase family members which are membrane-associated. AprA functions in the cytoplasm where it receives electrons from the membrane-associated Qmo complex.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    cytoplasm
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex that connects to the quinone pool</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0009055" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is marginally appropriate but misattributes function within the AprAB complex. The electron transfer function is primarily associated with AprB, which contains the iron-sulfur clusters responsible for shuttling electrons to the catalytic site. AprA contains FAD at the catalytic site and performs the reduction of APS, but does not have the iron-sulfur clusters that mediate electron transfer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While AprA participates in an electron-dependent reaction, the electron transfer activity per se is mediated by AprB (with its Fe-S clusters) and the QmoABC complex. AprA&#39;s role is catalytic reduction of APS using electrons delivered by AprB. This annotation conflates the catalytic function of AprA with the electron transfer function of its partner subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The AprA subunit houses the catalytic FAD, while AprB contains iron-sulfur clusters that mediate electron transfer, consistent with a flavoprotein-iron–sulfur oxidoreductase mechanism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009061" target="_blank" class="term-link">
+                                    GO:0009061
+                                </a>
+                            </span>
+                            <span class="term-label">anaerobic respiration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0009061" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is accurate but insufficiently specific. AprA functions specifically in dissimilatory sulfate reduction, a type of anaerobic respiration where sulfate serves as the terminal electron acceptor. In DvH&#39;s dissimilatory sulfate reduction, sulfate is activated by ATP sulfurylase (Sat) to APS, reduced by AprAB to sulfite, and then by dissimilatory sulfite reductase (DsrAB) to sulfide.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While anaerobic respiration is technically correct, the more specific term GO:0019420 (dissimilatory sulfate reduction) precisely captures AprA&#39;s biological role. AprA catalyzes a key step in this pathway where APS is reduced to sulfite.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019420" target="_blank" class="term-link">
+                                    dissimilatory sulfate reduction
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In DvH&#39;s dissimilatory sulfate reduction, sulfate is activated by ATP sulfurylase (Sat) to APS, reduced by AprAB to sulfite, and then by dissimilatory sulfite reductase (DsrAB) to sulfide</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprA/AprAB sits between Sat (ATP sulfurylase) and DsrAB in the dissimilatory sulfate reduction chain, central to energy metabolism in DvH</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0050660" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is accurate. AprA contains a FAD cofactor that is essential for its catalytic function. UniProt lists FAD as a cofactor (ChEBI:57692), and the deep research confirms that AprA contains the catalytic FAD. The protein has a FAD-binding domain (IPR003953, Pfam:PF00890).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FAD binding is well-established for AprA based on domain architecture (FAD-binding_2 domain) and functional characterization. The FAD cofactor is central to the catalytic mechanism of APS reduction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The AprA subunit houses the catalytic FAD</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009973" target="_blank" class="term-link">
+                                    GO:0009973
+                                </a>
+                            </span>
+                            <span class="term-label">adenylyl-sulfate reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0009973" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of AprA. The annotation is based on EC mapping (EC:1.8.99.2), which is the correct enzyme classification for APS reductase. The deep research extensively supports this: AprA in DvH (DVU_0847; UniProt Q72DT2) encodes the alpha subunit of adenylyl-sulfate (APS) reductase. APS reductase (EC 1.8.99.2) catalyzes APS + 2e- + H+ -&gt; AMP + sulfite.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary molecular function of AprA, strongly supported by multiple lines of evidence including EC classification, domain architecture (IPR011803 AprA, TIGR02061), UniProt annotation, and extensive literature.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AprA is the alpha subunit of APS reductase (AprAB). Together with AprB, it catalyzes reduction of APS to sulfite and AMP; AprA contains the catalytic FAD cofactor</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In DvH proteomics, AprA is explicitly mapped to DVU_0847, confirming the gene-protein assignment in this organism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72DT2" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is accurate but represents a very general parent term. AprA is indeed an oxidoreductase (catalyzing the reduction of APS), and this annotation is derived from InterPro domain mapping (IPR037099) and the oxidoreductase UniProt keyword. However, the more specific term GO:0009973 (adenylyl-sulfate reductase activity) is already present and is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While accurate, this is a high-level parent term that is redundant with the more specific GO:0009973. The annotation is technically correct based on the catalytic function of AprA in reducing APS.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">APS reductase (EC 1.8.99.2) catalyzes APS + 2e− + H+ → AMP + sulfite (SO3(2−))</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AprA is the alpha subunit of APS reductase (EC 1.8.99.2), catalyzing the reduction of adenosine 5&#39;-phosphosulfate (APS) to AMP and sulfite. This is the defining enzymatic function of the protein, supported by EC classification, domain architecture (IPR011803, TIGR02061), and extensive biochemical characterization in the literature. AprA contains a FAD cofactor essential for catalysis. AprAB is a soluble cytoplasmic enzyme.</h3>
+                <span class="vote-buttons" data-g="Q72DT2" data-a="FUNCTION: AprA is the alpha subunit of APS reductase (EC 1.8..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009973" target="_blank" class="term-link">
+                            adenylyl-sulfate reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019420" target="_blank" class="term-link">
+                                dissimilatory sulfate reduction
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">AprA is the alpha subunit of APS reductase (AprAB). Together with AprB, it catalyzes reduction of APS to sulfite and AMP; AprA contains the catalytic FAD cofactor</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex that connects to the quinone pool</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps EC:1.8.99.2 to GO:0009973 (adenylyl-sulfate reductase activity)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Propagated annotations from PANTHER node PTN000908678 (succinate dehydrogenase family)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Some propagated annotations are incorrect for AprA due to functional divergence within the family</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Derived oxidoreductase activity from InterPro domain IPR037099</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416397" target="_blank" class="term-link">
+                            PMID:25416397
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hydrogen sulfide: a toxic gas produced by dissimilatory sulfate and sulfur reduction and consumed by microbial oxidation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of dissimilatory sulfate reduction enzymology</div>
+                        
+                        <div class="finding-text">"This review provides an examination of cytochromes, iron-sulfur proteins, and sirohemes participating in electron movement in diverse groups of sulfate-reducing, sulfur-reducing, and sulfide-oxidizing Bacteria and Archaea"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Review of enzymatic activities in sulfate reduction</div>
+                        
+                        <div class="finding-text">"biosulfur reduction or oxidation requires unique enzymatic activities with metal cofactors participating in electron transfer"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31031715" target="_blank" class="term-link">
+                            PMID:31031715
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic and Isotopic Response of Desulfovibrio vulgaris to DsrC Perturbation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DvH proteomics maps AprA to DVU0847 with expression data</div>
+                        
+                        <div class="finding-text">"The APS reductase subunit AprA (DVU0847) showed lower relative expression in the mutant"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Shows coordinated regulation of AprA and QmoB</div>
+                        
+                        <div class="finding-text">"The APS reductase subunit AprA (DVU0847) showed lower relative expression in the mutant (–0.35 ± 0.21), as did a subunit, QmoB (DVU0849), of its affiliated electron donor complex"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37065130" target="_blank" class="term-link">
+                            PMID:37065130
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Large-scale genetic characterization of the model sulfate-reducing bacterium, Desulfovibrio vulgaris Hildenborough.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RB-TnSeq study providing fitness data for DvH genes</div>
+                        
+                        <div class="finding-text">"we generated a randomly barcoded transposon mutant library in the model SRB Desulfovibrio vulgaris Hildenborough (DvH) and used this genome-wide resource to assay the importance of its genes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Framework for understanding essentiality of sulfate reduction genes</div>
+                        
+                        <div class="finding-text">"In addition to defining the essential gene set of DvH, we identified a conditional phenotype for 1,137 non-essential genes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research synthesis for aprA (Q72DT2)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesis of literature on AprA function in dissimilatory sulfate reduction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirms AprAB is soluble cytoplasmic enzyme with FAD cofactor in AprA</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q72DT2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q72DT2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T08:11:35.995599'<br />
+end_time: '2026-01-15T08:16:09.379950'<br />
+duration_seconds: 273.38<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q72DT2<br />
+  gene_symbol: aprA<br />
+  uniprot_accession: Q72DT2<br />
+  protein_description: 'SubName: Full=Adenylyl-sulphate reductase, alpha subunit {ECO:0000313|EMBL:AAS95327.1};<br />
+    EC=1.8.99.2 {ECO:0000313|EMBL:AAS95327.1};'<br />
+  gene_info: Name=aprA {ECO:0000313|EMBL:AAS95327.1}; OrderedLocusNames=DVU_0847 {ECO:0000313|EMBL:AAS95327.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: AprA. (IPR011803); FAD-dep_OxRdtase_2_FAD-bd. (IPR003953); FAD/NAD-bd_sf.<br />
+    (IPR036188); Fum_R/Succ_DH_flav-like_C_sf. (IPR037099); SdhA/FrdA/AprA. (IPR030664)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 20</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72DT2</li>
+<li><strong>Protein Description:</strong> SubName: Full=Adenylyl-sulphate reductase, alpha subunit {ECO:0000313|EMBL:AAS95327.1}; EC=1.8.99.2 {ECO:0000313|EMBL:AAS95327.1};</li>
+<li><strong>Gene Information:</strong> Name=aprA {ECO:0000313|EMBL:AAS95327.1}; OrderedLocusNames=DVU_0847 {ECO:0000313|EMBL:AAS95327.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AprA. (IPR011803); FAD-dep_OxRdtase_2_FAD-bd. (IPR003953); FAD/NAD-bd_sf. (IPR036188); Fum_R/Succ_DH_flav-like_C_sf. (IPR037099); SdhA/FrdA/AprA. (IPR030664)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "aprA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'aprA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>aprA</strong> (gene ID: Q72DT2, UniProt: Q72DT2) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72DT2</li>
+<li><strong>Protein Description:</strong> SubName: Full=Adenylyl-sulphate reductase, alpha subunit {ECO:0000313|EMBL:AAS95327.1}; EC=1.8.99.2 {ECO:0000313|EMBL:AAS95327.1};</li>
+<li><strong>Gene Information:</strong> Name=aprA {ECO:0000313|EMBL:AAS95327.1}; OrderedLocusNames=DVU_0847 {ECO:0000313|EMBL:AAS95327.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AprA. (IPR011803); FAD-dep_OxRdtase_2_FAD-bd. (IPR003953); FAD/NAD-bd_sf. (IPR036188); Fum_R/Succ_DH_flav-like_C_sf. (IPR037099); SdhA/FrdA/AprA. (IPR030664)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "aprA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'aprA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>aprA</strong> (gene ID: Q72DT2, UniProt: Q72DT2) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan<br />
+- Objective 1 (verification): Confirm the identity of aprA (DVU_0847; UniProt Q72DT2) from Desulfovibrio vulgaris Hildenborough (DvH), its enzyme class, domains, complex membership (AprAB), and pathway context. (Completed using sources below.) (barton2014hydrogensulfidea pages 16-19, leavitt2019proteomicandisotopic pages 7-9, leavitt2019proteomicandisotopic pages 5-7)<br />
+- Objective 2 (recent literature): Prioritize 2023–2024 primary and review literature on APS reductase (AprAB) and the associated Qmo electron transfer system in sulfate reducers. (Completed using 2023 Frontiers RB‑TnSeq study and a 2024 scholarly chapter.) (d’ermo2024thecomplexinterplay pages 5-8, trotter2023largescalegeneticcharacterization pages 4-6)<br />
+- Objective 3 (organism-specific evidence): Extract DvH-specific locus, genetic/operon context, essentiality/fitness, proteomics expression, and interaction with Qmo. (Completed from DvH-focused proteomics and RB‑TnSeq datasets.) (leavitt2019proteomicandisotopic pages 7-9, trotter2023largescalegeneticcharacterization pages 4-6, leavitt2019proteomicandisotopic pages 5-7)<br />
+- Objective 4 (synthesis): Organize key concepts/definitions, reaction chemistry, cofactors, localization, pathway integration, real-world implications, expert viewpoints, and any available quantitative data. (Completed.) (barton2014hydrogensulfidea pages 16-19, d’ermo2024thecomplexinterplay pages 5-8, barton2014hydrogensulfidea pages 4-7)<br />
+- Objective 5 (final report): Write a comprehensive, fully cited research report with URLs and publication dates. (Completed.)</p>
+<p>Comprehensive Research Report: aprA (DVU_0847; UniProt Q72DT2) of Desulfovibrio vulgaris Hildenborough</p>
+<p>1) Key concepts and definitions with current understanding<br />
+- Target verification and identity: The gene aprA in DvH (ordered locus DVU_0847; UniProt Q72DT2) encodes the alpha subunit of adenylyl-sulfate (adenosine-5′-phosphosulfate, APS) reductase, the central enzyme in dissimilatory sulfate reduction that reduces APS to sulfite and AMP; it functions as a heterodimer with AprB (beta subunit) to form APS reductase (AprAB). In Desulfovibrio and other sulfate-reducing bacteria (SRB), AprAB is the canonical enzyme for this step in energy metabolism, distinguishing it from the assimilatory pathway variants. In DvH proteomics, AprA is explicitly mapped to DVU_0847, confirming the gene-protein assignment in this organism. (Barton et al., 2014; Leavitt et al., 2019) https://doi.org/10.1007/978-94-017-9269-1_10; https://doi.org/10.3389/fmicb.2019.00658 (barton2014hydrogensulfidea pages 16-19, leavitt2019proteomicandisotopic pages 7-9, leavitt2019proteomicandisotopic pages 5-7)<br />
+- Enzyme class and reaction: APS reductase (EC 1.8.99.2) catalyzes APS + 2e− + H+ → AMP + sulfite (SO3(2−)). The AprA subunit houses the catalytic FAD, while AprB contains iron-sulfur clusters that mediate electron transfer, consistent with a flavoprotein-iron–sulfur oxidoreductase mechanism. (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 16-19)<br />
+- Electron donor system and complex association: Electron delivery to AprAB is mediated by the membrane-associated Qmo (quinone-interacting membrane-bound oxidoreductase) complex (QmoABC), which couples quinone pool redox chemistry to APS reduction; genomic co-localization of aprAB with qmoABC is common in SRB and functionally linked to APS reduction. (Barton et al., 2014; D’Ermo et al., 2024; Saxena et al., 2023) https://doi.org/10.1007/978-94-017-9269-1_10; https://doi.org/10.1007/978-3-031-54306-7_15; https://doi.org/10.3389/fmicb.2023.1086021 (barton2014hydrogensulfidea pages 16-19, d’ermo2024thecomplexinterplay pages 5-8, saxena2023integrationoftext pages 5-6)<br />
+- Pathway context: In DvH’s dissimilatory sulfate reduction, sulfate is activated by ATP sulfurylase (Sat) to APS, reduced by AprAB to sulfite, and then by dissimilatory sulfite reductase (DsrAB) to sulfide, with multiple electron transfer modules (including Qmo and downstream complexes) supporting energy conservation. (Barton et al., 2014; D’Ermo et al., 2024) https://doi.org/10.1007/978-94-017-9269-1_10; https://doi.org/10.1007/978-3-031-54306-7_15 (barton2014hydrogensulfidea pages 16-19, d’ermo2024thecomplexinterplay pages 5-8)</p>
+<p>2) Recent developments and latest research (priority to 2023–2024)<br />
+- Genome-wide fitness genetics in DvH (2023): A large RB‑TnSeq study in DvH mapped essential and conditionally essential genes across 2,741 loci under diverse conditions, providing a reference for sulfate-reduction gene fitness. Although focused broadly on metabolism, this dataset defines condition dependencies and essential gene sets relevant to sulfate reduction, establishing a contemporary genetic framework that includes the sulfate reduction module (sat/apr/dsr). (Trotter et al., 2023, Frontiers in Microbiology; Mar 2023) https://doi.org/10.3389/fmicb.2023.1095191 (trotter2023largescalegeneticcharacterization pages 4-6)<br />
+- Updated mechanistic overview (2024): A 2024 scholarly chapter synthesizes sulfur bioenergetics, reaffirming that Sat→AprAB→DsrAB is the canonical dissimilatory route, with AprAB receiving electrons via Qmo linked to the quinone pool, emphasizing electron-transfer coupling and broader geochemical interplay. This contextualizes AprAB within redox network models that integrate quinone-linked electron flow. (D’Ermo et al., 2024; Jan 2024) https://doi.org/10.1007/978-3-031-54306-7_15 (d’ermo2024thecomplexinterplay pages 5-8)</p>
+<p>3) Current applications and real-world implementations<br />
+- Biogeochemistry and environmental monitoring: aprA/AprAB are widely used functional markers for detecting and quantifying SRB activity in sediments and subsurface environments, forming part of multi-gene panels with dsrAB and sat to infer sulfate reduction potential and activity. This has implications for interpreting sulfur-coupled carbon transformations and contaminant mobility. (Barton et al., 2014; D’Ermo et al., 2024) https://doi.org/10.1007/978-94-017-9269-1_10; https://doi.org/10.1007/978-3-031-54306-7_15 (barton2014hydrogensulfidea pages 16-19, d’ermo2024thecomplexinterplay pages 5-8)<br />
+- Industrial relevance and corrosion: SRB-mediated sulfide generation (to which AprAB is central) underpins souring and microbiologically influenced corrosion problems; understanding AprAB and its regulation within the pathway informs strategies for monitoring and mitigation. (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 4-7)</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Enzymology and electron transfer architecture: Authoritative review content consolidates the model in which AprA contains the catalytic FAD, AprB contributes Fe–S electron-transfer capacity, and QmoABC serves as the physiological electron donor, linking APS reduction to the quinone pool—placing AprAB at the hub of energy conservation in sulfate respiration. (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 16-19)<br />
+- Systems perspective on sulfur bioenergetics: Expert synthesis in 2024 situates AprAB’s role within modular redox networks and geochemical cycles, underscoring the coupling between quinone redox chemistry and APS reduction and motivating integrative studies that combine genomics/proteomics with environmental geochemistry. (D’Ermo et al., 2024) https://doi.org/10.1007/978-3-031-54306-7_15 (d’ermo2024thecomplexinterplay pages 5-8)</p>
+<p>5) Relevant statistics and data from recent studies<br />
+- Proteomics expression in DvH: In a DvH proteomics study testing perturbation of the downstream DsrC component, AprA (DVU_0847) abundance decreased in the mutant relative to wild type (−0.35 ± 0.21), and the associated QmoB (DVU_0849) also decreased (−0.52 ± 0.27), consistent with coordinated regulation and functional linkage in the sulfate-reduction chain. (Leavitt et al., 2019; Apr 2019) https://doi.org/10.3389/fmicb.2019.00658 (leavitt2019proteomicandisotopic pages 7-9, leavitt2019proteomicandisotopic pages 5-7)<br />
+- Genome-wide fitness framework in DvH: RB‑TnSeq across 2,741 protein-coding genes identified extensive conditional phenotypes and essentiality patterns, delineating a modern genetic map for DvH metabolism that includes sulfate-reduction modules, which can be used to frame hypotheses about aprA essentiality under sulfate-respiring conditions. (Trotter et al., 2023; Mar 2023) https://doi.org/10.3389/fmicb.2023.1095191 (trotter2023largescalegeneticcharacterization pages 4-6)</p>
+<p>Functional annotation for aprA (DVU_0847; Q72DT2) in DvH<br />
+- Primary function and reaction: AprA is the alpha subunit of APS reductase (AprAB). Together with AprB, it catalyzes reduction of APS to sulfite and AMP; AprA contains the catalytic FAD cofactor, while AprB houses [4Fe–4S] clusters for electron transfer. Substrate: APS; products: sulfite + AMP. (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 16-19)<br />
+- Subunit composition and cofactors: AprAB is an αβ heterodimer. AprA (FAD-binding flavoenzyme); AprB (Fe–S protein). These features align with UniProt domain annotations (FAD/NAD-binding and succinate dehydrogenase–like flavoprotein folds). (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 16-19)<br />
+- Electron donor system: Physiological electrons are delivered from the membrane quinone pool via the QmoABC complex to AprAB, consistent with aprAB–qmoABC genomic linkage and coordinated protein abundance. (Barton et al., 2014; D’Ermo et al., 2024; Leavitt et al., 2019) https://doi.org/10.1007/978-94-017-9269-1_10; https://doi.org/10.1007/978-3-031-54306-7_15; https://doi.org/10.3389/fmicb.2019.00658 (barton2014hydrogensulfidea pages 16-19, d’ermo2024thecomplexinterplay pages 5-8, leavitt2019proteomicandisotopic pages 7-9)<br />
+- Genomic context in DvH: In DvH, aprA corresponds to DVU_0847 and is adjacent to qmo genes (e.g., qmoB DVU_0849), supporting an operonic/linkage relationship typical for SRB sulfate-reduction loci. (Leavitt et al., 2019) https://doi.org/10.3389/fmicb.2019.00658 (leavitt2019proteomicandisotopic pages 7-9)<br />
+- Cellular localization: AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex that connects to the quinone pool. (Barton et al., 2014) https://doi.org/10.1007/978-94-017-9269-1_10 (barton2014hydrogensulfidea pages 16-19)<br />
+- Pathway integration: AprA/AprAB sits between Sat (ATP sulfurylase) and DsrAB in the dissimilatory sulfate reduction chain, central to energy metabolism in DvH. (D’Ermo et al., 2024; Barton et al., 2014) https://doi.org/10.1007/978-3-031-54306-7_15; https://doi.org/10.1007/978-94-017-9269-1_10 (d’ermo2024thecomplexinterplay pages 5-8, barton2014hydrogensulfidea pages 16-19)<br />
+- Organism-specific experimental evidence: DvH proteomics links DVU_0847 (AprA) to decreased abundance under DsrC perturbation, along with decreased QmoB, consistent with coordinated control; RB‑TnSeq in DvH provides a contemporary essentiality/fitness scaffold for sulfate-reduction genes. (Leavitt et al., 2019; Trotter et al., 2023) https://doi.org/10.3389/fmicb.2019.00658; https://doi.org/10.3389/fmicb.2023.1095191 (leavitt2019proteomicandisotopic pages 7-9, trotter2023largescalegeneticcharacterization pages 4-6, leavitt2019proteomicandisotopic pages 5-7)</p>
+<p>Ambiguity check<br />
+- The symbol aprA can be used broadly across bacteria and archaea for APS reductase alpha subunits. Here, the identity is unambiguous: DVU_0847 in DvH (UniProt Q72DT2), matching the organism Desulfovibrio vulgaris Hildenborough and aligning with canonical AprA domains and the AprAB enzyme system. If literature on other organisms with aprA exists, it was not used to infer divergent functions here. (Leavitt et al., 2019; Barton et al., 2014) https://doi.org/10.3389/fmicb.2019.00658; https://doi.org/10.1007/978-94-017-9269-1_10 (leavitt2019proteomicandisotopic pages 7-9, barton2014hydrogensulfidea pages 16-19)</p>
+<p>Limitations and open questions<br />
+- While structures and biophysical details of AprAB are well-established in the SRB literature, the most recent organism-specific structural updates for DvH AprAB were not identified in the 2023–2024 window surveyed here. Nevertheless, multiple 2023–2024 sources reaffirm the mechanistic model and genetic context for AprAB/Qmo in sulfate reducers. (D’Ermo et al., 2024; Trotter et al., 2023) https://doi.org/10.1007/978-3-031-54306-7_15; https://doi.org/10.3389/fmicb.2023.1095191 (d’ermo2024thecomplexinterplay pages 5-8, trotter2023largescalegeneticcharacterization pages 4-6)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(barton2014hydrogensulfidea pages 16-19): Larry L. Barton, Marie-Laure Fardeau, and Guy D. Fauque. Hydrogen sulfide: a toxic gas produced by dissimilatory sulfate and sulfur reduction and consumed by microbial oxidation. Metal ions in life sciences, 14:237-77, Jan 2014. URL: https://doi.org/10.1007/978-94-017-9269-1_10, doi:10.1007/978-94-017-9269-1_10. This article has 151 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leavitt2019proteomicandisotopic pages 7-9): William D. Leavitt, Sofia S. Venceslau, Jacob Waldbauer, Derek A. Smith, Inês A. Cardoso Pereira, and Alexander S. Bradley. Proteomic and isotopic response of desulfovibrio vulgaris to dsrc perturbation. Frontiers in Microbiology, Apr 2019. URL: https://doi.org/10.3389/fmicb.2019.00658, doi:10.3389/fmicb.2019.00658. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(leavitt2019proteomicandisotopic pages 5-7): William D. Leavitt, Sofia S. Venceslau, Jacob Waldbauer, Derek A. Smith, Inês A. Cardoso Pereira, and Alexander S. Bradley. Proteomic and isotopic response of desulfovibrio vulgaris to dsrc perturbation. Frontiers in Microbiology, Apr 2019. URL: https://doi.org/10.3389/fmicb.2019.00658, doi:10.3389/fmicb.2019.00658. This article has 12 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(d’ermo2024thecomplexinterplay pages 5-8): Giulia D’Ermo, Marianne Guiral, and Barbara Schoepp-Cothenet. The complex interplay of sulfur and arsenic bioenergetic metabolisms in the arsenic geochemical cycle. Geomicrobiology: Natural and Anthropogenic Settings, pages 301-328, Jan 2024. URL: https://doi.org/10.1007/978-3-031-54306-7_15, doi:10.1007/978-3-031-54306-7_15. This article has 1 citations.</p>
+</li>
+<li>
+<p>(trotter2023largescalegeneticcharacterization pages 4-6): Valentine V. Trotter, Maxim Shatsky, Morgan N. Price, Thomas R. Juba, Grant M. Zane, Kara B. De León, Erica L.-W. Majumder, Qin Gui, Rida Ali, Kelly M. Wetmore, Jennifer V. Kuehl, Adam P. Arkin, Judy D. Wall, Adam M. Deutschbauer, John-Marc Chandonia, and Gareth P. Butland. Large-scale genetic characterization of the model sulfate-reducing bacterium, desulfovibrio vulgaris hildenborough. Frontiers in Microbiology, Mar 2023. URL: https://doi.org/10.3389/fmicb.2023.1095191, doi:10.3389/fmicb.2023.1095191. This article has 11 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(barton2014hydrogensulfidea pages 4-7): Larry L. Barton, Marie-Laure Fardeau, and Guy D. Fauque. Hydrogen sulfide: a toxic gas produced by dissimilatory sulfate and sulfur reduction and consumed by microbial oxidation. Metal ions in life sciences, 14:237-77, Jan 2014. URL: https://doi.org/10.1007/978-94-017-9269-1_10, doi:10.1007/978-94-017-9269-1_10. This article has 151 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(saxena2023integrationoftext pages 5-6): Priya Saxena, Shailabh Rauniyar, Payal Thakur, Ram Nageena Singh, Alain Bomgni, Mathew O. Alaba, Abhilash Kumar Tripathi, Etienne Z. Gnimpieba, Carol Lushbough, and Rajesh Kumar Sani. Integration of text mining and biological network analysis: identification of essential genes in sulfate-reducing bacteria. Frontiers in Microbiology, Apr 2023. URL: https://doi.org/10.3389/fmicb.2023.1086021, doi:10.3389/fmicb.2023.1086021. This article has 14 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>barton2014hydrogensulfidea pages 16-19</li>
+<li>trotter2023largescalegeneticcharacterization pages 4-6</li>
+<li>barton2014hydrogensulfidea pages 4-7</li>
+<li>leavitt2019proteomicandisotopic pages 7-9</li>
+<li>leavitt2019proteomicandisotopic pages 5-7</li>
+<li>saxena2023integrationoftext pages 5-6</li>
+<li>4Fe–4S</li>
+<li>https://doi.org/10.1007/978-94-017-9269-1_10;</li>
+<li>https://doi.org/10.3389/fmicb.2019.00658</li>
+<li>https://doi.org/10.1007/978-94-017-9269-1_10</li>
+<li>https://doi.org/10.1007/978-3-031-54306-7_15;</li>
+<li>https://doi.org/10.3389/fmicb.2023.1086021</li>
+<li>https://doi.org/10.1007/978-3-031-54306-7_15</li>
+<li>https://doi.org/10.3389/fmicb.2023.1095191</li>
+<li>https://doi.org/10.3389/fmicb.2019.00658;</li>
+<li>https://doi.org/10.1007/978-94-017-9269-1_10,</li>
+<li>https://doi.org/10.3389/fmicb.2019.00658,</li>
+<li>https://doi.org/10.1007/978-3-031-54306-7_15,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1095191,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1086021,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q72DT2
+gene_symbol: aprA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris) Hildenborough
+description: &gt;-
+  AprA is the alpha (catalytic) subunit of adenylylsulfate (APS) reductase (EC 1.8.99.2),
+  the central enzyme in dissimilatory sulfate reduction. AprA contains the catalytic FAD
+  cofactor and forms an alpha-beta heterodimer with AprB (the beta subunit containing [4Fe-4S]
+  clusters) to constitute the functional AprAB enzyme. AprAB catalyzes the reduction of
+  adenosine 5&#39;-phosphosulfate (APS) to AMP and sulfite, receiving electrons from the
+  membrane-associated QmoABC complex which connects to the quinone pool. This enzyme sits
+  between ATP sulfurylase (Sat) and dissimilatory sulfite reductase (DsrAB) in the
+  dissimilatory sulfate reduction pathway. AprA is a soluble cytoplasmic protein.
+existing_annotations:
+- term:
+    id: GO:0000104
+    label: succinate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This annotation is based on TreeGrafter propagation from a PANTHER node
+      (PTN000908678) that encompasses both succinate dehydrogenase and APS reductase
+      family members due to their shared FAD-binding domain architecture. While AprA
+      shares structural homology with succinate dehydrogenase flavoproteins (both belong
+      to the SdhA/FrdA/AprA family IPR030664), AprA catalyzes a completely different
+      reaction. APS reductase (EC 1.8.99.2) catalyzes APS + 2e- + H+ -&gt; AMP + sulfite.
+      This is mechanistically distinct from succinate dehydrogenase activity.
+    action: REMOVE
+    reason: &gt;-
+      AprA does not catalyze succinate dehydrogenation. The structural similarity with
+      succinate dehydrogenase flavoproteins (shared FAD-binding domain) does not imply
+      functional equivalence. AprA specifically reduces APS to sulfite and AMP as part
+      of dissimilatory sulfate reduction. This is a clear case of over-annotation from
+      domain-based phylogenetic inference.
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;APS reductase (EC 1.8.99.2) catalyzes APS + 2e− + H+ → AMP + sulfite (SO3(2−)). The AprA subunit houses the catalytic FAD, while AprB contains iron-sulfur clusters that mediate electron transfer&#34;
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This localization annotation from TreeGrafter is incorrect for AprA. The deep
+      research clearly indicates that AprAB is a soluble cytoplasmic enzyme, functioning
+      in proximity to the cytoplasmic face of the membrane-associated Qmo complex.
+      While AprAB does interact with the membrane-associated QmoABC complex for electron
+      transfer, AprA itself is not membrane-localized.
+    action: MODIFY
+    reason: &gt;-
+      AprA is a soluble cytoplasmic protein, not a plasma membrane protein. The
+      TreeGrafter annotation likely propagated from succinate dehydrogenase family
+      members which are membrane-associated. AprA functions in the cytoplasm where it
+      receives electrons from the membrane-associated Qmo complex.
+    proposed_replacement_terms:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex that connects to the quinone pool&#34;
+
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This annotation is marginally appropriate but misattributes function within the
+      AprAB complex. The electron transfer function is primarily associated with AprB,
+      which contains the iron-sulfur clusters responsible for shuttling electrons to the
+      catalytic site. AprA contains FAD at the catalytic site and performs the reduction
+      of APS, but does not have the iron-sulfur clusters that mediate electron transfer.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While AprA participates in an electron-dependent reaction, the electron transfer
+      activity per se is mediated by AprB (with its Fe-S clusters) and the QmoABC
+      complex. AprA&#39;s role is catalytic reduction of APS using electrons delivered by
+      AprB. This annotation conflates the catalytic function of AprA with the electron
+      transfer function of its partner subunit.
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;The AprA subunit houses the catalytic FAD, while AprB contains iron-sulfur clusters that mediate electron transfer, consistent with a flavoprotein-iron–sulfur oxidoreductase mechanism&#34;
+
+- term:
+    id: GO:0009061
+    label: anaerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This annotation is accurate but insufficiently specific. AprA functions specifically
+      in dissimilatory sulfate reduction, a type of anaerobic respiration where sulfate
+      serves as the terminal electron acceptor. In DvH&#39;s dissimilatory sulfate reduction,
+      sulfate is activated by ATP sulfurylase (Sat) to APS, reduced by AprAB to sulfite,
+      and then by dissimilatory sulfite reductase (DsrAB) to sulfide.
+    action: MODIFY
+    reason: &gt;-
+      While anaerobic respiration is technically correct, the more specific term
+      GO:0019420 (dissimilatory sulfate reduction) precisely captures AprA&#39;s biological
+      role. AprA catalyzes a key step in this pathway where APS is reduced to sulfite.
+    proposed_replacement_terms:
+      - id: GO:0019420
+        label: dissimilatory sulfate reduction
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;In DvH&#39;s dissimilatory sulfate reduction, sulfate is activated by ATP sulfurylase (Sat) to APS, reduced by AprAB to sulfite, and then by dissimilatory sulfite reductase (DsrAB) to sulfide&#34;
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;AprA/AprAB sits between Sat (ATP sulfurylase) and DsrAB in the dissimilatory sulfate reduction chain, central to energy metabolism in DvH&#34;
+
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This annotation is accurate. AprA contains a FAD cofactor that is essential for
+      its catalytic function. UniProt lists FAD as a cofactor (ChEBI:57692), and the
+      deep research confirms that AprA contains the catalytic FAD. The protein has a
+      FAD-binding domain (IPR003953, Pfam:PF00890).
+    action: ACCEPT
+    reason: &gt;-
+      FAD binding is well-established for AprA based on domain architecture (FAD-binding_2
+      domain) and functional characterization. The FAD cofactor is central to the
+      catalytic mechanism of APS reduction.
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;The AprA subunit houses the catalytic FAD&#34;
+
+- term:
+    id: GO:0009973
+    label: adenylyl-sulfate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      This is the core molecular function of AprA. The annotation is based on EC mapping
+      (EC:1.8.99.2), which is the correct enzyme classification for APS reductase. The
+      deep research extensively supports this: AprA in DvH (DVU_0847; UniProt Q72DT2)
+      encodes the alpha subunit of adenylyl-sulfate (APS) reductase. APS reductase
+      (EC 1.8.99.2) catalyzes APS + 2e- + H+ -&gt; AMP + sulfite.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary molecular function of AprA, strongly supported by multiple
+      lines of evidence including EC classification, domain architecture (IPR011803
+      AprA, TIGR02061), UniProt annotation, and extensive literature.
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;AprA is the alpha subunit of APS reductase (AprAB). Together with AprB, it catalyzes reduction of APS to sulfite and AMP; AprA contains the catalytic FAD cofactor&#34;
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;In DvH proteomics, AprA is explicitly mapped to DVU_0847, confirming the gene-protein assignment in this organism&#34;
+
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation is accurate but represents a very general parent term. AprA is
+      indeed an oxidoreductase (catalyzing the reduction of APS), and this annotation
+      is derived from InterPro domain mapping (IPR037099) and the oxidoreductase UniProt
+      keyword. However, the more specific term GO:0009973 (adenylyl-sulfate reductase
+      activity) is already present and is more informative.
+    action: ACCEPT
+    reason: &gt;-
+      While accurate, this is a high-level parent term that is redundant with the more
+      specific GO:0009973. The annotation is technically correct based on the catalytic
+      function of AprA in reducing APS.
+    supported_by:
+      - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+        supporting_text: &#34;APS reductase (EC 1.8.99.2) catalyzes APS + 2e− + H+ → AMP + sulfite (SO3(2−))&#34;
+
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings:
+    - statement: Maps EC:1.8.99.2 to GO:0009973 (adenylyl-sulfate reductase activity)
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+    - statement: Propagated annotations from PANTHER node PTN000908678 (succinate dehydrogenase family)
+    - statement: Some propagated annotations are incorrect for AprA due to functional divergence within the family
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Derived oxidoreductase activity from InterPro domain IPR037099
+- id: PMID:25416397
+  title: &#34;Hydrogen sulfide: a toxic gas produced by dissimilatory sulfate and sulfur reduction and consumed by microbial oxidation.&#34;
+  findings:
+    - statement: Comprehensive review of dissimilatory sulfate reduction enzymology
+      supporting_text: &#34;This review provides an examination of cytochromes, iron-sulfur proteins, and sirohemes participating in electron movement in diverse groups of sulfate-reducing, sulfur-reducing, and sulfide-oxidizing Bacteria and Archaea&#34;
+    - statement: Review of enzymatic activities in sulfate reduction
+      supporting_text: &#34;biosulfur reduction or oxidation requires unique enzymatic activities with metal cofactors participating in electron transfer&#34;
+- id: PMID:31031715
+  title: &#34;Proteomic and Isotopic Response of Desulfovibrio vulgaris to DsrC Perturbation.&#34;
+  findings:
+    - statement: DvH proteomics maps AprA to DVU0847 with expression data
+      supporting_text: &#34;The APS reductase subunit AprA (DVU0847) showed lower relative expression in the mutant&#34;
+    - statement: Shows coordinated regulation of AprA and QmoB
+      supporting_text: &#34;The APS reductase subunit AprA (DVU0847) showed lower relative expression in the mutant (–0.35 ± 0.21), as did a subunit, QmoB (DVU0849), of its affiliated electron donor complex&#34;
+- id: PMID:37065130
+  title: &#34;Large-scale genetic characterization of the model sulfate-reducing bacterium, Desulfovibrio vulgaris Hildenborough.&#34;
+  findings:
+    - statement: RB-TnSeq study providing fitness data for DvH genes
+      supporting_text: &#34;we generated a randomly barcoded transposon mutant library in the model SRB Desulfovibrio vulgaris Hildenborough (DvH) and used this genome-wide resource to assay the importance of its genes&#34;
+    - statement: Framework for understanding essentiality of sulfate reduction genes
+      supporting_text: &#34;In addition to defining the essential gene set of DvH, we identified a conditional phenotype for 1,137 non-essential genes&#34;
+- id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+  title: Deep research synthesis for aprA (Q72DT2)
+  findings:
+    - statement: Synthesis of literature on AprA function in dissimilatory sulfate reduction
+    - statement: Confirms AprAB is soluble cytoplasmic enzyme with FAD cofactor in AprA
+
+core_functions:
+- description: &gt;-
+    AprA is the alpha subunit of APS reductase (EC 1.8.99.2), catalyzing the
+    reduction of adenosine 5&#39;-phosphosulfate (APS) to AMP and sulfite. This is
+    the defining enzymatic function of the protein, supported by EC classification,
+    domain architecture (IPR011803, TIGR02061), and extensive biochemical
+    characterization in the literature. AprA contains a FAD cofactor essential
+    for catalysis. AprAB is a soluble cytoplasmic enzyme.
+  molecular_function:
+    id: GO:0009973
+    label: adenylyl-sulfate reductase activity
+  directly_involved_in:
+    - id: GO:0019420
+      label: dissimilatory sulfate reduction
+  locations:
+    - id: GO:0005737
+      label: cytoplasm
+  supported_by:
+    - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+      supporting_text: &#34;AprA is the alpha subunit of APS reductase (AprAB). Together with AprB, it catalyzes reduction of APS to sulfite and AMP; AprA contains the catalytic FAD cofactor&#34;
+    - reference_id: file:DESVH/Q72DT2/Q72DT2-deep-research-falcon.md
+      supporting_text: &#34;AprAB is a soluble cytoplasmic enzyme, functioning in proximity to the cytoplasmic face of the membrane-associated Qmo complex that connects to the quinone pool&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

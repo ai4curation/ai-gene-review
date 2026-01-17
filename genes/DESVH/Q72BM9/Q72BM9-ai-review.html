@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVU_1606 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DVU_1606</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q72BM9" target="_blank" class="term-link">
+                        Q72BM9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris Hildenborough</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DVU_1606";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q72BM9" data-a="DESCRIPTION: DVU_1606 (Q72BM9) is a TrkA-family potassium uptak..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DVU_1606 (Q72BM9) is a TrkA-family potassium uptake regulatory protein containing RCK_N and RCK_C domains. Based on structural homology to characterized KtrA/TrkA proteins from other bacteria, it functions as the cytosolic regulatory subunit of a Trk/Ktr K+ uptake system. The protein assembles into an octameric RCK gating ring that associates with a membrane-embedded TrkH/KtrB pore. ATP binding promotes an active square-like conformation that opens the pore for K+ flux, while ADP binding induces an inactive diamond-like conformation. Na+ binding at intra-dimer sites synergistically stabilizes the active state. The protein may also bind c-di-AMP, which typically reduces K+ import by destabilizing regulator-pore interactions. The core physiological role is regulation of K+ homeostasis and osmoadaptation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098655" target="_blank" class="term-link">
+                                    GO:0098655
+                                </a>
+                            </span>
+                            <span class="term-label">monoatomic cation transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0098655" data-r="GO_REF:0000108" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation was inferred from GO:0008324 (transporter activity) via logical inference. However, Q72BM9 is NOT the membrane transporter itself but the cytosolic regulatory RCK subunit that gates the TrkH/KtrB pore. While the protein is involved in regulating cation transport, it does not itself participate in the transmembrane transport process. The annotation should be modified to reflect regulatory involvement rather than direct transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TrkA/KtrA family proteins are cytosolic regulatory subunits that form octameric RCK gating rings to modulate the activity of membrane K+ pores (TrkH/KtrB). Cryo-EM structures of B. subtilis KtrAB at 2.8 A resolution demonstrate that KtrA forms an octameric ring bound to dimeric KtrB, with ATP/ADP binding controlling pore gating rather than direct transport (Chiang et al. 2024). The protein regulates K+ transmembrane transport but does not itself transport ions across the membrane.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901379" target="_blank" class="term-link">
+                                    regulation of potassium ion transmembrane transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q72BM9/Q72BM9-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1038/s41467-024-48057-y
+                                    
+                                </span>
+                                
+                                <div class="support-text">2024 cryo-EM structures of Bacillus subtilis KtrAB (2.8 A) show an octameric KtrA RCK ring bound to a dimeric KtrB pore. ATP-bound KtrA adopts a square-like active conformation; ADP-bound adopts a diamond-like inactive state.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1128/mmbr.00181-23
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cytosolic component (TrkA/KtrA/KtrC) is a ring-like assembly of RCK (Regulator of Conductance of K+) domains that gates the pore in response to ligands.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProtKB subcellular location vocabulary mapping, which incorrectly predicts Q72BM9 as a multi-pass membrane protein based on Phobius transmembrane helix predictions. However, characterized TrkA/KtrA homologs are cytosolic proteins that associate with the membrane pore peripherally via protein-protein interactions, not as integral membrane proteins. The RCK domains (positions 127-350) are clearly cytosolic based on structural data from homologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Structural biology of KtrA/TrkA proteins demonstrates they are cytosolic regulatory subunits. The 2024 cryo-EM structure of B. subtilis KtrAB shows KtrA as a cytosolic octameric ring that binds to the cytoplasmic face of the KtrB membrane pore. The RCK_N and RCK_C domains that comprise the functional core of this protein are well-established as cytosolic ligand-binding domains. While Phobius predicts two N-terminal transmembrane helices, the dominant functional domains are cytosolic, and the protein should be annotated to cytoplasm with peripheral association to the plasma membrane.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    cytoplasm
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1038/s41467-024-48057-y
+                                    
+                                </span>
+                                
+                                <div class="support-text">By homology to experimentally resolved complexes, DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore (TrkH/KtrB homolog) via cytosolic interfaces. The active transport relies on membrane potential; the RCK ring does not span the membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006813" target="_blank" class="term-link">
+                                    GO:0006813
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0006813" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation from InterPro (IPR003148, IPR006037, IPR036721) captures the involvement of Q72BM9 in potassium ion transport. While the protein does not directly transport K+, it is an essential regulatory component of the K+ uptake system. The term GO:0006813 is appropriately general (covering both direct transport and regulatory involvement) and is acceptable, though a more specific regulatory term would be more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0006813 (potassium ion transport) describes the directed movement of K+ ions by means of transporters or pores, which includes regulatory subunits that are essential for this process. TrkA/KtrA proteins are obligate components of the functional Trk/Ktr K+ uptake system, and without them the pore cannot be properly gated. The annotation is acceptable as it captures the biological process in which the protein participates, even though its specific role is regulatory rather than catalytic.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1128/mmbr.00181-23
+                                    
+                                </span>
+                                
+                                <div class="support-text">Trk/Ktr potassium uptake systems: Two-component assemblies mediating low- to moderate-affinity K+ uptake that is primarily energized by the membrane potential. The membrane component (TrkH/KtrB/KtrD) forms the K+ permeation pathway, and the cytosolic component (TrkA/KtrA/KtrC) is a ring-like assembly of RCK domains that gates the pore in response to ligands.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008324" target="_blank" class="term-link">
+                                    GO:0008324
+                                </a>
+                            </span>
+                            <span class="term-label">monoatomic cation transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0008324" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This MF annotation from InterPro (IPR006037 - RCK_C) is an over-annotation. Q72BM9 is the regulatory RCK subunit, NOT the membrane transporter itself. RCK domains bind nucleotides (ATP/ADP) and undergo conformational changes that regulate the associated membrane pore, but they do not themselves enable transmembrane transport. The appropriate MF annotation would be potassium channel regulator activity or transporter regulator activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transporter activity terms should be reserved for proteins that directly enable the movement of substrates across membranes. TrkA/KtrA RCK proteins regulate transporter activity by binding to and modulating the TrkH/KtrB membrane pore. The 2024 structural study demonstrates that KtrA binds ATP/ADP at RCK interfaces and undergoes square-to-diamond conformational transitions that mechanically gate the associated pore. This is regulator activity, not transporter activity. The most appropriate term is GO:0015459 (potassium channel regulator activity) which specifically describes proteins that bind to and modulate K+ channels/transporters.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015459" target="_blank" class="term-link">
+                                    potassium channel regulator activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    ATP binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1038/s41467-024-48057-y
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP binding to RCK_N intra-dimer interfaces stabilizes an activating square ring conformation; ADP stabilizes an inactivating diamond conformation, switching K+ flux on/off through mechanical coupling to the pore&#39;s intramembrane gate.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1099/mic.0.001597
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Streptococcus mitis, TrkA directly binds c-di-AMP and is required for growth under low K+. Loss of TrkA compromises growth and modulates cellular c-di-AMP levels, reinforcing TrkA&#39;s role in c-di-AMP-mediated K+ control.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015459" target="_blank" class="term-link">
+                                    GO:0015459
+                                </a>
+                            </span>
+                            <span class="term-label">potassium channel regulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1038/s41467-024-48057-y
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0015459" data-r="DOI:10.1038/s41467-024-48057-y" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. Based on structural and functional characterization of homologous KtrA proteins, Q72BM9 functions as a potassium channel/transporter regulator. It binds to and modulates the activity of the associated TrkH/KtrB K+ pore through nucleotide-dependent conformational changes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The core molecular function of TrkA/KtrA proteins is to regulate the activity of associated K+ transporters. GO:0015459 (potassium channel regulator activity) accurately captures this function. Evidence from structural studies of B. subtilis KtrAB demonstrates that KtrA binds to KtrB and modulates its activity through ATP/ADP-dependent conformational changes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1038/s41467-024-48057-y
+                                    
+                                </span>
+                                
+                                <div class="support-text">A functional Ktr/Trk complex comprises a TrkH/KtrB-type dimeric membrane pore and a TrkA/KtrA-type octameric regulator. ATP-bound KtrA adopts a square-like active conformation; ADP-bound adopts a diamond-like inactive state.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1038/s41467-024-48057-y
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0005524" data-r="DOI:10.1038/s41467-024-48057-y" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. The RCK_N domain of TrkA/KtrA proteins contains ATP/ADP binding sites that are essential for the regulatory function. ATP binding at intra-dimer interfaces stabilizes the active conformation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a core biochemical function of TrkA/KtrA RCK proteins. The NAD(P)-binding domain superfamily signature (IPR036291) and structural studies confirm nucleotide binding capability. ATP/ADP binding is the primary mechanism by which these proteins sense cellular energy status and regulate K+ uptake accordingly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1038/s41467-024-48057-y
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATP binding to RCK_N intra-dimer interfaces stabilizes an activating square ring conformation; ADP stabilizes an inactivating diamond conformation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180001" target="_blank" class="term-link">
+                                    GO:0180001
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic-di-AMP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            DOI:10.1128/mmbr.00181-23
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q72BM9" data-a="GO:0180001" data-r="DOI:10.1128/mmbr.00181-23" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. TrkA/KtrA proteins are known receptors for c-di-AMP, a bacterial second messenger that regulates K+ homeostasis. c-di-AMP binding to RCK domains typically reduces K+ import by destabilizing regulator-pore interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> c-di-AMP is a master regulator of K+ homeostasis in bacteria, and TrkA/KtrA RCK proteins are established c-di-AMP receptors. Direct binding has been demonstrated for TrkA in S. mitis (Vevik 2025). The binding affinities range from ~40 nM to low uM across different systems. This is a likely function for Q72BM9 based on conservation of the RCK domain architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1128/mmbr.00181-23
+                                    
+                                </span>
+                                
+                                <div class="support-text">c-di-AMP binds many RCK/CBS-containing K+ transport regulators (including TrkA/KtrA/KtrC), with affinities spanning ~40 nM to low uM, and reduces K+ import by destabilizing regulator-pore interactions.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1099/mic.0.001597
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Streptococcus mitis, TrkA directly binds c-di-AMP and is required for growth under low K+.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forms octameric RCK gating ring that binds to and modulates the activity of associated TrkH/KtrB K+ membrane pore through ATP/ADP-dependent conformational changes.</h3>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="FUNCTION: Forms octameric RCK gating ring that binds to and ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015459" target="_blank" class="term-link">
+                            potassium channel regulator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1038/s41467-024-48057-y
+                            
+                        </span>
+                        
+                        <div class="finding-text">A functional Ktr/Trk complex comprises a TrkH/KtrB-type dimeric membrane pore and a TrkA/KtrA-type octameric regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds ATP at RCK_N intra-dimer interfaces, stabilizing active square-like conformation that promotes K+ flux through associated pore.</h3>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="FUNCTION: Binds ATP at RCK_N intra-dimer interfaces, stabili..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1038/s41467-024-48057-y
+                            
+                        </span>
+                        
+                        <div class="finding-text">ATP binding to RCK_N intra-dimer interfaces stabilizes an activating square ring conformation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Likely binds c-di-AMP second messenger, which reduces K+ import by destabilizing regulator-pore interactions.</h3>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="FUNCTION: Likely binds c-di-AMP second messenger, which redu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180001" target="_blank" class="term-link">
+                            cyclic-di-AMP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1128/mmbr.00181-23
+                            
+                        </span>
+                        
+                        <div class="finding-text">c-di-AMP binds many RCK/CBS-containing K+ transport regulators (including TrkA/KtrA/KtrC), with affinities spanning ~40 nM to low uM.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q72BM9/Q72BM9-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on DVU_1606 TrkA-family potassium uptake regulatory protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DVU_1606 is a TrkA-family RCK regulatory subunit that assembles into an octameric gating ring</div>
+                        
+                        <div class="finding-text">"DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP binding promotes active square-like conformation; ADP stabilizes inactive diamond-like state</div>
+                        
+                        <div class="finding-text">"ATP binding to RCK_N intra-dimer interfaces stabilizes an activating square ring conformation; ADP stabilizes an inactivating diamond conformation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TrkA proteins are c-di-AMP receptors linking K+ homeostasis to signaling</div>
+                        
+                        <div class="finding-text">"c-di-AMP binds many RCK/CBS-containing K+ transport regulators with affinities spanning ~40 nM to low µM"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domains IPR003148 (RCK_N), IPR006037 (RCK_C) map to K+ transport</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mapping is appropriate for BP but over-annotates MF as transporter activity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt predicts cell membrane localization based on Phobius TM predictions</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This conflicts with structural evidence showing TrkA/KtrA as cytosolic</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Inferred BP from MF annotation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Inference is problematic because the MF annotation is incorrect</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1038/s41467-024-48057-y
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural basis and synergism of ATP and Na+ activation in bacterial K+ uptake system KtrAB</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">2.8 A cryo-EM structures of B. subtilis KtrAB</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KtrA forms octameric cytosolic RCK ring bound to dimeric KtrB pore</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP-bound adopts square-like active conformation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ADP-bound adopts diamond-like inactive conformation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Na+ binding at intra-dimer sites stabilizes active state</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1128/mmbr.00181-23
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacterial cell volume regulation and the importance of cyclic di-AMP</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive review of Trk/Ktr systems</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">c-di-AMP binds RCK/CBS domains and reduces K+ import</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TrkA/KtrA are cytosolic regulatory subunits</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1099/mic.0.001597
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TrkA of Streptococcus mitis binds cyclic di-adenosine monophosphate</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct demonstration of TrkA-c-di-AMP binding</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TrkA required for low-K+ growth</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1128/spectrum.03786-23
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">c-di-AMP accumulation impairs toxin expression by down-regulating potassium importers</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">c-di-AMP targets RCK-containing subunits</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Links nucleotide signaling to K+ uptake control</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the cognate TrkH/KtrB membrane pore partner for DVU_1606 in D. vulgaris?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="Q: What is the cognate TrkH/KtrB membrane pore partne..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DVU_1606 bind c-di-AMP, and if so, with what affinity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="Q: Does DVU_1606 bind c-di-AMP, and if so, with what ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there evidence for Na+ synergy in DVU_1606 function as seen in B. subtilis KtrA?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="Q: Is there evidence for Na+ synergy in DVU_1606 func..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Isothermal titration calorimetry to measure ATP, ADP, and c-di-AMP binding affinities</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DVU_1606 binds ATP with higher affinity than ADP, and also binds c-di-AMP</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="EXPERIMENT: Isothermal titration calorimetry to measure ATP, A..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation or bacterial two-hybrid to identify the cognate membrane pore partner</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DVU_1606 interacts with a TrkH/KtrB homolog in D. vulgaris</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="EXPERIMENT: Co-immunoprecipitation or bacterial two-hybrid to ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cryo-EM structure of DVU_1606 octameric ring to confirm conservation of gating mechanism</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DVU_1606 forms an octameric ring similar to B. subtilis KtrA</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="EXPERIMENT: Cryo-EM structure of DVU_1606 octameric ring to co..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> K+ uptake assays in D. vulgaris DVU_1606 deletion mutant under various osmotic conditions</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DVU_1606 is required for efficient K+ uptake and osmoadaptation</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q72BM9" data-a="EXPERIMENT: K+ uptake assays in D. vulgaris DVU_1606 deletion ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q72BM9-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q72BM9" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:40:04.404997'<br />
+end_time: '2026-01-15T10:46:05.915016'<br />
+duration_seconds: 361.51<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q72BM9<br />
+  gene_symbol: Q72BM9<br />
+  uniprot_accession: Q72BM9<br />
+  protein_description: 'SubName: Full=Potassium uptake protein, TrkA family {ECO:0000313|EMBL:AAS96084.1};'<br />
+  gene_info: OrderedLocusNames=DVU_1606 {ECO:0000313|EMBL:AAS96084.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: K_chnl_dom. (IPR013099); NAD(P)-bd_dom_sf. (IPR036291); RCK_C.<br />
+    (IPR006037); RCK_C_sf. (IPR036721); RCK_N. (IPR003148)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 15</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72BM9</li>
+<li><strong>Protein Description:</strong> SubName: Full=Potassium uptake protein, TrkA family {ECO:0000313|EMBL:AAS96084.1};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=DVU_1606 {ECO:0000313|EMBL:AAS96084.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> K_chnl_dom. (IPR013099); NAD(P)-bd_dom_sf. (IPR036291); RCK_C. (IPR006037); RCK_C_sf. (IPR036721); RCK_N. (IPR003148)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q72BM9" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q72BM9' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q72BM9</strong> (gene ID: Q72BM9, UniProt: Q72BM9) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q72BM9</li>
+<li><strong>Protein Description:</strong> SubName: Full=Potassium uptake protein, TrkA family {ECO:0000313|EMBL:AAS96084.1};</li>
+<li><strong>Gene Information:</strong> OrderedLocusNames=DVU_1606 {ECO:0000313|EMBL:AAS96084.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> K_chnl_dom. (IPR013099); NAD(P)-bd_dom_sf. (IPR036291); RCK_C. (IPR006037); RCK_C_sf. (IPR036721); RCK_N. (IPR003148)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Q72BM9" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Q72BM9' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Q72BM9</strong> (gene ID: Q72BM9, UniProt: Q72BM9) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan (summary)<br />
+- Verify target identity and domains from the provided UniProt context and align with literature on Trk/Ktr systems.<br />
+- Synthesize current mechanistic understanding of Trk/Ktr (architecture, gating, ligands), emphasizing 2023–2024 sources.<br />
+- Map likely cellular localization and complex composition for DVU_1606 by homology.<br />
+- Summarize physiological roles, regulation by c-di-AMP, and quantitative parameters from recent studies.<br />
+- Note DVU-specific evidence and limitations.</p>
+<p>Gene/protein verification and scope<br />
+- Identity: The target is DVU_1606 (UniProt Q72BM9) from Desulfovibrio vulgaris Hildenborough, annotated as a TrkA-family potassium uptake protein with RCK (KTN) domains. This aligns with the canonical TrkA/KtrA cytosolic regulatory subunits that assemble with TrkH/KtrB membrane pores to mediate K+ uptake in bacteria (architecture detailed below). No conflicting gene symbol usage was found in the retrieved literature; we proceed under the DVU_1606 annotation provided. Inference-based conclusions are made where DVU-specific data are lacking (see Limitations). (foster2024bacterialcellvolume pages 6-8, chiang2024structuralbasisand pages 1-2)</p>
+<p>1) Key concepts and definitions (current understanding)<br />
+- Trk/Ktr potassium uptake systems: Two-component assemblies mediating low- to moderate-affinity K+ uptake that is primarily energized by the membrane potential. The membrane component (TrkH/KtrB/KtrD) forms the K+ permeation pathway, and the cytosolic component (TrkA/KtrA/KtrC) is a ring-like assembly of RCK (Regulator of Conductance of K+) domains that gates the pore in response to ligands. DVU_1606, as a TrkA-family protein with RCK_N and RCK_C domains, is most consistent with the soluble gating subunit. (foster2024bacterialcellvolume pages 6-8, chiang2024structuralbasisand pages 1-2)<br />
+- RCK/KTN domains: Cytosolic ligand-binding domains that assemble into an octameric gating ring (a tetramer of dimers). Ligand occupancy at RCK_N interfaces and conformational transitions in the ring couple to opening/closing of the membrane pore. (chiang2024structuralbasisand pages 1-2)<br />
+- Affinity/function: Trk/Ktr systems typically show low-affinity uptake (KM ~1 mM K+) and serve first-line osmoadaptive K+ import; high-affinity uptake in many bacteria is mediated by KdpFABC, an inducible K+ pump. (foster2024bacterialcellvolume pages 6-8, osman2020therolesof pages 45-49)</p>
+<p>2) Recent developments and latest research (2023–2024 prioritized)<br />
+- High-resolution architecture and gating mechanism: 2024 cryo-EM structures of Bacillus subtilis KtrAB (2.8 Å) show an octameric KtrA RCK ring bound to a dimeric KtrB pore. ATP-bound KtrA adopts a square-like active conformation; ADP-bound adopts a diamond-like inactive state. A Na+ ion binds at an intra-dimer site of ATP-bound KtrA, stabilizing the complex and synergistically enhancing K+ flux; gating involves a channel loop and helix elements under the selectivity filter. These structural transitions define how RCK ligands control pore gating. URL: https://doi.org/10.1038/s41467-024-48057-y (Nature Communications, May 2024). (chiang2024structuralbasisand pages 2-3, chiang2024structuralbasisand pages 1-2)<br />
+- c-di-AMP as master regulator of K+ homeostasis: A 2024 MMBR review synthesizes evidence that c-di-AMP binds many RCK/CBS-containing K+ transport regulators (including TrkA/KtrA/KtrC), with affinities spanning ~40 nM to low µM, and reduces K+ import by destabilizing regulator–pore interactions. Perturbing c-di-AMP causes predictable cell-volume phenotypes via altered K+ uptake. URL: https://doi.org/10.1128/mmbr.00181-23 (MMBR, Jun 2024). (foster2024bacterialcellvolume pages 6-8)<br />
+- Direct c-di-AMP control of K+ importers: In Bacillus anthracis, elevated c-di-AMP diminishes expression and activity of K+ uptake systems via binding to RCK-containing subunits (e.g., KtrC) and to riboswitches (ydaO) upstream of transporter genes and by targeting KdpD. This links nucleotide signaling to reduced K+ uptake and diminished virulence factor expression. URL: https://doi.org/10.1128/spectrum.03786-23 (Microbiology Spectrum, Aug 2024). (hu2024cdiampaccumulationimpairs pages 1-2)<br />
+- TrkA as a c-di-AMP receptor in vivo: In Streptococcus mitis, TrkA directly binds c-di-AMP and is required for growth under low K+. Loss of TrkA compromises growth and modulates cellular c-di-AMP levels, reinforcing TrkA’s role in c-di-AMP–mediated K+ control. URL: https://doi.org/10.1099/mic.0.001597 (Microbiology, Aug 2025). (vevik2025trkaofstreptococcus pages 1-2)</p>
+<p>3) Cellular localization and complex composition (inference for DVU_1606)<br />
+- Localization and assembly: By homology to experimentally resolved complexes, DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore (TrkH/KtrB homolog) via cytosolic interfaces. The active transport relies on membrane potential; the RCK ring does not span the membrane. (chiang2024structuralbasisand pages 1-2, foster2024bacterialcellvolume pages 6-8)<br />
+- Likely complex composition: A functional Ktr/Trk complex comprises a TrkH/KtrB-type dimeric membrane pore and a TrkA/KtrA-type octameric regulator. DVU_1606 most plausibly partners with a TrkH/KtrB homolog encoded elsewhere in the D. vulgaris genome (specific locus organization not located in the retrieved evidence). (chiang2024structuralbasisand pages 1-2, foster2024bacterialcellvolume pages 6-8)</p>
+<p>4) Ligand regulation and RCK-mediated gating<br />
+- ATP/ADP: ATP binding to RCK_N intra-dimer interfaces stabilizes an activating “square” ring conformation; ADP stabilizes an inactivating “diamond” conformation, switching K+ flux on/off through mechanical coupling to the pore’s intramembrane gate. (chiang2024structuralbasisand pages 1-2)<br />
+- Na+ synergy: Na+ binds specifically to the ATP-bound RCK ring and synergistically enhances activation and complex stability, revealing an Na+-dependent allosteric site in KtrA. (chiang2024structuralbasisand pages 2-3, chiang2024structuralbasisand pages 1-2)<br />
+- c-di-AMP: c-di-AMP binds to RCK/CBS domains in TrkA/KtrA-type proteins and typically decreases K+ import by weakening regulator–pore interaction or shifting the regulatory state; in vivo, TrkA can be a direct high-affinity c-di-AMP receptor required for low-K+ growth. (foster2024bacterialcellvolume pages 6-8, vevik2025trkaofstreptococcus pages 1-2, hu2024cdiampaccumulationimpairs pages 1-2)<br />
+- Other ligands: RCK/KTN modules in K+ systems can also engage NAD(H) and divalent cations in some species; these have been reported to modulate gating states and complex stability, though their generality is system-dependent. (chiang2024structuralbasisand pages 1-2)</p>
+<p>5) Physiological roles, pathways, and quantitative data<br />
+- Core roles of K+: K+ is the predominant cytosolic cation essential for charge balance, pH homeostasis, enzyme function, and turgor. Upon osmotic upshift, rapid K+ uptake via Trk/Ktr systems restores cell turgor; excessive ionic strength is later mitigated by exchanging K+ for compatible solutes. Typical intracellular K+ levels are in the hundreds of millimolar (often ~300–1,000 mM, species- and condition-dependent). (osman2020therolesof pages 45-49, foster2024bacterialcellvolume pages 6-8)<br />
+- c-di-AMP—K+ axis and cell volume: Elevated c-di-AMP reduces K+ uptake and cell size and impairs growth under hypertonic stress; reduced c-di-AMP can lead to toxic K+ accumulation and lysis propensity. These phenotypes underscore c-di-AMP’s role as a master regulator of K+ homeostasis. (foster2024bacterialcellvolume pages 6-8)<br />
+- Impact on virulence/fitness (cross-species evidence): In B. anthracis, increasing c-di-AMP down-regulates K+ importers (including Ktr/Kdp pathways) and diminishes toxin expression; manipulating K+ homeostasis affects pathogenic phenotypes. (hu2024cdiampaccumulationimpairs pages 1-2)</p>
+<p>Desulfovibrio vulgaris Hildenborough (DVU)–specific notes<br />
+- Genome- and stress-level context: D. vulgaris Hildenborough is a model sulfate-reducing bacterium with a fully sequenced genome; potassium and osmotic stress responses are prominent in transcriptomic studies. However, within the retrieved evidence, no DVU_1606-specific operon mapping or direct transcriptomic modulation of DVU_1606 was identified. Therefore, for DVU_1606 (Q72BM9), function and localization are inferred from conserved TrkA/KtrA mechanisms and its domain architecture (RCK_N/RCK_C; NAD(P)-binding-like domain signatures). (foster2024bacterialcellvolume pages 6-8)<br />
+- Inference-based annotation: Given the RCK domain composition and TrkA-family annotation, DVU_1606 is best interpreted as the cytosolic regulatory subunit of a Trk/Ktr K+ uptake system in D. vulgaris Hildenborough, gating a cognate TrkH/KtrB-type membrane pore in response to ATP/ADP, Na+ and likely c-di-AMP. (chiang2024structuralbasisand pages 1-2, foster2024bacterialcellvolume pages 6-8)</p>
+<p>Applications and real-world implementations<br />
+- Industrial and environmental microbiology: K+ uptake systems are central to osmoadaptation of anaerobes, influencing growth and stress resilience in bioreactors and subsurface environments where sulfate-reducing Desulfovibrio spp. operate. Targeting or tuning K+ transport (e.g., via c-di-AMP signaling or nutrient regimes) is a plausible lever to modulate biofilm formation, robustness, and community interactions; mechanistic insight from structural studies (ATP/Na+ synergy) suggests avenues for rational modulation. (chiang2024structuralbasisand pages 2-3, foster2024bacterialcellvolume pages 6-8, hu2024cdiampaccumulationimpairs pages 1-2)<br />
+- Therapeutic microbiology (cross-species): Manipulating c-di-AMP–K+ networks affects virulence and stress survival in pathogens, illustrating translatable principles that could inform strategies in unrelated bacteria sharing Trk/Ktr regulation. (hu2024cdiampaccumulationimpairs pages 1-2, foster2024bacterialcellvolume pages 6-8)</p>
+<p>Expert perspectives and synthesis<br />
+- Converging structural, biochemical, and physiological data now resolve a unified model: the RCK ring in TrkA/KtrA integrates adenine nucleotides and Na+ to set the gating state of the membrane pore, while c-di-AMP overlays a negative feedback that limits K+ influx and enforces cell-volume control. DVU_1606’s RCK architecture strongly supports this model as the basis of its function in D. vulgaris. (chiang2024structuralbasisand pages 2-3, chiang2024structuralbasisand pages 1-2, foster2024bacterialcellvolume pages 6-8)</p>
+<p>Relevant statistics and data (selected)<br />
+- KtrAB cryo-EM resolution and ligands: 2.8 Å structures for ATP- and ADP-bound states; Na+ identified at the RCK intra-dimer site, stabilizing ATP-bound KtrA and enhancing K+ flux. (chiang2024structuralbasisand pages 2-3)<br />
+- Typical Trk/Ktr affinity and role: Low-affinity uptake (~1 mM K+) functioning primarily under higher external K+; high-affinity uptake via Kdp under K+ limitation. (foster2024bacterialcellvolume pages 6-8, osman2020therolesof pages 45-49)<br />
+- c-di-AMP binding range to RCK-type receptors: ~40 nM to ~8 µM across species/systems; binding generally lowers K+ import capacity. (foster2024bacterialcellvolume pages 6-8)</p>
+<p>Limitations and guidance for future DVU-specific work<br />
+- The literature retrieved here did not provide DVU_1606-specific experimental characterization (biochemistry, complex partner identification, or mutational phenotypes). We therefore explicitly label DVU_1606 functional statements as inference from conserved TrkA/KtrA biology and domain content. Focused genomic context analysis (operon mapping for DVU_1606 with a neighboring trkH/ktrB homolog) and condition-specific transcriptomics (salt/K+ stress) in D. vulgaris would be the next steps to solidify the annotation.</p>
+<p>Key recent sources (URLs and dates)<br />
+| Citation | Organism / Scope | Key contribution relevant to TrkA/KtrA (RCK) regulation &amp; K+ uptake | URL | Publication year |<br />
+|---|---|---|---|---|<br />
+| Chiang 2024 — Structural basis and synergism of ATP and Na+ activation (Nature Commun.) (chiang2024structuralbasisand pages 2-3, chiang2024structuralbasisand pages 1-2) | Bacillus subtilis KtrAB structural study | High-resolution cryo-EM of KtrAB: octameric RCK ring (KtrA) couples ATP/ADP and Na+ binding to pore gating; defines ligand-dependent RCK conformations that activate/inhibit K+ flux | https://doi.org/10.1038/s41467-024-48057-y | 2024 |<br />
+| Foster 2024 — Bacterial cell volume regulation and the importance of cyclic di-AMP (MMBR) (foster2024bacterialcellvolume pages 6-8) | Broad bacterial review (cross-phyla) | Synthesizes role of Trk/Ktr systems and RCK domains in K+ homeostasis; summarizes c-di-AMP as a master regulator that binds RCK/CBS-type receptors to modulate K+ import and osmoadaptation | https://doi.org/10.1128/mmbr.00181-23 | 2024 |<br />
+| Hu 2024 — c-di-AMP accumulation impairs toxin expression by down-regulating potassium importers (Microbiology Spectrum) (hu2024cdiampaccumulationimpairs pages 1-2) | Bacillus anthracis and broader implications | Demonstrates c-di-AMP targets RCK-containing subunits and riboswitches to reduce K+ importer expression/activity; links nucleotide signaling to K+ uptake control | https://doi.org/10.1128/spectrum.03786-23 | 2024 |<br />
+| Vevik 2025 — TrkA of Streptococcus mitis binds c-di-AMP (Microbiology) (vevik2025trkaofstreptococcus pages 1-2) | Streptococcus mitis (Gram-positive) | Experimental evidence that a TrkA-family protein directly binds c-di-AMP and is required for growth in low-K+; connects TrkA function to c-di-AMP-mediated K+ homeostasis | https://doi.org/10.1099/mic.0.001597 | 2025 |<br />
+| Osman 2020 — Roles of Trk and Kdp in Mycobacterium tuberculosis (overview) (osman2020therolesof pages 45-49, osman2020therolesof pages 56-60) | Mycobacterium and comparative systems | Canonical description of Trk/Ktr architecture (membrane pore + cytosolic nucleotide-binding regulator), NAD(P)-binding-like features, and physiological roles (osmoadaptation, turgor, growth) | (review DOI in context) | 2020 |</p>
+<p><em>Table: Compact reference table of recent, authoritative studies and reviews on Trk/Ktr RCK (TrkA/KtrA) regulation and c-di-AMP control of bacterial K+ uptake, with URLs and context citations for evidence used in the report.</em></p>
+<p>Acknowledgment of identity constraints<br />
+- The gene symbol Q72BM9 is a UniProt accession, not a conventional symbol; no conflicting gene symbol usage was found. The organism and domain architecture provided are consistent with the TrkA-family RCK regulator of bacterial K+ uptake systems; no evidence of a different gene with the same identifier in another organism was encountered in this search. (foster2024bacterialcellvolume pages 6-8, chiang2024structuralbasisand pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(foster2024bacterialcellvolume pages 6-8): Alexander J. Foster, Marco van den Noort, and Bert Poolman. Bacterial cell volume regulation and the importance of cyclic di-amp. Microbiology and Molecular Biology Reviews, Jun 2024. URL: https://doi.org/10.1128/mmbr.00181-23, doi:10.1128/mmbr.00181-23. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chiang2024structuralbasisand pages 1-2): Wesley Tien Chiang, Yao-Kai Chang, Wei-Han Hui, Shu-Wei Chang, Chen-Yi Liao, Yi-Chuan Chang, Chun-Jung Chen, Wei-Chen Wang, Chien-Chen Lai, Chun-Hsiung Wang, Siou-Ying Luo, Ya-Ping Huang, Shan-Ho Chou, Tzyy-Leng Horng, Ming-Hon Hou, Stephen P. Muench, Ren-Shiang Chen, Ming-Daw Tsai, and Nien-Jen Hu. Structural basis and synergism of atp and na+ activation in bacterial k+ uptake system ktrab. Nature Communications, May 2024. URL: https://doi.org/10.1038/s41467-024-48057-y, doi:10.1038/s41467-024-48057-y. This article has 5 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(osman2020therolesof pages 45-49): AGE Osman. The roles of the potassium-uptake systems, trk and kdp, in the extracellular and intracellular growth of mycobacterium tuberculosis. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(chiang2024structuralbasisand pages 2-3): Wesley Tien Chiang, Yao-Kai Chang, Wei-Han Hui, Shu-Wei Chang, Chen-Yi Liao, Yi-Chuan Chang, Chun-Jung Chen, Wei-Chen Wang, Chien-Chen Lai, Chun-Hsiung Wang, Siou-Ying Luo, Ya-Ping Huang, Shan-Ho Chou, Tzyy-Leng Horng, Ming-Hon Hou, Stephen P. Muench, Ren-Shiang Chen, Ming-Daw Tsai, and Nien-Jen Hu. Structural basis and synergism of atp and na+ activation in bacterial k+ uptake system ktrab. Nature Communications, May 2024. URL: https://doi.org/10.1038/s41467-024-48057-y, doi:10.1038/s41467-024-48057-y. This article has 5 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2024cdiampaccumulationimpairs pages 1-2): Jia Hu, Junmin Yao, Chengfeng Lei, and Xiulian Sun. C-di-amp accumulation impairs toxin expression of <i>bacillus anthracis</i> by down-regulating potassium importers. Microbiology Spectrum, Aug 2024. URL: https://doi.org/10.1128/spectrum.03786-23, doi:10.1128/spectrum.03786-23. This article has 3 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vevik2025trkaofstreptococcus pages 1-2): Kristina Vevik, Biramitha Sribasgaran, Kun Cai, Ali-Oddin Naemi, Håkon Pedersen Kaspersen, Silvio Uhlig, O. Økstad, and Roger Simm. Trka of streptococcus mitis ccug31611 binds cyclic di-adenosine monophosphate and is required for growth in low potassium conditions. Microbiology, Aug 2025. URL: https://doi.org/10.1099/mic.0.001597, doi:10.1099/mic.0.001597. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(osman2020therolesof pages 56-60): AGE Osman. The roles of the potassium-uptake systems, trk and kdp, in the extracellular and intracellular growth of mycobacterium tuberculosis. Unknown journal, 2020.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>chiang2024structuralbasisand pages 1-2</li>
+<li>foster2024bacterialcellvolume pages 6-8</li>
+<li>hu2024cdiampaccumulationimpairs pages 1-2</li>
+<li>vevik2025trkaofstreptococcus pages 1-2</li>
+<li>chiang2024structuralbasisand pages 2-3</li>
+<li>osman2020therolesof pages 45-49</li>
+<li>osman2020therolesof pages 56-60</li>
+<li>https://doi.org/10.1038/s41467-024-48057-y</li>
+<li>https://doi.org/10.1128/mmbr.00181-23</li>
+<li>https://doi.org/10.1128/spectrum.03786-23</li>
+<li>https://doi.org/10.1099/mic.0.001597</li>
+<li>https://doi.org/10.1128/mmbr.00181-23,</li>
+<li>https://doi.org/10.1038/s41467-024-48057-y,</li>
+<li>https://doi.org/10.1128/spectrum.03786-23,</li>
+<li>https://doi.org/10.1099/mic.0.001597,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q72BM9
+gene_symbol: DVU_1606
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris Hildenborough
+description: &gt;-
+  DVU_1606 (Q72BM9) is a TrkA-family potassium uptake regulatory protein containing
+  RCK_N and RCK_C domains. Based on structural homology to characterized KtrA/TrkA
+  proteins from other bacteria, it functions as the cytosolic regulatory subunit of
+  a Trk/Ktr K+ uptake system. The protein assembles into an octameric RCK gating ring
+  that associates with a membrane-embedded TrkH/KtrB pore. ATP binding promotes an
+  active square-like conformation that opens the pore for K+ flux, while ADP binding
+  induces an inactive diamond-like conformation. Na+ binding at intra-dimer sites
+  synergistically stabilizes the active state. The protein may also bind c-di-AMP,
+  which typically reduces K+ import by destabilizing regulator-pore interactions.
+  The core physiological role is regulation of K+ homeostasis and osmoadaptation.
+existing_annotations:
+- term:
+    id: GO:0098655
+    label: monoatomic cation transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      This annotation was inferred from GO:0008324 (transporter activity) via logical
+      inference. However, Q72BM9 is NOT the membrane transporter itself but the
+      cytosolic regulatory RCK subunit that gates the TrkH/KtrB pore. While the
+      protein is involved in regulating cation transport, it does not itself
+      participate in the transmembrane transport process. The annotation should be
+      modified to reflect regulatory involvement rather than direct transport.
+    action: MODIFY
+    reason: &gt;-
+      TrkA/KtrA family proteins are cytosolic regulatory subunits that form octameric
+      RCK gating rings to modulate the activity of membrane K+ pores (TrkH/KtrB).
+      Cryo-EM structures of B. subtilis KtrAB at 2.8 A resolution demonstrate that
+      KtrA forms an octameric ring bound to dimeric KtrB, with ATP/ADP binding
+      controlling pore gating rather than direct transport (Chiang et al. 2024).
+      The protein regulates K+ transmembrane transport but does not itself transport
+      ions across the membrane.
+    proposed_replacement_terms:
+      - id: GO:1901379
+        label: regulation of potassium ion transmembrane transport
+    additional_reference_ids:
+      - DOI:10.1038/s41467-024-48057-y
+      - DOI:10.1128/mmbr.00181-23
+    supported_by:
+      - reference_id: file:DESVH/Q72BM9/Q72BM9-deep-research-falcon.md
+        supporting_text: &#34;DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore&#34;
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          2024 cryo-EM structures of Bacillus subtilis KtrAB (2.8 A) show an octameric
+          KtrA RCK ring bound to a dimeric KtrB pore. ATP-bound KtrA adopts a
+          square-like active conformation; ADP-bound adopts a diamond-like inactive
+          state.
+      - reference_id: DOI:10.1128/mmbr.00181-23
+        supporting_text: &gt;-
+          The cytosolic component (TrkA/KtrA/KtrC) is a ring-like assembly of RCK
+          (Regulator of Conductance of K+) domains that gates the pore in response
+          to ligands.
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This annotation derives from UniProtKB subcellular location vocabulary mapping,
+      which incorrectly predicts Q72BM9 as a multi-pass membrane protein based on
+      Phobius transmembrane helix predictions. However, characterized TrkA/KtrA
+      homologs are cytosolic proteins that associate with the membrane pore
+      peripherally via protein-protein interactions, not as integral membrane
+      proteins. The RCK domains (positions 127-350) are clearly cytosolic based on
+      structural data from homologs.
+    action: MODIFY
+    reason: &gt;-
+      Structural biology of KtrA/TrkA proteins demonstrates they are cytosolic
+      regulatory subunits. The 2024 cryo-EM structure of B. subtilis KtrAB shows
+      KtrA as a cytosolic octameric ring that binds to the cytoplasmic face of the
+      KtrB membrane pore. The RCK_N and RCK_C domains that comprise the functional
+      core of this protein are well-established as cytosolic ligand-binding domains.
+      While Phobius predicts two N-terminal transmembrane helices, the dominant
+      functional domains are cytosolic, and the protein should be annotated to
+      cytoplasm with peripheral association to the plasma membrane.
+    proposed_replacement_terms:
+      - id: GO:0005737
+        label: cytoplasm
+    additional_reference_ids:
+      - DOI:10.1038/s41467-024-48057-y
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          By homology to experimentally resolved complexes, DVU_1606 (TrkA-family
+          RCK protein) is a cytosolic/peripheral protein that assembles into an
+          octameric RCK gating ring associated with an inner-membrane K+ pore
+          (TrkH/KtrB homolog) via cytosolic interfaces. The active transport relies
+          on membrane potential; the RCK ring does not span the membrane.
+
+- term:
+    id: GO:0006813
+    label: potassium ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation from InterPro (IPR003148, IPR006037, IPR036721) captures the
+      involvement of Q72BM9 in potassium ion transport. While the protein does not
+      directly transport K+, it is an essential regulatory component of the K+
+      uptake system. The term GO:0006813 is appropriately general (covering both
+      direct transport and regulatory involvement) and is acceptable, though a more
+      specific regulatory term would be more informative.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0006813 (potassium ion transport) describes the directed movement of K+
+      ions by means of transporters or pores, which includes regulatory subunits
+      that are essential for this process. TrkA/KtrA proteins are obligate components
+      of the functional Trk/Ktr K+ uptake system, and without them the pore cannot
+      be properly gated. The annotation is acceptable as it captures the biological
+      process in which the protein participates, even though its specific role is
+      regulatory rather than catalytic.
+    supported_by:
+      - reference_id: DOI:10.1128/mmbr.00181-23
+        supporting_text: &gt;-
+          Trk/Ktr potassium uptake systems: Two-component assemblies mediating low-
+          to moderate-affinity K+ uptake that is primarily energized by the membrane
+          potential. The membrane component (TrkH/KtrB/KtrD) forms the K+ permeation
+          pathway, and the cytosolic component (TrkA/KtrA/KtrC) is a ring-like
+          assembly of RCK domains that gates the pore in response to ligands.
+
+- term:
+    id: GO:0008324
+    label: monoatomic cation transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This MF annotation from InterPro (IPR006037 - RCK_C) is an over-annotation.
+      Q72BM9 is the regulatory RCK subunit, NOT the membrane transporter itself.
+      RCK domains bind nucleotides (ATP/ADP) and undergo conformational changes
+      that regulate the associated membrane pore, but they do not themselves
+      enable transmembrane transport. The appropriate MF annotation would be
+      potassium channel regulator activity or transporter regulator activity.
+    action: MODIFY
+    reason: &gt;-
+      Transporter activity terms should be reserved for proteins that directly
+      enable the movement of substrates across membranes. TrkA/KtrA RCK proteins
+      regulate transporter activity by binding to and modulating the TrkH/KtrB
+      membrane pore. The 2024 structural study demonstrates that KtrA binds ATP/ADP
+      at RCK interfaces and undergoes square-to-diamond conformational transitions
+      that mechanically gate the associated pore. This is regulator activity, not
+      transporter activity. The most appropriate term is GO:0015459 (potassium
+      channel regulator activity) which specifically describes proteins that bind
+      to and modulate K+ channels/transporters.
+    proposed_replacement_terms:
+      - id: GO:0015459
+        label: potassium channel regulator activity
+      - id: GO:0005524
+        label: ATP binding
+    additional_reference_ids:
+      - DOI:10.1038/s41467-024-48057-y
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          ATP binding to RCK_N intra-dimer interfaces stabilizes an activating
+          square ring conformation; ADP stabilizes an inactivating diamond
+          conformation, switching K+ flux on/off through mechanical coupling to
+          the pore&#39;s intramembrane gate.
+      - reference_id: DOI:10.1099/mic.0.001597
+        supporting_text: &gt;-
+          In Streptococcus mitis, TrkA directly binds c-di-AMP and is required for
+          growth under low K+. Loss of TrkA compromises growth and modulates
+          cellular c-di-AMP levels, reinforcing TrkA&#39;s role in c-di-AMP-mediated
+          K+ control.
+
+- term:
+    id: GO:0015459
+    label: potassium channel regulator activity
+  evidence_type: ISS
+  original_reference_id: DOI:10.1038/s41467-024-48057-y
+  review:
+    summary: &gt;-
+      NEW annotation. Based on structural and functional characterization of
+      homologous KtrA proteins, Q72BM9 functions as a potassium channel/transporter
+      regulator. It binds to and modulates the activity of the associated TrkH/KtrB
+      K+ pore through nucleotide-dependent conformational changes.
+    action: NEW
+    reason: &gt;-
+      The core molecular function of TrkA/KtrA proteins is to regulate the activity
+      of associated K+ transporters. GO:0015459 (potassium channel regulator
+      activity) accurately captures this function. Evidence from structural studies
+      of B. subtilis KtrAB demonstrates that KtrA binds to KtrB and modulates its
+      activity through ATP/ADP-dependent conformational changes.
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          A functional Ktr/Trk complex comprises a TrkH/KtrB-type dimeric membrane
+          pore and a TrkA/KtrA-type octameric regulator. ATP-bound KtrA adopts a
+          square-like active conformation; ADP-bound adopts a diamond-like inactive
+          state.
+
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: ISS
+  original_reference_id: DOI:10.1038/s41467-024-48057-y
+  review:
+    summary: &gt;-
+      NEW annotation. The RCK_N domain of TrkA/KtrA proteins contains ATP/ADP
+      binding sites that are essential for the regulatory function. ATP binding
+      at intra-dimer interfaces stabilizes the active conformation.
+    action: NEW
+    reason: &gt;-
+      ATP binding is a core biochemical function of TrkA/KtrA RCK proteins. The
+      NAD(P)-binding domain superfamily signature (IPR036291) and structural
+      studies confirm nucleotide binding capability. ATP/ADP binding is the
+      primary mechanism by which these proteins sense cellular energy status
+      and regulate K+ uptake accordingly.
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          ATP binding to RCK_N intra-dimer interfaces stabilizes an activating
+          square ring conformation; ADP stabilizes an inactivating diamond
+          conformation.
+
+- term:
+    id: GO:0180001
+    label: cyclic-di-AMP binding
+  evidence_type: ISS
+  original_reference_id: DOI:10.1128/mmbr.00181-23
+  review:
+    summary: &gt;-
+      NEW annotation. TrkA/KtrA proteins are known receptors for c-di-AMP, a
+      bacterial second messenger that regulates K+ homeostasis. c-di-AMP binding
+      to RCK domains typically reduces K+ import by destabilizing regulator-pore
+      interactions.
+    action: NEW
+    reason: &gt;-
+      c-di-AMP is a master regulator of K+ homeostasis in bacteria, and TrkA/KtrA
+      RCK proteins are established c-di-AMP receptors. Direct binding has been
+      demonstrated for TrkA in S. mitis (Vevik 2025). The binding affinities
+      range from ~40 nM to low uM across different systems. This is a likely
+      function for Q72BM9 based on conservation of the RCK domain architecture.
+    supported_by:
+      - reference_id: DOI:10.1128/mmbr.00181-23
+        supporting_text: &gt;-
+          c-di-AMP binds many RCK/CBS-containing K+ transport regulators (including
+          TrkA/KtrA/KtrC), with affinities spanning ~40 nM to low uM, and reduces
+          K+ import by destabilizing regulator-pore interactions.
+      - reference_id: DOI:10.1099/mic.0.001597
+        supporting_text: &gt;-
+          In Streptococcus mitis, TrkA directly binds c-di-AMP and is required for
+          growth under low K+.
+
+references:
+- id: file:DESVH/Q72BM9/Q72BM9-deep-research-falcon.md
+  title: Deep research report on DVU_1606 TrkA-family potassium uptake regulatory protein
+  findings:
+    - statement: DVU_1606 is a TrkA-family RCK regulatory subunit that assembles into an octameric gating ring
+      supporting_text: &#34;DVU_1606 (TrkA-family RCK protein) is a cytosolic/peripheral protein that assembles into an octameric RCK gating ring associated with an inner-membrane K+ pore&#34;
+    - statement: ATP binding promotes active square-like conformation; ADP stabilizes inactive diamond-like state
+      supporting_text: &#34;ATP binding to RCK_N intra-dimer interfaces stabilizes an activating square ring conformation; ADP stabilizes an inactivating diamond conformation&#34;
+    - statement: TrkA proteins are c-di-AMP receptors linking K+ homeostasis to signaling
+      supporting_text: &#34;c-di-AMP binds many RCK/CBS-containing K+ transport regulators with affinities spanning ~40 nM to low µM&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: InterPro domains IPR003148 (RCK_N), IPR006037 (RCK_C) map to K+ transport
+    - statement: Mapping is appropriate for BP but over-annotates MF as transporter activity
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping
+  findings:
+    - statement: UniProt predicts cell membrane localization based on Phobius TM predictions
+    - statement: This conflicts with structural evidence showing TrkA/KtrA as cytosolic
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference
+  findings:
+    - statement: Inferred BP from MF annotation
+    - statement: Inference is problematic because the MF annotation is incorrect
+- id: DOI:10.1038/s41467-024-48057-y
+  title: Structural basis and synergism of ATP and Na+ activation in bacterial K+
+    uptake system KtrAB
+  findings:
+    - statement: 2.8 A cryo-EM structures of B. subtilis KtrAB
+    - statement: KtrA forms octameric cytosolic RCK ring bound to dimeric KtrB pore
+    - statement: ATP-bound adopts square-like active conformation
+    - statement: ADP-bound adopts diamond-like inactive conformation
+    - statement: Na+ binding at intra-dimer sites stabilizes active state
+- id: DOI:10.1128/mmbr.00181-23
+  title: Bacterial cell volume regulation and the importance of cyclic di-AMP
+  findings:
+    - statement: Comprehensive review of Trk/Ktr systems
+    - statement: c-di-AMP binds RCK/CBS domains and reduces K+ import
+    - statement: TrkA/KtrA are cytosolic regulatory subunits
+- id: DOI:10.1099/mic.0.001597
+  title: TrkA of Streptococcus mitis binds cyclic di-adenosine monophosphate
+  findings:
+    - statement: Direct demonstration of TrkA-c-di-AMP binding
+    - statement: TrkA required for low-K+ growth
+- id: DOI:10.1128/spectrum.03786-23
+  title: c-di-AMP accumulation impairs toxin expression by down-regulating potassium
+    importers
+  findings:
+    - statement: c-di-AMP targets RCK-containing subunits
+    - statement: Links nucleotide signaling to K+ uptake control
+
+core_functions:
+  - description: &gt;-
+      Forms octameric RCK gating ring that binds to and modulates the activity of
+      associated TrkH/KtrB K+ membrane pore through ATP/ADP-dependent conformational
+      changes.
+    molecular_function:
+      id: GO:0015459
+      label: potassium channel regulator activity
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          A functional Ktr/Trk complex comprises a TrkH/KtrB-type dimeric membrane
+          pore and a TrkA/KtrA-type octameric regulator.
+  - description: &gt;-
+      Binds ATP at RCK_N intra-dimer interfaces, stabilizing active square-like
+      conformation that promotes K+ flux through associated pore.
+    molecular_function:
+      id: GO:0005524
+      label: ATP binding
+    supported_by:
+      - reference_id: DOI:10.1038/s41467-024-48057-y
+        supporting_text: &gt;-
+          ATP binding to RCK_N intra-dimer interfaces stabilizes an activating
+          square ring conformation.
+  - description: &gt;-
+      Likely binds c-di-AMP second messenger, which reduces K+ import by
+      destabilizing regulator-pore interactions.
+    molecular_function:
+      id: GO:0180001
+      label: cyclic-di-AMP binding
+    supported_by:
+      - reference_id: DOI:10.1128/mmbr.00181-23
+        supporting_text: &gt;-
+          c-di-AMP binds many RCK/CBS-containing K+ transport regulators (including
+          TrkA/KtrA/KtrC), with affinities spanning ~40 nM to low uM.
+
+suggested_questions:
+  - question: What is the cognate TrkH/KtrB membrane pore partner for DVU_1606 in D. vulgaris?
+  - question: Does DVU_1606 bind c-di-AMP, and if so, with what affinity?
+  - question: Is there evidence for Na+ synergy in DVU_1606 function as seen in B. subtilis KtrA?
+
+suggested_experiments:
+  - description: Isothermal titration calorimetry to measure ATP, ADP, and c-di-AMP binding affinities
+    hypothesis: DVU_1606 binds ATP with higher affinity than ADP, and also binds c-di-AMP
+  - description: Co-immunoprecipitation or bacterial two-hybrid to identify the cognate membrane pore partner
+    hypothesis: DVU_1606 interacts with a TrkH/KtrB homolog in D. vulgaris
+  - description: Cryo-EM structure of DVU_1606 octameric ring to confirm conservation of gating mechanism
+    hypothesis: DVU_1606 forms an octameric ring similar to B. subtilis KtrA
+  - description: K+ uptake assays in D. vulgaris DVU_1606 deletion mutant under various osmotic conditions
+    hypothesis: DVU_1606 is required for efficient K+ uptake and osmoadaptation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

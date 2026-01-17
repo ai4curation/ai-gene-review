@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fliA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fliA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q726C4" target="_blank" class="term-link">
+                        Q726C4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris Hildenborough)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fliA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q726C4" data-a="DESCRIPTION: FliA (sigma-28, sigma^F) is an alternative sigma f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FliA (sigma-28, sigma^F) is an alternative sigma factor belonging to the sigma-70 family that directs RNA polymerase to flagellar gene promoters in D. vulgaris Hildenborough. As the master regulator of late flagellar gene expression (class III/IV genes), FliA controls transcription of genes encoding flagellin (fliC), hook-associated proteins, motor components (motAB), and chemotaxis machinery. FliA activity is regulated by the anti-sigma factor FlgM, which sequesters FliA in the cytoplasm until hook-basal body (HBB) assembly is complete; upon HBB completion, FlgM is secreted through the flagellar type III export apparatus, releasing FliA to drive late gene expression. Deletion of fliA in D. vulgaris results in severe motility defects, defective/truncated flagella, and loss of biofilm formation capacity.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA (sigma-28) regulates transcription initiation by directing RNA polymerase to sigma-28-dependent promoters of late flagellar genes. The annotation to &#34;regulation of DNA-templated transcription initiation&#34; is accurate since sigma factors specifically function in transcription initiation rather than elongation. However, this term is generic and does not capture the flagellar-specific function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly reflects that FliA functions in regulation of transcription initiation. Sigma factors are initiation factors that promote attachment of RNA polymerase to specific promoter sequences and are released after initiation (UniProt Q726C4). While a more specific term involving flagellar regulation would be ideal, no such term exists in GO. The IEA annotation via logical inference (GO_REF:0000108) is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA/sigma-28 contains conserved sigma-70 regions 2 and 4 that mediate DNA element recognition at promoters. While sigma factors do not bind DNA autonomously, they confer DNA-binding specificity when combined with RNA polymerase core to form the holoenzyme. The annotation is technically correct but somewhat imprecise.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The DNA binding annotation is acceptable because sigma factors confer DNA-binding specificity to the RNAP holoenzyme by recognizing specific promoter elements. FliA contains the characteristic sigma-70 region 2 and region 4 domains (IPR007627, IPR007630) that recognize the -10 and -35 promoter elements respectively. The sigma-28 promoter consensus is approximately TAAA-N15-GCCGATAA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA contains conserved sigma-70 regions that mediate promoter recognition and RNA polymerase core binding, with regions 2 and 4 central to DNA element recognition</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0003700" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation characterizes FliA as a DNA-binding transcription factor. While sigma factors do regulate transcription and confer promoter specificity, the term &#34;DNA-binding transcription factor activity&#34; is typically used for sequence-specific DNA-binding proteins that directly bind DNA and regulate transcription of target genes. Sigma factors function differently - they bind RNA polymerase core and confer promoter specificity to the holoenzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;DNA-binding transcription factor activity&#34; (GO:0003700) is not the most precise term for sigma factors. GO:0016987 (sigma factor activity) is the more appropriate molecular function term that specifically describes the mechanism by which sigma factors promote transcription initiation. This annotation should be replaced with the more specific sigma factor activity term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0003899" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation incorrectly attributes RNA polymerase catalytic activity to FliA. Sigma factors do not possess RNA polymerase enzymatic activity themselves; rather, they are regulatory subunits that associate with the RNA polymerase core enzyme (alpha2-beta-beta&#39;) to direct promoter recognition. The catalytic activity resides in the core enzyme subunits, not the sigma factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FliA is a sigma factor, not an RNA polymerase enzyme. Sigma factors function by binding to the RNA polymerase core to form a holoenzyme and directing it to specific promoters; they do not possess catalytic polymerase activity. This annotation appears to be an over-annotation based on InterPro domain associations (GO_REF:0000002). The UniProt record correctly identifies Q726C4 as &#34;RNA polymerase sigma factor&#34; not as RNA polymerase itself. This distinction is critical for accurate functional annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0006352" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA is directly involved in DNA-templated transcription initiation as it binds RNA polymerase core and directs the holoenzyme to sigma-28-dependent promoters of late flagellar genes. Upon promoter recognition and initiation, sigma factors are released from the elongating polymerase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This biological process annotation is accurate. Sigma factors function specifically in transcription initiation - they bind RNAP core to form the holoenzyme, recognize and bind promoter sequences, facilitate open complex formation, and are released after initiation. FliA participates in transcription initiation of late flagellar genes including flagellin, hook-associated proteins, motor components, and chemotaxis genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA (sigma-28) directs transcription of the late (class III/IV) flagellar regulon, which typically includes flagellin (fliC), hook-associated proteins, motor components (e.g., motAB), and chemotaxis genes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA clearly functions in regulation of transcription as it controls expression of late flagellar genes. This annotation is accurate but somewhat general - FliA specifically regulates transcription initiation rather than elongation or other aspects of transcription.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is correct. FliA regulates transcription of late flagellar genes by directing RNA polymerase to sigma-28-dependent promoters. The D. vulgaris fliA deletion mutant shows severe motility defects and defective flagella, demonstrating FliA&#39;s essential role in regulating expression of flagellar genes (Ray et al. 2014, Clark 2008).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function annotation for FliA. Sigma factor activity precisely describes FliA&#39;s function as a promoter specificity subunit that associates with RNA polymerase core and directs it to specific promoter sequences. FliA belongs to the sigma-70 family, specifically the FliA/WhiG clade (IPR012845).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most accurate and informative molecular function annotation for FliA. GO:0016987 (sigma factor activity) precisely defines the mechanism by which FliA functions: it combines with RNA polymerase core to form a holoenzyme, confers promoter binding specificity, and is released after transcription initiation begins. This annotation is strongly supported by domain architecture (sigma-70 regions 2 and 4), family membership (FliA/WhiG subfamily), and functional evidence from D. vulgaris mutant studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902208" target="_blank" class="term-link">
+                                    GO:1902208
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of bacterial-type flagellum assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24639670" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24639670
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exploring the role of CheA3 in Desulfovibrio vulgaris Hilden...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:1902208" data-r="PMID:24639670" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA regulates late flagellar gene expression which is essential for flagellar assembly. Deletion of fliA in D. vulgaris results in defective or truncated flagella as shown by TEM (Ray et al. 2014).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is strongly supported by organism-specific experimental evidence. The delta-fliA mutant in D. vulgaris Hildenborough shows defective or truncated flagella by transmission electron microscopy, demonstrating that FliA is required for proper flagellar assembly. FliA regulates expression of late flagellar genes (class III/IV) including flagellin and hook-associated proteins that are essential for flagellum structure.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the D. vulgaris delta-fliA mutant (DVU3229) for FliA, predicted to regulate flagella-related genes including cheA3, was defective both in flagellum formation and in forming the motility halos</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071973" target="_blank" class="term-link">
+                                    GO:0071973
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum-dependent cell motility</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24639670" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24639670
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exploring the role of CheA3 in Desulfovibrio vulgaris Hilden...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0071973" data-r="PMID:24639670" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA is essential for motility in D. vulgaris. Delta-fliA mutants show severe motility defects in both soft agar assays and wet-mount microscopy (Ray et al. 2014, Clark 2008).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from D. vulgaris Hildenborough demonstrates that fliA deletion results in severe motility defects. The delta-fliA mutant (JW9017) shows loss of motility on soft agar plates and in wet-mount assays. This phenotype is consistent with FliA&#39;s role in regulating late flagellar genes required for functional flagella and cell motility.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q726C4" data-a="GO:0005737" data-r="file:DESVH/Q726C4/Q726C4-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA is a cytoplasmic sigma factor that associates with RNA polymerase core in the cytosol. Its activity is regulated by the anti-sigma factor FlgM, which sequesters FliA in the cytoplasm until hook-basal body assembly is complete.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FliA functions in the cytoplasm where it associates with RNA polymerase core enzyme. Literature explicitly states FliA associates with RNA polymerase core in the cytosol. This localization is consistent with the function of sigma factors which must interact with cytoplasmic RNAP core to form the holoenzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FliA is an alternative sigma factor (sigma-28/sigma^F) that associates with RNA polymerase core enzyme to form a holoenzyme and directs it to sigma-28-dependent promoters of late flagellar genes. Contains conserved sigma-70 regions 2 and 4 (IPR007627, IPR007630) that recognize -10 and -35 promoter elements respectively.</h3>
+                <span class="vote-buttons" data-g="Q726C4" data-a="FUNCTION: FliA is an alternative sigma factor (sigma-28/sigm..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902208" target="_blank" class="term-link">
+                                regulation of bacterial-type flagellum assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071973" target="_blank" class="term-link">
+                                bacterial-type flagellum-dependent cell motility
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24639670" target="_blank" class="term-link">
+                            PMID:24639670
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Exploring the role of CheA3 in Desulfovibrio vulgaris Hildenborough motility</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15077118" target="_blank" class="term-link">
+                            PMID:15077118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio vulgaris Hildenborough</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for Q726C4 (FliA) in D. vulgaris Hildenborough</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FliA (sigma-28) is an alternative sigma factor that directs transcription of late flagellar genes</div>
+                        
+                        <div class="finding-text">"FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">delta-fliA mutants show defective flagella and motility defects</div>
+                        
+                        <div class="finding-text">"D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FliA contains sigma-70 regions 2 and 4 for promoter recognition</div>
+                        
+                        <div class="finding-text">"FliA contains conserved sigma-70 regions that mediate promoter recognition and RNA polymerase core binding, with regions 2 and 4 central to DNA element recognition"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the specific promoter sequence recognized by FliA in D. vulgaris? Is it similar to the consensus TAAA-N15-GCCGATAA found in other bacteria?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="Q: What is the specific promoter sequence recognized ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does D. vulgaris encode a FlgM anti-sigma factor ortholog, and if so, does it function similarly to regulate FliA activity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="Q: Does D. vulgaris encode a FlgM anti-sigma factor o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the complete FliA regulon in D. vulgaris? Which specific genes are transcribed from sigma-28-dependent promoters?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="Q: What is the complete FliA regulon in D. vulgaris? ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq to identify FliA binding sites genome-wide in D. vulgaris and define the sigma-28 promoter consensus sequence for this organism.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FliA binds to sigma-28-like promoter sequences upstream of late flagellar genes</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="EXPERIMENT: ChIP-seq to identify FliA binding sites genome-wid..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNA-seq comparing wild-type and delta-fliA strains to define the complete FliA regulon and identify all sigma-28-dependent genes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FliA deletion will result in downregulation of late flagellar genes</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: RNA-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="EXPERIMENT: RNA-seq comparing wild-type and delta-fliA strains..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Complementation studies to confirm that the motility and flagellar defects in delta-fliA are specifically due to loss of FliA function.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Expression of wild-type fliA will restore motility and flagellar assembly in delta-fliA mutants</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genetic complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q726C4" data-a="EXPERIMENT: Complementation studies to confirm that the motili..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Q726C4-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q726C4" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-15T10:26:30.906594'<br />
+end_time: '2026-01-15T10:35:31.807688'<br />
+duration_seconds: 540.9<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DESVH<br />
+  gene_id: Q726C4<br />
+  gene_symbol: fliA<br />
+  uniprot_accession: Q726C4<br />
+  protein_description: 'RecName: Full=RNA polymerase sigma factor {ECO:0000256|RuleBase:RU362124};'<br />
+  gene_info: Name=fliA {ECO:0000313|EMBL:AAS97699.1}; OrderedLocusNames=DVU_3229 {ECO:0000313|EMBL:AAS97699.1};<br />
+  organism_full: Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG<br />
+    34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).<br />
+  protein_family: Belongs to the sigma-70 factor family.<br />
+  protein_domains: RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943);<br />
+    RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r4. (IPR007630); RNA_pol_sigma_FliA_WhiG.<br />
+    (IPR012845)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 16</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q726C4</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma factor {ECO:0000256|RuleBase:RU362124};</li>
+<li><strong>Gene Information:</strong> Name=fliA {ECO:0000313|EMBL:AAS97699.1}; OrderedLocusNames=DVU_3229 {ECO:0000313|EMBL:AAS97699.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r4. (IPR007630); RNA_pol_sigma_FliA_WhiG. (IPR012845)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fliA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fliA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fliA</strong> (gene ID: Q726C4, UniProt: Q726C4) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q726C4</li>
+<li><strong>Protein Description:</strong> RecName: Full=RNA polymerase sigma factor {ECO:0000256|RuleBase:RU362124};</li>
+<li><strong>Gene Information:</strong> Name=fliA {ECO:0000313|EMBL:AAS97699.1}; OrderedLocusNames=DVU_3229 {ECO:0000313|EMBL:AAS97699.1};</li>
+<li><strong>Organism (full):</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Protein Family:</strong> Belongs to the sigma-70 factor family.</li>
+<li><strong>Key Domains:</strong> RNA_pol_sigma-70_dom. (IPR014284); RNA_pol_sigma70. (IPR000943); RNA_pol_sigma70_r2. (IPR007627); RNA_pol_sigma70_r4. (IPR007630); RNA_pol_sigma_FliA_WhiG. (IPR012845)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "fliA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Nitratidesulfovibrio vulgaris (strain ATCC 29579 / DSM 644 / CCUG 34227 / NCIMB 8303 / VKM B-1760 / Hildenborough) (Desulfovibrio vulgaris).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'fliA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>fliA</strong> (gene ID: Q726C4, UniProt: Q726C4) in DESVH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan and verification<br />
+- Identity verification: The target is DVU_3229 (gene symbol fliA) from Desulfovibrio vulgaris Hildenborough, corresponding to UniProt Q726C4. Literature in D. vulgaris directly identifies DVU_3229 as fliA encoding a σ28/σ70-family alternative sigma factor (FliA) that regulates flagellar formation and motility, consistent with the sigma-70 FliA/WhiG subfamily domain architecture (regions 2 and 4) specified in UniProt (organism and gene context match) (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6, clark2008physiologicalanalysisof pages 149-154).</p>
+<p>Research report: fliA (DVU_3229; UniProt Q726C4) in Desulfovibrio vulgaris Hildenborough (DESVH)</p>
+<p>1) Key concepts and definitions<br />
+- Gene/protein and family: fliA encodes RNA polymerase sigma factor FliA (σ28), a member of the sigma-70 family, specifically the FliA/WhiG clade. FliA contains conserved sigma-70 regions that mediate promoter recognition and RNA polymerase core binding, with regions 2 and 4 central to DNA element recognition and anti-sigma interactions (general σ28 mechanistic features) (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 61-65).<br />
+- Functional class: FliA directs transcription of the “late” (class III/IV) flagellar regulon, which typically includes flagellin (fliC), hook-associated proteins, motor components (e.g., motAB), and chemotaxis genes in diverse bacteria (definition and examples from model systems) (smith2009regulationofthe pages 65-69, oladosu2024fliptheswitch pages 3-4).<br />
+- Promoter consensus: σ28-dependent promoters characteristically contain a −35/−10-like motif approximated by TAAA–N15–GCCGATAA in model organisms; this consensus encapsulates the sequence specificity recognized by FliA region 4 and region 2 analogs (smith2009regulationofthe pages 65-69).</p>
+<p>2) Primary biological role and mechanism<br />
+- Primary role: FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from σ28 promoters, governing late stages of flagellar gene expression necessary for assembly of functional flagella and motility (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 61-65).<br />
+- Mechanistic integration with assembly: The FliA regulon is controlled by an export/assembly checkpoint. During hook–basal body (HBB) assembly, the anti-sigma factor FlgM sequesters FliA and inhibits σ28-dependent transcription. Upon HBB completion, FlgM is secreted through the flagellar type III export apparatus, relieving inhibition and allowing FliA-driven expression of late genes; FliA can also facilitate FlgM secretion and FlgM can stabilize σ28 against proteolysis (canonical mechanism) (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 69-73).</p>
+<p>3) Organism-specific function in Desulfovibrio vulgaris Hildenborough<br />
+- Genetic identity and mutant phenotype: DVU_3229 (fliA) is present in the D. vulgaris Hildenborough genome. A ΔfliA mutant (JW9017) shows severe motility defects on soft agar and in wet-mount assays, and transmission electron microscopy indicates defective or truncated flagella under the conditions tested. These data directly implicate FliA in flagellar biogenesis and motility in D. vulgaris (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6).<br />
+- Biofilm and flagella linkage: Independent work in D. vulgaris reports that ΔfliA mutants lack functional flagella, are non-motile, and fail to form biofilm, consistent with a requirement for FliA-driven late flagellar gene expression to achieve functional flagellation and surface-associated behaviors in this anaerobe (clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154).</p>
+<p>4) Cellular localization and action<br />
+- Localization: FliA functions in the cytosol, forming a holoenzyme with RNA polymerase to recognize σ28-type promoters. Its availability and activity are controlled by cytosolic sequestration with FlgM and release upon export-coupled checkpoints (mechanistic paradigm) (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 61-65).</p>
+<p>5) Regulatory network and partners<br />
+- Anti-sigma factor: FlgM is the canonical anti-σ28 factor. It binds FliA (and can engage the holoenzyme) to block transcription until structural checkpoints trigger its secretion; this couples flagellar assembly status to late-gene transcription (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 69-73).<br />
+- Additional regulatory layers: In Pseudomonas, the HptB–HsbR–HsbA partner-switching system can antagonize FlgM-mediated sequestration of FliA, highlighting layered control beyond the core anti-sigma checkpoint; a FleQ-centered network integrates second messenger signaling and transcriptional regulation upstream of FliA-dependent genes (model system illustrating contemporary regulatory complexity) (oladosu2024fliptheswitch pages 3-4).</p>
+<p>6) Conservation and comparative context<br />
+- Prevalence: A genomic survey cited in foundational work identified FliA/SigD orthologs across at least 552 genomes (≈300 species) predominantly in flagellated taxa, with notable lineage-specific absences (e.g., frequent lack in many α-Proteobacteria). This indicates widespread but non-universal conservation of σ28 across bacteria (smith2009regulationofthe pages 65-69).<br />
+- Phylogenetic variation: Comparative analyses show extensive diversity in flagellar regulatory architectures; some lineages lack FliA but regulate motility through σ70-type promoters and post-transcriptional mechanisms, underscoring that while the FlgM–FliA export-coupled checkpoint is common, alternatives exist (smith2009regulationofthe pages 69-73). Large-scale, recent mappings of flagellar components across thousands of genomes confirm that the presence of FliA varies and correlates with specific flagellar modules, reinforcing lineage-specific strategies for motility control (philip2025mappingtheloss pages 9-10).</p>
+<p>7) Recent developments (2023–2024) relevant to σ28/FliA control<br />
+- Layered flagellar regulation interfacing with second messengers: Contemporary reviews in Pseudomonas detail how transcription factors (e.g., FleQ) and c-di-GMP-responsive circuits modulate the motility–biofilm switch and intersect with FlgM–FliA control, including partner-switching systems that influence σ28 activity. These works emphasize the modular, multi-signal integration around FliA-dependent late gene expression (Journal of Bacteriology, 2024; URL: https://doi.org/10.1128/jb.00365-23) (oladosu2024fliptheswitch pages 3-4).<br />
+- Systems/phylogenomic perspective: A 2025 systems-level mapping quantifies component distributions (including σ factors) across &gt;11,000 genomes and correlates them with motility states, highlighting FliA’s heterogeneous distribution and its association with conserved flagellar modules; this provides updated comparative context even though not D. vulgaris–specific (The ISME Journal, 2025; URL: https://doi.org/10.1093/ismejo/wraf111) (philip2025mappingtheloss pages 9-10).</p>
+<p>8) Current applications and real-world implications<br />
+- Motility and biofilm in SRB: In D. vulgaris, ΔfliA eliminates functional flagella, abrogates motility, and disrupts biofilm formation, directly tying FliA to phenotypes that influence surface colonization and community behaviors relevant to environmental persistence and engineered systems where sulfate-reducing bacteria operate (e.g., biofilms). These organism-specific data establish FliA as a lever for controlling motility-associated traits in this SRB (clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154).</p>
+<p>9) Expert opinions and authoritative sources<br />
+- Canonical model: Foundational syntheses emphasize the export-coupled checkpoint integrating the flagellar type III secretion system with FliA and FlgM to ensure temporal control of late gene expression—an expert consensus model supported by multiple genetic and biochemical studies in diverse bacteria (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 69-73, smith2009regulationofthe pages 61-65).<br />
+- Modern perspectives: Recent field overviews in Pseudomonas integrate sigma-factor control with second-messenger signaling and partner-switching mechanisms, reflecting the prevailing expert view that FliA operates within multi-layered, signal-responsive networks (oladosu2024fliptheswitch pages 3-4).</p>
+<p>10) Relevant statistics and data<br />
+- Conservation statistics: FliA/SigD reported across 552 genomes (≈300 species) in a survey of flagellated bacteria, with 83% of species lacking FliA/SigD belonging to α-Proteobacteria, illustrating uneven phylogenetic distribution (smith2009regulationofthe pages 65-69).<br />
+- D. vulgaris phenotypes: ΔfliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions—quantitative assay details provided in the primary organism-specific studies (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6, clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154).</p>
+<p>Data and evidence table (with sources, URLs, and years)<br />
+| Topic | Organism/Scope | Key finding (1–2 sentences) | Source (journal/title with DOI/URL) | Year |<br />
+|---|---|---|---|---|<br />
+| DVU_3229 (fliA) mutant phenotype | Desulfovibrio vulgaris Hildenborough | Deletion of DVU_3229 (fliA) causes loss or truncation of flagella and severe motility defects on soft agar and in wet-mount assays. (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6) | Ray et al., Frontiers in Microbiology — https://doi.org/10.3389/fmicb.2014.00077 | 2014 |<br />
+| ΔfliA effects on motility/flagella/biofilm | Desulfovibrio vulgaris Hildenborough | ΔfliA mutants lack functional flagella, are non-motile, and show impaired biofilm formation; deletions may have polar effects on downstream genes. (clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154) | Clark 2008 (thesis/report) — NA | 2008 |<br />
+| Canonical FliA/FlgM export-coupled regulation | Broad bacterial models (e.g., H. pylori, E. coli) | FliA (σ28) directs late (class III/IV) flagellar genes; FlgM is an anti‑σ that is secreted via the flagellar export apparatus to relieve inhibition upon hook–basal‑body completion; promoter consensus TAAA–N15–GCCGATAA described. (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 69-73) | Smith 2009 review/paper — NA | 2009 |<br />
+| Regulatory layers and c-di-GMP integration | Pseudomonas aeruginosa (model for layered control) | Additional layers (e.g., HptB‑HsbR‑HsbA partner switching) can antagonize FlgM sequestration; FleQ links flagellar transcription to c‑di‑GMP signaling, illustrating multi‑layered control of FliA‑dependent genes. (oladosu2024fliptheswitch pages 3-4) | Oladosu et al., Journal of Bacteriology — https://doi.org/10.1128/jb.00365-23 | 2024 |<br />
+| Distribution and conservation of FliA | Large-scale bacterial phylogeny | Genome-wide mapping shows variable presence of FliA correlated with flagellar filament components; many lineages lack FliA despite other flagellar elements, indicating lineage-specific regulatory variation. (philip2025mappingtheloss pages 9-10) | Philip et al., The ISME Journal — https://doi.org/10.1093/ismejo/wraf111 | 2025 |</p>
+<p><em>Table: Concise, source‑linked evidence for FliA (σ28) focusing on DVU_3229 in Desulfovibrio vulgaris Hildenborough and broader regulatory features; useful as a quick reference to primary findings and reviews cited in the report.</em></p>
+<p>Notes on the promoter motif and domains<br />
+- Promoter: The σ28 motif TAAA–N15–GCCGATAA (−35/−10-like) is reported from model systems; while D. vulgaris–specific promoters were not delineated in the cited organism-specific studies, DVU_3229’s functional role in flagellar assembly and motility supports the inference that a σ28-like regulon exists in DVH (smith2009regulationofthe pages 65-69, ray2014exploringtherole pages 4-5, clark2008physiologicalanalysisof pages 149-154).<br />
+- Domains: Anti-sigma FlgM binding targets conserved σ28 surfaces overlapping with regions 2 and 4, explaining sequestration and modulation of holoenzyme stability; these mechanistic insights from model organisms are consistent with the family/domain annotations for Q726C4 (smith2009regulationofthe pages 65-69).</p>
+<p>Citations with publication details<br />
+- Ray et al., Frontiers in Microbiology (2014). Exploring the role of CheA3 in Desulfovibrio vulgaris Hildenborough motility. DOI: 10.3389/fmicb.2014.00077. URL: https://doi.org/10.1101/2014.00077 (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6).<br />
+- Clark (2008). Physiological analysis of Desulfovibrio vulgaris Hildenborough under conditions relevant to the subsurface environment: Carbon and energy limitation and biofilm… (Thesis/report). URL: NA (clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154).<br />
+- Smith (2009). Regulation of the Helicobacter pylori RpoN regulon by the flagellar protein export apparatus (review/paper). URL: NA (smith2009regulationofthe pages 65-69, smith2009regulationofthe pages 69-73, smith2009regulationofthe pages 61-65).<br />
+- Oladosu et al., Journal of Bacteriology (2024). Flip the switch: FleQ and layered regulation of motility/biofilm; DOI: 10.1128/jb.00365-23. URL: https://doi.org/10.1128/jb.00365-23 (oladosu2024fliptheswitch pages 3-4).<br />
+- Philip et al., The ISME Journal (2025). Mapping the loss of flagellar motility across the tree of life; DOI: 10.1093/ismejo/wraf111. URL: https://doi.org/10.1093/ismejo/wraf111 (philip2025mappingtheloss pages 9-10).</p>
+<p>Summary<br />
+- The fliA gene in D. vulgaris Hildenborough (DVU_3229; UniProt Q726C4) encodes a σ28/FliA sigma factor essential for late flagellar gene expression, functional flagella, motility, and biofilm formation under tested conditions. Its regulation is expected to conform to the canonical FlgM-mediated, export-coupled checkpoint observed broadly in bacteria, with emerging multi-layered controls exemplified in model systems. Comparative analyses underscore wide but uneven conservation of FliA across bacterial lineages. Together, organism-specific genetics and general mechanistic studies provide a coherent, well-supported functional annotation for Q726C4 as the flagellar sigma factor FliA in this sulfate-reducing bacterium (ray2014exploringtherole pages 4-5, ray2014exploringtherole pages 5-6, clark2008physiologicalanalysisof pages 135-139, clark2008physiologicalanalysisof pages 149-154, smith2009regulationofthe pages 65-69, oladosu2024fliptheswitch pages 3-4, smith2009regulationofthe pages 69-73).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ray2014exploringtherole pages 4-5): Jayashree Ray, Kimberly L. Keller, Michela Catena, Thomas R. Juba, Marcin Zemla, Lara Rajeev, Bernhard Knierim, Grant M. Zane, Jarrod J. Robertson, Manfred Auer, Judy D. Wall, and Aindrila Mukhopadhyay. Exploring the role of chea3 in desulfovibrio vulgaris hildenborough motility. Frontiers in Microbiology, Mar 2014. URL: https://doi.org/10.3389/fmicb.2014.00077, doi:10.3389/fmicb.2014.00077. This article has 10 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(ray2014exploringtherole pages 5-6): Jayashree Ray, Kimberly L. Keller, Michela Catena, Thomas R. Juba, Marcin Zemla, Lara Rajeev, Bernhard Knierim, Grant M. Zane, Jarrod J. Robertson, Manfred Auer, Judy D. Wall, and Aindrila Mukhopadhyay. Exploring the role of chea3 in desulfovibrio vulgaris hildenborough motility. Frontiers in Microbiology, Mar 2014. URL: https://doi.org/10.3389/fmicb.2014.00077, doi:10.3389/fmicb.2014.00077. This article has 10 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(clark2008physiologicalanalysisof pages 149-154): ME Clark. Physiological analysis of desulfovibrio vulgaris hildenborough under conditions relevant to the subsurface environment: carbon and energy limitation and biofilm …. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(smith2009regulationofthe pages 65-69): TG Smith. Regulation of the helicobacter pylori rpon regulon by the flagellar protein export apparatus. Unknown journal, 2009.</p>
+</li>
+<li>
+<p>(smith2009regulationofthe pages 61-65): TG Smith. Regulation of the helicobacter pylori rpon regulon by the flagellar protein export apparatus. Unknown journal, 2009.</p>
+</li>
+<li>
+<p>(oladosu2024fliptheswitch pages 3-4): Victoria I. Oladosu, Soyoung Park, and Karin Sauer. Flip the switch: the role of fleq in modulating the transition between the free-living and sessile mode of growth in <i>pseudomonas aeruginosa</i>. Journal of Bacteriology, Mar 2024. URL: https://doi.org/10.1128/jb.00365-23, doi:10.1128/jb.00365-23. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2009regulationofthe pages 69-73): TG Smith. Regulation of the helicobacter pylori rpon regulon by the flagellar protein export apparatus. Unknown journal, 2009.</p>
+</li>
+<li>
+<p>(clark2008physiologicalanalysisof pages 135-139): ME Clark. Physiological analysis of desulfovibrio vulgaris hildenborough under conditions relevant to the subsurface environment: carbon and energy limitation and biofilm …. Unknown journal, 2008.</p>
+</li>
+<li>
+<p>(philip2025mappingtheloss pages 9-10): Jamiema Sara Philip, Sehhaj Grewal, Jacob Scadden, Caroline Puente-Lelievre, Nicholas J. Matzke, Luke McNally, and Matthew AB Baker. Mapping the loss of flagellar motility across the tree of life. The ISME Journal, Jan 2025. URL: https://doi.org/10.1093/ismejo/wraf111, doi:10.1093/ismejo/wraf111. This article has 2 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>smith2009regulationofthe pages 65-69</li>
+<li>oladosu2024fliptheswitch pages 3-4</li>
+<li>smith2009regulationofthe pages 69-73</li>
+<li>philip2025mappingtheloss pages 9-10</li>
+<li>ray2014exploringtherole pages 4-5</li>
+<li>ray2014exploringtherole pages 5-6</li>
+<li>clark2008physiologicalanalysisof pages 149-154</li>
+<li>smith2009regulationofthe pages 61-65</li>
+<li>clark2008physiologicalanalysisof pages 135-139</li>
+<li>https://doi.org/10.1128/jb.00365-23</li>
+<li>https://doi.org/10.1093/ismejo/wraf111</li>
+<li>https://doi.org/10.3389/fmicb.2014.00077</li>
+<li>https://doi.org/10.1101/2014.00077</li>
+<li>https://doi.org/10.3389/fmicb.2014.00077,</li>
+<li>https://doi.org/10.1128/jb.00365-23,</li>
+<li>https://doi.org/10.1093/ismejo/wraf111,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q726C4
+gene_symbol: fliA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:882
+  label: Nitratidesulfovibrio vulgaris (Desulfovibrio vulgaris Hildenborough)
+description: &gt;-
+  FliA (sigma-28, sigma^F) is an alternative sigma factor belonging to the sigma-70 family
+  that directs RNA polymerase to flagellar gene promoters in D. vulgaris Hildenborough.
+  As the master regulator of late flagellar gene expression (class III/IV genes), FliA
+  controls transcription of genes encoding flagellin (fliC), hook-associated proteins,
+  motor components (motAB), and chemotaxis machinery. FliA activity is regulated by the
+  anti-sigma factor FlgM, which sequesters FliA in the cytoplasm until hook-basal body
+  (HBB) assembly is complete; upon HBB completion, FlgM is secreted through the flagellar
+  type III export apparatus, releasing FliA to drive late gene expression. Deletion of
+  fliA in D. vulgaris results in severe motility defects, defective/truncated flagella,
+  and loss of biofilm formation capacity.
+existing_annotations:
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      FliA (sigma-28) regulates transcription initiation by directing RNA polymerase
+      to sigma-28-dependent promoters of late flagellar genes. The annotation to
+      &#34;regulation of DNA-templated transcription initiation&#34; is accurate since sigma
+      factors specifically function in transcription initiation rather than elongation.
+      However, this term is generic and does not capture the flagellar-specific function.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation correctly reflects that FliA functions in regulation of transcription
+      initiation. Sigma factors are initiation factors that promote attachment of RNA
+      polymerase to specific promoter sequences and are released after initiation
+      (UniProt Q726C4). While a more specific term involving flagellar regulation would
+      be ideal, no such term exists in GO. The IEA annotation via logical inference
+      (GO_REF:0000108) is appropriate.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      FliA/sigma-28 contains conserved sigma-70 regions 2 and 4 that mediate DNA element
+      recognition at promoters. While sigma factors do not bind DNA autonomously, they
+      confer DNA-binding specificity when combined with RNA polymerase core to form the
+      holoenzyme. The annotation is technically correct but somewhat imprecise.
+    action: ACCEPT
+    reason: &gt;-
+      The DNA binding annotation is acceptable because sigma factors confer DNA-binding
+      specificity to the RNAP holoenzyme by recognizing specific promoter elements. FliA
+      contains the characteristic sigma-70 region 2 and region 4 domains (IPR007627,
+      IPR007630) that recognize the -10 and -35 promoter elements respectively. The
+      sigma-28 promoter consensus is approximately TAAA-N15-GCCGATAA.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA contains conserved sigma-70 regions that mediate promoter recognition and RNA polymerase core binding, with regions 2 and 4 central to DNA element recognition&#34;
+
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation characterizes FliA as a DNA-binding transcription factor. While
+      sigma factors do regulate transcription and confer promoter specificity, the term
+      &#34;DNA-binding transcription factor activity&#34; is typically used for sequence-specific
+      DNA-binding proteins that directly bind DNA and regulate transcription of target
+      genes. Sigma factors function differently - they bind RNA polymerase core and
+      confer promoter specificity to the holoenzyme.
+    action: MODIFY
+    reason: &gt;-
+      The term &#34;DNA-binding transcription factor activity&#34; (GO:0003700) is not the most
+      precise term for sigma factors. GO:0016987 (sigma factor activity) is the more
+      appropriate molecular function term that specifically describes the mechanism by
+      which sigma factors promote transcription initiation. This annotation should be
+      replaced with the more specific sigma factor activity term.
+    proposed_replacement_terms:
+      - id: GO:0016987
+        label: sigma factor activity
+
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation incorrectly attributes RNA polymerase catalytic activity to FliA.
+      Sigma factors do not possess RNA polymerase enzymatic activity themselves; rather,
+      they are regulatory subunits that associate with the RNA polymerase core enzyme
+      (alpha2-beta-beta&#39;) to direct promoter recognition. The catalytic activity resides
+      in the core enzyme subunits, not the sigma factor.
+    action: REMOVE
+    reason: &gt;-
+      FliA is a sigma factor, not an RNA polymerase enzyme. Sigma factors function by
+      binding to the RNA polymerase core to form a holoenzyme and directing it to specific
+      promoters; they do not possess catalytic polymerase activity. This annotation appears
+      to be an over-annotation based on InterPro domain associations (GO_REF:0000002). The
+      UniProt record correctly identifies Q726C4 as &#34;RNA polymerase sigma factor&#34; not as
+      RNA polymerase itself. This distinction is critical for accurate functional annotation.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      FliA is directly involved in DNA-templated transcription initiation as it binds
+      RNA polymerase core and directs the holoenzyme to sigma-28-dependent promoters
+      of late flagellar genes. Upon promoter recognition and initiation, sigma factors
+      are released from the elongating polymerase.
+    action: ACCEPT
+    reason: &gt;-
+      This biological process annotation is accurate. Sigma factors function specifically
+      in transcription initiation - they bind RNAP core to form the holoenzyme, recognize
+      and bind promoter sequences, facilitate open complex formation, and are released
+      after initiation. FliA participates in transcription initiation of late flagellar
+      genes including flagellin, hook-associated proteins, motor components, and
+      chemotaxis genes.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA (sigma-28) directs transcription of the late (class III/IV) flagellar regulon, which typically includes flagellin (fliC), hook-associated proteins, motor components (e.g., motAB), and chemotaxis genes&#34;
+
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      FliA clearly functions in regulation of transcription as it controls expression
+      of late flagellar genes. This annotation is accurate but somewhat general - FliA
+      specifically regulates transcription initiation rather than elongation or other
+      aspects of transcription.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is correct. FliA regulates transcription of late flagellar genes
+      by directing RNA polymerase to sigma-28-dependent promoters. The D. vulgaris fliA
+      deletion mutant shows severe motility defects and defective flagella, demonstrating
+      FliA&#39;s essential role in regulating expression of flagellar genes (Ray et al. 2014,
+      Clark 2008).
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions&#34;
+
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the core molecular function annotation for FliA. Sigma factor activity
+      precisely describes FliA&#39;s function as a promoter specificity subunit that
+      associates with RNA polymerase core and directs it to specific promoter sequences.
+      FliA belongs to the sigma-70 family, specifically the FliA/WhiG clade (IPR012845).
+    action: ACCEPT
+    reason: &gt;-
+      This is the most accurate and informative molecular function annotation for FliA.
+      GO:0016987 (sigma factor activity) precisely defines the mechanism by which FliA
+      functions: it combines with RNA polymerase core to form a holoenzyme, confers
+      promoter binding specificity, and is released after transcription initiation begins.
+      This annotation is strongly supported by domain architecture (sigma-70 regions 2
+      and 4), family membership (FliA/WhiG subfamily), and functional evidence from
+      D. vulgaris mutant studies.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+
+# Proposed new annotations based on literature evidence
+- term:
+    id: GO:1902208
+    label: regulation of bacterial-type flagellum assembly
+  evidence_type: IMP
+  original_reference_id: PMID:24639670
+  review:
+    summary: &gt;-
+      FliA regulates late flagellar gene expression which is essential for flagellar
+      assembly. Deletion of fliA in D. vulgaris results in defective or truncated flagella
+      as shown by TEM (Ray et al. 2014).
+    action: NEW
+    reason: &gt;-
+      This annotation is strongly supported by organism-specific experimental evidence.
+      The delta-fliA mutant in D. vulgaris Hildenborough shows defective or truncated
+      flagella by transmission electron microscopy, demonstrating that FliA is required
+      for proper flagellar assembly. FliA regulates expression of late flagellar genes
+      (class III/IV) including flagellin and hook-associated proteins that are essential
+      for flagellum structure.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;the D. vulgaris delta-fliA mutant (DVU3229) for FliA, predicted to regulate flagella-related genes including cheA3, was defective both in flagellum formation and in forming the motility halos&#34;
+
+- term:
+    id: GO:0071973
+    label: bacterial-type flagellum-dependent cell motility
+  evidence_type: IMP
+  original_reference_id: PMID:24639670
+  review:
+    summary: &gt;-
+      FliA is essential for motility in D. vulgaris. Delta-fliA mutants show severe
+      motility defects in both soft agar assays and wet-mount microscopy (Ray et al. 2014,
+      Clark 2008).
+    action: NEW
+    reason: &gt;-
+      Direct experimental evidence from D. vulgaris Hildenborough demonstrates that fliA
+      deletion results in severe motility defects. The delta-fliA mutant (JW9017) shows
+      loss of motility on soft agar plates and in wet-mount assays. This phenotype is
+      consistent with FliA&#39;s role in regulating late flagellar genes required for
+      functional flagella and cell motility.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions&#34;
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+  review:
+    summary: &gt;-
+      FliA is a cytoplasmic sigma factor that associates with RNA polymerase core
+      in the cytosol. Its activity is regulated by the anti-sigma factor FlgM, which
+      sequesters FliA in the cytoplasm until hook-basal body assembly is complete.
+    action: NEW
+    reason: &gt;-
+      FliA functions in the cytoplasm where it associates with RNA polymerase core
+      enzyme. Literature explicitly states FliA associates with RNA polymerase core
+      in the cytosol. This localization is consistent with the function of sigma
+      factors which must interact with cytoplasmic RNAP core to form the holoenzyme.
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:24639670
+  title: &#34;Exploring the role of CheA3 in Desulfovibrio vulgaris Hildenborough motility&#34;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:15077118
+  title: &#34;The genome sequence of the anaerobic, sulfate-reducing bacterium Desulfovibrio vulgaris Hildenborough&#34;
+  full_text_unavailable: true
+  findings: []
+- id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+  title: Deep research summary for Q726C4 (FliA) in D. vulgaris Hildenborough
+  findings:
+    - statement: FliA (sigma-28) is an alternative sigma factor that directs transcription of late flagellar genes
+      supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+    - statement: delta-fliA mutants show defective flagella and motility defects
+      supporting_text: &#34;D. vulgaris phenotypes: delta-fliA (DVU_3229) shows (i) severe motility defects on soft agar and wet mounts; (ii) defective or truncated flagella by TEM; (iii) failure to form biofilm under tested conditions&#34;
+    - statement: FliA contains sigma-70 regions 2 and 4 for promoter recognition
+      supporting_text: &#34;FliA contains conserved sigma-70 regions that mediate promoter recognition and RNA polymerase core binding, with regions 2 and 4 central to DNA element recognition&#34;
+
+core_functions:
+  - description: &gt;-
+      FliA is an alternative sigma factor (sigma-28/sigma^F) that associates with RNA
+      polymerase core enzyme to form a holoenzyme and directs it to sigma-28-dependent
+      promoters of late flagellar genes. Contains conserved sigma-70 regions 2 and 4
+      (IPR007627, IPR007630) that recognize -10 and -35 promoter elements respectively.
+    molecular_function:
+      id: GO:0016987
+      label: sigma factor activity
+    directly_involved_in:
+      - id: GO:2000142
+        label: regulation of DNA-templated transcription initiation
+      - id: GO:1902208
+        label: regulation of bacterial-type flagellum assembly
+      - id: GO:0071973
+        label: bacterial-type flagellum-dependent cell motility
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: file:DESVH/Q726C4/Q726C4-deep-research-falcon.md
+        supporting_text: &#34;FliA is an alternative sigma factor that associates with RNA polymerase core in the cytosol to initiate transcription from sigma-28 promoters&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: &gt;-
+      What is the specific promoter sequence recognized by FliA in D. vulgaris?
+      Is it similar to the consensus TAAA-N15-GCCGATAA found in other bacteria?
+  - question: &gt;-
+      Does D. vulgaris encode a FlgM anti-sigma factor ortholog, and if so,
+      does it function similarly to regulate FliA activity?
+  - question: &gt;-
+      What is the complete FliA regulon in D. vulgaris? Which specific genes
+      are transcribed from sigma-28-dependent promoters?
+
+suggested_experiments:
+  - description: &gt;-
+      ChIP-seq to identify FliA binding sites genome-wide in D. vulgaris and
+      define the sigma-28 promoter consensus sequence for this organism.
+    experiment_type: ChIP-seq
+    hypothesis: FliA binds to sigma-28-like promoter sequences upstream of late flagellar genes
+  - description: &gt;-
+      RNA-seq comparing wild-type and delta-fliA strains to define the complete
+      FliA regulon and identify all sigma-28-dependent genes.
+    experiment_type: RNA-seq
+    hypothesis: FliA deletion will result in downregulation of late flagellar genes
+  - description: &gt;-
+      Complementation studies to confirm that the motility and flagellar
+      defects in delta-fliA are specifically due to loss of FliA function.
+    experiment_type: Genetic complementation
+    hypothesis: Expression of wild-type fliA will restore motility and flagellar assembly in delta-fliA mutants
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
