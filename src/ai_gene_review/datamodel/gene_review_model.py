@@ -928,7 +928,7 @@ class FunctionalIsoform(ConfiguredBaseModel):
                        'CoreFunction',
                        'Experiment',
                        'RuleReview']} })
-    go_annotations: Optional[list[str]] = Field(default=None, description="""GO term IDs that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Format as GO:NNNNNNN.""", json_schema_extra = { "linkml_meta": {'alias': 'go_annotations', 'domain_of': ['FunctionalIsoform', 'EmbeddedRule']} })
+    isoform_specific_terms: Optional[list[Term]] = Field(default=None, description="""GO terms that are specific to this functional class. These are terms that should NOT be annotated to the gene as a whole, only to this specific form. Using Term objects enables linkml-term-validator checking.""", json_schema_extra = { "linkml_meta": {'alias': 'isoform_specific_terms', 'domain_of': ['FunctionalIsoform']} })
 
 
 class FunctionalIsoformMapping(ConfiguredBaseModel):
@@ -1284,7 +1284,7 @@ class EmbeddedRule(ConfiguredBaseModel):
 
     rule_id: str = Field(default=..., description="""Original rule ID (e.g., ARBA00026249, UR000000070)""", json_schema_extra = { "linkml_meta": {'alias': 'rule_id', 'domain_of': ['EmbeddedRule']} })
     condition_sets: list[RuleConditionSet] = Field(default=..., description="""List of condition sets (OR-ed together). Each condition set is a conjunction (AND) of conditions. The rule fires if ANY condition set matches.""", json_schema_extra = { "linkml_meta": {'alias': 'condition_sets', 'domain_of': ['EmbeddedRule']} })
-    go_annotations: Optional[list[RuleGOAnnotation]] = Field(default=None, description="""GO terms assigned by this rule""", json_schema_extra = { "linkml_meta": {'alias': 'go_annotations', 'domain_of': ['FunctionalIsoform', 'EmbeddedRule']} })
+    go_annotations: Optional[list[RuleGOAnnotation]] = Field(default=None, description="""GO terms assigned by this rule""", json_schema_extra = { "linkml_meta": {'alias': 'go_annotations', 'domain_of': ['EmbeddedRule']} })
     ipr2go_redundancy: Optional[InterPro2GORedundancy] = Field(default=None, description="""Analysis of redundancy with InterPro2GO mappings""", json_schema_extra = { "linkml_meta": {'alias': 'ipr2go_redundancy', 'domain_of': ['EmbeddedRule']} })
     entries: list[RuleReviewEntry] = Field(default=..., description="""Entry-centric view of all entities in the rule (domain conditions and GO terms). Each entry tracks its relationships (PREDICTS, PREDICTED_BY, EQUIV) to other entries.""", json_schema_extra = { "linkml_meta": {'alias': 'entries', 'domain_of': ['EmbeddedRule']} })
     reviewed_protein_count: Optional[int] = Field(default=None, description="""Number of reviewed (Swiss-Prot) proteins annotated by this rule""", json_schema_extra = { "linkml_meta": {'alias': 'reviewed_protein_count', 'domain_of': ['EmbeddedRule']} })
