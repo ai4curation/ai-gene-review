@@ -108,25 +108,48 @@ Key reviews and resources:
 - [x] DSCAM - **COMPLETE** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
 
 ### Tier 3 Genes
-- [ ] FGFR2 - Not started
-- [ ] PKM - Not started
-- [ ] PTBP1/2 - Not started
+- [x] FGFR2 - **COMPLETE** - 229 annotations | 16 OVER_ANNOTATED (IIIb vs IIIc ligand specificity)
+- [x] PKM - **COMPLETE** - 79 annotations | 6 OVER_ANNOTATED (M1 vs M2 Warburg effect)
+- [ ] PTBP1/2 - Not started (splicing regulators, different project focus)
 - [ ] RON/MST1R - Not started
-- [ ] STAT3 - Not started
+- [x] STAT3 - **COMPLETE** - 456 annotations | alpha vs beta dominant-negative documented
 
 ## Summary Stats
 - **Total genes**: 15
-- **Completed**: 10 (Tier 1 + Tier 2)
+- **Completed**: 13 (Tier 1 + Tier 2 + 3 Tier 3)
 - **In progress**: 0
 - **Tier 1 genes**: 6/6 COMPLETE
 - **Tier 2 genes**: 4/4 COMPLETE
-- **Total annotations reviewed**: 925 across Tier 1+2 genes
+- **Tier 3 genes**: 3/5 COMPLETE
+- **Total annotations reviewed**: 1689 across completed genes
 
 ---
 
 # NOTES
 
 ## 2026-01-19
+
+**Tier 3 Annotation Review Progress:**
+
+| Gene | Total | ACCEPT | NON_CORE | OVER_ANNOTATED | MODIFY | Key Finding |
+|------|-------|--------|----------|----------------|--------|-------------|
+| FGFR2 | 229 | 160 | 45 | 16 | 6 | IIIb vs IIIc ligand specificity |
+| PKM | 79 | 31 | 35 | 6 | 7 | M1 vs M2 Warburg effect |
+| STAT3 | 456 | 364 | 26 | 0 | 0 | Alpha vs beta dominant-negative |
+
+**Key Tier 3 Findings:**
+
+1. **FGFR2**: Classic epithelial/mesenchymal isoform switch. FGFR2IIIb (P21802-3) is epithelial-specific and binds FGF7/KGF and FGF10. FGFR2IIIc (P21802-1) is mesenchymal-specific and binds FGF2/FGF4. This enables paracrine signaling between tissue compartments. 16 annotations marked as potentially isoform-specific or over-annotated.
+
+2. **PKM**: The M1/M2 switch is fundamental to the Warburg effect. PKM1 (P14618-2) is constitutively active in adult differentiated tissues. PKM2 (P14618-1) has low activity and is allosterically regulated - this diverts glycolytic intermediates to biosynthesis in proliferating/cancer cells. PKM2 also has PKM1-absent functions: protein kinase activity, nuclear translocation, and transcription coactivation. 6 annotations identified as PKM2-specific.
+
+3. **STAT3**: Alpha (P40763-1) has full transactivation domain; beta (P40763-2) lacks TAD and can act as dominant-negative. Already reviewed - 456 annotations processed with isoform biology documented.
+
+**Tier 3 Progress: 3/5 genes complete (FGFR2, PKM, STAT3)**
+
+Remaining: PTBP1/2 (splicing regulators - different focus), RON/MST1R
+
+---
 
 **Tier 2 Annotation Review Completed:**
 
