@@ -129,6 +129,22 @@ Key reviews and resources:
 
 ## 2026-01-19
 
+**Template Updates Complete:**
+
+The Jinja2 template (`gene_review.html.j2`) has been fully updated to support isoform tracking:
+
+1. **Alternative Products section** - Renders isoform cards showing id, name, sequence_note, and description for each isoform (implemented earlier)
+
+2. **Isoform badge on annotations** - NEW: Annotations with `isoform` field now display a blue badge linking to the UniProt isoform (e.g., P19544-1)
+
+3. **NOT badge on annotations** - NEW: Negated annotations (`negated: true`) now display a red "NOT" badge
+
+**Tested with:**
+- WT1: Verified isoform-specific annotations (P19544-1) and NOT annotations display correctly
+- BCL2L1: Verified Alternative Products section renders Bcl-xL, Bcl-xS, and Q07817-3 isoforms
+
+---
+
 **Tier 3 Annotation Review Progress:**
 
 | Gene | Total | ACCEPT | NON_CORE | OVER_ANNOTATED | MODIFY | Key Finding |
