@@ -41,6 +41,12 @@ Genes selected for this project should have:
 - [ ] **RON/MST1R** (human) - Proto-oncogene with motility-promoting splice variant in cancer
 - [ ] **STAT3** (human) - STAT3α vs STAT3β have distinct transcriptional activities
 
+### Special Cases: Polyproteins (Post-Translational Cleavage)
+
+These are NOT alternative splicing but share the annotation challenge of multiple functional products from one gene:
+
+- [x] **POMC** (human) - Pro-opiomelanocortin: cleaved into ACTH, alpha-MSH, beta-endorphin with ANTAGONISTIC functions (anorexigenic vs orexigenic)
+
 ## Background: Key Concepts
 
 ### Types of Functional Differences
@@ -128,6 +134,45 @@ Key reviews and resources:
 # NOTES
 
 ## 2026-01-19
+
+**New Data Model: `functional_isoforms`**
+
+Added a new curator-defined field to the schema for tracking functionally distinct gene products. Unlike `alternative_products` (ETL-seeded from UniProt), this is purely curated:
+
+```yaml
+FunctionalIsoformTypeEnum:
+  - SPLICE_VARIANT: Single splice isoform
+  - SPLICE_CLASS: Group of related isoforms (e.g., WT1 +KTS vs -KTS)
+  - CLEAVAGE_PRODUCT: Post-translational proteolysis (e.g., POMC peptides)
+  - MODIFICATION_STATE: PTM-dependent states
+  - CONFORMATIONAL_STATE: Distinct functional conformations
+
+FunctionalIsoformMappingTypeEnum:
+  - UNIPROT_ISOFORM: e.g., P19544-1
+  - UNIPROT_CHAIN: e.g., PRO_0000024969 (UniProt FT PEPTIDE)
+```
+
+**IMPORTANT**: UniProt chain/peptide IDs (PRO_NNNNNNN) have NOTHING to do with the PRO ontology (PR:NNNNNNN namespace). Different systems!
+
+---
+
+**POMC Review Complete (Polyprotein Paradigm):**
+
+POMC is fundamentally different from alternative splicing - it's a **polyprotein** cleaved into multiple bioactive peptides:
+
+| Peptide | UniProt Chain | Function | Effect on Appetite |
+|---------|---------------|----------|-------------------|
+| ACTH | PRO_0000024969 | Cortisol release (HPA axis) | - |
+| Alpha-MSH | PRO_0000024970 | MC4R binding, pigmentation | ANOREXIGENIC |
+| Beta-endorphin | PRO_0000024975 | Opioid signaling | OREXIGENIC |
+| Beta-MSH | PRO_0000024974 | MC1R binding, pigmentation | - |
+| Gamma-MSH | PRO_0000024967 | Sodium regulation | - |
+
+**Key insight**: Alpha-MSH and beta-endorphin are produced in the SAME hypothalamic neurons but have ANTAGONISTIC effects on appetite. This is a paradigm case of why gene-level annotation is insufficient.
+
+55 annotations reviewed: 42 ACCEPT, 4 NON_CORE, 5 OVER_ANNOTATED, 1 MODIFY, 3 REMOVE
+
+---
 
 **Template Updates Complete:**
 
