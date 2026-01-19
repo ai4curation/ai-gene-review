@@ -46,6 +46,7 @@ Genes selected for this project should have:
 These are NOT alternative splicing but share the annotation challenge of multiple functional products from one gene:
 
 - [x] **POMC** (human) - Pro-opiomelanocortin: cleaved into ACTH, alpha-MSH, beta-endorphin with ANTAGONISTIC functions (anorexigenic vs orexigenic)
+- [x] **App** (mouse) - Amyloid precursor protein: BOTH splicing (APP695 vs APP751/770 KPI) AND cleavage (sAPPalpha NEUROPROTECTIVE vs Abeta NEUROTOXIC) - most complex case
 
 ## Background: Key Concepts
 
@@ -171,6 +172,24 @@ POMC is fundamentally different from alternative splicing - it's a **polyprotein
 **Key insight**: Alpha-MSH and beta-endorphin are produced in the SAME hypothalamic neurons but have ANTAGONISTIC effects on appetite. This is a paradigm case of why gene-level annotation is insufficient.
 
 55 annotations reviewed: 42 ACCEPT, 4 NON_CORE, 5 OVER_ANNOTATED, 1 MODIFY, 3 REMOVE
+
+---
+
+**App (Mouse) Review Complete - Most Complex Case Yet:**
+
+App demonstrates BOTH alternative splicing AND proteolytic cleavage:
+
+| Type | Variant | Function |
+|------|---------|----------|
+| SPLICE | APP695 | Neuronal, no KPI domain |
+| SPLICE | APP751/770 | Peripheral, has KPI (protease inhibitor) |
+| CLEAVAGE | sAPPalpha | **NEUROPROTECTIVE** (non-amyloidogenic) |
+| CLEAVAGE | Abeta42 | **NEUROTOXIC** (Alzheimer's) |
+| CLEAVAGE | AICD | Nuclear signaling (controversial) |
+
+**Critical insight**: The same gene produces both NEUROPROTECTIVE (sAPPalpha) and NEUROTOXIC (Abeta) products depending on whether alpha-secretase or beta-secretase cleaves first. This is a paradigm for how proteolytic processing balance determines cell fate.
+
+342 annotations reviewed: 267 ACCEPT, 62 OVER_ANNOTATED (Abeta-specific), 8 NON_CORE, 1 MODIFY, 1 REMOVE
 
 ---
 
