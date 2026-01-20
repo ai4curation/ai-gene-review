@@ -29,18 +29,44 @@ class GOAAnnotation:
     assigned_by: str
     annotation_extension: str
     date: str
+    isoform: str = ""  # UniProt isoform ID (e.g., "P19544-1") if present
 
     @classmethod
     def from_tsv_row(cls, row: list) -> "GOAAnnotation":
-        """Parse a GOA annotation from a TSV row."""
+        """Parse a GOA annotation from a TSV row.
+
+        Extracts isoform information from the gene product ID when present.
+        For example, "P19544-1" indicates isoform 1, while "P19544" is canonical.
+        """
         # GOA format columns:
         # 0: GENE PRODUCT DB, 1: GENE PRODUCT ID, 2: SYMBOL, 3: QUALIFIER
         # 4: GO TERM, 5: GO NAME, 6: GO ASPECT, 7: ECO ID, 8: GO EVIDENCE CODE
         # 9: REFERENCE, 10: WITH/FROM, 11: TAXON ID, 12: TAXON NAME
         # 13: ASSIGNED BY, 14: GENE NAME, 15: DATE
+
+        db_object_id = row[1] if len(row) > 1 else ""
+
+        # Extract isoform from db_object_id if present (e.g., "P19544-1" -> isoform "P19544-1")
+        # UniProt isoform format: <accession>-<number> where number is 1, 2, 3, etc.
+        # Swiss-Prot accessions: [OPQ][0-9][A-Z0-9]{3}[0-9] (6 chars) or
+        #                        [A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9] (6 chars)
+        # TrEMBL accessions: [A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9][A-Z][A-Z0-9]{2}[0-9] (10 chars)
+        isoform = ""
+        if db_object_id and "-" in db_object_id:
+            # Check if it matches UniProt isoform pattern
+            parts = db_object_id.rsplit("-", 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                base_accession = parts[0]
+                # UniProt accessions are 6 or 10 alphanumeric chars, starting with a letter
+                if (len(base_accession) in (6, 10) and
+                    base_accession[0].isalpha() and
+                    base_accession.isalnum()):
+                    # This is an isoform ID - store the full isoform ID
+                    isoform = db_object_id
+
         return cls(
             database=row[0] if len(row) > 0 else "",
-            db_object_id=row[1] if len(row) > 1 else "",
+            db_object_id=db_object_id,
             db_object_symbol=row[2] if len(row) > 2 else "",
             qualifier=row[3] if len(row) > 3 else "",
             go_id=row[4] if len(row) > 4 else "",
@@ -55,6 +81,7 @@ class GOAAnnotation:
             assigned_by=row[13] if len(row) > 13 else "",
             annotation_extension=row[14] if len(row) > 14 else "",  # Actually GENE NAME
             date=row[15] if len(row) > 15 else "",
+            isoform=isoform,
         )
 
 
@@ -215,13 +242,14 @@ class GOAValidator:
         yaml_annotations: List[Dict],
         result: GOAValidationResult,
     ) -> GOAValidationResult:
-        """Validate using strict tuple matching (go_id, evidence_code, reference)."""
+        """Validate using strict tuple matching (go_id, evidence_code, reference, negated)."""
         # Create lookup structure for GOA using complete tuples
-        # Key: (go_id, evidence_code, reference)
+        # Key: (go_id, evidence_code, reference, negated)
         goa_tuples = set()
-        goa_by_tuple: Dict[Tuple[str, str, str], GOAAnnotation] = {}
+        goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
         for ann in goa_annotations:
-            tuple_key = (ann.go_id, ann.evidence_code, ann.reference)
+            is_negated = "NOT" in ann.qualifier.upper() if ann.qualifier else False
+            tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
             goa_tuples.add(tuple_key)
             goa_by_tuple[tuple_key] = ann
 
@@ -245,7 +273,8 @@ class GOAValidator:
                     original_ref = yaml_ann.get("original_reference_id", "")
 
                     # Check if this annotation exists in GOA
-                    yaml_tuple = (go_id, evidence_type, original_ref)
+                    negated = yaml_ann.get("negated", False)
+                    yaml_tuple = (go_id, evidence_type, original_ref, negated)
                     if yaml_tuple in goa_tuples:
                         # This is an error - NEW annotation should not exist in GOA
                         result.is_valid = False
@@ -261,12 +290,13 @@ class GOAValidator:
             go_id = term.get("id", "")
             evidence_type = yaml_ann.get("evidence_type", "")
             original_ref = yaml_ann.get("original_reference_id", "")
+            negated = yaml_ann.get("negated", False)
 
             if not go_id:
                 continue
 
-            # Create the tuple to check
-            yaml_tuple = (go_id, evidence_type, original_ref)
+            # Create the tuple to check (includes negation)
+            yaml_tuple = (go_id, evidence_type, original_ref, negated)
 
             # Check if this exact tuple exists in GOA
             if yaml_tuple not in goa_tuples:
@@ -322,8 +352,9 @@ class GOAValidator:
                     go_id = term.get("id", "")
                     evidence_type = yaml_ann.get("evidence_type", "")
                     original_ref = yaml_ann.get("original_reference_id", "")
+                    negated = yaml_ann.get("negated", False)
                     if go_id:
-                        yaml_tuples.add((go_id, evidence_type, original_ref))
+                        yaml_tuples.add((go_id, evidence_type, original_ref, negated))
 
         for goa_tuple in goa_tuples:
             if goa_tuple not in yaml_tuples:
@@ -536,7 +567,7 @@ class GOAValidator:
         # Get existing annotations
         existing_annotations = yaml_data.get("existing_annotations", [])
 
-        # Build set of existing tuples (GO ID, evidence_type, reference)
+        # Build set of existing tuples (GO ID, evidence_type, reference, negated)
         existing_tuples = set()
         for ann in existing_annotations:
             if isinstance(ann, dict) and "term" in ann:
@@ -545,7 +576,8 @@ class GOAValidator:
                     go_id = term["id"]
                     evidence = ann.get("evidence_type", "")
                     ref = ann.get("original_reference_id", "")
-                    existing_tuples.add((go_id, evidence, ref))
+                    negated = ann.get("negated", False)
+                    existing_tuples.add((go_id, evidence, ref, negated))
 
         # Add missing annotations from GOA
         added_count = 0
@@ -566,7 +598,12 @@ class GOAValidator:
             go_id = goa_ann.go_id
             evidence = goa_ann.evidence_code
             reference = goa_ann.reference
-            tuple_key = (go_id, evidence, reference)
+
+            # Check if this is a NOT annotation
+            is_negated = "NOT" in goa_ann.qualifier.upper() if goa_ann.qualifier else False
+
+            # Include negation in tuple key since NOT annotations are distinct
+            tuple_key = (go_id, evidence, reference, is_negated)
 
             # Skip if this exact tuple already exists in YAML or was already added
             if tuple_key in existing_tuples or tuple_key in seen_tuples:
@@ -578,6 +615,14 @@ class GOAValidator:
                 "evidence_type": evidence,
                 "original_reference_id": reference,
             }
+
+            # Add negated field if this is a NOT annotation
+            if is_negated:
+                new_annotation["negated"] = True
+
+            # Add isoform if present in GOA annotation
+            if goa_ann.isoform:
+                new_annotation["isoform"] = goa_ann.isoform
 
             # Add optional review section placeholder
             # This signals that the annotation needs review
@@ -774,3 +819,109 @@ class GOAValidator:
         # Cache and return
         cache[reactome_id] = title
         return title
+
+    def backfill_isoforms(
+        self,
+        yaml_file: Path,
+        goa_file: Optional[Path] = None,
+    ) -> Tuple[int, Path]:
+        """Backfill isoform field on existing annotations from GOA data.
+
+        This migration function adds the 'isoform' field to existing annotations
+        that match isoform-specific annotations in the GOA file. It does NOT
+        modify annotations that already have an isoform field.
+
+        Matching is done by (GO ID, evidence_type, reference) tuple.
+
+        Args:
+            yaml_file: Path to the gene review YAML file
+            goa_file: Path to GOA file (if None, derives from yaml_file path)
+
+        Returns:
+            Tuple of (number of annotations updated, output file path)
+
+        Example:
+            >>> validator = GOAValidator()
+            >>> updated, path = validator.backfill_isoforms(
+            ...     Path("genes/human/WT1/WT1-ai-review.yaml")
+            ... )  # doctest: +SKIP
+            >>> print(f"Updated {updated} annotations with isoform info")  # doctest: +SKIP
+        """
+        # Derive GOA file path if not provided
+        if goa_file is None:
+            yaml_stem = yaml_file.stem
+            if yaml_stem.endswith("-ai-review"):
+                gene_name = yaml_stem[:-10]
+                goa_file = yaml_file.parent / f"{gene_name}-goa.tsv"
+            else:
+                raise ValueError(f"Could not derive GOA file path from {yaml_file}")
+
+        # Check if GOA file exists
+        if not goa_file.exists():
+            raise FileNotFoundError(f"GOA file not found: {goa_file}")
+
+        # Parse GOA annotations
+        goa_annotations = self.parse_goa_file(goa_file)
+
+        # Build lookup: (GO ID, evidence, reference) -> isoform
+        goa_isoform_lookup: Dict[Tuple[str, str, str], str] = {}
+        for goa_ann in goa_annotations:
+            if goa_ann.isoform:  # Only track isoform-specific annotations
+                tuple_key = (goa_ann.go_id, goa_ann.evidence_code, goa_ann.reference)
+                goa_isoform_lookup[tuple_key] = goa_ann.isoform
+
+        if not goa_isoform_lookup:
+            # No isoform-specific annotations in GOA
+            return 0, yaml_file
+
+        # Load the YAML data
+        if not yaml_file.exists():
+            return 0, yaml_file
+
+        with open(yaml_file, "r") as f:
+            yaml_data = yaml.safe_load(f) or {}
+
+        existing_annotations = yaml_data.get("existing_annotations", [])
+
+        # Update annotations that match isoform-specific GOA entries
+        updated_count = 0
+        for ann in existing_annotations:
+            if not isinstance(ann, dict) or "term" not in ann:
+                continue
+
+            # Skip if already has isoform field
+            if ann.get("isoform"):
+                continue
+
+            # Extract tuple key
+            term = ann.get("term", {})
+            if not isinstance(term, dict):
+                continue
+
+            go_id = term.get("id", "")
+            evidence = ann.get("evidence_type", "")
+            ref = ann.get("original_reference_id", "")
+
+            if not go_id:
+                continue
+
+            tuple_key = (go_id, evidence, ref)
+
+            # Check if this annotation has isoform info in GOA
+            if tuple_key in goa_isoform_lookup:
+                ann["isoform"] = goa_isoform_lookup[tuple_key]
+                updated_count += 1
+
+        if updated_count > 0:
+            # Write the updated YAML
+            yaml_data["existing_annotations"] = existing_annotations
+            with open(yaml_file, "w") as f:
+                yaml.dump(
+                    yaml_data,
+                    f,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
+
+        return updated_count, yaml_file
