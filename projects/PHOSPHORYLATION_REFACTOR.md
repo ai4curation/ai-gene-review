@@ -16,7 +16,7 @@ However, annotating these genes directly to "protein phosphorylation" (GO:000646
 
 ## Executive Summary: Cross-Species Analysis
 
-This project systematically analyzed phosphorylation annotations across **8 Model Organism Databases (MODs)**: human (GOA), mouse (MGI), fly (FlyBase), zebrafish (ZFIN), worm (WormBase), Arabidopsis (TAIR), budding yeast (SGD), and fission yeast (PomBase).
+This project systematically analyzed phosphorylation annotations across **9 Model Organism Databases (MODs)**: human (GOA), mouse (MGI), rat (RGD), fly (FlyBase), zebrafish (ZFIN), worm (WormBase), Arabidopsis (TAIR), budding yeast (SGD), and fission yeast (PomBase).
 
 ### Annotation Quality by Database
 
@@ -28,6 +28,7 @@ This project systematically analyzed phosphorylation annotations across **8 Mode
 | **ZFIN** | D. rerio | 1 | VERY GOOD |
 | **FlyBase** | D. melanogaster | ~3 | GOOD |
 | **TAIR** | A. thaliana | ~7-10 | GOOD |
+| **RGD** | R. norvegicus | 11 | MODERATE |
 | **MGI** | M. musculus | ~20 | NEEDS REVIEW |
 | **GOA** | H. sapiens | ~45 | NEEDS REVIEW |
 
@@ -42,10 +43,11 @@ This project systematically analyzed phosphorylation annotations across **8 Mode
    - **Transcription factors** treated as kinases when they are substrates (CREB1, ATF2, ERG, RUNX3, RARA)
    - **Adapter proteins** credited with kinase activity belonging to associated kinases
 
-3. **Glycerate kinase (glyctk) error propagated across species.** The same misannotation of a sugar kinase (EC 2.7.1.31) to "protein phosphorylation" was found in human (GLYCTK), fly (CG9886), and zebrafish (glyctk). This appears to be propagated via ISS (Inferred from Sequence Similarity) transfer, highlighting how computational methods can spread errors across species.
+3. **Errors propagate via ISS transfer.** The rat database (RGD) demonstrates this clearly: 7 of 11 problematic annotations are ISS transfers from mouse/human, replicating the same errors (Ppp3cb phosphatase, Glyctk sugar kinase, Gas6/Pdgfb ligands). The glycerate kinase error specifically appears in human (GLYCTK), fly (CG9886), zebrafish (glyctk), and rat (Glyctk). This highlights how computational inference methods can spread annotation errors across species.
 
 4. **Opposite-reaction errors are particularly problematic.** Annotating phosphatases (enzymes that REMOVE phosphate) to phosphorylation (the process of ADDING phosphate) represents a fundamental biological error. Found in:
    - Human: CDC25B, PPP3CB, PTPN6, PPP4R1
+   - Rat: Ppp3cb (calcineurin, ISS from human)
    - Arabidopsis: TOPP4, CDC25
 
 5. **Lipid and sugar kinases require substrate-specific terms.** Genes like PI3K (lipid kinase), IP6K3 (inositol kinase), and GLYCTK (sugar kinase) should not be annotated to "protein phosphorylation" - they should use substrate-appropriate terms like GO:0046834 (lipid phosphorylation) or GO:0046835 (carbohydrate phosphorylation).
@@ -1853,4 +1855,122 @@ in TAIR (locus:XXXXXX vs ATXGXXXXX). Symbol-based matching reduced this to 42 ge
 - **EXCELLENT**: SGD, PomBase, WormBase (0 errors)
 - **VERY GOOD**: ZFIN (1 error)
 - **GOOD**: FlyBase (~3 errors), TAIR (~7-10 confirmed)
+- **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
+
+---
+
+# RAT (RGD) PHOSPHORYLATION ANALYSIS
+
+## Overview
+
+Extended the phosphorylation annotation analysis to Rattus norvegicus using the RGD database
+(`rgd.ddb`). Rat shows **moderate annotation issues** - 11 genes were identified, but most are
+ISS transfers from mouse/human showing identical error patterns. A few IDA annotations warrant
+closer examination.
+
+## Summary Statistics (Rat - RGD database)
+
+- **Total annotations in database**: 635,614
+- **Non-kinase genes with protein phosphorylation annotations**: 11
+- **Breakdown by evidence type**:
+  - ISS: 7 annotations (transferred from orthologs)
+  - IDA: 4 annotations (direct experimental evidence)
+
+## Candidates Analysis
+
+### ISS Transfers (Same Errors as Mouse/Human)
+
+| Gene | GO Term | Error Type | Code | Origin |
+|------|---------|------------|------|--------|
+| **Gas6** | protein phosphorylation | Signaling ligand | R-ligand | Mouse/Human |
+| **Glyctk** | protein phosphorylation | Sugar kinase (EC 2.7.1.31) | W-sugar | Human |
+| **Ilf3** | protein phosphorylation | Substrate | S | Human |
+| **Pdgfb** | protein phosphorylation, peptidyl-Tyr phosphorylation | Signaling ligand | R-ligand | Human |
+| **Prrt1** | protein phosphorylation | Adapter protein | R-adapter | Human |
+| **Ywhaz** | protein phosphorylation | 14-3-3 adapter | R-adapter | Human |
+| **Ppp3cb** | protein phosphorylation | **PHOSPHATASE** (calcineurin) | O-ser | Human |
+
+**Ppp3cb** is particularly egregious - it's calcineurin, a calcium-dependent protein serine/threonine
+PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activity" (IDA/TAS) annotations.
+
+### IDA Annotations (Require Review)
+
+| Gene | GO Term | Analysis | Code | Action |
+|------|---------|----------|------|--------|
+| **Grm5** | protein phosphorylation | GPCR with "protein tyrosine kinase activator activity" | R-receptor | **MODIFY** |
+| **Pick1** | protein phosphorylation | PDZ scaffold with "protein kinase C binding" | R-adapter | **MODIFY** |
+| **Thy1** | protein autophosphorylation | GPI-anchored protein, no kinase domain | S? | **INVESTIGATE** |
+
+**Grm5** (Metabotropic glutamate receptor 5)
+- GPCR that activates Src family kinases via Homer scaffolding
+- Has "protein tyrosine kinase activator activity" (IGI/ISO)
+- The receptor ACTIVATES kinases but doesn't phosphorylate - should be regulatory term
+- Action: **MODIFY** → GO:0045859 [R-receptor]
+
+**Pick1** (Protein interacting with C kinase 1)
+- PDZ domain protein that binds and scaffolds PKC
+- Has "protein kinase C binding" (IDA) - it's an ADAPTER, not a kinase
+- Action: **MODIFY** → GO:0045859 [R-adapter]
+
+**Thy1** (Thy-1 membrane glycoprotein)
+- GPI-anchored membrane protein
+- Annotated to "protein autophosphorylation" (IDA) but has NO kinase domain
+- Also has "negative regulation of protein kinase activity" (IDA)
+- May be a substrate that affects kinases, not a kinase itself
+- Action: **INVESTIGATE** - likely [S] substrate error
+
+## Cross-Species Comparison: Final Summary (All 9 MODs)
+
+| Pattern | Mouse | Human | Rat | Fly | Zebrafish | Worm | Arabidopsis | S. cerevisiae | S. pombe |
+|---------|-------|-------|-----|-----|-----------|------|-------------|---------------|----------|
+| **Total problematic** | ~20 | ~45 | **11** | ~3 | 1 | 0 | ~7-10 | 0 | 0 |
+| Phosphatases | 0 | 3 | **1** | 0 | 0 | 0 | 2 | 0 | 0 |
+| Signaling ligands | 5 | 7+ | **2** | 0 | 0 | 0 | 0 | 0 | 0 |
+| Sugar kinases | 0 | 1 | **1** | 1 | 1 | 0 | 1 | 0 | 0 |
+| Receptors | 2 | 0 | **1** | 0 | 0 | 0 | 0 | 0 | 0 |
+| Adapter proteins | 0 | 3 | **3** | 0 | 0 | 0 | 0 | 0 | 0 |
+| Substrates | 0 | 5 | **2** | 1? | 0 | 0 | 1 | 0 | 0 |
+
+**Key observation**: RGD errors are almost entirely ISS transfers from MGI/GOA. The 4 IDA annotations
+(Grm5, Pick1, Thy1) represent independent rat-specific curation that also shows over-annotation patterns.
+
+## STATUS (Rat)
+
+- [x] Query analysis completed - **11 problematic annotations found**
+- [x] 7 ISS transfers identified (same errors as mouse/human)
+- [x] 1 phosphatase (Ppp3cb) - **REMOVE** [O-ser]
+- [x] 2 signaling ligands (Gas6, Pdgfb) - **MODIFY** [R-ligand]
+- [x] 1 sugar kinase (Glyctk) - **REMOVE** [W-sugar]
+- [x] 2 adapters (Prrt1, Ywhaz, Pick1) - **MODIFY** [R-adapter]
+- [x] 1 receptor (Grm5) - **MODIFY** [R-receptor]
+- [ ] Thy1 autophosphorylation needs literature review
+
+**Last updated**: 2026-01-19
+
+---
+
+## 2026-01-19 (Session 10 - Rat Analysis)
+
+Extended analysis to Rattus norvegicus using RGD database.
+
+**Key finding**: RGD has **11 problematic phosphorylation annotations**, mostly ISS transfers from
+mouse/human. The errors mirror those found in the source databases (MGI, GOA).
+
+**ISS transfer errors (7 genes)**:
+- Gas6, Pdgfb - signaling ligands [R-ligand]
+- Glyctk - sugar kinase [W-sugar]
+- Ilf3 - substrate [S]
+- Prrt1, Ywhaz - adapter proteins [R-adapter]
+- Ppp3cb - phosphatase (calcineurin) [O-ser]
+
+**IDA annotations requiring review (4 genes)**:
+- Grm5 - GPCR that activates kinases [R-receptor]
+- Pick1 - PKC scaffold/adapter [R-adapter]
+- Thy1 - GPI protein with suspicious autophosphorylation claim [S?]
+
+**Annotation quality gradient (updated - 9 MODs)**:
+- **EXCELLENT**: SGD, PomBase, WormBase (0 errors)
+- **VERY GOOD**: ZFIN (1 error)
+- **GOOD**: FlyBase (~3 errors), TAIR (~7-10 confirmed)
+- **MODERATE**: RGD (11 errors, mostly ISS transfers)
 - **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
