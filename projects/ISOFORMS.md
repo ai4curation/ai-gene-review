@@ -47,6 +47,7 @@ These are NOT alternative splicing but share the annotation challenge of multipl
 
 - [x] **POMC** (human) - Pro-opiomelanocortin: cleaved into ACTH, alpha-MSH, beta-endorphin with ANTAGONISTIC functions (anorexigenic vs orexigenic)
 - [x] **App** (mouse) - Amyloid precursor protein: BOTH splicing (APP695 vs APP751/770 KPI) AND cleavage (sAPPalpha NEUROPROTECTIVE vs Abeta NEUROTOXIC) - most complex case
+- [x] **APP** (human) - Human ortholog, directly relevant to Alzheimer's disease with familial mutations
 
 ## Background: Key Concepts
 
