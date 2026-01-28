@@ -86,6 +86,12 @@ window.searchSchema = {
       "sortBy": "alphabetical"
     },
     {
+      "field": "is_for_isoform",
+      "label": "Isoform-Specific",
+      "type": "boolean",
+      "sortBy": "alphabetical"
+    },
+    {
       "field": "tags",
       "label": "Tags",
       "type": "array",
@@ -181,6 +187,16 @@ window.searchSchema = {
     {
       "field": "review.proposed_replacement_terms",
       "label": "Replacements",
+      "type": "string"
+    },
+    {
+      "field": "is_for_isoform",
+      "label": "Isoform",
+      "type": "boolean"
+    },
+    {
+      "field": "isoform_id",
+      "label": "Isoform ID",
       "type": "string"
     },
     {

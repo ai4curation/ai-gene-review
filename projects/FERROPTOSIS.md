@@ -136,6 +136,22 @@ Tetrahydrobiopterin-mediated protection:
 
 # NOTES
 
+## 2026-01-19 (codex review)
+
+- [x] GPX4: manual second pass complete; `just validate human GPX4` clean (info-only aliases)
+- [x] GPX4: updated HTP/HDA evidence summaries for mitochondrial/nuclear/exosome entries to clarify high-throughput scope; kept ACCEPT for mitochondrion/nucleus, set exosome to UNDECIDED, and set spermatogenesis ISS to UNDECIDED pending direct cached evidence
+- [ ] GPX4: follow-up to add explicit primary evidence for nuclear/spermatogenesis localization (e.g., PMID:21618532 nGPX4 nuclear matrix; PMID:19417079 mGPX4 male infertility)
+- [x] SLC7A11: manual second pass complete; `just validate human SLC7A11` clean (info-only aliases)
+- [x] SLC7A11: added deep-research support for core antiporter activity to clear validation warning
+- [ ] SLC7A11: consider incorporating 2025–2026 disease/regulation papers if needed (e.g., HSPB1 axis in HCC; GPAT4/SLC7A11 platinum resistance in ovarian cancer; CRPC resistance studies)
+- [x] ACSL4: manual second pass complete; `just validate human ACSL4` clean (info-only aliases)
+- [x] ACSL4: added missing supporting_text for membrane/exosome HDA entries to clear validation warning
+- [x] ACSL4: folded in 2025 context papers (IBD fibroblast ACSL4; TRIM28/OPTN autophagy control after SCI; H3K27cr–SQSTM1/autophagy control in diabetic wound healing)
+- [x] AIFM2/FSP1: manual second pass complete; `just validate human AIFM2` clean (info-only aliases)
+- [x] AIFM2/FSP1: resolved missing supporting_text in references; updated iFSP1 paper findings to match abstract; refreshed deep-research-falcon
+- [x] AIFM2/FSP1: integrated new papers (RNF126 ubiquitination/localization; temsirolimus direct FSP1 inhibition and ferroptosis induction)
+- [ ] Next gene: select from remaining Priority 1 list (DHODH, GCH1, LPCAT3, NCOA4)
+
 ## 2025-12-28
 
 **Completion Session - Full Project Finished**

@@ -114,6 +114,8 @@ class JSONExporter:
         row["taxon_id"] = gene_review.taxon.id if gene_review.taxon else None
         row["taxon_label"] = gene_review.taxon.label if gene_review.taxon else None
         row["tags"] = gene_review.tags if gene_review.tags else []
+        row["description"] = gene_review.description if gene_review.description else None
+        row["core_functions"] = self._summarize_core_functions(gene_review)
 
         # Add link fields
         # For ncRNAs, link to RNAcentral; for proteins, link to UniProt
@@ -268,6 +270,52 @@ class JSONExporter:
                     methods.append(method)
 
         return sorted(set(methods))
+
+    def _summarize_core_functions(self, gene_review: GeneReview) -> List[str]:
+        """
+        Summarize core functions into readable strings for export.
+
+        Uses the core function description when available, otherwise falls back
+        to a minimal text representation of molecular function and key terms.
+        """
+        if not gene_review.core_functions:
+            return []
+
+        summaries: List[str] = []
+        for core_func in gene_review.core_functions:
+            if core_func.description:
+                summaries.append(core_func.description)
+                continue
+
+            parts: List[str] = []
+            if core_func.molecular_function:
+                parts.append(
+                    core_func.molecular_function.label
+                    or core_func.molecular_function.id
+                )
+            if core_func.directly_involved_in:
+                parts.extend(
+                    term.label or term.id
+                    for term in core_func.directly_involved_in
+                    if term
+                )
+            if core_func.locations:
+                parts.extend(
+                    term.label or term.id for term in core_func.locations if term
+                )
+
+            if parts:
+                summaries.append("; ".join(parts))
+
+        # Deduplicate while preserving order
+        seen = set()
+        deduped: List[str] = []
+        for summary in summaries:
+            if summary and summary not in seen:
+                seen.add(summary)
+                deduped.append(summary)
+
+        return deduped
 
     def _find_gene_directory(self, gene_review: GeneReview) -> Optional[Path]:
         """

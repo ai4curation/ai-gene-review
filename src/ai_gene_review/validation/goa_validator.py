@@ -248,7 +248,8 @@ class GOAValidator:
         goa_tuples = set()
         goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
         for ann in goa_annotations:
-            is_negated = "NOT" in ann.qualifier.upper() if ann.qualifier else False
+            qualifier = getattr(ann, "qualifier", "")
+            is_negated = self._qualifier_is_negated(qualifier)
             tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
             goa_tuples.add(tuple_key)
             goa_by_tuple[tuple_key] = ann
@@ -600,7 +601,8 @@ class GOAValidator:
             reference = goa_ann.reference
 
             # Check if this is a NOT annotation
-            is_negated = "NOT" in goa_ann.qualifier.upper() if goa_ann.qualifier else False
+            qualifier = getattr(goa_ann, "qualifier", "")
+            is_negated = self._qualifier_is_negated(qualifier)
 
             # Include negation in tuple key since NOT annotations are distinct
             tuple_key = (go_id, evidence, reference, is_negated)
@@ -621,8 +623,9 @@ class GOAValidator:
                 new_annotation["negated"] = True
 
             # Add isoform if present in GOA annotation
-            if goa_ann.isoform:
-                new_annotation["isoform"] = goa_ann.isoform
+            isoform = getattr(goa_ann, "isoform", "")
+            if isinstance(isoform, str) and isoform:
+                new_annotation["isoform"] = isoform
 
             # Add optional review section placeholder
             # This signals that the annotation needs review
@@ -772,6 +775,13 @@ class GOAValidator:
         placeholder = "TODO: Fetch title"
         cache[go_ref_id] = placeholder
         return placeholder
+
+    @staticmethod
+    def _qualifier_is_negated(qualifier: Optional[str]) -> bool:
+        """Return True if qualifier marks a NOT annotation."""
+        if not isinstance(qualifier, str):
+            return False
+        return "NOT" in qualifier.upper()
 
     def _get_reactome_title(self, reactome_id: str, cache: Dict[str, str]) -> str:
         """Fetch Reactome pathway title from Reactome API or cache.

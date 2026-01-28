@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2025-12-27T01:25:06.961499'
-end_time: '2025-12-27T01:34:14.976610'
-duration_seconds: 548.02
+cached: true
+start_time: '2026-01-18T19:07:00.575959'
+end_time: '2026-01-18T19:07:00.578635'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
