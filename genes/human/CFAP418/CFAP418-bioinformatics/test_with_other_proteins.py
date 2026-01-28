@@ -25,8 +25,8 @@ from structural_analysis import (
     analyze_disorder_prediction
 )
 
-def test_with_ubiquitin():
-    """Test with ubiquitin - a small, well-characterized protein"""
+def run_with_ubiquitin() -> bool:
+    """Run analysis with ubiquitin - a small, well-characterized protein."""
     
     # Ubiquitin sequence (76 aa)
     ubiquitin_seq = "MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG"
@@ -62,8 +62,13 @@ def test_with_ubiquitin():
     
     return True
 
-def test_with_p53():
-    """Test with p53 - a larger protein with known disordered regions"""
+
+def test_with_ubiquitin():
+    """Test with ubiquitin - a small, well-characterized protein"""
+    assert run_with_ubiquitin()
+
+def run_with_p53() -> bool:
+    """Run analysis with p53 - a larger protein with known disordered regions."""
     
     # p53 N-terminal transactivation domain (first 100 aa) - known to be disordered
     p53_seq = ("MEEPQSDPSVEPPLSQETFSDLWKLLPENNVLSPLPSQAMDDLMLSPDDIEQWFTEDPGP"
@@ -91,8 +96,13 @@ def test_with_p53():
     
     return True
 
-def test_with_myosin():
-    """Test with myosin heavy chain - a protein with extensive coiled-coil regions"""
+
+def test_with_p53():
+    """Test with p53 - a larger protein with known disordered regions"""
+    assert run_with_p53()
+
+def run_with_myosin() -> bool:
+    """Run analysis with myosin heavy chain - a protein with extensive coiled-coil regions."""
     
     # Myosin tail fragment (known coiled-coil region)
     myosin_seq = ("LEEAEKAADEERGMKVIESRAQKDEEKMEIQEIQLKEAKHIAEDADRKYEEVARKLVIILE"
@@ -121,8 +131,13 @@ def test_with_myosin():
     
     return True
 
-def test_with_fam161a():
-    """Test with FAM161A - CFAP418's interaction partner"""
+
+def test_with_myosin():
+    """Test with myosin heavy chain - a protein with extensive coiled-coil regions"""
+    assert run_with_myosin()
+
+def run_with_fam161a() -> bool:
+    """Run analysis with FAM161A - CFAP418's interaction partner."""
     
     # FAM161A N-terminal fragment (first 100 aa)
     fam161a_seq = ("MSSQDSQETLLCQKLQELQARLSKMEKDLDDTRSQLEQENKSLKDTQGLLGPEKPGPGDG"
@@ -149,6 +164,11 @@ def test_with_fam161a():
     
     return True
 
+
+def test_with_fam161a():
+    """Test with FAM161A - CFAP418's interaction partner"""
+    assert run_with_fam161a()
+
 def main():
     """Run all tests"""
     
@@ -158,10 +178,10 @@ def main():
     print("This ensures the scripts are not hardcoded for CFAP418\n")
     
     tests = [
-        ("Ubiquitin", test_with_ubiquitin),
-        ("p53", test_with_p53),
-        ("Myosin", test_with_myosin),
-        ("FAM161A", test_with_fam161a)
+        ("Ubiquitin", run_with_ubiquitin),
+        ("p53", run_with_p53),
+        ("Myosin", run_with_myosin),
+        ("FAM161A", run_with_fam161a)
     ]
     
     results = []

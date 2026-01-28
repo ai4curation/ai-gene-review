@@ -6,6 +6,8 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
+from linkml_data_qc.analyzer import ComplianceAnalyzer
+
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
@@ -22,6 +24,7 @@ from ai_gene_review.validation import (
     ValidationSeverity,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
+from ai_gene_review.validation.validator import get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
@@ -521,6 +524,74 @@ def validate(
             raise typer.Exit(code=1)
 
 
+@app.command()
+def compliance(
+    yaml_files: Annotated[list[Path], typer.Argument(help="YAML file(s) to analyze")],
+    schema: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--schema",
+            "-s",
+            help="Path to LinkML schema (uses default if not provided)",
+        ),
+    ] = None,
+    tsv_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--tsv-output",
+            help="Output compliance results to TSV file (default: stdout)",
+        ),
+    ] = None,
+):
+    """Analyze recommended-field compliance using linkml-data-qc."""
+    all_files: list[Path] = []
+    for pattern in yaml_files:
+        if "*" in str(pattern):
+            from glob import glob
+
+            matched = glob(str(pattern), recursive=True)
+            all_files.extend(
+                [Path(f) for f in matched if f.endswith(".yaml") or f.endswith(".yml")]
+            )
+        else:
+            all_files.append(pattern)
+
+    if not all_files:
+        typer.echo("No files found to analyze", err=True)
+        raise typer.Exit(code=1)
+
+    schema_path = schema or get_schema_path()
+    analyzer = ComplianceAnalyzer(str(schema_path))
+
+    rows: list[tuple[str, str, str, str]] = []
+    for yaml_file in all_files:
+        report = analyzer.analyze_file(str(yaml_file), "GeneReview")
+        for path_score in report.path_scores:
+            for slot_score in path_score.slot_scores:
+                if slot_score.populated == 0:
+                    if path_score.path == "(root)":
+                        slot_path = slot_score.slot_name
+                    else:
+                        slot_path = f"{path_score.path}.{slot_score.slot_name}"
+                    rows.append(
+                        (
+                            str(yaml_file),
+                            slot_path,
+                            slot_score.slot_name,
+                            path_score.parent_class,
+                        )
+                    )
+
+    output_lines = ["file_path\tpath\tslot_name\tparent_class"]
+    output_lines.extend("\t".join(row) for row in rows)
+
+    if tsv_output:
+        tsv_output.parent.mkdir(parents=True, exist_ok=True)
+        tsv_output.write_text("\n".join(output_lines) + "\n")
+    else:
+        typer.echo("\n".join(output_lines))
+
+
 def _print_issue(issue, indent="  "):
     """Helper to print a validation issue with appropriate formatting."""
     symbol = {
@@ -820,6 +891,85 @@ def seed_goa(
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
             typer.echo("\n✓ No annotations added (all GOA annotations already present)")
+
+    except (ValueError, FileNotFoundError) as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def backfill_isoforms(
+    yaml_file: Annotated[Path, typer.Argument(help="Gene review YAML file to update")],
+    goa_file: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--goa", "-g", help="GOA TSV file (auto-detected if not provided)"
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run", help="Show what would be updated without modifying files"
+        ),
+    ] = False,
+):
+    """Backfill isoform field on existing annotations from GOA data.
+
+    This migration command adds the 'isoform' field to existing annotations
+    that match isoform-specific annotations in the GOA file. It does NOT
+    modify annotations that already have an isoform field.
+
+    Use this to update existing gene reviews after the isoform tracking
+    feature was added.
+
+    Examples:
+        ai-gene-review backfill-isoforms genes/human/WT1/WT1-ai-review.yaml
+        ai-gene-review backfill-isoforms test.yaml --goa custom-goa.tsv
+        ai-gene-review backfill-isoforms test.yaml --dry-run  # Preview changes
+    """
+    yaml_file = Path(yaml_file)
+
+    if not yaml_file.exists():
+        typer.echo(f"Error: YAML file not found: {yaml_file}", err=True)
+        raise typer.Exit(code=1)
+
+    # Initialize validator
+    validator = GOAValidator()
+
+    if dry_run:
+        # Just show what would be updated
+        try:
+            goa_path = goa_file
+            if goa_path is None:
+                yaml_stem = yaml_file.stem
+                if yaml_stem.endswith("-ai-review"):
+                    gene_name = yaml_stem[:-10]
+                    goa_path = yaml_file.parent / f"{gene_name}-goa.tsv"
+
+            goa_annotations = validator.parse_goa_file(goa_path)
+            isoform_anns = [a for a in goa_annotations if a.isoform]
+
+            if not isoform_anns:
+                typer.echo("No isoform-specific annotations found in GOA file")
+                return
+
+            typer.echo(f"Found {len(isoform_anns)} isoform-specific annotations in GOA:")
+            for ann in isoform_anns:
+                typer.echo(f"  {ann.go_id} ({ann.evidence_code}, {ann.reference}) -> {ann.isoform}")
+
+            typer.echo("\nUse without --dry-run to apply these updates")
+        except (ValueError, FileNotFoundError) as e:
+            typer.echo(f"Error: {e}", err=True)
+            raise typer.Exit(code=1)
+        return
+
+    try:
+        updated_count, output_path = validator.backfill_isoforms(yaml_file, goa_file)
+
+        if updated_count > 0:
+            typer.echo(f"✓ Updated {updated_count} annotations with isoform info in {output_path}")
+        else:
+            typer.echo("✓ No annotations needed isoform updates")
 
     except (ValueError, FileNotFoundError) as e:
         typer.echo(f"Error: {e}", err=True)
@@ -2072,6 +2222,105 @@ def rules_sync(
                 typer.echo("  (dry run - no files written)")
     else:
         typer.echo("Please specify file(s) or use --all to sync all reviews", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def render_projects(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Project markdown file(s) to render"),
+    ] = None,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for HTML files"),
+    ] = Path("pages/projects"),
+    genes_dir: Annotated[
+        Path,
+        typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
+    ] = Path("genes"),
+    all_projects: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Render all project files in projects/"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed output including all warnings"),
+    ] = False,
+):
+    """Render project markdown files to HTML with auto-linked gene symbols.
+
+    Converts project markdown files (from projects/) to HTML, automatically
+    linking gene symbols to their corresponding gene review pages.
+
+    Gene symbols are detected using word boundaries and linked to:
+    genes/{species}/{gene}/{gene}-ai-review.html
+
+    For ambiguous symbols (same gene in multiple species), add a 'species'
+    field to the markdown frontmatter to resolve:
+
+        ---
+        species: [human, mouse]
+        ---
+
+    Examples:
+        # Render all projects
+        ai-gene-review render-projects --all
+
+        # Render a specific project
+        ai-gene-review render-projects projects/FERROPTOSIS.md
+
+        # Render to custom output directory
+        ai-gene-review render-projects --all -o docs/projects
+    """
+    from ai_gene_review.render_projects import render_project, render_all_projects
+
+    if all_projects:
+        typer.echo("Rendering all project markdown files...")
+        output_paths, warnings = render_all_projects(
+            projects_dir=Path("projects"),
+            output_dir=output_dir,
+            genes_dir=genes_dir,
+        )
+
+        if verbose and warnings:
+            typer.echo("\nAll warnings:")
+            for warning in warnings:
+                typer.echo(f"  - {warning}")
+
+        typer.echo(f"\n✓ Rendered {len(output_paths)} projects to {output_dir}")
+
+    elif files:
+        total_warnings = []
+        for md_file in files:
+            if not md_file.exists():
+                typer.echo(f"Error: File not found: {md_file}", err=True)
+                continue
+
+            try:
+                output_path, warnings = render_project(
+                    md_file,
+                    output_dir=output_dir,
+                    genes_dir=genes_dir,
+                )
+                total_warnings.extend(warnings)
+
+                if warnings:
+                    typer.echo(f"✓ {md_file.name} -> {output_path} ({len(warnings)} warnings)")
+                    if verbose:
+                        for w in warnings:
+                            typer.echo(f"    - {w}")
+                else:
+                    typer.echo(f"✓ {md_file.name} -> {output_path}")
+
+            except Exception as e:
+                typer.echo(f"✗ {md_file.name}: {e}", err=True)
+
+        if total_warnings and not verbose:
+            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+
+    else:
+        typer.echo("Please specify file(s) or use --all to render all projects", err=True)
         raise typer.Exit(code=1)
 
 

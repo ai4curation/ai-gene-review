@@ -207,6 +207,60 @@ def test_parse_goa_annotation():
     assert ann.evidence_type == "ECO:0000353"  # From index 7
     assert ann.reference == "PMID:29727692"
     assert ann.taxon_id == "NCBITaxon:9606"
+    assert ann.isoform == ""  # No isoform in canonical accession
+
+
+def test_parse_goa_annotation_with_isoform():
+    """Test parsing a GOA annotation with isoform-specific annotation."""
+    # Row with isoform ID (e.g., P19544-1 for WT1 isoform 1)
+    row = [
+        "UniProtKB",
+        "P19544-1",  # Isoform 1
+        "WT1",
+        "involved_in",
+        "GO:0045892",
+        "negative regulation of DNA-templated transcription",
+        "BP",
+        "ECO:0000314",
+        "IDA",
+        "PMID:9815658",
+        "",
+        "9606",
+        "Homo sapiens",
+        "UniProt",
+        "Wilms tumor protein",
+        "20091207",
+    ]
+
+    ann = GOAAnnotation.from_tsv_row(row)
+
+    assert ann.db_object_id == "P19544-1"
+    assert ann.isoform == "P19544-1"  # Should capture full isoform ID
+    assert ann.go_id == "GO:0045892"
+    assert ann.evidence_code == "IDA"
+
+
+@pytest.mark.parametrize(
+    "db_object_id,expected_isoform",
+    [
+        ("P19544", ""),  # Canonical - no isoform
+        ("P19544-1", "P19544-1"),  # Isoform 1
+        ("P19544-2", "P19544-2"),  # Isoform 2
+        ("Q9Y697-2", "Q9Y697-2"),  # Another isoform
+        ("Q5VWQ8-10", "Q5VWQ8-10"),  # Double-digit isoform
+        ("A0A0C4DH72", ""),  # TrEMBL accession (no hyphen)
+        ("UniProtKB-SubCell", ""),  # Not an isoform (has hyphen but not numeric)
+        ("GO-123", ""),  # Not an isoform
+    ],
+)
+def test_isoform_extraction(db_object_id, expected_isoform):
+    """Test isoform extraction from various gene product IDs."""
+    row = ["UniProtKB", db_object_id, "TEST", "", "GO:0005515", "protein binding",
+           "MF", "ECO:0000353", "IPI", "PMID:12345", "", "9606", "Homo sapiens",
+           "UniProt", "Test protein", "20180515"]
+
+    ann = GOAAnnotation.from_tsv_row(row)
+    assert ann.isoform == expected_isoform
 
 
 def test_parse_goa_file(sample_goa_tsv):
@@ -733,13 +787,142 @@ UniProtKB	Q12345	TEST		GO:0005515	protein binding	MF	ECO:0000353	IPI	PMID:12345	
     goa_path.unlink()
 
 
+def test_seed_with_isoform_annotation():
+    """Test that isoform annotations are seeded with the isoform field populated."""
+    validator = GOAValidator()
+
+    # Create a GOA file with isoform-specific annotation
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	P19544	WT1		GO:0003700	DNA-binding transcription factor activity	MF	ECO:0000353	IPI	PMID:12345		9606	Homo sapiens	UniProt	Wilms tumor protein	20180515
+UniProtKB	P19544-1	WT1		GO:0045892	negative regulation of DNA-templated transcription	BP	ECO:0000314	IDA	PMID:9815658		9606	Homo sapiens	UniProt	Wilms tumor protein	20091207"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    # Create an empty YAML file
+    yaml_data = {
+        "id": "P19544",
+        "gene_symbol": "WT1",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Wilms tumor protein",
+        "existing_annotations": [],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        # Seed annotations
+        added_count, output_path, refs_added = validator.seed_missing_annotations(
+            yaml_path, goa_path
+        )
+
+        assert added_count == 2
+
+        # Load and verify the updated YAML
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        assert len(updated_data["existing_annotations"]) == 2
+
+        # Find the canonical and isoform annotations
+        canonical_ann = None
+        isoform_ann = None
+        for ann in updated_data["existing_annotations"]:
+            if ann["term"]["id"] == "GO:0003700":
+                canonical_ann = ann
+            elif ann["term"]["id"] == "GO:0045892":
+                isoform_ann = ann
+
+        # Canonical annotation should NOT have isoform field
+        assert canonical_ann is not None
+        assert "isoform" not in canonical_ann
+
+        # Isoform annotation SHOULD have isoform field
+        assert isoform_ann is not None
+        assert isoform_ann.get("isoform") == "P19544-1"
+
+    finally:
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
+def test_seed_with_negated_annotation():
+    """Test that NOT annotations are seeded with the negated field set to true."""
+    validator = GOAValidator()
+
+    # Create a GOA file with a NOT annotation
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	P19544	WT1	involved_in	GO:0045892	negative regulation of DNA-templated transcription	BP	ECO:0000314	IDA	PMID:9815658		9606	Homo sapiens	UniProt	Wilms tumor protein	20091207
+UniProtKB	P19544-1	WT1	NOT|involved_in	GO:0045893	positive regulation of DNA-templated transcription	BP	ECO:0000314	IDA	PMID:9815658		9606	Homo sapiens	UniProt	Wilms tumor protein	20091207"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    # Create an empty YAML file
+    yaml_data = {
+        "id": "P19544",
+        "gene_symbol": "WT1",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Wilms tumor protein",
+        "existing_annotations": [],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        # Seed annotations
+        added_count, output_path, refs_added = validator.seed_missing_annotations(
+            yaml_path, goa_path
+        )
+
+        assert added_count == 2
+
+        # Load and verify the updated YAML
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        assert len(updated_data["existing_annotations"]) == 2
+
+        # Find the positive (NOT) and negative annotations
+        positive_ann = None
+        negative_ann = None
+        for ann in updated_data["existing_annotations"]:
+            if ann["term"]["id"] == "GO:0045892":
+                negative_ann = ann
+            elif ann["term"]["id"] == "GO:0045893":
+                positive_ann = ann
+
+        # Negative regulation annotation should NOT be negated
+        assert negative_ann is not None
+        assert negative_ann.get("negated") is not True  # Should be absent or False
+
+        # Positive regulation annotation with NOT qualifier SHOULD be negated
+        assert positive_ann is not None
+        assert positive_ann.get("negated") is True
+        assert positive_ann.get("isoform") == "P19544-1"  # Also has isoform
+
+    finally:
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
 def test_seed_creates_new_file():
     """Test that seeding can create a new YAML file if it doesn't exist."""
     validator = GOAValidator()
 
     # Create a GOA file
     goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
-UniProtKB	Q12345	TEST		GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
         goa_file.write(goa_content)

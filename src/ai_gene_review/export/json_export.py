@@ -145,6 +145,11 @@ class JSONExporter:
         row["evidence_type"] = annotation.evidence_type
         row["negated"] = annotation.negated or False
 
+        # Isoform-specific annotation flag
+        # True if this annotation was made on a specific isoform (e.g., P19544-1)
+        row["is_for_isoform"] = bool(annotation.isoform) if hasattr(annotation, 'isoform') else False
+        row["isoform_id"] = annotation.isoform if hasattr(annotation, 'isoform') and annotation.isoform else None
+
         # Original reference information
         if annotation.original_reference_id:
             ref_id = annotation.original_reference_id

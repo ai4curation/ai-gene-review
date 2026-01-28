@@ -8,12 +8,12 @@ from pathlib import Path
 from Bio import SeqIO
 import re
 
-def test_jmjc_analysis_on_kdm4a():
-    """Test our JmjC analysis functions on KDM4A (an active demethylase)."""
+def run_jmjc_analysis_on_kdm4a() -> bool:
+    """Run JmjC analysis functions on KDM4A (an active demethylase)."""
     print("Testing pipeline with KDM4A (active demethylase)...")
     print("-" * 50)
     
-    data_dir = Path("data")
+    data_dir = Path(__file__).parent / "data"
     
     # Load KDM4A sequence
     with open(data_dir / "kdm4a_human.fasta") as f:
@@ -56,6 +56,11 @@ def test_jmjc_analysis_on_kdm4a():
     print("\n✓ Pipeline works correctly with different proteins!")
     
     return True
+
+
+def test_jmjc_analysis_on_kdm4a():
+    """Test our JmjC analysis functions on KDM4A (an active demethylase)."""
+    assert run_jmjc_analysis_on_kdm4a()
 
 def verify_no_hardcoding():
     """Verify that our scripts don't have hardcoded Epe1-specific values."""
@@ -100,7 +105,7 @@ def main():
     print("=" * 60)
     
     # Test 1: Run analysis on a different protein
-    test1_passed = test_jmjc_analysis_on_kdm4a()
+    test1_passed = run_jmjc_analysis_on_kdm4a()
     
     # Test 2: Check for hardcoding
     test2_passed = verify_no_hardcoding()

@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+
 import requests
 
-def test_goa_pagination(uniprot_id):
+try:
+    import pytest
+except ImportError:  # pragma: no cover - used only when pytest isn't installed
+    pytest = None
+
+if pytest is not None:
+    pytestmark = pytest.mark.integration
+
+def goa_pagination(uniprot_id: str):
     """Test GOA pagination to see if we're getting all results"""
     url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 
@@ -64,4 +76,14 @@ def test_goa_pagination(uniprot_id):
 
 # Test with TP53 which likely has many annotations
 print("Testing TP53 (P04637):")
-results = test_goa_pagination("P04637")
+def test_goa_pagination_smoke():
+    if pytest is None:
+        raise RuntimeError("pytest is required to run integration tests")
+    if os.environ.get("AI_GENE_REVIEW_INTEGRATION") != "1":
+        pytest.skip("Set AI_GENE_REVIEW_INTEGRATION=1 to run QuickGO tests.")
+    goa_pagination("P04637")
+
+
+if __name__ == "__main__":
+    print("Testing TP53 (P04637):")
+    goa_pagination("P04637")
