@@ -2,6 +2,85 @@
 
 all: validate-all test
 
+# Sync Claude Code commands into Codex custom prompts (namespaced).
+sync-codex-prompts:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    src_dir=".claude/commands"
+    dest_dir="${HOME}/.codex/prompts"
+    prefix="gr-"
+    mkdir -p "$dest_dir"
+    if [ ! -d "$src_dir" ]; then
+        echo "No $src_dir directory found."
+        exit 0
+    fi
+    shopt -s nullglob
+    for src in "$src_dir"/*.md; do
+        base="$(basename "$src" .md)"
+        dest="$dest_dir/${prefix}${base}.md"
+        cp "$src" "$dest"
+    done
+    shopt -u nullglob
+    echo "Synced commands from $src_dir to $dest_dir with prefix '$prefix'."
+    echo "Restart Codex to load new prompts."
+
+# Convert Claude subagents into Codex skills (stored in .codex/skills).
+sync-codex-skills:
+    #!/usr/bin/env python3
+    from pathlib import Path
+
+    src_dir = Path(".claude/agents")
+    dest_root = Path(".codex/skills")
+    dest_root.mkdir(parents=True, exist_ok=True)
+
+    if not src_dir.exists():
+        print(f"No {src_dir} directory found.")
+        raise SystemExit(0)
+
+    for src in sorted(src_dir.glob("*.md")):
+        text = src.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            continue
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+        frontmatter = parts[1]
+        body = parts[2].lstrip("\n")
+
+        name = None
+        description = None
+        for line in frontmatter.splitlines():
+            if line.startswith("name:"):
+                name = line.split(":", 1)[1].strip()
+            elif line.startswith("description:"):
+                description = line.split(":", 1)[1].strip()
+
+        if not name:
+            name = src.stem
+        if not description:
+            description = f"Converted from {src.as_posix()}"
+
+        def yaml_quote(value: str) -> str:
+            escaped = value.replace("\\", "\\\\").replace("\"", "\\\"")
+            escaped = escaped.replace("\n", "\\n")
+            return f"\"{escaped}\""
+
+        skill_dir = dest_root / name
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        skill_path = skill_dir / "SKILL.md"
+        skill_text = (
+            "---\n"
+            f"name: {name}\n"
+            f"description: {yaml_quote(description)}\n"
+            "metadata:\n"
+            f"  short-description: {yaml_quote(f'Converted from {src.as_posix()}')}\n"
+            "---\n\n"
+            f"{body}"
+        )
+        skill_path.write_text(skill_text, encoding="utf-8")
+
+    print(f"Synced Claude agents from {src_dir} into {dest_root}.")
+
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
@@ -88,6 +167,31 @@ deep-research-cyberian organism gene_id *args="":
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
+# Term deep research (open-ended biological concepts)
+# Examples:
+#   just term-deep-research-openai "JAK-STAT pathway"
+#   just term-deep-research-openai "OXPHOS complex"
+#   just term-deep-research-openai "Cellulosome"
+#   just term-deep-research-perplexity "Respiratory complex I"
+#   just term-deep-research-perplexity-lite "Iron-sulfur cluster biogenesis"
+term-deep-research-openai concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" openai {{args}}
+
+term-deep-research-perplexity concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" perplexity {{args}}
+
+term-deep-research-perplexity-lite concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" perplexity-lite {{args}}
+
+term-deep-research-falcon concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" falcon {{args}}
+
+term-deep-research-cyberian concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
+
+term-deep-research-codex concept *args="":
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
@@ -185,6 +289,18 @@ validate-all:
     @echo ""
     @echo "Checking PMID references in all pathway markdown files..."
     @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
+
+# Compliance report for recommended fields (separate from validation-all.tsv)
+compliance-all:
+    @echo "Analyzing recommended-field compliance..."
+    @mkdir -p reports
+    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+
+# Compliance report with HTML dashboard (linkml-data-qc)
+compliance-dashboard:
+    @echo "Generating compliance dashboard..."
+    @mkdir -p reports/compliance-dashboard
+    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -334,6 +450,54 @@ check-missing-goa organism:
         echo "Run 'just seed-goa-organism {{organism}}' to fix"
     fi
 
+# Backfill isoform field on existing annotations for a specific gene
+backfill-isoforms organism gene:
+    uv run ai-gene-review backfill-isoforms genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
+
+# Backfill isoform field for all genes in an organism
+backfill-isoforms-organism organism:
+    #!/usr/bin/env bash
+    echo "Backfilling isoform info for all {{organism}} genes..."
+    count=0
+    updated=0
+    for yaml in genes/{{organism}}/*/*-ai-review.yaml; do
+        if [ -f "$yaml" ]; then
+            gene=$(basename $(dirname "$yaml"))
+            result=$(uv run ai-gene-review backfill-isoforms "$yaml" 2>&1)
+            if echo "$result" | grep -q "Updated [1-9]"; then
+                echo "$gene: $result"
+                updated=$((updated + 1))
+            fi
+            count=$((count + 1))
+        fi
+    done
+    echo "Processed $count genes, updated $updated with isoform info"
+
+# Backfill isoform field for ALL genes (use with caution)
+backfill-isoforms-all:
+    #!/usr/bin/env bash
+    echo "Backfilling isoform info for ALL genes..."
+    total=0
+    updated=0
+    for organism_dir in genes/*/; do
+        if [ -d "$organism_dir" ]; then
+            organism=$(basename "$organism_dir")
+            echo "Processing organism: $organism"
+            for yaml in "$organism_dir"/*/*-ai-review.yaml; do
+                if [ -f "$yaml" ]; then
+                    gene=$(basename $(dirname "$yaml"))
+                    result=$(uv run ai-gene-review backfill-isoforms "$yaml" 2>&1)
+                    if echo "$result" | grep -q "Updated [1-9]"; then
+                        echo "  $gene: $result"
+                        updated=$((updated + 1))
+                    fi
+                    total=$((total + 1))
+                fi
+            done
+        fi
+    done
+    echo "Total: Processed $total genes, updated $updated with isoform info"
+
 # ============== Rendering ==============
 
 # Render a single gene review YAML as HTML (custom renderer)
@@ -347,6 +511,14 @@ render-organism organism:
 # Render all gene reviews as HTML
 render-all:
     uv run python -m ai_gene_review.render --all genes/
+
+# Render project markdown files to HTML with auto-linked gene symbols
+render-projects:
+    uv run ai-gene-review render-projects --all
+
+# Render a specific project markdown to HTML
+render-project project:
+    uv run ai-gene-review render-projects projects/{{project}}.md
 
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:

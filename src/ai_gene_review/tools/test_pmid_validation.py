@@ -6,8 +6,8 @@ sys.path.insert(0, 'src')
 
 from ai_gene_review.tools.validate_pmid_references import extract_pmids_from_markdown
 
-def test_pmid_extraction():
-    """Test that PMID extraction correctly identifies valid and invalid PMIDs."""
+def run_pmid_extraction() -> bool:
+    """Run PMID extraction checks for valid and invalid PMIDs."""
     
     test_cases = [
         # (markdown_content, expected_valid, expected_invalid)
@@ -62,8 +62,13 @@ def test_pmid_extraction():
     
     return all_passed
 
-def test_jak1_pathway():
-    """Test the actual JAK1 pathway file."""
+
+def test_pmid_extraction():
+    """Test that PMID extraction correctly identifies valid and invalid PMIDs."""
+    assert run_pmid_extraction()
+
+def run_jak1_pathway() -> bool:
+    """Run the actual JAK1 pathway file check."""
     jak1_path = Path("genes/human/JAK1/JAK1-pathway.md")
     
     if not jak1_path.exists():
@@ -91,6 +96,11 @@ def test_jak1_pathway():
         print("  ✅ All PMIDs are valid")
         return True
 
+
+def test_jak1_pathway():
+    """Test the actual JAK1 pathway file."""
+    assert run_jak1_pathway()
+
 def main():
     """Run all tests."""
     print("="*60)
@@ -98,10 +108,10 @@ def main():
     print("="*60)
     
     # Run extraction tests
-    extraction_passed = test_pmid_extraction()
+    extraction_passed = run_pmid_extraction()
     
     # Run JAK1 pathway test
-    jak1_passed = test_jak1_pathway()
+    jak1_passed = run_jak1_pathway()
     
     print("\n" + "="*60)
     if extraction_passed and jak1_passed:

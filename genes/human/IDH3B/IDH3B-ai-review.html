@@ -1,0 +1,3784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDH3B - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>IDH3B</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O43837" target="_blank" class="term-link">
+                        O43837
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "IDH3B";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O43837" data-a="DESCRIPTION: IDH3B encodes the beta subunit of mitochondrial NA..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>IDH3B encodes the beta subunit of mitochondrial NAD-dependent isocitrate dehydrogenase 3 (IDH3). The functional IDH3 enzyme is a heterotetramer with alpha2-beta-gamma stoichiometry (2alpha:1beta:1gamma), where the alpha subunits (IDH3A) are catalytic, while beta (IDH3B) and gamma (IDH3G) play structural and regulatory roles. IDH3B does NOT have intrinsic catalytic activity on its own - expression of beta subunit alone shows no detectable activity [PMID:10601238]. The alphabeta and alphagamma dimers exhibit significant IDH activity, but the full heterotetramer is required for maximal activity and proper allosteric regulation [PMID:14555658]. The IDH3 complex catalyzes the irreversible oxidative decarboxylation of isocitrate to alpha-ketoglutarate in the TCA cycle. Beta-Arg99 is required for normal ADP activation of the enzyme but is not essential for catalysis [PMID:14555658]. IDH3B localizes to the mitochondrial matrix. Biallelic variants cause retinitis pigmentosa 46 (RP46). IDH3B exists as multiple isoforms (beta1 and beta2) due to alternative splicing, with tissue-specific expression patterns affecting the pH optimum of the enzyme complex [PMID:10601238].</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDH3B is well-established as a mitochondrial protein. The IBA annotation is phylogenetically well-supported across eukaryotes. UniProt indicates a mitochondrial transit peptide (residues 1-34) and documents mitochondrial localization. PMID:10601238 describes IDH3B as part of &#34;mitochondrial NAD(+)-dependent isocitrate dehydrogenase&#34; and discusses its function in the context of mitochondrial enzyme complexes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is correct and well-supported by phylogenetic inference, UniProt annotation, and experimental literature. While mitochondrial matrix (GO:0005759) is more precise, this broader term is acceptable for the IBA evidence type.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the interactions and functional role of each of the three mitochondrial NAD(+)-dependent isocitrate dehydrogenase (IDH) subunits (alpha, beta, and gamma)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0006099" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDH3B is a component of the NAD-dependent isocitrate dehydrogenase complex that catalyzes a key step of the TCA cycle. While the beta subunit is not itself catalytic, it is essential for proper complex assembly and function in the TCA cycle [PMID:10601238, PMID:14555658]. The IBA annotation appropriately captures the involvement of IDH3B in this process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As an essential structural component of the IDH3 complex, IDH3B participates in the TCA cycle even though it lacks intrinsic catalytic activity. The phylogenetic evidence supports this annotation across eukaryotes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Among the various combinations of human IDH subunits co-expressed in bacteria, alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006102" target="_blank" class="term-link">
+                                    GO:0006102
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0006102" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDH3B participates in isocitrate metabolism as part of the IDH3 complex. The complex converts isocitrate to alpha-ketoglutarate. While IDH3B is not the catalytic subunit, it is required for proper complex assembly and activity [PMID:10601238].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation correctly captures IDH3B&#39;s involvement in isocitrate metabolism through its role in the IDH3 complex. Well-supported by phylogenetic analysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0000287" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from InterPro domain IPR019818 (IsoCit/isopropylmalate_DH_CS). However, in the IDH3 complex, Mg2+ (or Mn2+) binding occurs at the active site in the catalytic alpha subunit, not in the structural beta subunit. The deep research notes that the enzyme &#34;is a heterooctamer containing two copies of a heterotetramer of two IDH3A, one IDH3B, one IDH3G, and two Mn++&#34; [Reactome:R-HSA-70967], suggesting metal binding is associated with the catalytic subunits. No direct evidence supports magnesium binding by IDH3B specifically.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the InterPro domain is present, the functional magnesium/metal binding site is located in the catalytic alpha subunit. IDH3B shares sequence/structural homology with dehydrogenases but its specific role is structural, not catalytic. This IEA annotation represents domain-based inference that does not reflect the actual function of this specific subunit.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization inferred from UniProt subcellular location annotation. This is consistent with experimental evidence and the IBA annotation above.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation based on UniProt curation. IDH3B has a mitochondrial transit peptide and functions in the mitochondrial matrix.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated annotation correctly identifies IDH3B&#39;s involvement in the TCA cycle. Consistent with IBA annotation and experimental literature.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation. IDH3B is part of the IDH3 complex that catalyzes a key TCA cycle step.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from InterPro domain IPR019818. However, PMID:10601238 demonstrates that &#34;subunits produced alone ... showed no detectable activity&#34; and establishes that &#34;the alpha is the catalytic subunit.&#34; IDH3B shares the dehydrogenase domain but does not itself possess oxidoreductase activity - it is a structural/ regulatory subunit of the complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDH3B does not have intrinsic oxidoreductase activity. The beta subunit alone shows no detectable enzymatic activity [PMID:10601238]. This annotation incorrectly attributes the catalytic activity of the complex to the non-catalytic beta subunit based solely on domain homology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">subunits produced alone and betagamma showed no detectable activity. These data suggest that the alpha is the catalytic subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is inferred from InterPro domain IPR019818. While IDH3B shares structural homology with NAD-binding dehydrogenases, the functional NAD binding and catalysis occurs in the alpha subunit. PMID:14555658 shows that mutations in the gamma subunit affect NAD binding (gamma-R97Q has 10-fold higher Km for NAD), but the beta subunit&#39;s role is in ADP activation, not NAD binding at the catalytic site. However, the beta subunit may contribute to the nucleotide binding pocket architecture.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is based on domain homology rather than demonstrated function. IDH3B contributes to the complex structure and ADP-mediated regulation but is not itself the primary NAD-binding subunit. The catalytic NAD binding site is in IDH3A.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                        PMID:14555658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the beta and gamma subunits have roles in the nucleotide functions of this allosteric enzyme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045242" target="_blank" class="term-link">
+                                    GO:0045242
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate dehydrogenase complex (NAD+)</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0045242" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDH3B is a core component of the NAD-dependent isocitrate dehydrogenase complex. The complex has 2alpha:1beta:1gamma stoichiometry [PMID:14555658]. This cellular component annotation is entirely appropriate for IDH3B.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct annotation. IDH3B is an established subunit of the IDH3 complex, confirmed by co-expression studies and structural analysis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                        PMID:14555658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for mitochondrial localization from HPA immunofluorescence data. This provides direct experimental support for the mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (IDA from immunofluorescence) confirms mitochondrial localization, consistent with all other evidence sources.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14555658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evaluation by mutagenesis of the importance of 3 arginines i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="PMID:14555658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:14555658 is a study of human NAD-dependent isocitrate dehydrogenase expressed in bacteria. The paper discusses the enzyme&#39;s function in the context of mitochondrial metabolism but does not directly demonstrate mitochondrial localization - hence NAS (non-traceable author statement) is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While the evidence is indirect, mitochondrial localization is well-established from multiple other sources. This annotation is consistent with the overall body of evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                        PMID:14555658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mammalian NAD-dependent isocitrate dehydrogenase is an allosteric enzyme</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14555658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evaluation by mutagenesis of the importance of 3 arginines i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0006099" data-r="PMID:14555658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:14555658 demonstrates that the IDH3 complex including the beta subunit has isocitrate dehydrogenase activity, which is a key TCA cycle reaction. The study shows IDH activity of purified complexes containing beta subunit [PMID:14555658].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence that IDH3B-containing complexes have isocitrate dehydrogenase activity, supporting involvement in TCA cycle.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                        PMID:14555658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specific activities of 22, 14, and 2 micromol of NADH/min/mg were measured, respectively, for WT, beta-R99Q, and gamma-R97Q enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:34800366 is a high-throughput mitochondrial proteomics study that identified IDH3B in the human mitochondrial proteome. This provides orthogonal mass spectrometry- based evidence for mitochondrial localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-quality proteomics study confirming IDH3B presence in the mitochondrial proteome.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Quantitative high-confidence human mitochondrial proteome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045242" target="_blank" class="term-link">
+                                    GO:0045242
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate dehydrogenase complex (NAD+)</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14555658
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evaluation by mutagenesis of the importance of 3 arginines i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0045242" data-r="PMID:14555658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:14555658 provides direct experimental evidence that IDH3B is a component of the IDH3 complex. The study purified the complex and demonstrated the 2alpha:1beta:1gamma stoichiometry through expression and biochemical analysis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration that IDH3B is part of the IDH3 complex with defined stoichiometry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                        PMID:14555658
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Wild type (WT) and mutant enzymes (each containing 2 normal subunits plus a mutant subunit with alpha-R88Q, beta-R99Q, or gamma-R97Q) were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition and a native molecular mass of 315 kDa</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005634" data-r="PMID:21630459" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:21630459 is a proteomic study of the human sperm nucleus that identified IDH3B among 403 nuclear proteins. This is a specialized cell type where metabolic proteins may be present in the nuclear fraction during spermatogenesis. The nuclear localization is likely context-specific rather than representing a core localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The detection in sperm nuclear proteome may represent a specialized developmental context. IDH3B&#39;s primary localization is mitochondrial, and nuclear detection may reflect the unique chromatin remodeling during spermiogenesis or technical co-purification. This is not a core localization but should be retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                                        PMID:21630459
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">403 different proteins have been identified from the isolated sperm nuclei</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-70967
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005759" data-r="Reactome:R-HSA-70967" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway R-HSA-70967 &#34;IDH3 complex decarboxylates isocitrate&#34; places the IDH3 complex, including IDH3B, in the mitochondrial matrix. This is the most specific and accurate localization for IDH3B&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial matrix is the precise subcellular location where IDH3 functions in the TCA cycle. This is the most informative localization annotation for IDH3B.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10601238
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and functional characterization of a novel, t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0009055" data-r="PMID:10601238" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:10601238 does not support electron transfer activity for IDH3B. The paper demonstrates that the IDH3 complex has isocitrate dehydrogenase activity (reducing NAD+ to NADH), but this is not the same as electron transfer activity. Electron transfer activity (GO:0009055) refers to proteins that function as electron carriers (like cytochromes or ferredoxins), not dehydrogenases that use NAD+ as a cofactor. Furthermore, IDH3B specifically is the non-catalytic subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Incorrect annotation. GO:0009055 (electron transfer activity) is inappropriate for IDH3B. The NAD+-dependent dehydrogenase reaction is not electron transfer activity in the GO sense. Additionally, IDH3B is not catalytically active - the paper states &#34;subunits produced alone ... showed no detectable activity.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">subunits produced alone and betagamma showed no detectable activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004449" target="_blank" class="term-link">
+                                    GO:0004449
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10601238
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and functional characterization of a novel, t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0004449" data-r="PMID:10601238" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:10601238 explicitly demonstrates that IDH3B alone does not have isocitrate dehydrogenase activity. The paper states &#34;subunits produced alone and betagamma showed no detectable activity&#34; and concludes that &#34;the alpha is the catalytic subunit.&#34; While the alphabeta dimer has activity, this is due to the alpha subunit, not beta.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cited paper PMID:10601238 directly contradicts this annotation. IDH3B does not have intrinsic isocitrate dehydrogenase activity. The beta subunit is structural/ regulatory, and attributing the catalytic activity to it is incorrect. This is a case where the annotation was likely made at the complex level and incorrectly propagated to the non-catalytic subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">subunits produced alone and betagamma showed no detectable activity. These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10601238
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and functional characterization of a novel, t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005739" data-r="PMID:10601238" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:10601238 describes IDH3B as part of &#34;mitochondrial NAD(+)-dependent isocitrate dehydrogenase&#34; and discusses it in the context of mitochondrial function. The mitochondrial localization is well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The paper describes IDH3B as a mitochondrial protein. Consistent with all other evidence for mitochondrial localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the interactions and functional role of each of the three mitochondrial NAD(+)-dependent isocitrate dehydrogenase (IDH) subunits</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006102" target="_blank" class="term-link">
+                                    GO:0006102
+                                </a>
+                            </span>
+                            <span class="term-label">isocitrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10601238
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and functional characterization of a novel, t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0006102" data-r="PMID:10601238" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:10601238 demonstrates that IDH3B contributes to isocitrate metabolism as part of the IDH3 complex. While IDH3B is not catalytic, it plays &#34;an essential supporting role for activity&#34; in isocitrate oxidation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDH3B participates in isocitrate metabolism through its essential structural role in the IDH3 complex. The paper demonstrates that beta-containing complexes have isocitrate dehydrogenase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10601238
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and functional characterization of a novel, t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O43837" data-a="GO:0005198" data-r="PMID:10601238" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDH3B functions as a structural subunit of the IDH3 complex. PMID:10601238 demonstrates that the beta subunit alone has no catalytic activity (&#34;subunits produced alone and betagamma showed no detectable activity&#34;) but plays &#34;an essential supporting role for activity.&#34; The beta subunit is required for proper complex assembly and function. Deep research confirms that IDH3B plays a structural/regulatory role in the heterotetramer [file:human/IDH3B/IDH3B-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures IDH3B&#39;s established role as a structural component of the IDH3 enzyme complex. The term GO:0005198 is defined as &#34;The action of a molecule that contributes to the structural integrity of a complex&#34; which accurately describes IDH3B&#39;s function. This is a more appropriate molecular function annotation than the catalytic activity terms that were incorrectly attributed to IDH3B.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                        PMID:10601238
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/IDH3B/IDH3B-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">IDH3B appears to play a structural/regulatory role in the complex, as opposed to a catalytic one</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>IDH3B functions as a structural/regulatory subunit of the mitochondrial NAD-dependent isocitrate dehydrogenase complex. It does not have intrinsic catalytic activity but is essential for proper complex assembly, stability, and allosteric regulation. The beta subunit contributes to ADP-mediated activation of the enzyme.</h3>
+                <span class="vote-buttons" data-g="O43837" data-a="FUNCTION: IDH3B functions as a structural/regulatory subunit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045242" target="_blank" class="term-link">
+                            isocitrate dehydrogenase complex (NAD+)
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                                PMID:14555658
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                                PMID:10601238
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domain IPR019818 (IsoCit/isopropylmalate_DH_CS) is present in IDH3B but catalytic residues are in the alpha subunit</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic analysis supports IDH3B mitochondrial localization and TCA cycle involvement across eukaryotes</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt documents mitochondrial localization with transit peptide</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HPA immunofluorescence confirms mitochondrial localization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complex membership annotation transferred from mouse ortholog</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Automated methods correctly identify TCA cycle involvement</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10601238" target="_blank" class="term-link">
+                            PMID:10601238
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification and functional characterization of a novel, tissue-specific NAD(+)-dependent isocitrate dehydrogenase beta subunit isoform.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3B exists as two isoforms (beta1 and beta2) due to alternative splicing</div>
+                        
+                        <div class="finding-text">"the smaller beta(2) transcript (1.3 kilobases) is primarily expressed in heart and skeletal muscle, whereas the larger beta(1) mRNA (1.6 kilobases) is prevalent in nonmuscle tissues"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta subunit alone has no detectable IDH activity</div>
+                        
+                        <div class="finding-text">"subunits produced alone and betagamma showed no detectable activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alpha is the catalytic subunit</div>
+                        
+                        <div class="finding-text">"These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alphabeta and alphagamma dimers have IDH activity</div>
+                        
+                        <div class="finding-text">"alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta isoforms affect pH optimum of enzyme activity</div>
+                        
+                        <div class="finding-text">"Substitution of beta(1) with beta(2) in the co-expression system lowered the pH optimum for IDH activity from 8.0 to 7.6"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14555658" target="_blank" class="term-link">
+                            PMID:14555658
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evaluation by mutagenesis of the importance of 3 arginines in alpha, beta, and gamma subunits of human NAD-dependent isocitrate dehydrogenase.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3 complex has 2alpha:1beta:1gamma stoichiometry with 315 kDa molecular mass</div>
+                        
+                        <div class="finding-text">"Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition and a native molecular mass of 315 kDa"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta-R99Q mutant retains 64% of wild-type activity (14 vs 22 micromol NADH/min/mg)</div>
+                        
+                        <div class="finding-text">"Specific activities of 22, 14, and 2 micromol of NADH/min/mg were measured, respectively, for WT, beta-R99Q, and gamma-R97Q enzymes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta-Arg99 is required for normal ADP activation but not essential for catalysis</div>
+                        
+                        <div class="finding-text">"for beta-R99Q and gamma-R97Q enzymes, the Km for isocitrate is the same in the absence or presence of ADP, although all the enzymes bind ADP"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alpha-Arg88 is essential for catalysis (alpha-R88Q has no activity)</div>
+                        
+                        <div class="finding-text">"mutant enzymes with normal beta and gamma subunits and alpha-R88Q mutant subunit has no detectable activity, demonstrating that ... alpha-Arg88 is essential for catalysis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta and gamma subunits have roles in nucleotide functions of the allosteric enzyme</div>
+                        
+                        <div class="finding-text">"the beta and gamma subunits have roles in the nucleotide functions of this allosteric enzyme"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3B detected in sperm nuclear proteome among 403 proteins</div>
+                        
+                        <div class="finding-text">"403 different proteins have been identified from the isolated sperm nuclei"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput proteomics confirms IDH3B in mitochondrial proteome</div>
+                        
+                        <div class="finding-text">"Quantitative high-confidence human mitochondrial proteome"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-70967
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">IDH3 complex decarboxylates isocitrate</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3 complex catalyzes isocitrate + NAD+ to alpha-ketoglutarate + CO2 + NADH in mitochondrial matrix</div>
+                        
+                        <div class="finding-text">"Mitochondrial isocitrate dehydrogenase IDH3 catalyzes the irreversible reaction of isocitrate and NAD+ to form alpha-ketoglutarate, CO2, and NADH"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complex is heterooctamer with 2alpha:1beta:1gamma heterotetramer repeated twice plus Mn++</div>
+                        
+                        <div class="finding-text">"The enzyme is a heterooctamer containing two copies of a heterotetramer of two IDH3A, one IDH3B, one IDH3G, and two Mn++"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Activated by ADP, inhibited by NADH and high ATP</div>
+                        
+                        <div class="finding-text">"It is activated by ADP (Soundar et al., 2003, 2006; Bzymek and Colman, 2007) and inhibited by NADH and high concentrations of ATP"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/IDH3B/IDH3B-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for IDH3B</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3 complex has alpha2-beta-gamma stoichiometry where beta plays structural/regulatory role</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AlphaBeta dimer has ~16% of heterotetramer activity while AlphaGamma dimer has ~36%</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Allosteric regulation by citrate and ADP occurs through gamma subunit, not beta</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IDH3B required for spermiogenesis in mouse knockout studies</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic IDH3B variants cause retinitis pigmentosa 46</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(IDH3B-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43837" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-26T13:54:13.572226'<br />
+end_time: '2026-01-26T13:58:36.698407'<br />
+duration_seconds: 263.13<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: IDH3B<br />
+  gene_symbol: IDH3B<br />
+  uniprot_accession: O43837<br />
+  protein_description: 'RecName: Full=Isocitrate dehydrogenase [NAD] subunit beta,<br />
+    mitochondrial; AltName: Full=Isocitric dehydrogenase subunit beta; AltName: Full=NAD(+)-specific<br />
+    ICDH subunit beta; Flags: Precursor;'<br />
+  gene_info: Name=IDH3B;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the isocitrate and isopropylmalate<br />
+  protein_domains: IsoCit/isopropylmalate_DH_CS. (IPR019818); Isocitrate_DH_NAD. (IPR004434);<br />
+    IsoPropMal-DH-like_dom. (IPR024084); Iso_dh (PF00180)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O43837</li>
+<li><strong>Protein Description:</strong> RecName: Full=Isocitrate dehydrogenase [NAD] subunit beta, mitochondrial; AltName: Full=Isocitric dehydrogenase subunit beta; AltName: Full=NAD(+)-specific ICDH subunit beta; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=IDH3B;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the isocitrate and isopropylmalate</li>
+<li><strong>Key Domains:</strong> IsoCit/isopropylmalate_DH_CS. (IPR019818); Isocitrate_DH_NAD. (IPR004434); IsoPropMal-DH-like_dom. (IPR024084); Iso_dh (PF00180)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "IDH3B" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'IDH3B' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>IDH3B</strong> (gene ID: IDH3B, UniProt: O43837) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O43837</li>
+<li><strong>Protein Description:</strong> RecName: Full=Isocitrate dehydrogenase [NAD] subunit beta, mitochondrial; AltName: Full=Isocitric dehydrogenase subunit beta; AltName: Full=NAD(+)-specific ICDH subunit beta; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=IDH3B;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the isocitrate and isopropylmalate</li>
+<li><strong>Key Domains:</strong> IsoCit/isopropylmalate_DH_CS. (IPR019818); Isocitrate_DH_NAD. (IPR004434); IsoPropMal-DH-like_dom. (IPR024084); Iso_dh (PF00180)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "IDH3B" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'IDH3B' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>IDH3B</strong> (gene ID: IDH3B, UniProt: O43837) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status update: We verified the target identity and collected recent, authoritative sources focused on the human IDH3B subunit of mitochondrial isocitrate dehydrogenase 3 (IDH3). We synthesized functional, mechanistic, localization, regulation, disease, and quantitative data, prioritizing 2022–2024 peer‑reviewed literature where available.</p>
+<p>Comprehensive Research Report: Human IDH3B (UniProt: O43837)</p>
+<p>1) Key concepts and definitions<br />
+- Identity and gene/protein verification: IDH3B encodes the beta subunit of the mitochondrial NAD-dependent isocitrate dehydrogenase 3 complex (IDH3). IDH3 catalyzes the irreversible oxidative decarboxylation of isocitrate to alpha‑ketoglutarate (α‑KG) and CO2, reducing NAD+ to NADH in the tricarboxylic acid (TCA) cycle. These features distinguish IDH3 (NAD+-dependent, mitochondrial) from IDH1/2 (NADP+-dependent; IDH1 cytosolic/peroxisomal; IDH2 mitochondrial) (https://doi.org/10.1016/j.jbc.2022.102387, Sep 2022; https://doi.org/10.1242/dmm.036426, Dec 2018; https://doi.org/10.3390/cancers15112883, May 2023) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Organism confirmation: All cited primary and review sources explicitly address mammalian/human IDH3 and subunits including IDH3B (https://doi.org/10.1016/j.jbc.2022.102387; https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Family/domains alignment: IDH3B belongs to the mitochondrial isocitrate dehydrogenase 3 family and carries conserved isocitrate dehydrogenase domains shared with the IsoCit/isopropylmalate_DH clan; the beta subunit plays primarily structural/regulatory roles within the complex (https://doi.org/10.1016/j.jbc.2022.102387; https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).</p>
+<p>2) Molecular function, reaction, substrate specificity, and localization<br />
+- Enzymatic reaction: IDH3 catalyzes isocitrate + NAD+ → α‑KG + CO2 + NADH. Unlike IDH1/2, IDH3 is NAD+-specific and functions in the canonical TCA cycle (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Substrate/cofactor specificity: Substrate is isocitrate; cofactor is NAD+. The reaction is physiologically irreversible in the TCA direction under mitochondrial conditions (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Complex composition/stoichiometry: Functional IDH3 is an α2βγ heterotetramer; α subunits are catalytic, β (IDH3B) contributes structural/assembly functions and influences allosteric regulation, and γ (IDH3G) has key allosteric roles (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Localization: IDH3 resides in the mitochondrial matrix. Expression is enriched in mitochondria‑rich tissues (e.g., heart, skeletal muscle, brain, retina) (https://doi.org/10.1016/j.jbc.2022.102387; https://doi.org/10.1242/dmm.036426) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6).</p>
+<p>3) Biochemical pathway context and regulation<br />
+- Pathway role: IDH3 is a central, rate‑influencing step of the TCA cycle, producing α‑KG and mitochondrial NADH that fuels oxidative phosphorylation. By managing α‑KG levels, IDH3 impacts α‑KG–dependent dioxygenase activities with downstream epigenetic effects noted in development and reprogramming contexts (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 9-10).<br />
+- Regulation/allostery: IDH3 activity is modulated by cellular energy and redox state. Reported activators include citrate/isocitrate, ADP, NAD+, and divalent cations (Mg2+, Mn2+, Ca2+), while inhibitors include NADH, α‑KG, and ATP; the β and γ subunits set effector sensitivity. Distinct activities have been measured for partial dimers vs. the heterotetramer (α–γ dimer ~36% of tetramer activity; α–β dimer ~16%), indicating subunit‑dependent regulation (https://doi.org/10.3390/cancers15112883; https://doi.org/10.1242/dmm.036426) (solomou2023mutantidhin pages 1-2, findlay2018mouseidh3amutations pages 11-13).</p>
+<p>4) Structure–function, assembly, and quantitative data<br />
+- Subunit activities and assembly: Biochemical studies demonstrate differing specific activities of αγ and αβ dimers relative to the α2βγ tetramer, consistent with non‑catalytic subunits tuning activity and allosteric responses (α–γ ≈ 36%; α–β ≈ 16% of tetramer) (https://doi.org/10.1242/dmm.036426) (findlay2018mouseidh3amutations pages 11-13).<br />
+- Tissue‑specific compensation: In Idh3b knockout mice, testes show coordinated subunit expression changes (e.g., ~75% reduction in IDH3A and ~35% increase in IDH3G), illustrating tissue‑specific assembly compensation and dependence (https://doi.org/10.1016/j.jbc.2022.102387) (zhu2022isocitratedehydrogenase3b pages 1-2).<br />
+- Mitochondrial reserve capacity: Photoreceptor mitochondria operate near their maximal respiratory rate (~70–80%), leaving low reserve; this helps explain retinal vulnerability to partial IDH3 dysfunction (https://doi.org/10.1242/dmm.036426) (findlay2018mouseidh3amutations pages 4-6).</p>
+<p>5) Recent developments and latest research (priority 2023–2024)<br />
+- 2023 review of mutant IDH and physiology: Comprehensive discussion of IDH family biology emphasizes IDH3’s role in the mitochondrial TCA cycle, subunit functions (α catalytic; β structural; γ allosteric), and lack of canonical tumor‑driver mutations in IDH3 subunits compared to IDH1/2 (https://doi.org/10.3390/cancers15112883, May 2023) (solomou2023mutantidhin pages 1-2).<br />
+- Developmental/epigenetic context: Emerging work summarized in recent reviews indicates that IDH enzymes (notably IDH3A) can transiently localize to the nucleus during early development/reprogramming, implicating mitochondrial‑nuclear metabolic coupling; although shown for IDH3A, this underscores systems‑level roles of the IDH3 complex composition that includes β (IDH3B) (https://doi.org/10.3390/cancers15112883, May 2023) (solomou2023mutantidhin pages 9-10).<br />
+- 2022 functional genetics in mammals (near‑current and highly relevant): IDH3B is essential for spermiogenesis in mice, with loss causing male infertility but not retinal degeneration, refining tissue‑specific functional annotation of IDH3B (https://doi.org/10.1016/j.jbc.2022.102387, Sep 2022) (zhu2022isocitratedehydrogenase3b pages 1-2).</p>
+<p>6) Disease associations, genetics, and clinical relevance<br />
+- Inherited retinal disease (IRD): Biallelic IDH3B variants have been reported in families with nonsyndromic retinitis pigmentosa; experimental mouse Idh3a and human genetics highlight retinal susceptibility to IDH3 perturbation, consistent with high mitochondrial load in photoreceptors (https://doi.org/10.1242/dmm.036426, Dec 2018) (findlay2018mouseidh3amutations pages 4-6).<br />
+- Species differences: Despite human reports, Idh3b−/− mice do not show retinal degeneration or impaired mitochondrial respiration in embryonic fibroblasts through P180, illustrating species and tissue‑specific differences and potential compensation (https://doi.org/10.1242/dmm.036426, Dec 2018) (findlay2018mouseidh3amutations pages 8-11).<br />
+- Spermatogenesis/male infertility: Genetic ablation of Idh3b in mice reveals a critical requirement for spermiogenesis; IDH3B deficiency impairs sperm development and is linked to reduced IDH3A protein and compensatory IDH3G increase in testes (https://doi.org/10.1016/j.jbc.2022.102387, Sep 2022) (zhu2022isocitratedehydrogenase3b pages 1-2).<br />
+- Broader clinical context: IDH3 subunit defects (especially IDH3A/IDH3B) are increasingly recognized in IRD gene panels and reviews of metabolic contributions to disease, although IDH3 subunits are not the canonical IDH1/2 cancer drivers (https://doi.org/10.3390/cancers15112883, May 2023) (solomou2023mutantidhin pages 1-2).</p>
+<p>7) Current applications and implementations<br />
+- Diagnostics: Genetic testing for IRDs includes IDH3 subunits in gene panels; assignment of pathogenicity requires careful segregation, functional data, and attention to species‑specific phenotypic differences inferred from model systems (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Research models: Idh3a and Idh3b mouse models provide complementary tools for dissecting retinal bioenergetics and spermatogenesis; extracellular flux assays in mutant fibroblasts illustrate how reserve capacity and maximal respiration are used to profile mitochondrial consequences of subunit loss (https://doi.org/10.1242/dmm.036426; https://doi.org/10.1016/j.jbc.2022.102387) (findlay2018mouseidh3amutations pages 8-11, zhu2022isocitratedehydrogenase3b pages 1-2).</p>
+<p>8) Expert opinions/analysis from authoritative sources<br />
+- Consensus function: Primary biochemical role and mitochondrial localization of IDH3 (with IDH3B as the β subunit) are well‑established and consistently described in peer‑reviewed primary and review articles (https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Regulatory architecture: Subunit architecture underlies nuanced allosteric regulation—γ and β modulate catalytic α activity and effector sensitivity—fitting the broader theme that energy/redox sensing is embedded in IDH3 quaternary structure (https://doi.org/10.3390/cancers15112883) (solomou2023mutantidhin pages 1-2).<br />
+- Disease interpretation: The divergence between human retinal phenotypes and mouse Idh3b retinal viability suggests that in humans, β‑subunit loss reduces functional tetramer abundance/efficacy sufficiently to cross a disease threshold in photoreceptors, whereas mice may compensate via subunit rebalancing or metabolic plasticity (https://doi.org/10.1242/dmm.036426; https://doi.org/10.1016/j.jbc.2022.102387) (findlay2018mouseidh3amutations pages 4-6, zhu2022isocitratedehydrogenase3b pages 1-2).</p>
+<p>9) Quantitative statistics and data<br />
+- Partial dimer activity vs tetramer: αγ dimer ≈ 36% and αβ dimer ≈ 16% of heterotetramer specific activity in vitro, showing the importance of tetramer assembly for full catalytic throughput (https://doi.org/10.1242/dmm.036426) (findlay2018mouseidh3amutations pages 11-13).<br />
+- Photoreceptor bioenergetics: Photoreceptor mitochondria reportedly function at ~70–80% of maximal capacity in vivo, rationalizing sensitivity to reduced IDH3 flux (https://doi.org/10.1242/dmm.036426) (findlay2018mouseidh3amutations pages 4-6).<br />
+- Testis subunit re‑balancing in IDH3B loss: In Idh3b−/− mice, IDH3A decreases by ~75% and IDH3G increases by ~35% in testes, aligning with defective spermiogenesis and suggesting assembly‑dependent stability (https://doi.org/10.1016/j.jbc.2022.102387) (zhu2022isocitratedehydrogenase3b pages 1-2).</p>
+<p>Embedded summary artifact<br />
+| Topic | Key points | Quantitative / structural details | Most supportive sources |<br />
+|---|---|---:|---|<br />
+| Identity &amp; domains | IDH3B encodes the beta (non‑catalytic/structural) subunit of mitochondrial NAD‑dependent isocitrate dehydrogenase 3 (IDH3); domain annotations include IsoCit/isopropylmalate_DH_CS and Isocitrate_DH_NAD. | UniProt accession O43837 (IDH3B); contains conserved isocitrate dehydrogenase domains typical of IDH3 family. | (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6) |<br />
+| Enzymatic reaction &amp; specificity | IDH3 complex catalyzes irreversible oxidative decarboxylation: isocitrate → α‑ketoglutarate (α‑KG) with reduction of NAD+ → NADH. IDH3B is part of the NAD+‑dependent enzyme (distinct from NADP+ IDH1/2). | Reaction: isocitrate + NAD+ → α‑KG + CO2 + NADH; IDH3 is NAD+‑specific. | (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2) |<br />
+| Complex composition / stoichiometry | Functional enzyme is a heterotetramer comprising two α subunits plus one β (IDH3B) and one γ subunit (IDH3G); β has structural/regulatory role. | Stoichiometry: α2β1γ1 (heterotetramer). β contributes to assembly/allostery rather than primary catalysis. | (findlay2018mouseidh3amutations pages 4-6, findlay2018mouseidh3amutations pages 11-13) |<br />
+| Localization | Localizes to the mitochondrial matrix; expressed highly in mitochondria‑rich tissues (heart, skeletal muscle, brain, retina). | Mitochondrial targeting and matrix localization reported in mammalian tissues. | (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6) |<br />
+| Allosteric regulation | IDH3 activity is regulated allosterically (substrate/cofactor and energy state); β/γ subunits modulate sensitivity to effectors. | Activated by isocitrate/ADP/NAD+/divalent cations (Mg2+/Mn2+/Ca2+); inhibited by NADH, α‑KG, ATP; β/γ subunits shape these responses. | (solomou2023mutantidhin pages 1-2, findlay2018mouseidh3amutations pages 11-13) |<br />
+| Pathway context (TCA / NADH) | IDH3 provides α‑KG for TCA and produces NADH used in oxidative phosphorylation; by controlling α‑KG, it can indirectly affect α‑KG‑dependent dioxygenases/epigenetic processes. | Position: canonical TCA step (isocitrate → α‑KG) supplying reducing equivalents (NADH) to complex I/ETC. | (findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 9-10) |<br />
+| Disease associations | Human biallelic/homozygous IDH3B variants reported in families with retinitis pigmentosa; IDH3B loss also linked to impaired spermiogenesis/male infertility in experimental models. | Human: familial RP linked to IDH3B loss‑of‑function alleles; experimental mouse: Idh3b KO causes spermiogenesis defects (Zhu et al. 2022). | (findlay2018mouseidh3amutations pages 4-6, zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 8-11) |<br />
+| Model organism contrasts | Humans with IDH3B null variants reported retinal degeneration; mouse Idh3b knockout is viable with no retinal degeneration but shows male fertility defects; Idh3a loss is embryonic lethal in mouse. | Mouse Idh3b-/-: no retinal phenotype by P180, but spermiogenesis impaired; Idh3a null: embryonic lethal. | (findlay2018mouseidh3amutations pages 4-6, findlay2018mouseidh3amutations pages 1-4, findlay2018mouseidh3amutations pages 8-11) |<br />
+| Quantitative notes | Measured relative activities of partial dimers versus heterotetramer indicate strong subunit‑dependent activity differences; subunit expression shifts reported in testes of KO models. | α–γ dimers ≈ 36% of heterotetramer activity; α–β dimers ≈ 16% activity; KO testes showed ~75% reduction in IDH3A and ~35% increase in IDH3G (reported experimentally). | (findlay2018mouseidh3amutations pages 11-13, zhu2022isocitratedehydrogenase3b pages 1-2) |<br />
+| Recent insights (2022–2024) | 2022 JBC study (Zhu et al.): IDH3B required for spermiogenesis; 2018 mouse work highlighted retina sensitivity to IDH3 perturbation; 2023–2024 reviews/gene panels note IDH3B in IRD gene lists and discuss subunit roles in metabolism and disease. | Key recent publications: Zhu et al. 2022 (JBC); Findlay et al. 2018 (DMM); review/clinical panel mentions in 2023–2024 literature. | (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2) |</p>
+<p><em>Table: Compact, evidence‑linked summary of human IDH3B (UniProt O43837) covering identity, enzymatic role, complex structure, localization, regulation, pathway context, disease links, model differences, quantitative notes, and recent (2022–2024) findings; sources cite gathered evidence identifiers for traceability.</em></p>
+<p>Mandatory verification and ambiguity check<br />
+- Gene symbol match and organism: The literature consistently uses IDH3B to denote the β subunit of mitochondrial NAD‑dependent IDH3 in mammals/humans, matching UniProt O43837 and Homo sapiens (https://doi.org/10.1016/j.jbc.2022.102387; https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).<br />
+- Domain/family concordance: Reported function, localization, and complex assembly are coherent with isocitrate dehydrogenase family/domain annotations provided, and no conflicting gene symbol usage was found in the curated sources cited (https://doi.org/10.1016/j.jbc.2022.102387; https://doi.org/10.1242/dmm.036426; https://doi.org/10.3390/cancers15112883) (zhu2022isocitratedehydrogenase3b pages 1-2, findlay2018mouseidh3amutations pages 4-6, solomou2023mutantidhin pages 1-2).</p>
+<p>References (URLs and dates)<br />
+- Zhu et al., 2022, Journal of Biological Chemistry. “Isocitrate dehydrogenase 3b is required for spermiogenesis but dispensable for retinal viability.” Published Sep 2022. URL: https://doi.org/10.1016/j.jbc.2022.102387 (zhu2022isocitratedehydrogenase3b pages 1-2).<br />
+- Findlay et al., 2018, Disease Models &amp; Mechanisms. “Mouse Idh3a mutations cause retinal degeneration and reduced mitochondrial function.” Published Dec 2018. URL: https://doi.org/10.1242/dmm.036426 (findlay2018mouseidh3amutations pages 4-6, findlay2018mouseidh3amutations pages 11-13, findlay2018mouseidh3amutations pages 18-20, findlay2018mouseidh3amutations pages 1-4, findlay2018mouseidh3amutations pages 8-11).<br />
+- Solomou et al., 2023, Cancers. “Mutant IDH in Gliomas: Role in Cancer and Treatment Options.” Published May 2023. URL: https://doi.org/10.3390/cancers15112883 (solomou2023mutantidhin pages 1-2, solomou2023mutantidhin pages 9-10).</p>
+<p>Limitations<br />
+- While multiple 2023–2024 sources discuss IDH enzymes and retinal disease broadly, specific new primary human IDH3B variant case series from 2023–2024 were not captured in the curated evidence set above. Where possible, we emphasized 2023 review coverage and 2022 functional genetics aligned to human biology (solomou2023mutantidhin pages 1-2, zhu2022isocitratedehydrogenase3b pages 1-2).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(zhu2022isocitratedehydrogenase3b pages 1-2): Siyan Zhu, Jiancheng Huang, Rong Xu, Yekai Wang, Yiming Wan, Rachel McNeel, Edward A. Parker, Douglas R. Kolson, M. Yam, Bradley A. Webb, Chen Zhao, Jenna Sigado, and Jianhai Du. Isocitrate dehydrogenase 3b is required for spermiogenesis but dispensable for retinal viability. Journal of Biological Chemistry, 298:102387, Sep 2022. URL: https://doi.org/10.1016/j.jbc.2022.102387, doi:10.1016/j.jbc.2022.102387. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(findlay2018mouseidh3amutations pages 4-6): Amy S. Findlay, Roderick N. Carter, Becky Starbuck, Lisa McKie, Klára Nováková, Peter S. Budd, Margaret A. Keighren, Joseph A. Marsh, Sally H. Cross, Michelle M. Simon, Paul K. Potter, Nicholas M. Morton, and Ian J. Jackson. Mouse idh3a mutations cause retinal degeneration and reduced mitochondrial function. Disease Models &amp; Mechanisms, Dec 2018. URL: https://doi.org/10.1242/dmm.036426, doi:10.1242/dmm.036426. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(solomou2023mutantidhin pages 1-2): Georgios Solomou, Alina Finch, Asim Asghar, and Chiara Bardella. Mutant idh in gliomas: role in cancer and treatment options. Cancers, May 2023. URL: https://doi.org/10.3390/cancers15112883, doi:10.3390/cancers15112883. This article has 49 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(solomou2023mutantidhin pages 9-10): Georgios Solomou, Alina Finch, Asim Asghar, and Chiara Bardella. Mutant idh in gliomas: role in cancer and treatment options. Cancers, May 2023. URL: https://doi.org/10.3390/cancers15112883, doi:10.3390/cancers15112883. This article has 49 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(findlay2018mouseidh3amutations pages 11-13): Amy S. Findlay, Roderick N. Carter, Becky Starbuck, Lisa McKie, Klára Nováková, Peter S. Budd, Margaret A. Keighren, Joseph A. Marsh, Sally H. Cross, Michelle M. Simon, Paul K. Potter, Nicholas M. Morton, and Ian J. Jackson. Mouse idh3a mutations cause retinal degeneration and reduced mitochondrial function. Disease Models &amp; Mechanisms, Dec 2018. URL: https://doi.org/10.1242/dmm.036426, doi:10.1242/dmm.036426. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(findlay2018mouseidh3amutations pages 8-11): Amy S. Findlay, Roderick N. Carter, Becky Starbuck, Lisa McKie, Klára Nováková, Peter S. Budd, Margaret A. Keighren, Joseph A. Marsh, Sally H. Cross, Michelle M. Simon, Paul K. Potter, Nicholas M. Morton, and Ian J. Jackson. Mouse idh3a mutations cause retinal degeneration and reduced mitochondrial function. Disease Models &amp; Mechanisms, Dec 2018. URL: https://doi.org/10.1242/dmm.036426, doi:10.1242/dmm.036426. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(findlay2018mouseidh3amutations pages 1-4): Amy S. Findlay, Roderick N. Carter, Becky Starbuck, Lisa McKie, Klára Nováková, Peter S. Budd, Margaret A. Keighren, Joseph A. Marsh, Sally H. Cross, Michelle M. Simon, Paul K. Potter, Nicholas M. Morton, and Ian J. Jackson. Mouse idh3a mutations cause retinal degeneration and reduced mitochondrial function. Disease Models &amp; Mechanisms, Dec 2018. URL: https://doi.org/10.1242/dmm.036426, doi:10.1242/dmm.036426. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(findlay2018mouseidh3amutations pages 18-20): Amy S. Findlay, Roderick N. Carter, Becky Starbuck, Lisa McKie, Klára Nováková, Peter S. Budd, Margaret A. Keighren, Joseph A. Marsh, Sally H. Cross, Michelle M. Simon, Paul K. Potter, Nicholas M. Morton, and Ian J. Jackson. Mouse idh3a mutations cause retinal degeneration and reduced mitochondrial function. Disease Models &amp; Mechanisms, Dec 2018. URL: https://doi.org/10.1242/dmm.036426, doi:10.1242/dmm.036426. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>solomou2023mutantidhin pages 1-2</li>
+<li>solomou2023mutantidhin pages 9-10</li>
+<li>NAD</li>
+<li>https://doi.org/10.1016/j.jbc.2022.102387,</li>
+<li>https://doi.org/10.1242/dmm.036426,</li>
+<li>https://doi.org/10.3390/cancers15112883,</li>
+<li>https://doi.org/10.1016/j.jbc.2022.102387;</li>
+<li>https://doi.org/10.1242/dmm.036426;</li>
+<li>https://doi.org/10.3390/cancers15112883</li>
+<li>https://doi.org/10.1242/dmm.036426</li>
+<li>https://doi.org/10.3390/cancers15112883;</li>
+<li>https://doi.org/10.1016/j.jbc.2022.102387</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O43837
+gene_symbol: IDH3B
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  IDH3B encodes the beta subunit of mitochondrial NAD-dependent isocitrate dehydrogenase 3 (IDH3).
+  The functional IDH3 enzyme is a heterotetramer with alpha2-beta-gamma stoichiometry (2alpha:1beta:1gamma),
+  where the alpha subunits (IDH3A) are catalytic, while beta (IDH3B) and gamma (IDH3G) play structural
+  and regulatory roles. IDH3B does NOT have intrinsic catalytic activity on its own - expression of
+  beta subunit alone shows no detectable activity [PMID:10601238]. The alphabeta and alphagamma dimers
+  exhibit significant IDH activity, but the full heterotetramer is required for maximal activity and
+  proper allosteric regulation [PMID:14555658]. The IDH3 complex catalyzes the irreversible oxidative
+  decarboxylation of isocitrate to alpha-ketoglutarate in the TCA cycle. Beta-Arg99 is required for
+  normal ADP activation of the enzyme but is not essential for catalysis [PMID:14555658]. IDH3B localizes
+  to the mitochondrial matrix. Biallelic variants cause retinitis pigmentosa 46 (RP46). IDH3B exists
+  as multiple isoforms (beta1 and beta2) due to alternative splicing, with tissue-specific expression
+  patterns affecting the pH optimum of the enzyme complex [PMID:10601238].
+alternative_products:
+- name: B
+  id: O43837-1
+- name: A
+  id: O43837-2
+  sequence_note: VSP_002462
+- name: C
+  id: O43837-3
+  sequence_note: VSP_041335
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IDH3B is well-established as a mitochondrial protein. The IBA annotation is phylogenetically
+      well-supported across eukaryotes. UniProt indicates a mitochondrial transit peptide (residues
+      1-34) and documents mitochondrial localization. PMID:10601238 describes IDH3B as part of
+      &#34;mitochondrial NAD(+)-dependent isocitrate dehydrogenase&#34; and discusses its function in
+      the context of mitochondrial enzyme complexes.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial localization is correct and well-supported by phylogenetic inference, UniProt
+      annotation, and experimental literature. While mitochondrial matrix (GO:0005759) is more
+      precise, this broader term is acceptable for the IBA evidence type.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;the interactions and functional role of each of the three mitochondrial NAD(+)-dependent isocitrate dehydrogenase (IDH) subunits (alpha, beta, and gamma)&#34;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IDH3B is a component of the NAD-dependent isocitrate dehydrogenase complex that catalyzes
+      a key step of the TCA cycle. While the beta subunit is not itself catalytic, it is essential
+      for proper complex assembly and function in the TCA cycle [PMID:10601238, PMID:14555658].
+      The IBA annotation appropriately captures the involvement of IDH3B in this process.
+    action: ACCEPT
+    reason: &gt;-
+      As an essential structural component of the IDH3 complex, IDH3B participates in the TCA
+      cycle even though it lacks intrinsic catalytic activity. The phylogenetic evidence
+      supports this annotation across eukaryotes.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;Among the various combinations of human IDH subunits co-expressed in bacteria, alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity&#34;
+- term:
+    id: GO:0006102
+    label: isocitrate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IDH3B participates in isocitrate metabolism as part of the IDH3 complex. The complex
+      converts isocitrate to alpha-ketoglutarate. While IDH3B is not the catalytic subunit,
+      it is required for proper complex assembly and activity [PMID:10601238].
+    action: ACCEPT
+    reason: &gt;-
+      The annotation correctly captures IDH3B&#39;s involvement in isocitrate metabolism through
+      its role in the IDH3 complex. Well-supported by phylogenetic analysis.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity&#34;
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is inferred from InterPro domain IPR019818 (IsoCit/isopropylmalate_DH_CS).
+      However, in the IDH3 complex, Mg2+ (or Mn2+) binding occurs at the active site in the
+      catalytic alpha subunit, not in the structural beta subunit. The deep research notes
+      that the enzyme &#34;is a heterooctamer containing two copies of a heterotetramer of two
+      IDH3A, one IDH3B, one IDH3G, and two Mn++&#34; [Reactome:R-HSA-70967], suggesting metal
+      binding is associated with the catalytic subunits. No direct evidence supports
+      magnesium binding by IDH3B specifically.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While the InterPro domain is present, the functional magnesium/metal binding site is
+      located in the catalytic alpha subunit. IDH3B shares sequence/structural homology with
+      dehydrogenases but its specific role is structural, not catalytic. This IEA annotation
+      represents domain-based inference that does not reflect the actual function of this
+      specific subunit.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Mitochondrial localization inferred from UniProt subcellular location annotation.
+      This is consistent with experimental evidence and the IBA annotation above.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation based on UniProt curation. IDH3B has a mitochondrial transit
+      peptide and functions in the mitochondrial matrix.
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Combined automated annotation correctly identifies IDH3B&#39;s involvement in the TCA cycle.
+      Consistent with IBA annotation and experimental literature.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation. IDH3B is part of the IDH3 complex that catalyzes a key TCA cycle step.
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is inferred from InterPro domain IPR019818. However, PMID:10601238
+      demonstrates that &#34;subunits produced alone ... showed no detectable activity&#34; and
+      establishes that &#34;the alpha is the catalytic subunit.&#34; IDH3B shares the dehydrogenase
+      domain but does not itself possess oxidoreductase activity - it is a structural/
+      regulatory subunit of the complex.
+    action: REMOVE
+    reason: &gt;-
+      IDH3B does not have intrinsic oxidoreductase activity. The beta subunit alone shows
+      no detectable enzymatic activity [PMID:10601238]. This annotation incorrectly attributes
+      the catalytic activity of the complex to the non-catalytic beta subunit based solely
+      on domain homology.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;subunits produced alone and betagamma showed no detectable activity. These data suggest that the alpha is the catalytic subunit&#34;
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation is inferred from InterPro domain IPR019818. While IDH3B shares
+      structural homology with NAD-binding dehydrogenases, the functional NAD binding and
+      catalysis occurs in the alpha subunit. PMID:14555658 shows that mutations in the
+      gamma subunit affect NAD binding (gamma-R97Q has 10-fold higher Km for NAD), but
+      the beta subunit&#39;s role is in ADP activation, not NAD binding at the catalytic site.
+      However, the beta subunit may contribute to the nucleotide binding pocket architecture.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The annotation is based on domain homology rather than demonstrated function.
+      IDH3B contributes to the complex structure and ADP-mediated regulation but is not
+      itself the primary NAD-binding subunit. The catalytic NAD binding site is in IDH3A.
+    supported_by:
+      - reference_id: PMID:14555658
+        supporting_text: &#34;the beta and gamma subunits have roles in the nucleotide functions of this allosteric enzyme&#34;
+- term:
+    id: GO:0045242
+    label: isocitrate dehydrogenase complex (NAD+)
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      IDH3B is a core component of the NAD-dependent isocitrate dehydrogenase complex.
+      The complex has 2alpha:1beta:1gamma stoichiometry [PMID:14555658]. This cellular
+      component annotation is entirely appropriate for IDH3B.
+    action: ACCEPT
+    reason: &gt;-
+      Correct annotation. IDH3B is an established subunit of the IDH3 complex, confirmed
+      by co-expression studies and structural analysis.
+    supported_by:
+      - reference_id: PMID:14555658
+        supporting_text: &#34;Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: &gt;-
+      Direct experimental evidence for mitochondrial localization from HPA immunofluorescence
+      data. This provides direct experimental support for the mitochondrial localization.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence (IDA from immunofluorescence) confirms mitochondrial
+      localization, consistent with all other evidence sources.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: NAS
+  original_reference_id: PMID:14555658
+  review:
+    summary: &gt;-
+      PMID:14555658 is a study of human NAD-dependent isocitrate dehydrogenase expressed
+      in bacteria. The paper discusses the enzyme&#39;s function in the context of mitochondrial
+      metabolism but does not directly demonstrate mitochondrial localization - hence NAS
+      (non-traceable author statement) is appropriate.
+    action: ACCEPT
+    reason: &gt;-
+      While the evidence is indirect, mitochondrial localization is well-established from
+      multiple other sources. This annotation is consistent with the overall body of evidence.
+    supported_by:
+      - reference_id: PMID:14555658
+        supporting_text: &#34;Mammalian NAD-dependent isocitrate dehydrogenase is an allosteric enzyme&#34;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IDA
+  original_reference_id: PMID:14555658
+  review:
+    summary: &gt;-
+      PMID:14555658 demonstrates that the IDH3 complex including the beta subunit has
+      isocitrate dehydrogenase activity, which is a key TCA cycle reaction. The study
+      shows IDH activity of purified complexes containing beta subunit [PMID:14555658].
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence that IDH3B-containing complexes have isocitrate
+      dehydrogenase activity, supporting involvement in TCA cycle.
+    supported_by:
+      - reference_id: PMID:14555658
+        supporting_text: &#34;Specific activities of 22, 14, and 2 micromol of NADH/min/mg were measured, respectively, for WT, beta-R99Q, and gamma-R97Q enzymes&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: &gt;-
+      PMID:34800366 is a high-throughput mitochondrial proteomics study that identified
+      IDH3B in the human mitochondrial proteome. This provides orthogonal mass spectrometry-
+      based evidence for mitochondrial localization.
+    action: ACCEPT
+    reason: &gt;-
+      High-quality proteomics study confirming IDH3B presence in the mitochondrial proteome.
+    supported_by:
+      - reference_id: PMID:34800366
+        supporting_text: &#34;Quantitative high-confidence human mitochondrial proteome&#34;
+- term:
+    id: GO:0045242
+    label: isocitrate dehydrogenase complex (NAD+)
+  evidence_type: IDA
+  original_reference_id: PMID:14555658
+  review:
+    summary: &gt;-
+      PMID:14555658 provides direct experimental evidence that IDH3B is a component of
+      the IDH3 complex. The study purified the complex and demonstrated the 2alpha:1beta:1gamma
+      stoichiometry through expression and biochemical analysis.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration that IDH3B is part of the IDH3 complex with
+      defined stoichiometry.
+    supported_by:
+      - reference_id: PMID:14555658
+        supporting_text: &#34;Wild type (WT) and mutant enzymes (each containing 2 normal subunits plus a mutant subunit with alpha-R88Q, beta-R99Q, or gamma-R97Q) were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition and a native molecular mass of 315 kDa&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  review:
+    summary: &gt;-
+      PMID:21630459 is a proteomic study of the human sperm nucleus that identified IDH3B
+      among 403 nuclear proteins. This is a specialized cell type where metabolic proteins
+      may be present in the nuclear fraction during spermatogenesis. The nuclear localization
+      is likely context-specific rather than representing a core localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The detection in sperm nuclear proteome may represent a specialized developmental
+      context. IDH3B&#39;s primary localization is mitochondrial, and nuclear detection may
+      reflect the unique chromatin remodeling during spermiogenesis or technical
+      co-purification. This is not a core localization but should be retained.
+    supported_by:
+      - reference_id: PMID:21630459
+        supporting_text: &#34;403 different proteins have been identified from the isolated sperm nuclei&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70967
+  review:
+    summary: &gt;-
+      Reactome pathway R-HSA-70967 &#34;IDH3 complex decarboxylates isocitrate&#34; places the
+      IDH3 complex, including IDH3B, in the mitochondrial matrix. This is the most specific
+      and accurate localization for IDH3B&#39;s function.
+    action: ACCEPT
+    reason: &gt;-
+      Mitochondrial matrix is the precise subcellular location where IDH3 functions in
+      the TCA cycle. This is the most informative localization annotation for IDH3B.
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: TAS
+  original_reference_id: PMID:10601238
+  review:
+    summary: &gt;-
+      PMID:10601238 does not support electron transfer activity for IDH3B. The paper
+      demonstrates that the IDH3 complex has isocitrate dehydrogenase activity (reducing
+      NAD+ to NADH), but this is not the same as electron transfer activity. Electron
+      transfer activity (GO:0009055) refers to proteins that function as electron carriers
+      (like cytochromes or ferredoxins), not dehydrogenases that use NAD+ as a cofactor.
+      Furthermore, IDH3B specifically is the non-catalytic subunit.
+    action: REMOVE
+    reason: &gt;-
+      Incorrect annotation. GO:0009055 (electron transfer activity) is inappropriate for
+      IDH3B. The NAD+-dependent dehydrogenase reaction is not electron transfer activity
+      in the GO sense. Additionally, IDH3B is not catalytically active - the paper states
+      &#34;subunits produced alone ... showed no detectable activity.&#34;
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;subunits produced alone and betagamma showed no detectable activity&#34;
+- term:
+    id: GO:0004449
+    label: isocitrate dehydrogenase (NAD+) activity
+  evidence_type: TAS
+  original_reference_id: PMID:10601238
+  review:
+    summary: &gt;-
+      PMID:10601238 explicitly demonstrates that IDH3B alone does not have isocitrate
+      dehydrogenase activity. The paper states &#34;subunits produced alone and betagamma
+      showed no detectable activity&#34; and concludes that &#34;the alpha is the catalytic subunit.&#34;
+      While the alphabeta dimer has activity, this is due to the alpha subunit, not beta.
+    action: REMOVE
+    reason: &gt;-
+      The cited paper PMID:10601238 directly contradicts this annotation. IDH3B does not
+      have intrinsic isocitrate dehydrogenase activity. The beta subunit is structural/
+      regulatory, and attributing the catalytic activity to it is incorrect. This is a
+      case where the annotation was likely made at the complex level and incorrectly
+      propagated to the non-catalytic subunit.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;subunits produced alone and betagamma showed no detectable activity. These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: TAS
+  original_reference_id: PMID:10601238
+  review:
+    summary: &gt;-
+      PMID:10601238 describes IDH3B as part of &#34;mitochondrial NAD(+)-dependent isocitrate
+      dehydrogenase&#34; and discusses it in the context of mitochondrial function. The
+      mitochondrial localization is well-supported.
+    action: ACCEPT
+    reason: &gt;-
+      The paper describes IDH3B as a mitochondrial protein. Consistent with all other
+      evidence for mitochondrial localization.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;the interactions and functional role of each of the three mitochondrial NAD(+)-dependent isocitrate dehydrogenase (IDH) subunits&#34;
+- term:
+    id: GO:0006102
+    label: isocitrate metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10601238
+  review:
+    summary: &gt;-
+      PMID:10601238 demonstrates that IDH3B contributes to isocitrate metabolism as part
+      of the IDH3 complex. While IDH3B is not catalytic, it plays &#34;an essential supporting
+      role for activity&#34; in isocitrate oxidation.
+    action: ACCEPT
+    reason: &gt;-
+      IDH3B participates in isocitrate metabolism through its essential structural role
+      in the IDH3 complex. The paper demonstrates that beta-containing complexes have
+      isocitrate dehydrogenase activity.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity&#34;
+- term:
+    id: GO:0005198
+    label: structural molecule activity
+  evidence_type: NAS
+  original_reference_id: PMID:10601238
+  review:
+    summary: &gt;-
+      IDH3B functions as a structural subunit of the IDH3 complex. PMID:10601238 demonstrates
+      that the beta subunit alone has no catalytic activity (&#34;subunits produced alone and
+      betagamma showed no detectable activity&#34;) but plays &#34;an essential supporting role for
+      activity.&#34; The beta subunit is required for proper complex assembly and function. Deep
+      research confirms that IDH3B plays a structural/regulatory role in the heterotetramer
+      [file:human/IDH3B/IDH3B-deep-research-falcon.md].
+    action: NEW
+    reason: &gt;-
+      This annotation captures IDH3B&#39;s established role as a structural component of the
+      IDH3 enzyme complex. The term GO:0005198 is defined as &#34;The action of a molecule
+      that contributes to the structural integrity of a complex&#34; which accurately describes
+      IDH3B&#39;s function. This is a more appropriate molecular function annotation than
+      the catalytic activity terms that were incorrectly attributed to IDH3B.
+    supported_by:
+      - reference_id: PMID:10601238
+        supporting_text: &#34;These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity&#34;
+      - reference_id: file:human/IDH3B/IDH3B-deep-research-falcon.md
+        supporting_text: &#34;IDH3B appears to play a structural/regulatory role in the complex, as opposed to a catalytic one&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: InterPro domain IPR019818 (IsoCit/isopropylmalate_DH_CS) is present in IDH3B but catalytic residues are in the alpha subunit
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Phylogenetic analysis supports IDH3B mitochondrial localization and TCA cycle involvement across eukaryotes
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: UniProt documents mitochondrial localization with transit peptide
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings:
+    - statement: HPA immunofluorescence confirms mitochondrial localization
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara
+  findings:
+    - statement: Complex membership annotation transferred from mouse ortholog
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Automated methods correctly identify TCA cycle involvement
+- id: PMID:10601238
+  title: Identification and functional characterization of a novel, tissue-specific NAD(+)-dependent isocitrate dehydrogenase beta subunit isoform.
+  findings:
+    - statement: IDH3B exists as two isoforms (beta1 and beta2) due to alternative splicing
+      supporting_text: &#34;the smaller beta(2) transcript (1.3 kilobases) is primarily expressed in heart and skeletal muscle, whereas the larger beta(1) mRNA (1.6 kilobases) is prevalent in nonmuscle tissues&#34;
+    - statement: Beta subunit alone has no detectable IDH activity
+      supporting_text: &#34;subunits produced alone and betagamma showed no detectable activity&#34;
+    - statement: Alpha is the catalytic subunit
+      supporting_text: &#34;These data suggest that the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity&#34;
+    - statement: Alphabeta and alphagamma dimers have IDH activity
+      supporting_text: &#34;alphabetagamma, alphabeta, and alphagamma combinations exhibited significant amounts of IDH activity&#34;
+    - statement: Beta isoforms affect pH optimum of enzyme activity
+      supporting_text: &#34;Substitution of beta(1) with beta(2) in the co-expression system lowered the pH optimum for IDH activity from 8.0 to 7.6&#34;
+- id: PMID:14555658
+  title: Evaluation by mutagenesis of the importance of 3 arginines in alpha, beta, and gamma subunits of human NAD-dependent isocitrate dehydrogenase.
+  findings:
+    - statement: IDH3 complex has 2alpha:1beta:1gamma stoichiometry with 315 kDa molecular mass
+      supporting_text: &#34;Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition and a native molecular mass of 315 kDa&#34;
+    - statement: Beta-R99Q mutant retains 64% of wild-type activity (14 vs 22 micromol NADH/min/mg)
+      supporting_text: &#34;Specific activities of 22, 14, and 2 micromol of NADH/min/mg were measured, respectively, for WT, beta-R99Q, and gamma-R97Q enzymes&#34;
+    - statement: Beta-Arg99 is required for normal ADP activation but not essential for catalysis
+      supporting_text: &#34;for beta-R99Q and gamma-R97Q enzymes, the Km for isocitrate is the same in the absence or presence of ADP, although all the enzymes bind ADP&#34;
+    - statement: Alpha-Arg88 is essential for catalysis (alpha-R88Q has no activity)
+      supporting_text: &#34;mutant enzymes with normal beta and gamma subunits and alpha-R88Q mutant subunit has no detectable activity, demonstrating that ... alpha-Arg88 is essential for catalysis&#34;
+    - statement: Beta and gamma subunits have roles in nucleotide functions of the allosteric enzyme
+      supporting_text: &#34;the beta and gamma subunits have roles in the nucleotide functions of this allosteric enzyme&#34;
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings:
+    - statement: IDH3B detected in sperm nuclear proteome among 403 proteins
+      supporting_text: &#34;403 different proteins have been identified from the isolated sperm nuclei&#34;
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings:
+    - statement: High-throughput proteomics confirms IDH3B in mitochondrial proteome
+      supporting_text: &#34;Quantitative high-confidence human mitochondrial proteome&#34;
+- id: Reactome:R-HSA-70967
+  title: IDH3 complex decarboxylates isocitrate
+  findings:
+    - statement: IDH3 complex catalyzes isocitrate + NAD+ to alpha-ketoglutarate + CO2 + NADH in mitochondrial matrix
+      supporting_text: &#34;Mitochondrial isocitrate dehydrogenase IDH3 catalyzes the irreversible reaction of isocitrate and NAD+ to form alpha-ketoglutarate, CO2, and NADH&#34;
+    - statement: Complex is heterooctamer with 2alpha:1beta:1gamma heterotetramer repeated twice plus Mn++
+      supporting_text: &#34;The enzyme is a heterooctamer containing two copies of a heterotetramer of two IDH3A, one IDH3B, one IDH3G, and two Mn++&#34;
+    - statement: Activated by ADP, inhibited by NADH and high ATP
+      supporting_text: &#34;It is activated by ADP (Soundar et al., 2003, 2006; Bzymek and Colman, 2007) and inhibited by NADH and high concentrations of ATP&#34;
+- id: file:human/IDH3B/IDH3B-deep-research-falcon.md
+  title: Deep research summary for IDH3B
+  findings:
+    - statement: IDH3 complex has alpha2-beta-gamma stoichiometry where beta plays structural/regulatory role
+    - statement: AlphaBeta dimer has ~16% of heterotetramer activity while AlphaGamma dimer has ~36%
+    - statement: Allosteric regulation by citrate and ADP occurs through gamma subunit, not beta
+    - statement: IDH3B required for spermiogenesis in mouse knockout studies
+    - statement: Biallelic IDH3B variants cause retinitis pigmentosa 46
+core_functions:
+- description: &gt;-
+    IDH3B functions as a structural/regulatory subunit of the mitochondrial NAD-dependent
+    isocitrate dehydrogenase complex. It does not have intrinsic catalytic activity but is
+    essential for proper complex assembly, stability, and allosteric regulation. The beta
+    subunit contributes to ADP-mediated activation of the enzyme.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  directly_involved_in:
+    - id: GO:0006099
+      label: tricarboxylic acid cycle
+  locations:
+    - id: GO:0005759
+      label: mitochondrial matrix
+  in_complex:
+    id: GO:0045242
+    label: isocitrate dehydrogenase complex (NAD+)
+  supported_by:
+    - reference_id: PMID:14555658
+      supporting_text: &#34;Wild type (WT) and mutant enzymes ... were purified to homogeneity yielding enzymes with 2alpha:1beta:1gamma subunit composition&#34;
+    - reference_id: PMID:10601238
+      supporting_text: &#34;the alpha is the catalytic subunit and that at least one of the other two subunits plays an essential supporting role for activity&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

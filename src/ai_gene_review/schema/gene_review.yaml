@@ -14,6 +14,7 @@ prefixes:
   rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
   rdfs: http://www.w3.org/2000/01/rdf-schema#
   owl: http://www.w3.org/2002/07/owl#
+  oa: http://www.w3.org/ns/oa#
   skos: http://www.w3.org/2004/02/skos/core#
   dcat: http://www.w3.org/ns/dcat#
   dcterms: http://purl.org/dc/terms/
@@ -52,6 +53,12 @@ slots:
   aliases:
     range: string
     multivalued: true
+  name:
+    range: string
+    description: Name of the entity (e.g., isoform name like Bcl-xL)
+  sequence_note:
+    range: string
+    description: Brief note about sequence characteristics or differences
   tags:
     range: string
     multivalued: true
@@ -59,7 +66,6 @@ slots:
   description:
     description: Description of the entity
     slot_uri: dcterms:description
-    recommended: true
   statement:
     range: string
     description: Concise statement describing an aspect of the gene
@@ -86,6 +92,8 @@ slots:
       This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual
       text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say
       '...[CFAP300 shows] transport within cilia is IFT dependent...'
+    implements:
+      - oa:exact
     recommended: true
   full_text_unavailable:
     range: boolean
@@ -107,6 +115,29 @@ slots:
     range: Term
     inlined: true
     required: true
+  alternative_products:
+    range: AlternativeProduct
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+    description: >-
+      Alternative splicing products (isoforms) of the gene. Seeded from UniProt
+      ALTERNATIVE PRODUCTS section. Only populated if there are multiple isoforms.
+      Use this to document isoform-specific functions and biology.
+      DEPRECATED: Use functional_isoforms instead for curated functional classes.
+  functional_isoforms:
+    range: FunctionalIsoform
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+    description: >-
+      Curated functional isoform classes for the gene. Unlike alternative_products
+      (which is seeded from UniProt), this field is purely curator/agent-defined
+      to capture FUNCTIONALLY RELEVANT distinctions. Examples:
+      - Splice classes that group multiple UniProt isoforms (e.g., WT1 +KTS vs -KTS)
+      - Cleavage products from polyproteins (e.g., POMC peptides)
+      - Modification states with distinct functions
+      Only populate when there ARE functionally distinct forms worth documenting.
   existing_annotations:
     range: ExistingAnnotation
     multivalued: true
@@ -138,6 +169,8 @@ slots:
   reference_id:
     range: Reference
     inlined: false
+    implements:
+      - dcterms:references
     required: true
   original_reference_id:
     range: Reference
@@ -146,6 +179,15 @@ slots:
   retired:
     range: boolean
     description: Whether the annotation is retired or replaced
+  isoform:
+    range: string
+    description: >-
+      UniProt isoform identifier (e.g., "P19544-1" for WT1 isoform 1).
+      Only populated when the annotation is specific to a particular isoform
+      rather than the canonical protein sequence. Note that just because an
+      experiment used a particular isoform doesn't mean the annotation is
+      isoform-specific - it may apply to all isoforms. Use this field only
+      when there is clear evidence the annotation is isoform-specific.
   review:
     recommended: true
     range: Review
@@ -202,13 +244,120 @@ classes:
      - status
      - description
      - taxon
+     - alternative_products
+     - functional_isoforms
      - references
      - existing_annotations
      - core_functions
      - proposed_new_terms
      - suggested_questions
      - suggested_experiments
+    slot_usage:
+      description:
+        recommended: true
 
+
+  AlternativeProduct:
+    description: >-
+      An alternative splicing product (isoform) of the gene. Corresponds to UniProt
+      isoform entries. Use this to document isoform-specific functions where different
+      isoforms have distinct or even antagonistic biological activities.
+      DEPRECATED: Use FunctionalIsoform instead for curated functional classes.
+    slots:
+      - id
+      - name
+      - sequence_note
+      - description
+    slot_usage:
+      id:
+        description: UniProt isoform ID (e.g., Q07817-1, Q07817-2)
+        required: true
+      name:
+        description: Common name of the isoform (e.g., Bcl-xL, Bcl-xS)
+        required: false
+      sequence_note:
+        description: Brief note about sequence differences (e.g., "lacks exon 2", "shorter C-terminus")
+        required: false
+      description:
+        description: >-
+          Agent-populated description of the isoform's function. Document any
+          isoform-specific functions, expression patterns, or biological activities
+          that differ from other isoforms.
+        recommended: true
+
+  FunctionalIsoform:
+    description: >-
+      A curated functional isoform class. Unlike AlternativeProduct (which maps 1:1
+      to UniProt isoforms), this captures FUNCTIONALLY RELEVANT distinctions that may:
+      - Group multiple UniProt isoforms into a functional class (e.g., WT1 +KTS isoforms)
+      - Represent cleavage products from polyproteins (e.g., POMC peptides)
+      - Describe modification states or conformational variants
+      Only create entries when there ARE functionally distinct forms worth documenting.
+    attributes:
+      id:
+        range: string
+        required: true
+        identifier: true
+        description: >-
+          Curator-defined identifier for this functional class. Use a descriptive
+          format like GENE_CLASS (e.g., WT1_PLUS_KTS, POMC_ACTH, BCL2L1_XL).
+      name:
+        range: string
+        required: true
+        description: >-
+          Human-readable name for this functional class (e.g., "+KTS isoforms",
+          "ACTH/Corticotropin", "Bcl-xL").
+      type:
+        range: FunctionalIsoformTypeEnum
+        required: true
+        description: >-
+          Type of functional distinction (SPLICE_VARIANT, SPLICE_CLASS, CLEAVAGE_PRODUCT,
+          MODIFICATION_STATE, CONFORMATIONAL_STATE).
+      maps_to:
+        range: FunctionalIsoformMapping
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Mappings to underlying UniProt identifiers. Optional - some functional classes
+          may not map cleanly to specific UniProt IDs.
+      description:
+        range: string
+        required: true
+        description: >-
+          Detailed description of this functional class. Document the specific functions,
+          how they differ from other classes, tissue specificity, and any antagonistic
+          relationships (e.g., "OREXIGENIC - opposite to alpha-MSH").
+      isoform_specific_terms:
+        range: Term
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          GO terms that are specific to this functional class. These are terms
+          that should NOT be annotated to the gene as a whole, only to this specific
+          form. Using Term objects enables linkml-term-validator checking.
+
+  FunctionalIsoformMapping:
+    description: >-
+      A mapping from a functional isoform class to underlying UniProt identifiers.
+      Allows grouping multiple UniProt isoforms or chains into a single functional class.
+    attributes:
+      type:
+        range: FunctionalIsoformMappingTypeEnum
+        required: true
+        description: Type of identifier (UNIPROT_ISOFORM or UNIPROT_CHAIN)
+      ids:
+        range: string
+        multivalued: true
+        required: true
+        description: >-
+          UniProt identifiers belonging to this functional class.
+          For UNIPROT_ISOFORM: P19544-1, P19544-2, etc.
+          For UNIPROT_CHAIN: PRO_0000024969, PRO_0000024970, etc.
+      residues:
+        range: string
+        description: >-
+          Residue range for cleavage products (e.g., "138-176" for ACTH).
+          Only applicable for UNIPROT_CHAIN type.
 
   Term:
     description: A term in a specific ontology
@@ -259,9 +408,10 @@ classes:
       - term
       - extensions
       - negated
-      - evidence_type 
+      - evidence_type
       - original_reference_id
       - retired
+      - isoform
       - supporting_entities
       - review
     slot_usage:
@@ -340,6 +490,9 @@ classes:
           - binds_value_of: id
             range: GOProteinContainingComplexEnum
             obligation_level: REQUIRED
+    slot_usage:
+      description:
+        recommended: true
   AnnotationExtension:
     slots:
       - predicate
@@ -1458,4 +1611,40 @@ enums:
           This entry is equivalent to the target (bidirectional high similarity).
           Selected when jaccard_boosted (jaccard + 0.05) is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.
 
+  # ============== Functional Isoform Enums ==============
 
+  FunctionalIsoformTypeEnum:
+    description: >-
+      Type of functional isoform or product. Distinguishes between different mechanisms
+      that produce functionally distinct forms of a gene product.
+    permissible_values:
+      SPLICE_VARIANT:
+        description: >-
+          Alternative splicing produces functionally distinct isoforms.
+          Maps to one or more UniProt isoform IDs (e.g., P19544-1, P19544-2).
+      SPLICE_CLASS:
+        description: >-
+          A class of splice variants that share functional properties.
+          Groups multiple UniProt isoform IDs that have similar functions.
+          Example: WT1 +KTS isoforms (multiple UniProt IDs) vs -KTS isoforms.
+      CLEAVAGE_PRODUCT:
+        description: >-
+          Post-translational proteolytic cleavage produces distinct peptides.
+          Maps to UniProt chain IDs (PRO_NNNNNNN from FT PEPTIDE lines).
+          Example: POMC cleavage into ACTH, alpha-MSH, beta-endorphin.
+      MODIFICATION_STATE:
+        description: >-
+          Post-translational modification creates functionally distinct forms.
+          Example: Phosphorylated vs unphosphorylated forms with different activities.
+      CONFORMATIONAL_STATE:
+        description: >-
+          Different conformational states with distinct functions.
+          Example: GTP-bound vs GDP-bound forms of GTPases.
+
+  FunctionalIsoformMappingTypeEnum:
+    description: Type of identifier that a functional isoform maps to
+    permissible_values:
+      UNIPROT_ISOFORM:
+        description: UniProt isoform ID (e.g., P19544-1, Q07817-2)
+      UNIPROT_CHAIN:
+        description: UniProt chain/peptide ID from FT PEPTIDE (e.g., PRO_0000024969)

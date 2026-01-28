@@ -22,6 +22,117 @@ import yaml
 import re
 
 
+def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Dict[str, str]]:
+    """Extract alternative products (isoforms) from UniProt data.
+
+    Parses the ALTERNATIVE PRODUCTS section from UniProt text format.
+    Only returns data if there are multiple isoforms (>1).
+
+    Args:
+        uniprot_data: Raw UniProt text data
+        uniprot_id: The canonical UniProt accession (e.g., "Q07817")
+
+    Returns:
+        List of isoform dictionaries with keys: id, name, sequence_note
+        Empty list if only one isoform or no ALTERNATIVE PRODUCTS section.
+
+    Examples:
+        >>> data = '''CC   -!- ALTERNATIVE PRODUCTS:
+        ... CC       Event=Alternative splicing; Named isoforms=3;
+        ... CC       Name=Bcl-X(L); Synonyms=Bcl-xL;
+        ... CC         IsoId=Q07817-1; Sequence=Displayed;
+        ... CC       Name=Bcl-X(S); Synonyms=Bcl-xS;
+        ... CC         IsoId=Q07817-2; Sequence=VSP_000515;
+        ... CC       Name=Bcl-X(beta);
+        ... CC         IsoId=Q07817-3; Sequence=VSP_000516;
+        ... CC   -!- TISSUE SPECIFICITY: blah'''
+        >>> isoforms = _extract_alternative_products(data, "Q07817")
+        >>> len(isoforms)
+        3
+        >>> isoforms[0]['id']
+        'Q07817-1'
+        >>> isoforms[0]['name']
+        'Bcl-X(L) (Bcl-xL)'
+        >>> isoforms[1]['name']
+        'Bcl-X(S) (Bcl-xS)'
+    """
+    isoforms: List[Dict[str, str]] = []
+
+    # Check if ALTERNATIVE PRODUCTS section exists
+    if "-!- ALTERNATIVE PRODUCTS:" not in uniprot_data:
+        return []
+
+    # Extract the ALTERNATIVE PRODUCTS section
+    in_alt_products = False
+    alt_products_lines = []
+
+    for line in uniprot_data.split('\n'):
+        if "CC   -!- ALTERNATIVE PRODUCTS:" in line:
+            in_alt_products = True
+            continue
+        elif in_alt_products:
+            if line.startswith("CC   -!-"):
+                # Hit next CC section, stop
+                break
+            elif line.startswith("CC"):
+                alt_products_lines.append(line)
+            else:
+                # End of CC block
+                break
+
+    if not alt_products_lines:
+        return []
+
+    # Parse the isoforms
+    current_isoform: Dict[str, str] = {}
+
+    for line in alt_products_lines:
+        # Remove CC prefix and clean up
+        content = line[2:].strip() if line.startswith("CC") else line.strip()
+
+        # Check for Named isoforms count
+        if "Named isoforms=" in content:
+            match = re.search(r'Named isoforms=(\d+)', content)
+            if match:
+                num_isoforms = int(match.group(1))
+                if num_isoforms <= 1:
+                    return []  # Don't return data for single isoform genes
+
+        # Match Name line: "Name=Bcl-X(L); Synonyms=Bcl-xL;"
+        name_match = re.match(r'Name=([^;]+)(?:;\s*Synonyms=([^;]+))?', content)
+        if name_match:
+            # Save previous isoform if exists
+            if current_isoform and 'id' in current_isoform:
+                isoforms.append(current_isoform)
+
+            current_isoform = {'name': name_match.group(1).strip()}
+            # Add synonym as alternate name if present
+            if name_match.group(2):
+                synonyms = name_match.group(2).strip()
+                # Use first synonym if multiple, append others to name
+                current_isoform['name'] = f"{current_isoform['name']} ({synonyms})"
+            continue
+
+        # Match IsoId line: "IsoId=Q07817-1; Sequence=Displayed;"
+        isoid_match = re.match(r'IsoId=([^;]+);\s*Sequence=([^;]+)', content)
+        if isoid_match and current_isoform:
+            current_isoform['id'] = isoid_match.group(1).strip()
+            seq_info = isoid_match.group(2).strip()
+            if seq_info != "Displayed":
+                current_isoform['sequence_note'] = seq_info
+            continue
+
+    # Don't forget the last isoform
+    if current_isoform and 'id' in current_isoform:
+        isoforms.append(current_isoform)
+
+    # Only return if there are multiple isoforms
+    if len(isoforms) <= 1:
+        return []
+
+    return isoforms
+
+
 def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
     """Extract PANTHER family ID from UniProt data.
 
@@ -264,6 +375,11 @@ def fetch_gene_data(
                 "description": f"TODO: Add description for {gene_name}",
             }
 
+            # Extract alternative products (isoforms) if present
+            alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
+            if alt_products:
+                yaml_data["alternative_products"] = alt_products
+
             # Write initial YAML
             with open(yaml_file, "w") as f:
                 yaml.dump(
@@ -292,6 +408,26 @@ def fetch_gene_data(
                 print(
                     f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
                 )
+
+        # Add alternative_products to existing files if missing
+        if yaml_existed:
+            with open(yaml_file, "r") as f:
+                existing_data = yaml.safe_load(f)
+
+            if existing_data and "alternative_products" not in existing_data:
+                alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
+                if alt_products:
+                    existing_data["alternative_products"] = alt_products
+                    with open(yaml_file, "w") as f:
+                        yaml.dump(
+                            existing_data,
+                            f,
+                            default_flow_style=False,
+                            sort_keys=False,
+                            allow_unicode=True,
+                        )
+                    print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
+                    result["alternative_products_added"] = len(alt_products)
 
     # Auto-fetch PANTHER family data if found in UniProt data
     panther_family_id = _extract_panther_family_id(uniprot_data)

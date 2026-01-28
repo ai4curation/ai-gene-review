@@ -410,17 +410,6 @@ def check_best_practices_rules(
             check_type="todo_placeholder"
         )
 
-    # Check for missing optional but recommended fields
-    if "aliases" not in data:
-        report.add_issue(
-            ValidationSeverity.INFO,
-            "No aliases provided for the gene",
-            path="aliases",
-            suggestion="Consider adding known gene aliases if available",
-            validation_category="BestPractices",
-            check_type="missing_aliases"
-        )
-
     # Check for missing references
     if "references" not in data or not data["references"]:
         report.add_issue(

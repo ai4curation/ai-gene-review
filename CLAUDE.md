@@ -144,6 +144,48 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
 
+## Isoform and Negation Tracking
+
+The system tracks isoform-specific GO annotations and NOT (negated) annotations:
+
+```yaml
+existing_annotations:
+# Isoform-specific annotation
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: IDA
+  original_reference_id: PMID:9815658
+  isoform: P19544-1  # UniProt isoform ID - only present for isoform-specific annotations
+  review:
+    summary: ...
+
+# NOT annotation (negated)
+- term:
+    id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  evidence_type: IDA
+  original_reference_id: PMID:9815658
+  negated: true  # This is a NOT annotation
+  isoform: P19544-1
+  review:
+    summary: WT1 does NOT activate transcription...
+```
+
+- **`isoform`**: UniProt isoform ID (e.g., `P19544-1`) - indicates what isoform was tested
+- **`negated`**: Set to `true` for NOT annotations (e.g., `NOT|involved_in` qualifier in GOA)
+
+**Important**: Just because an annotation was made on a specific isoform doesn't mean the function is isoform-specific.
+The `isoform` field indicates what was tested, not necessarily what is unique to that isoform.
+
+To backfill isoform info on existing reviews:
+```bash
+just backfill-isoforms human WT1
+just backfill-isoforms-organism human  # all genes in organism
+```
+
+See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
+
 ## Bioinformatics analyses
 
 In some cases, it may be useful to do additional bioinformatics analyses. To validate gene function. Here are some guidelines:
