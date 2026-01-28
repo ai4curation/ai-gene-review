@@ -1,0 +1,2524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVEN - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AVEN</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NQS1" target="_blank" class="term-link">
+                        Q9NQS1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AVEN";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NQS1" data-a="DESCRIPTION: AVEN is an anti-apoptotic regulator that inhibits ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AVEN is an anti-apoptotic regulator that inhibits the intrinsic apoptosis pathway through two complementary mechanisms. First, it binds Apaf-1 and interferes with Apaf-1 self-association, thereby blocking apoptosome assembly and caspase-9 activation. Second, it binds and stabilizes the anti-apoptotic BCL-xL protein, potentiating its pro-survival function. AVEN contains a predicted BH3-like motif (aa 141-153) that mediates BCL-xL interaction. The full anti-apoptotic potential of AVEN is unleashed by cathepsin D cleavage that removes an inhibitory N-terminal domain. AVEN also participates in the DNA damage response, where ATM phosphorylates it at Ser135/Ser138 to promote G2/M checkpoint arrest. AVEN is overexpressed in hematologic malignancies and contributes to chemotherapy resistance.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010972" target="_blank" class="term-link">
+                                    GO:0010972
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of G2/M transition of mitotic cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0010972" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AVEN participates in the DNA damage response and promotes G2/M checkpoint arrest. ATM phosphorylates AVEN at Ser135 and Ser138 upon DNA damage, and these phosphorylation sites are required for AVEN-driven checkpoint function. This IBA annotation is phylogenetically inferred and is consistent with experimental evidence showing AVEN&#39;s role in DNA damage checkpoint signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While AVEN does contribute to G2/M checkpoint arrest via ATM-dependent phosphorylation, this represents a secondary/modulatory function rather than AVEN&#39;s core anti-apoptotic role. The primary function of AVEN is inhibition of apoptosome assembly and BCL-xL stabilization. The checkpoint function is mechanistically distinct and should be retained as a non-core annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AVEN/AVEN-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATM phosphorylates Aven at Ser135 and Ser138, and these sites are required for Aven-driven checkpoint function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0006915" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on the UniProt keyword &#39;Apoptosis&#39;. AVEN is indeed involved in apoptosis, but as a negative regulator. The term &#39;apoptotic process&#39; is too general and does not capture AVEN&#39;s specific anti-apoptotic function. AVEN inhibits the intrinsic apoptosis pathway by binding Apaf-1 and preventing apoptosome assembly, and by stabilizing BCL-xL.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong (AVEN is involved in the apoptotic process), but it lacks specificity. AVEN specifically negatively regulates apoptosis through direct inhibition of apoptosome assembly and BCL-xL stabilization. A more informative annotation would be &#39;negative regulation of apoptotic process&#39; (GO:0043066), which is already annotated with IDA evidence.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    negative regulation of apoptotic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases. Consistent with this idea, Aven inhibited the proteolytic activation of caspases in a cell-free extract and suppressed apoptosis induced by Apaf-1 plus caspase-9.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012505" target="_blank" class="term-link">
+                                    GO:0012505
+                                </a>
+                            </span>
+                            <span class="term-label">endomembrane system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0012505" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is based on UniProt subcellular location mapping. UniProt states AVEN is &#34;Associated with intracellular membranes&#34; and is a peripheral membrane protein of the endomembrane system. The original Chau et al. 2000 paper showed AVEN localizes to light membrane/vesicular fractions with diffuse nuclear and reticular cytoplasmic staining. Later work showed AVEN co-localizes with cathepsin D in vesicular compartments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is consistent with experimental evidence showing AVEN association with intracellular membranes and vesicular compartments. This localization is functionally relevant as cathepsin D processing of AVEN in vesicular compartments releases its anti-apoptotic potential.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AVEN/AVEN-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven localizes mainly to light membrane/vesicular fractions, with diffuse nuclear and reticular cytoplasmic staining; it can co-localize with cathepsin D (CathD) in vesicular compartments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10949025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aven, a novel inhibitor of caspase activation, binds Bcl-xL ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0005515" data-r="PMID:10949025" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation reflects AVEN&#39;s binding to APAF1 (O14727) and BCL2L1/BCL-xL (Q07817). While the interactions are well-documented (AVEN was discovered through yeast two-hybrid screen for BCL-xL interactors), the term &#39;protein binding&#39; is uninformative. More specific molecular function terms should be used.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#39;protein binding&#39; (GO:0005515) is too generic to be informative. AVEN has specific, characterized binding partners (Apaf-1 and BCL-xL) with defined functional consequences. The binding to Apaf-1 inhibits apoptosome assembly, while BCL-xL binding stabilizes and potentiates this anti-apoptotic protein. More specific terms like &#39;BH domain binding&#39; (GO:0051400) for BCL-xL interaction would be more appropriate, though the core function is better captured by process annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven is broadly expressed and is conserved in other mammalian species. Only those mutants of Bcl-x(L)that retain their antiapoptotic activity are capable of binding Aven.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-6805507
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0005829" data-r="Reactome:R-HSA-6805507" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TAS annotation from Reactome reflects AVEN localization in the cytosol where it can interact with Apaf-1 to inhibit apoptosome assembly. Apoptosome formation occurs in the cytosol following cytochrome c release from mitochondria, so cytosolic localization of AVEN is required for its anti-apoptotic function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization is consistent with AVEN&#39;s function as an inhibitor of apoptosome assembly. The Reactome pathway &#39;APAF1 binds AVEN&#39; documents this interaction in the cytosol. AVEN also associates with membrane fractions, but cytosolic AVEN is the pool that interacts with Apaf-1 to prevent caspase activation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-6805507
+                                    
+                                </span>
+                                
+                                <div class="support-text">The binding of AVEN to apoptotic protease activating factor 1 (APAF1) is thought to interfere with the ability of APAF1 to self-associate during apoptosome assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10949025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aven, a novel inhibitor of caspase activation, binds Bcl-xL ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0016020" data-r="PMID:10949025" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IDA annotation indicates AVEN associates with membranes. The original Chau et al. paper showed AVEN localizes to light membrane fractions by subcellular fractionation. UniProt describes AVEN as a peripheral membrane protein of the endomembrane system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The membrane localization is experimentally validated and functionally relevant. AVEN co-localizes with cathepsin D in vesicular/membrane compartments where proteolytic processing removes the N-terminal inhibitory domain to unleash AVEN&#39;s full anti-apoptotic activity. Both cytosolic and membrane-associated pools of AVEN are physiologically relevant.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AVEN/AVEN-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Biochemical fractionation and microscopy place Aven in light membrane/vesicular pools and nucleus/cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10949025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aven, a novel inhibitor of caspase activation, binds Bcl-xL ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0043066" data-r="PMID:10949025" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core functional annotation for AVEN. AVEN negatively regulates apoptosis through two mechanisms: (1) binding Apaf-1 and interfering with its self-association, thereby blocking apoptosome assembly and caspase-9 activation; (2) binding and stabilizing BCL-xL to potentiate its anti-apoptotic function. Chau et al. demonstrated that AVEN inhibited caspase proteolytic activation in cell-free extracts and suppressed apoptosis induced by Apaf-1 plus caspase-9. AVEN also protected against death in a mouse Sindbis virus infection model.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures AVEN&#39;s core function as an anti-apoptotic regulator. The IDA evidence from the original discovery paper is strong, demonstrating both biochemical inhibition of caspase activation and cellular protection from apoptosis. This is a legitimate, evolved anti-apoptotic function, not a downstream metabolic effect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases. Consistent with this idea, Aven inhibited the proteolytic activation of caspases in a cell-free extract and suppressed apoptosis induced by Apaf-1 plus caspase-9.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905101" target="_blank" class="term-link">
+                                    GO:1905101
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10949025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aven, a novel inhibitor of caspase activation, binds Bcl-xL ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:1905101" data-r="PMID:10949025" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AVEN directly inhibits apoptosome assembly by binding Apaf-1 and preventing its self-association. This is the specific mechanistic step at which AVEN acts to inhibit apoptosis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term (GO:1905101) more precisely describes AVEN&#39;s mechanism of action than the broader &#39;negative regulation of apoptotic process&#39;. AVEN binds Apaf-1 and interferes with its oligomerization, which is required for apoptosome formation. This is the proximal step that AVEN inhibits to block caspase activation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    Reactome:R-HSA-6805507
+                                    
+                                </span>
+                                
+                                <div class="support-text">The binding of AVEN to apoptotic protease activating factor 1 (APAF1) is thought to interfere with the ability of APAF1 to self-associate during apoptosome assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051400" target="_blank" class="term-link">
+                                    GO:0051400
+                                </a>
+                            </span>
+                            <span class="term-label">BH domain binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10949025
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aven, a novel inhibitor of caspase activation, binds Bcl-xL ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NQS1" data-a="GO:0051400" data-r="PMID:10949025" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AVEN binds BCL-xL (BCL2L1), an anti-apoptotic BCL-2 family member. AVEN was originally identified by yeast two-hybrid screen for BCL-xL interactors. Computational analysis has identified a predicted BH3-like motif in AVEN (aa 141-153) that may mediate this interaction. Only BCL-xL mutants that retain anti-apoptotic activity can bind AVEN.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This molecular function annotation would capture AVEN&#39;s specific interaction with BCL-xL through the BH domain binding interface. This is more informative than generic &#39;protein binding&#39; and reflects the BH3-like motif in AVEN that mediates the interaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                                        PMID:10949025
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Only those mutants of Bcl-x(L)that retain their antiapoptotic activity are capable of binding Aven.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AVEN/AVEN-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Computational/biophysical analyses identified a BH3-like segment in Aven (aa 141-153) predicted to bind BCL-xL with appreciable affinity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AVEN binds BCL-xL through a predicted BH3-like motif (aa 141-153), stabilizing BCL-xL and potentiating its anti-apoptotic function. Only BCL-xL mutants retaining anti-apoptotic activity can bind AVEN.</h3>
+                <span class="vote-buttons" data-g="Q9NQS1" data-a="FUNCTION: AVEN binds BCL-xL through a predicted BH3-like mot..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051400" target="_blank" class="term-link">
+                            BH domain binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                negative regulation of apoptotic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905101" target="_blank" class="term-link">
+                                negative regulation of apoptosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10949025" target="_blank" class="term-link">
+                            PMID:10949025
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN was identified by yeast two-hybrid screen for BCL-xL interactors</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN binds both BCL-xL and Apaf-1</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN interferes with Apaf-1 self-association</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN inhibits caspase proteolytic activation in cell-free extracts</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN suppresses apoptosis induced by Apaf-1 plus caspase-9</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN is broadly expressed and conserved in mammals</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN localizes to light membrane/vesicular fractions</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-6805507
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">APAF1 binds AVEN</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN binding to APAF1 interferes with APAF1 self-association during apoptosome assembly</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Anti-apoptotic function of AVEN may require proteolytic removal of inhibitory N-terminus</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/AVEN/AVEN-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research synthesis for AVEN</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN binds and stabilizes BCL-xL, potentiating its anti-apoptotic function</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cathepsin D cleaves AVEN N-terminus at aa 144/145 and 196/197 to unleash anti-apoptotic activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN contains a predicted BH3-like motif (aa 141-153) for BCL-xL interaction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATM phosphorylates AVEN at Ser135/Ser138 for G2/M checkpoint function</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AVEN is overexpressed in acute leukemias with adverse outcomes</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AVEN-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NQS1" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-18T20:25:39.238764'<br />
+end_time: '2026-01-18T20:31:19.971846'<br />
+duration_seconds: 340.73<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: AVEN<br />
+  gene_symbol: AVEN<br />
+  uniprot_accession: Q9NQS1<br />
+  protein_description: 'RecName: Full=Cell death regulator Aven;'<br />
+  gene_info: Name=AVEN;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Aven. (IPR026187)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 17</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9NQS1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cell death regulator Aven;</li>
+<li><strong>Gene Information:</strong> Name=AVEN;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Aven. (IPR026187)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "AVEN" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'AVEN' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>AVEN</strong> (gene ID: AVEN, UniProt: Q9NQS1) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9NQS1</li>
+<li><strong>Protein Description:</strong> RecName: Full=Cell death regulator Aven;</li>
+<li><strong>Gene Information:</strong> Name=AVEN;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Aven. (IPR026187)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "AVEN" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'AVEN' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>AVEN</strong> (gene ID: AVEN, UniProt: Q9NQS1) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan and verification<br />
+- Identity verification: The target is the human gene AVEN (UniProt: Q9NQS1), encoding “cell death regulator Aven” (also called AVEN). Foundational papers identify human Aven as a novel anti-apoptotic factor that binds BCL-xL (BCL2L1) and Apaf-1, and inhibits caspase activation in human systems, confirming the gene/protein match and organism (Homo sapiens) (chau2000avenanovel pages 1-2, chau2000avenanovel pages 2-3).<br />
+- Scope of this report: mechanistic function, interaction partners, subcellular localization, pathway placement, disease links, and translational context, with URLs and publication years for each cited source.</p>
+<p>1) Key concepts and definitions<br />
+- Definition and discovery: Aven is an anti-apoptotic protein first identified by yeast two-hybrid screening for interactors of BCL-xL; it also binds Apaf-1 and can block Apaf-1 self-association, thereby inhibiting apoptosome formation and caspase-9 activation downstream of mitochondrial cytochrome c release (intrinsic apoptosis) (Molecular Cell, 2000; https://doi.org/10.1016/S1097-2765(05)00021-3) (chau2000avenanovel pages 1-2, chau2000avenanovel pages 2-3).<br />
+- Mechanistic role: Aven prevents Apaf-1-driven apoptosome assembly/activation and can stabilize the pro-survival Bcl-2 family protein BCL-xL, collectively dampening caspase activation and apoptosis signals (Eur J Cancer, 2010; https://doi.org/10.1016/j.ejca.2010.06.011; Cell Death Differ, 2012; https://doi.org/10.1038/cdd.2012.17) (kutuk2010avenblocksdna pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).<br />
+- Cellular distribution: Aven localizes mainly to light membrane/vesicular fractions, with diffuse nuclear and reticular cytoplasmic staining; it can co-localize with cathepsin D (CathD) in vesicular compartments, consistent with proteolytic processing in endolysosomal-derived environments (Molecular Cell, 2000; Cell Death Differ, 2012) (https://doi.org/10.1016/S1097-2765(05)00021-3; https://doi.org/10.1038/cdd.2012.17) (chau2000avenanovel pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).</p>
+<p>2) Mechanisms, interactions, and structural/biochemical details<br />
+- Apaf-1 interaction and apoptosome inhibition: Aven binds Apaf-1 at/near regions encompassing the CARD-containing portion of Apaf-1 and impairs Apaf-1 self-association, inhibiting Apaf-1–mediated caspase activation in cell-free systems and in cells (Molecular Cell, 2000; Cell Death Differ, 2012) (https://doi.org/10.1016/S1097-2765(05)00021-3; https://doi.org/10.1038/cdd.2012.17) (chau2000avenanovel pages 8-9, chau2000avenanovel pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).<br />
+- BCL-xL interaction and stabilization: Aven forms complexes with BCL-xL in untreated breast cancer cells. Enforced Aven expression protects against UV-, SN-38–, and cisplatin-induced apoptosis, whereas Aven knockdown enhances apoptosis. Critically, loss of BCL-xL abrogates Aven’s protection, indicating Aven’s pro-survival function requires BCL-xL; Aven acts in part by stabilizing BCL-xL (Eur J Cancer, 2010; https://doi.org/10.1016/j.ejca.2010.06.011) (kutuk2010avenblocksdna pages 1-2).<br />
+- N-terminal inhibitory domain and cathepsin D activation: Aven harbors an N-terminal inhibitory segment whose proteolytic removal “unleashes” anti-apoptotic activity. Cathepsin D cleaves human Aven in vitro at mapped sites around amino acids ~144/145 and ~196/197; N-terminally truncated Aven retains Apaf-1 binding but exhibits enhanced anti-apoptotic function. Aven co-localizes with CathD in vesicular compartments, supporting physiological processing (Cell Death Differ, 2012; https://doi.org/10.1038/cdd.2012.17) (melzer2012theapaf1bindingprotein pages 1-2, melzer2012theapaf1bindingprotein pages 7-8).<br />
+- Putative BH3-like element and binding model: Computational/biophysical analyses identified a BH3-like segment in Aven (aa 141–153) predicted to bind BCL-xL with appreciable affinity, rationalizing the original yeast two-hybrid result and selective binding to anti-apoptotic Bcl-2 proteins (Open Biology Journal, 2012; https://doi.org/10.2174/1874196701205010006) (hawley2012anintegratedbioinformatics pages 4-5).<br />
+- DNA damage and checkpoint signaling: Aven contributes to the DNA damage response, promoting ATM-dependent G2/M checkpoint arrest; ATM phosphorylates Aven at Ser135 and Ser138, and these sites are required for Aven-driven checkpoint function (Eur J Cancer, 2010; https://doi.org/10.1016/j.ejca.2010.06.011; Open Biology Journal, 2012; https://doi.org/10.2174/1874196701205010006) (kutuk2010avenblocksdna pages 1-2, hawley2012anintegratedbioinformatics pages 4-5).</p>
+<p>3) Pathway and subcellular context<br />
+- Pathway placement: Aven functions within the intrinsic apoptosis pathway at a post-mitochondrial checkpoint by directly inhibiting Apaf-1/apoptosome formation and by bolstering BCL-xL function, thereby reducing caspase-9 activation and executioner caspase processing (Molecular Cell, 2000; Cell Death Differ, 2012) (https://doi.org/10.1016/S1097-2765(05)00021-3; https://doi.org/10.1038/cdd.2012.17) (chau2000avenanovel pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).<br />
+- Localization: Biochemical fractionation and microscopy place Aven in light membrane/vesicular pools and nucleus/cytoplasm; co-localization with CathD suggests endolysosomal/vesicular processing contributes to functional regulation (Molecular Cell, 2000; Cell Death Differ, 2012) (https://doi.org/10.1016/S1097-2765(05)00021-3; https://doi.org/10.1038/cdd.2012.17) (chau2000avenanovel pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).</p>
+<p>4) Disease associations and translational relevance<br />
+- Hematologic malignancy: AVEN is overexpressed in acute leukemias, correlating with adverse outcomes (e.g., poor prognosis in childhood ALL). In T-cell–specific transgenic models, AVEN overexpression cooperates with p53 haploinsufficiency to accelerate T-cell lymphomagenesis. In human leukemia lines (MOLT-4, CCRF-CEM, Kasumi-1), AVEN knockdown increases apoptosis and limits growth, supporting an oncoprotein role (Oncogene, 2013; https://doi.org/10.1038/onc.2012.263) (eissmann2013overexpressionofthe pages 1-2).<br />
+- Solid tumors and chemotherapy response: In breast cancer models, Aven promotes survival after DNA damage by stabilizing BCL-xL; Aven depletion sensitizes cells to DNA-damaging agents (Eur J Cancer, 2010; https://doi.org/10.1016/j.ejca.2010.06.011) (kutuk2010avenblocksdna pages 1-2).<br />
+- In vivo antiviral/apoptosis model: Human Aven reduced organismal death in a mouse Sindbis virus infection model, illustrating potent anti-apoptotic function in vivo (Molecular Cell, 2000; https://doi.org/10.1016/S1097-2765(05)00021-3) (chau2000avenanovel pages 2-3).</p>
+<p>5) Quantitative and experimental highlights<br />
+- Interaction and function assays: Aven–BCL-xL and Aven–Apaf-1 interactions were shown by yeast two-hybrid and co-immunoprecipitation. Functional inhibition of the apoptosome was demonstrated in cell-free reconstitutions and in cells, with reduced caspase-9/-3 activation. Tissue fractionation and confocal microscopy delineated subcellular pools (Molecular Cell, 2000; https://doi.org/10.1016/S1097-2765(05)00021-3) (chau2000avenanovel pages 1-2).<br />
+- Cathepsin D processing sites: In vitro mapping implicated cleavage near aa 144/145 and 196/197. N-terminally truncated Aven (ΔN-Aven) retains Apaf-1 binding with enhanced anti-apoptotic effect, supporting a protease-activation switch (Cell Death Differ, 2012; https://doi.org/10.1038/cdd.2012.17) (melzer2012theapaf1bindingprotein pages 7-8).<br />
+- Dependency on BCL-xL: In breast cancer cells, Aven’s cytoprotection against DNA damage required BCL-xL; siRNA depletion of BCL-xL negated Aven’s protective effect (Eur J Cancer, 2010; https://doi.org/10.1016/j.ejca.2010.06.011) (kutuk2010avenblocksdna pages 1-2).<br />
+- Expression breadth: Northern blotting detected an ~1.7 kb AVEN transcript broadly in adult human tissues, with notable expression in heart, skeletal muscle, kidney, liver, pancreas, and testis (Molecular Cell, 2000; https://doi.org/10.1016/S1097-2765(05)00021-3) (chau2000avenanovel pages 2-3).</p>
+<p>6) Recent developments (2023–2024)<br />
+- Targeted 2023–2024 literature searches did not retrieve AVEN-specific primary studies or authoritative reviews with novel mechanistic updates beyond the established interaction with BCL-xL/Apaf-1, CathD-mediated activation, and oncogenic roles summarized above. Current translational activity around intrinsic apoptosis more broadly (e.g., BCL-xL pharmacology) remains active, but AVEN-focused advances in 2023–2024 were not identified in our evidence set. This highlights a potential evidence gap and opportunity for updated functional/structural studies of AVEN in human disease contexts (kutuk2010avenblocksdna pages 1-2).</p>
+<p>7) Expert perspectives and open questions<br />
+- The foundational and mechanistic studies collectively support AVEN as a node at the apoptosome checkpoint and a BCL-xL-cooperative survival factor. Key open questions include: structural resolution of the Aven–Apaf-1 interface; definitive mapping of domains/motifs governing BCL-xL binding in full-length Aven; the extent of protease-mediated activation in vivo across tumor types; and whether AVEN status can stratify response to DNA-damaging therapy or BCL-xL–targeted approaches (Molecular Cell, 2000; Eur J Cancer, 2010; Cell Death Differ, 2012) (chau2000avenanovel pages 1-2, kutuk2010avenblocksdna pages 1-2, melzer2012theapaf1bindingprotein pages 1-2).</p>
+<p>Embedded evidence summary<br />
+| Aspect | Key finding | Experimental evidence / assay | Model / system | URL | Year | Citation ID |<br />
+|---|---|---|---|---|---:|---|<br />
+| Discovery and identity | AVEN identified as a novel inhibitor of caspase activation that binds BCL-xL and APAF-1; broadly expressed transcript (~1.7 kb). | Yeast two-hybrid discovery, co-immunoprecipitation, cell-free apoptosome inhibition assays, in vivo protection (Sindbis virus mouse model). | Human cDNAs, transfected BHK cells, cell-free extracts, mouse infection model. | https://doi.org/10.1016/s1097-2765(05)00021-3 | 2000 | (chau2000avenanovel pages 2-3) |<br />
+| Binding to BCL-xL | AVEN binds anti-apoptotic BCL-xL; contains a BH3-like region predicted to mediate binding. | Yeast two-hybrid, co-IP, peptide modeling and binding assays; functional dependency shown by loss-of-function experiments. | Human cell lines, peptide assays, computational modeling. | https://doi.org/10.1016/s1097-2765(05)00021-3 , https://doi.org/10.1016/j.ejca.2010.06.011 | 2000, 2010 | (chau2000avenanovel pages 2-3, kutuk2010avenblocksdna pages 1-2) |<br />
+| Binding to APAF-1 and apoptosome inhibition | AVEN binds APAF-1 and interferes with APAF-1 self-association, inhibiting apoptosome formation and downstream caspase-9/-3 activation. | Co-immunoprecipitation, cell-free apoptosome reconstitution and caspase activity assays. | Cell-free extracts, human cells. | https://doi.org/10.1016/s1097-2765(05)00021-3 , https://doi.org/10.1038/cdd.2012.17 | 2000, 2012 | (chau2000avenanovel pages 2-3, melzer2012theapaf1bindingprotein pages 1-2) |<br />
+| Subcellular localization | Predominantly in light-membrane/vesicular fractions; shows diffuse nuclear and reticular cytoplasmic staining; colocalizes with Cathepsin D in vesicular compartments. | Subcellular fractionation, immunofluorescence/confocal microscopy, co-localization studies. | Transfected BHK cells, MCF-7 breast cancer cells. | https://doi.org/10.1016/s1097-2765(05)00021-3 , https://doi.org/10.1038/cdd.2012.17 | 2000, 2012 | (chau2000avenanovel pages 2-3, melzer2012theapaf1bindingprotein pages 1-2) |<br />
+| Stabilization of BCL-xL &amp; effect on DNA-damage apoptosis | AVEN stabilizes BCL-xL and protects cells from DNA-damage–induced apoptosis; BCL-xL is required for AVEN's prosurvival effect (BCL-xL depletion abrogates protection). | Overexpression and RNAi knockdown, Annexin V, DEVDase/caspase activity assays, tissue microarray analysis. | Human breast cancer cell lines (e.g., MCF-7); clinical tissue arrays. | https://doi.org/10.1016/j.ejca.2010.06.011 | 2010 | (kutuk2010avenblocksdna pages 1-2) |<br />
+| ATM-related phosphorylation notes | AVEN participates in DNA-damage response: ATM phosphorylates AVEN (Ser135/Ser138), required for G2/M checkpoint function. | Phosphorylation assays, checkpoint assays, mutational analysis of phosphorylation sites. | Human cell lines subjected to DNA damage. | https://doi.org/10.1016/j.ejca.2010.06.011 , https://doi.org/10.2174/1874196701205010006 | 2010, 2012 | (kutuk2010avenblocksdna pages 1-2, hawley2012anintegratedbioinformatics pages 4-5) |<br />
+| Cathepsin D cleavage sites &amp; activation of anti-apoptotic function | Cathepsin D (CathD) cleaves AVEN N-terminus (mapped in vitro to ~aa144/145 and aa196/197); N-terminal removal "unleashes" AVEN's anti-apoptotic activity while truncated AVEN still binds APAF-1. | In vitro CathD cleavage assays, western blot mapping of cleavage, co-IP of truncated constructs, colocalization with CathD. | Human cancer cell lines (e.g., MCF-7), biochemical assays. | https://doi.org/10.1038/cdd.2012.17 | 2012 | (melzer2012theapaf1bindingprotein pages 1-2) |<br />
+| Oncogenic overexpression in hematologic malignancies &amp; functional effects | AVEN is overexpressed in acute leukemias (correlates with poor prognosis); AVEN overexpression promotes lymphomagenesis in transgenic mice (cooperates with p53 loss); AVEN knockdown reduces leukemia cell growth via apoptosis. | Patient mRNA expression profiling, transgenic mouse models, xenografts, RNAi-mediated knockdown, proliferation/apoptosis assays. | Human T-ALL patient samples, transgenic mice, human leukemia cell lines (MOLT-4, CCRF-CEM, Kasumi-1). | https://doi.org/10.1038/onc.2012.263 | 2013 | (eissmann2013overexpressionofthe pages 1-2) |</p>
+<p><em>Table: Concise, source-linked experimental evidence summary for human AVEN (Q9NQS1), listing key functional findings, assays, models, exact URLs, years, and internal citation IDs to support functional annotation and translational context.</em></p>
+<p>Conclusions<br />
+- Human AVEN (Q9NQS1) is a non-enzymatic anti-apoptotic regulator that binds BCL-xL and Apaf-1, inhibits apoptosome formation and caspase activation, and promotes cell survival after genotoxic stress, at least partly by stabilizing BCL-xL. Its anti-apoptotic potential is enhanced by N‑terminal removal via cathepsin D. AVEN is broadly expressed and is overexpressed in leukemias with functional oncogenic effects in vivo and in cell models, highlighting biomarker and therapeutic relevance. While the core biology is well established, recent AVEN-specific updates (2023–2024) appear limited in the retrieved literature, underscoring a need for renewed investigation into its structure–function relationships and translational exploitation (chau2000avenanovel pages 1-2, chau2000avenanovel pages 2-3, kutuk2010avenblocksdna pages 1-2, melzer2012theapaf1bindingprotein pages 1-2, eissmann2013overexpressionofthe pages 1-2).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(chau2000avenanovel pages 1-2): BN Chau, EHY Cheng, DA Kerr, and JM Hardwick. Aven, a novel inhibitor of caspase activation, binds bcl-xl and apaf-1. Molecular cell, 6 1:31-40, Jul 2000. URL: https://doi.org/10.1016/s1097-2765(05)00021-3, doi:10.1016/s1097-2765(05)00021-3. This article has 305 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chau2000avenanovel pages 2-3): BN Chau, EHY Cheng, DA Kerr, and JM Hardwick. Aven, a novel inhibitor of caspase activation, binds bcl-xl and apaf-1. Molecular cell, 6 1:31-40, Jul 2000. URL: https://doi.org/10.1016/s1097-2765(05)00021-3, doi:10.1016/s1097-2765(05)00021-3. This article has 305 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutuk2010avenblocksdna pages 1-2): Ozgur Kutuk, Sehime Gulsun Temel, Sahsine Tolunay, and Huveyda Basaga. Aven blocks dna damage-induced apoptosis by stabilising bcl-xl. European journal of cancer, 46 13:2494-505, Sep 2010. URL: https://doi.org/10.1016/j.ejca.2010.06.011, doi:10.1016/j.ejca.2010.06.011. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(melzer2012theapaf1bindingprotein pages 1-2): I. Melzer, Sbm Fernández, S. Bösser, K. Lohrig, U. Lewandrowski, D. Wolters, S. Kehrloesser, Marie-Luise Brezniceanu, Alexander C. Theos, PM Irusta, Francis Impens, K. Gevaert, and M. Zörnig. The apaf-1-binding protein aven is cleaved by cathepsin d to unleash its anti-apoptotic potential. Cell Death and Differentiation, 19:1435-1445, Mar 2012. URL: https://doi.org/10.1038/cdd.2012.17, doi:10.1038/cdd.2012.17. This article has 39 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chau2000avenanovel pages 8-9): BN Chau, EHY Cheng, DA Kerr, and JM Hardwick. Aven, a novel inhibitor of caspase activation, binds bcl-xl and apaf-1. Molecular cell, 6 1:31-40, Jul 2000. URL: https://doi.org/10.1016/s1097-2765(05)00021-3, doi:10.1016/s1097-2765(05)00021-3. This article has 305 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(melzer2012theapaf1bindingprotein pages 7-8): I. Melzer, Sbm Fernández, S. Bösser, K. Lohrig, U. Lewandrowski, D. Wolters, S. Kehrloesser, Marie-Luise Brezniceanu, Alexander C. Theos, PM Irusta, Francis Impens, K. Gevaert, and M. Zörnig. The apaf-1-binding protein aven is cleaved by cathepsin d to unleash its anti-apoptotic potential. Cell Death and Differentiation, 19:1435-1445, Mar 2012. URL: https://doi.org/10.1038/cdd.2012.17, doi:10.1038/cdd.2012.17. This article has 39 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hawley2012anintegratedbioinformatics pages 4-5): Robert G. Hawley, Yuzhong Chen, Irene Riz, and Chen Zeng. An integrated bioinformatics and computational biology approach identifies new bh3-only protein candidates. The open biology journal, 5:6-16, May 2012. URL: https://doi.org/10.2174/1874196701205010006, doi:10.2174/1874196701205010006. This article has 22 citations.</p>
+</li>
+<li>
+<p>(eissmann2013overexpressionofthe pages 1-2): M. Eissmann, I. Melzer, S. B. M. Fernández, G. Michel, M. H. Angelis, G. Hoefler, P. Finkenwirth, A. Jauch, B. Schoell, M. Grez, M. Schmidt, C. Bartholomae, S. Newrzela, Nadine Haetscher, M. Rieger, C. Zachskorn, M. Mittelbronn, and M. Zörnig. Overexpression of the anti-apoptotic protein aven contributes to increased malignancy in hematopoietic neoplasms. Oncogene, 32:2586-2591, May 2013. URL: https://doi.org/10.1038/onc.2012.263, doi:10.1038/onc.2012.263. This article has 33 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kutuk2010avenblocksdna pages 1-2</li>
+<li>hawley2012anintegratedbioinformatics pages 4-5</li>
+<li>eissmann2013overexpressionofthe pages 1-2</li>
+<li>chau2000avenanovel pages 2-3</li>
+<li>chau2000avenanovel pages 1-2</li>
+<li>chau2000avenanovel pages 8-9</li>
+<li>https://doi.org/10.1016/S1097-2765(05</li>
+<li>https://doi.org/10.1016/j.ejca.2010.06.011;</li>
+<li>https://doi.org/10.1038/cdd.2012.17</li>
+<li>https://doi.org/10.1016/j.ejca.2010.06.011</li>
+<li>https://doi.org/10.2174/1874196701205010006</li>
+<li>https://doi.org/10.1038/onc.2012.263</li>
+<li>https://doi.org/10.1016/s1097-2765(05</li>
+<li>https://doi.org/10.1016/j.ejca.2010.06.011,</li>
+<li>https://doi.org/10.1038/cdd.2012.17,</li>
+<li>https://doi.org/10.2174/1874196701205010006,</li>
+<li>https://doi.org/10.1038/onc.2012.263,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NQS1
+gene_symbol: AVEN
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AVEN is an anti-apoptotic regulator that inhibits the intrinsic apoptosis pathway through two
+  complementary mechanisms. First, it binds Apaf-1 and interferes with Apaf-1 self-association,
+  thereby blocking apoptosome assembly and caspase-9 activation. Second, it binds and stabilizes
+  the anti-apoptotic BCL-xL protein, potentiating its pro-survival function. AVEN contains a
+  predicted BH3-like motif (aa 141-153) that mediates BCL-xL interaction. The full anti-apoptotic
+  potential of AVEN is unleashed by cathepsin D cleavage that removes an inhibitory N-terminal
+  domain. AVEN also participates in the DNA damage response, where ATM phosphorylates it at
+  Ser135/Ser138 to promote G2/M checkpoint arrest. AVEN is overexpressed in hematologic
+  malignancies and contributes to chemotherapy resistance.
+existing_annotations:
+- term:
+    id: GO:0010972
+    label: negative regulation of G2/M transition of mitotic cell cycle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      AVEN participates in the DNA damage response and promotes G2/M checkpoint arrest. ATM
+      phosphorylates AVEN at Ser135 and Ser138 upon DNA damage, and these phosphorylation
+      sites are required for AVEN-driven checkpoint function. This IBA annotation is
+      phylogenetically inferred and is consistent with experimental evidence showing AVEN&#39;s
+      role in DNA damage checkpoint signaling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While AVEN does contribute to G2/M checkpoint arrest via ATM-dependent phosphorylation,
+      this represents a secondary/modulatory function rather than AVEN&#39;s core anti-apoptotic
+      role. The primary function of AVEN is inhibition of apoptosome assembly and BCL-xL
+      stabilization. The checkpoint function is mechanistically distinct and should be
+      retained as a non-core annotation.
+    supported_by:
+      - reference_id: file:human/AVEN/AVEN-deep-research-falcon.md
+        supporting_text: &#34;ATM phosphorylates Aven at Ser135 and Ser138, and these sites are required for Aven-driven checkpoint function&#34;
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This IEA annotation is based on the UniProt keyword &#39;Apoptosis&#39;. AVEN is indeed involved
+      in apoptosis, but as a negative regulator. The term &#39;apoptotic process&#39; is too general
+      and does not capture AVEN&#39;s specific anti-apoptotic function. AVEN inhibits the intrinsic
+      apoptosis pathway by binding Apaf-1 and preventing apoptosome assembly, and by stabilizing
+      BCL-xL.
+    action: MODIFY
+    reason: &gt;-
+      The annotation is not wrong (AVEN is involved in the apoptotic process), but it lacks
+      specificity. AVEN specifically negatively regulates apoptosis through direct inhibition
+      of apoptosome assembly and BCL-xL stabilization. A more informative annotation would be
+      &#39;negative regulation of apoptotic process&#39; (GO:0043066), which is already annotated
+      with IDA evidence.
+    proposed_replacement_terms:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases. Consistent with this idea, Aven inhibited the proteolytic activation of caspases in a cell-free extract and suppressed apoptosis induced by Apaf-1 plus caspase-9.&#34;
+- term:
+    id: GO:0012505
+    label: endomembrane system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This IEA annotation is based on UniProt subcellular location mapping. UniProt states AVEN
+      is &#34;Associated with intracellular membranes&#34; and is a peripheral membrane protein of the
+      endomembrane system. The original Chau et al. 2000 paper showed AVEN localizes to light
+      membrane/vesicular fractions with diffuse nuclear and reticular cytoplasmic staining.
+      Later work showed AVEN co-localizes with cathepsin D in vesicular compartments.
+    action: ACCEPT
+    reason: &gt;-
+      The annotation is consistent with experimental evidence showing AVEN association with
+      intracellular membranes and vesicular compartments. This localization is functionally
+      relevant as cathepsin D processing of AVEN in vesicular compartments releases its
+      anti-apoptotic potential.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1&#34;
+      - reference_id: file:human/AVEN/AVEN-deep-research-falcon.md
+        supporting_text: &#34;Aven localizes mainly to light membrane/vesicular fractions, with diffuse nuclear and reticular cytoplasmic staining; it can co-localize with cathepsin D (CathD) in vesicular compartments&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10949025
+  review:
+    summary: &gt;-
+      This annotation reflects AVEN&#39;s binding to APAF1 (O14727) and BCL2L1/BCL-xL (Q07817).
+      While the interactions are well-documented (AVEN was discovered through yeast two-hybrid
+      screen for BCL-xL interactors), the term &#39;protein binding&#39; is uninformative. More specific
+      molecular function terms should be used.
+    action: REMOVE
+    reason: &gt;-
+      The term &#39;protein binding&#39; (GO:0005515) is too generic to be informative. AVEN has
+      specific, characterized binding partners (Apaf-1 and BCL-xL) with defined functional
+      consequences. The binding to Apaf-1 inhibits apoptosome assembly, while BCL-xL binding
+      stabilizes and potentiates this anti-apoptotic protein. More specific terms like
+      &#39;BH domain binding&#39; (GO:0051400) for BCL-xL interaction would be more appropriate,
+      though the core function is better captured by process annotations.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven is broadly expressed and is conserved in other mammalian species. Only those mutants of Bcl-x(L)that retain their antiapoptotic activity are capable of binding Aven.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6805507
+  review:
+    summary: &gt;-
+      This TAS annotation from Reactome reflects AVEN localization in the cytosol where it
+      can interact with Apaf-1 to inhibit apoptosome assembly. Apoptosome formation occurs
+      in the cytosol following cytochrome c release from mitochondria, so cytosolic
+      localization of AVEN is required for its anti-apoptotic function.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosolic localization is consistent with AVEN&#39;s function as an inhibitor of
+      apoptosome assembly. The Reactome pathway &#39;APAF1 binds AVEN&#39; documents this
+      interaction in the cytosol. AVEN also associates with membrane fractions, but
+      cytosolic AVEN is the pool that interacts with Apaf-1 to prevent caspase activation.
+    supported_by:
+      - reference_id: Reactome:R-HSA-6805507
+        supporting_text: &#34;The binding of AVEN to apoptotic protease activating factor 1 (APAF1) is thought to interfere with the ability of APAF1 to self-associate during apoptosome assembly&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:10949025
+  review:
+    summary: &gt;-
+      This IDA annotation indicates AVEN associates with membranes. The original Chau et al.
+      paper showed AVEN localizes to light membrane fractions by subcellular fractionation.
+      UniProt describes AVEN as a peripheral membrane protein of the endomembrane system.
+    action: ACCEPT
+    reason: &gt;-
+      The membrane localization is experimentally validated and functionally relevant.
+      AVEN co-localizes with cathepsin D in vesicular/membrane compartments where
+      proteolytic processing removes the N-terminal inhibitory domain to unleash AVEN&#39;s
+      full anti-apoptotic activity. Both cytosolic and membrane-associated pools of AVEN
+      are physiologically relevant.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1&#34;
+      - reference_id: file:human/AVEN/AVEN-deep-research-falcon.md
+        supporting_text: &#34;Biochemical fractionation and microscopy place Aven in light membrane/vesicular pools and nucleus/cytoplasm&#34;
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IDA
+  original_reference_id: PMID:10949025
+  review:
+    summary: &gt;-
+      This is the core functional annotation for AVEN. AVEN negatively regulates apoptosis
+      through two mechanisms: (1) binding Apaf-1 and interfering with its self-association,
+      thereby blocking apoptosome assembly and caspase-9 activation; (2) binding and
+      stabilizing BCL-xL to potentiate its anti-apoptotic function. Chau et al. demonstrated
+      that AVEN inhibited caspase proteolytic activation in cell-free extracts and suppressed
+      apoptosis induced by Apaf-1 plus caspase-9. AVEN also protected against death in a
+      mouse Sindbis virus infection model.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation accurately captures AVEN&#39;s core function as an anti-apoptotic regulator.
+      The IDA evidence from the original discovery paper is strong, demonstrating both
+      biochemical inhibition of caspase activation and cellular protection from apoptosis.
+      This is a legitimate, evolved anti-apoptotic function, not a downstream metabolic effect.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases. Consistent with this idea, Aven inhibited the proteolytic activation of caspases in a cell-free extract and suppressed apoptosis induced by Apaf-1 plus caspase-9.&#34;
+- term:
+    id: GO:1905101
+    label: negative regulation of apoptosome assembly
+  evidence_type: IDA
+  original_reference_id: PMID:10949025
+  review:
+    summary: &gt;-
+      AVEN directly inhibits apoptosome assembly by binding Apaf-1 and preventing its
+      self-association. This is the specific mechanistic step at which AVEN acts to
+      inhibit apoptosis.
+    action: NEW
+    reason: &gt;-
+      This term (GO:1905101) more precisely describes AVEN&#39;s mechanism of action than
+      the broader &#39;negative regulation of apoptotic process&#39;. AVEN binds Apaf-1 and
+      interferes with its oligomerization, which is required for apoptosome formation.
+      This is the proximal step that AVEN inhibits to block caspase activation.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Aven interferes with the ability of Apaf-1 to self-associate, suggesting that Aven impairs Apaf-1-mediated activation of caspases.&#34;
+      - reference_id: Reactome:R-HSA-6805507
+        supporting_text: &#34;The binding of AVEN to apoptotic protease activating factor 1 (APAF1) is thought to interfere with the ability of APAF1 to self-associate during apoptosome assembly&#34;
+- term:
+    id: GO:0051400
+    label: BH domain binding
+  evidence_type: IDA
+  original_reference_id: PMID:10949025
+  review:
+    summary: &gt;-
+      AVEN binds BCL-xL (BCL2L1), an anti-apoptotic BCL-2 family member. AVEN was originally
+      identified by yeast two-hybrid screen for BCL-xL interactors. Computational analysis
+      has identified a predicted BH3-like motif in AVEN (aa 141-153) that may mediate
+      this interaction. Only BCL-xL mutants that retain anti-apoptotic activity can bind AVEN.
+    action: NEW
+    reason: &gt;-
+      This molecular function annotation would capture AVEN&#39;s specific interaction with
+      BCL-xL through the BH domain binding interface. This is more informative than
+      generic &#39;protein binding&#39; and reflects the BH3-like motif in AVEN that mediates
+      the interaction.
+    supported_by:
+      - reference_id: PMID:10949025
+        supporting_text: &#34;Only those mutants of Bcl-x(L)that retain their antiapoptotic activity are capable of binding Aven.&#34;
+      - reference_id: file:human/AVEN/AVEN-deep-research-falcon.md
+        supporting_text: &#34;Computational/biophysical analyses identified a BH3-like segment in Aven (aa 141-153) predicted to bind BCL-xL with appreciable affinity&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:10949025
+  title: Aven, a novel inhibitor of caspase activation, binds Bcl-xL and Apaf-1.
+  findings:
+    - statement: AVEN was identified by yeast two-hybrid screen for BCL-xL interactors
+    - statement: AVEN binds both BCL-xL and Apaf-1
+    - statement: AVEN interferes with Apaf-1 self-association
+    - statement: AVEN inhibits caspase proteolytic activation in cell-free extracts
+    - statement: AVEN suppresses apoptosis induced by Apaf-1 plus caspase-9
+    - statement: AVEN is broadly expressed and conserved in mammals
+    - statement: AVEN localizes to light membrane/vesicular fractions
+- id: Reactome:R-HSA-6805507
+  title: APAF1 binds AVEN
+  findings:
+    - statement: AVEN binding to APAF1 interferes with APAF1 self-association during apoptosome assembly
+    - statement: Anti-apoptotic function of AVEN may require proteolytic removal of inhibitory N-terminus
+- id: file:human/AVEN/AVEN-deep-research-falcon.md
+  title: Deep research synthesis for AVEN
+  findings:
+    - statement: AVEN binds and stabilizes BCL-xL, potentiating its anti-apoptotic function
+    - statement: Cathepsin D cleaves AVEN N-terminus at aa 144/145 and 196/197 to unleash anti-apoptotic activity
+    - statement: AVEN contains a predicted BH3-like motif (aa 141-153) for BCL-xL interaction
+    - statement: ATM phosphorylates AVEN at Ser135/Ser138 for G2/M checkpoint function
+    - statement: AVEN is overexpressed in acute leukemias with adverse outcomes
+core_functions:
+  - molecular_function:
+      id: GO:0051400
+      label: BH domain binding
+    description: &gt;-
+      AVEN binds BCL-xL through a predicted BH3-like motif (aa 141-153), stabilizing BCL-xL
+      and potentiating its anti-apoptotic function. Only BCL-xL mutants retaining
+      anti-apoptotic activity can bind AVEN.
+    directly_involved_in:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+      - id: GO:1905101
+        label: negative regulation of apoptosome assembly
+    locations:
+      - id: GO:0005829
+        label: cytosol
+      - id: GO:0016020
+        label: membrane
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

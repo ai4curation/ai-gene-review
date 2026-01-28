@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMA7B - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TMA7B</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A024R1R8" target="_blank" class="term-link">
+                        A0A024R1R8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TMA7B";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A024R1R8" data-a="DESCRIPTION: TMA7B (Translation machinery-associated protein 7B..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TMA7B (Translation machinery-associated protein 7B) is a small 64-amino acid protein belonging to the TMA7 family (Pfam: PF09072, InterPro: IPR015157). It is a paralog of human TMA7 (Q9Y2S6). No direct experimental studies characterize human TMA7B specifically; however, function can be inferred from the well-characterized yeast ortholog TMA7 (Saccharomyces cerevisiae). In yeast, TMA7 associates with the 40S ribosomal subunit in an EDTA-sensitive manner and is required for efficient cytoplasmic translation. Yeast tma7-null mutants show approximately 95% reduction in protein synthesis (35S-methionine incorporation), reduced polysomes relative to monosomes (indicative of a translation initiation defect), and resistance to the translation inhibitor anisomycin [PMID:16702403]. Cross-species complementation studies demonstrate functional conservation of TMA7 family members across eukaryotes, as human MCT-1 (TMA20 homolog) can rescue yeast tma20 defects [PMID:16702403]. Recent mammalian proteomics studies link TMA7 family protein levels to ribosome quality control pathways (Luo et al. 2023 bioRxiv). Plant ribosome proteomics also identified the Arabidopsis TMA7 homolog co-purifying with 80S cytosolic ribosomes (Salih et al. 2019 bioRxiv), supporting conserved ribosome association across eukaryotes.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043022" target="_blank" class="term-link">
+                                    GO:0043022
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16702403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification and functional screens of uncharac...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A024R1R8" data-a="GO:0043022" data-r="PMID:16702403" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ribosome binding is inferred from yeast TMA7 ortholog evidence. Yeast TMA7 shows EDTA-dependent cosedimentation with ribosomes (particularly 40S subunit) in sucrose gradients [PMID:16702403]. This term better reflects the evidence than &#34;structural constituent of ribosome&#34; since TMA7 is an associated factor, not a core component. CAVEAT: Double inference (yeast ortholog → human paralog) reduces confidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Biochemical evidence from yeast shows TMA7 co-sediments with ribosomal fractions in an EDTA-dependent manner, indicating physical association with ribosomes. &#34;Ribosome binding&#34; appropriately describes transient association without implying TMA7 is a structural ribosomal component. Requires inference across orthology and paralogy; no direct human TMA7B binding evidence exists.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link">
+                                        PMID:16702403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TMA7B/TMA7B-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMA7 detected in 40S ribosomal fractions...The yeast TMA7 association with the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a cytosolic, ribosome-associated localization during translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002181" target="_blank" class="term-link">
+                                    GO:0002181
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic translation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16702403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification and functional screens of uncharac...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A024R1R8" data-a="GO:0002181" data-r="PMID:16702403" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is proposed based on yeast TMA7 ortholog evidence. Yeast tma7-null mutants show alterations in protein synthesis rates and polyribosome profiles, indicating a role in cytoplasmic translation [PMID:16702403]. CAVEAT: This involves a double inference (yeast TMA7 ortholog → human TMA7B paralog), so confidence is moderate. Neither human TMA7 nor TMA7B have been directly characterized experimentally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong functional evidence from yeast: tma7 deletion causes ~95% reduction in protein synthesis and altered polyribosome profiles. However, this annotation requires inference across both orthology (yeast→human) and paralogy (TMA7→TMA7B), which reduces confidence. TMA7 family conservation across eukaryotes (yeast, plant, mammal) supports the inference but direct human TMA7B evidence is lacking.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link">
+                                        PMID:16702403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">null yeast strains harboring deletions for several of the TMA genes had alterations in protein synthesis rates (TMA7 and TMA19), susceptibility to drugs that inhibit translation (TMA7), translation fidelity (TMA20), and polyribosome profiles (TMA7, TMA19, and TMA20)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TMA7B/TMA7B-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">tma7 deletion → ~95% reduction in 35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin resistance and slow growth — consistent with a role in translation (initiation/efficiency)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16702403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification and functional screens of uncharac...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A024R1R8" data-a="GO:0005829" data-r="PMID:16702403" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is inferred from yeast TMA7 ortholog evidence. Yeast TMA7 shows EDTA-dependent cosedimentation with ribosomes in sucrose gradients. Plant TMA7 homolog also co-purifies with 80S cytosolic ribosomes. CAVEAT: Double inference (yeast ortholog → human paralog) reduces confidence; no direct human TMA7B localization data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Yeast TMA7 associates with cytosolic ribosomes, and plant TMA7 homolog co-purifies with 80S cytosolic ribosomes. Cytosolic localization is the parsimonious inference for TMA7B given conserved ribosome association across the TMA7 family. However, this requires inference across orthology and paralogy without direct human evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link">
+                                        PMID:16702403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TMA7B/TMA7B-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The yeast TMA7 association with the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a cytosolic, ribosome-associated localization during translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022627" target="_blank" class="term-link">
+                                    GO:0022627
+                                </a>
+                            </span>
+                            <span class="term-label">cytosolic small ribosomal subunit</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16702403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification and functional screens of uncharac...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A024R1R8" data-a="GO:0022627" data-r="PMID:16702403" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is proposed based on yeast TMA7 ortholog evidence. Yeast TMA7 shows EDTA-dependent cosedimentation with ribosomes [PMID:16702403], and the deep research indicates specific association with the 40S ribosomal subunit. CAVEAT: Lower confidence due to (1) double inference chain (yeast ortholog → human paralog), and (2) TMA7 transiently associates with ribosomes rather than being a stable component - &#34;colocalizes_with&#34; may be more appropriate than &#34;located_in&#34;.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Biochemical evidence from yeast shows TMA7 co-sediments with 40S ribosomal fractions. EDTA sensitivity indicates association with assembled ribosomes. However, TMA7 is an associated factor, not a core ribosomal component, so this annotation may overstate the relationship. Direct human TMA7B evidence is lacking.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link">
+                                        PMID:16702403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TMA7B/TMA7B-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TMA7 detected in 40S ribosomal fractions...The yeast TMA7 association with the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a cytosolic, ribosome-associated localization during translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>INFERRED FROM YEAST ORTHOLOG (moderate confidence): TMA7B likely functions as a translation machinery-associated protein that transiently associates with the small ribosomal subunit and promotes efficient cytoplasmic translation, particularly at the initiation step. IMPORTANT CAVEATS: (1) No direct human TMA7B experimental evidence exists - function is inferred from yeast TMA7 ortholog via a double inference chain (yeast ortholog → human paralog). (2) TMA7 is not a core ribosomal structural component but an associated factor. (3) Functional redundancy with human TMA7 paralog is unknown. Cross-species complementation studies demonstrate TMA7 family conservation, supporting but not confirming this inference.</h3>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="FUNCTION: INFERRED FROM YEAST ORTHOLOG (moderate confidence)..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043022" target="_blank" class="term-link">
+                            ribosome binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002181" target="_blank" class="term-link">
+                                cytoplasmic translation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TMA7B/TMA7B-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">TMA7 detected in 40S ribosomal fractions; tma7 deletion → ~95% reduction in 35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin resistance and slow growth — consistent with a role in translation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16702403" target="_blank" class="term-link">
+                            PMID:16702403
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Yeast TMA7 associates with ribosomes in an EDTA-dependent manner and tma7 null strains show alterations in protein synthesis rates and susceptibility to drugs that inhibit translation.</div>
+                        
+                        <div class="finding-text">"null yeast strains harboring deletions for several of the TMA genes had alterations in protein synthesis rates (TMA7 and TMA19), susceptibility to drugs that inhibit translation (TMA7), translation fidelity (TMA20), and polyribosome profiles (TMA7, TMA19, and TMA20)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human MCT-1 (TMA20 homolog) complements yeast tma20 defects, demonstrating functional conservation of TMA family proteins across eukaryotes.</div>
+                        
+                        <div class="finding-text">"Expression of human MCT-1 in the Deltatma20 yeast mutant complemented translation-related defects, strongly implying that MCT-1 functions in translation-related processes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TMA7B/TMA7B-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for TMA7B</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Yeast TMA7 sediments with the 40S fraction at high salt and tma7 deletion causes ~95% reduction in 35S-methionine incorporation.</div>
+                        
+                        <div class="finding-text">"TMA7 detected in 40S ribosomal fractions; tma7 deletion → ~95% reduction in 35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin resistance and slow growth — consistent with a role in translation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In HBS1L-deficient retina, proteomics revealed reduced levels of Tma7 together with depletion of PELO and EDF1, linking TMA7-family proteins to ribosome quality control pathways.</div>
+                        
+                        <div class="finding-text">"HBS1L deficiency (ribosome rescue factor) caused decreased levels of translation machinery-associated 7 homolog (Tma7) protein in retinal proteomics; links TMA7-level changes to ribosome-rescue/quality-control perturbation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Arabidopsis TMA7 homolog (AT1G15270) co-purifies with the 80S cytosolic ribosome, providing cross-kingdom evidence for TMA7 family ribosome association.</div>
+                        
+                        <div class="finding-text">"AT1G15270 annotated as TMA7 homolog and experimentally co-purifies with 80S cytosolic ribosomes; first direct plant evidence of TMA7-family ribosome association"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional relationship and potential redundancy between human TMA7 and TMA7B? Do they have overlapping expression patterns or distinct tissue-specific roles?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Andrew J. Link</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="Q: What is the functional relationship and potential ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human TMA7B, like yeast TMA7, associate with the 40S ribosomal subunit in an EDTA-sensitive manner? What is its precise role in translation initiation versus elongation?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Andrew J. Link</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="Q: Does human TMA7B, like yeast TMA7, associate with ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is TMA7B involved in ribosome quality control pathways in humans, similar to the connection observed between Tma7 levels and HBS1L/PELO/EDF1 in mammalian systems?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pankaj B. Agrawal</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="Q: Is TMA7B involved in ribosome quality control path..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform sucrose gradient fractionation of human cell lysates (e.g., HEK293, HeLa) with and without EDTA treatment. Use western blotting or mass spectrometry to detect TMA7B in ribosomal fractions. EDTA sensitivity would indicate association with assembled ribosomes rather than free subunits.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human TMA7B associates with the 40S ribosomal subunit similar to yeast TMA7.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Biochemical fractionation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="EXPERIMENT: Perform sucrose gradient fractionation of human ce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate TMA7B knockdown (siRNA) or knockout (CRISPR) human cell lines. Measure global protein synthesis using 35S-methionine incorporation, SUnSET assay, or OP-puromycin labeling. Perform polysome profiling to assess effects on translation initiation (polysome to monosome ratio).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TMA7B knockdown reduces global translation rates in human cells.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Functional genomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="EXPERIMENT: Generate TMA7B knockdown (siRNA) or knockout (CRIS..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate single and double knockouts/knockdowns of TMA7 and TMA7B. Compare phenotypes (cell viability, translation rates, polysome profiles) to assess redundancy. Test whether overexpression of one paralog rescues loss of the other.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TMA7 and TMA7B have redundant functions in human cells.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Genetic complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A024R1R8" data-a="EXPERIMENT: Generate single and double knockouts/knockdowns of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TMA7B-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A024R1R8" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-26T12:30:24.820301'<br />
+end_time: '2026-01-26T12:40:13.513759'<br />
+duration_seconds: 588.69<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: TMA7B<br />
+  gene_symbol: TMA7B<br />
+  uniprot_accession: A0A024R1R8<br />
+  protein_description: 'RecName: Full=Translation machinery-associated protein 7B<br />
+    {ECO:0000305};'<br />
+  gene_info: Name=TMA7B {ECO:0000312|HGNC:HGNC:53893};<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the TMA7 family. .<br />
+  protein_domains: TMA7. (IPR015157); TMA7 (PF09072)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 12</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A024R1R8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translation machinery-associated protein 7B {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=TMA7B {ECO:0000312|HGNC:HGNC:53893};</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TMA7 family. .</li>
+<li><strong>Key Domains:</strong> TMA7. (IPR015157); TMA7 (PF09072)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TMA7B" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TMA7B' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TMA7B</strong> (gene ID: TMA7B, UniProt: A0A024R1R8) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A024R1R8</li>
+<li><strong>Protein Description:</strong> RecName: Full=Translation machinery-associated protein 7B {ECO:0000305};</li>
+<li><strong>Gene Information:</strong> Name=TMA7B {ECO:0000312|HGNC:HGNC:53893};</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TMA7 family. .</li>
+<li><strong>Key Domains:</strong> TMA7. (IPR015157); TMA7 (PF09072)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TMA7B" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TMA7B' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TMA7B</strong> (gene ID: TMA7B, UniProt: A0A024R1R8) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Research plan and verification<br />
+- Identity verified: TMA7B (HGNC:53893) encodes a human protein annotated as translation machinery-associated protein 7B (UniProt A0A024R1R8), belonging to the TMA7 family with conserved domains PF09072/IPR015157. This aligns with the profile used below.</p>
+<p>Key concepts and definitions<br />
+- TMA7 family: A set of small, conserved eukaryotic proteins identified as translation machinery-associated (TMA), many of which comigrate with ribosomal subunits and influence translation. Foundational studies in budding yeast defined TMA7 as a ribosome-associated factor whose deletion reduces global protein synthesis and alters polysome profiles, consistent with a role at translation initiation/efficiency (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 9-10).<br />
+- Translation machinery-associated protein 7 (TMA7): In Saccharomyces cerevisiae, TMA7 sediments with the 40S fraction at high salt; tma7Δ strains show strong anisomycin resistance, ~95% reduction in 35S-methionine incorporation, slow growth, and decreased polysomes relative to monosomes—indicative of impaired initiation rather than elongation (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 10-11, fleischer2006systematicidentificationand pages 9-10).<br />
+- Family conservation/orthology: TMA family proteins show cross-species conservation; the human homolog of yeast TMA20 (MCT-1) complements yeast defects, supporting that TMA family roles are conserved across eukaryotes and motivating cautious inference for human TMA7B (fleischer2006systematicidentificationand pages 8-9).</p>
+<p>Recent developments and latest research (emphasis 2023–2024)<br />
+- Mammalian disease context linking TMA7-family levels to ribosome rescue: In a 2023 study of HBS1L deficiency (a ribosomal rescue GTPase) in a human patient and a hypomorphic mouse model, retinal proteomics revealed reduced levels of translation machinery associated 7 homolog (Tma7) together with depletion of PELO and EDF1, connecting defects in ribosome rescue/quality control to retinal dystrophy. This positions TMA7-family proteins within mammalian ribosome quality control networks affected by HBS1L loss (bioRxiv preprint posted Oct 20, 2023) (luo2023geneticdeficiencyof pages 12-15).<br />
+- Cross-kingdom ribosome association: Plant ribosome proteomics in Arabidopsis thaliana identified the TMA7 homolog (AT1G15270) co-purifying with the 80S cytosolic ribosome, representing direct proteomic evidence outside yeast that TMA7-family proteins associate with cytosolic ribosomes (2019 preprint; reinforces conserved association) (salih2019refiningthecomposition pages 8-10).</p>
+<p>Primary function, processes, and localization (inferred for human TMA7B)<br />
+- Function: Based on conserved family evidence, human TMA7B likely acts as a translation machinery-associated factor. Yeast loss-of-function phenotypes implicate TMA7 in efficient translation initiation or initiation control, with strong reductions in overall protein synthesis and a characteristic decrease in polysomes relative to monosomes (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 9-10, fleischer2006systematicidentificationand pages 10-11). While direct enzymatic activity has not been assigned, TMA7-family proteins are functionally linked to ribosome-associated processes and may modulate initiation complex function or ribosome engagement on mRNAs.<br />
+- Subcellular localization: The yeast TMA7 association with the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a cytosolic, ribosome-associated localization during translation (fleischer2006systematicidentificationand pages 9-10). Independent plant proteomics corroborates cytosolic 80S ribosome co-purification for a TMA7 homolog (salih2019refiningthecomposition pages 8-10). For human TMA7B, cytosolic ribosome association is the parsimonious inference pending direct human evidence.<br />
+- Pathways: Family-level data connect TMA proteins to translation, ribosome biogenesis, and RNA metabolism; several TMA proteins have predicted RNA-binding domains or copurify with RNA-modifying factors (fleischer2006systematicidentificationand pages 10-11, fleischer2006systematicidentificationand pages 9-10). Recent mammalian evidence links TMA7 abundance to ribosome rescue/quality-control (HBS1L–PELO–EDF1 axis) (luo2023geneticdeficiencyof pages 12-15).</p>
+<p>Current applications and real-world implementations<br />
+- Research tools and models: Yeast deletion strains (tma7Δ) serve as experimental models to dissect translation initiation defects and drug responses (anisomycin resistance) (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 9-10). Plant ribosome proteomics workflows enable identification of ribosome-associated proteins, including TMA7 homologs, informing cross-species annotation (salih2019refiningthecomposition pages 8-10). The HBS1L-deficient mouse model provides an in vivo context where TMA7-family levels track with ribosome quality-control perturbations relevant to retinal degeneration (luo2023geneticdeficiencyof pages 12-15).<br />
+- Translational implications: Although direct therapeutic targeting of TMA7B has not been reported in the retrieved literature, the linkage of TMA7-family protein levels to HBS1L/PELO/EDF1 suggests that TMA7B may serve as a biomarker or readout in studies of ribosome rescue, proteostasis, and retina-related disorders (luo2023geneticdeficiencyof pages 12-15).</p>
+<p>Expert opinions and authoritative analyses<br />
+- Foundational riboproteomics and functional screens conclude TMA proteins are bona fide translation machinery-associated factors, with multiple lines of biochemical and genetic evidence indicating roles at the ribosome and in initiation control; these studies underscore conservation across eukaryotes and the value of yeast for inferring functions of human homologs (fleischer2006systematicidentificationand pages 9-10, fleischer2006systematicidentificationand pages 10-11, fleischer2006systematicidentificationand pages 8-9).<br />
+- Cross-kingdom ribosome composition studies highlight that TMA7-family proteins consistently co-purify with the cytosolic 80S ribosome and are likely integral or auxiliary components of the cytosolic translatome across eukaryotes (salih2019refiningthecomposition pages 8-10).</p>
+<p>Relevant statistics and data<br />
+- Yeast tma7Δ translation rate: 35S-methionine incorporation ~5% of wild type (p = 7.4 × 10^−5), indicating a severe reduction in protein synthesis upon TMA7 loss (fleischer2006systematicidentificationand pages 7-8).<br />
+- Polysome profiling in tma7Δ: Reduced polysomes relative to monosomes, consistent with an initiation defect (qualitative but reproducible signature) (fleischer2006systematicidentificationand pages 9-10, fleischer2006systematicidentificationand pages 10-11).<br />
+- Drug phenotype: tma7Δ resistant to 50 μg/mL anisomycin; no resistance to cycloheximide, puromycin, rapamycin, or hygromycin, arguing for a specific translational effect rather than general drug transport/metabolism changes (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 9-10).<br />
+- Mammalian context (2023): In HBS1L-deficient retina, proteomics detected reduced Tma7 levels together with reduced PELO and EDF1, aligning TMA7-family abundance with ribosome rescue/quality control perturbation; study date Oct 20, 2023 (bioRxiv preprint) (luo2023geneticdeficiencyof pages 12-15).</p>
+<p>Ambiguity notice and scope<br />
+- The gene symbol “TMA7B” is specific here to Homo sapiens (HGNC:53893; UniProt A0A024R1R8). Direct, peer-reviewed functional studies that characterize human TMA7B specifically were not identified in the retrieved corpus. Therefore, functional annotation is inferred from conserved family/function evidence (yeast TMA7, plant TMA7 homolog), and from recent mammalian proteomics linking TMA7-family abundance to ribosome rescue pathways. Where claims are inferential, this is explicitly noted (fleischer2006systematicidentificationand pages 7-8, salih2019refiningthecomposition pages 8-10, luo2023geneticdeficiencyof pages 12-15).</p>
+<p>Actionable next steps for experimental validation in human cells<br />
+- Define subcellular localization and ribosome association of human TMA7B by sucrose gradient fractionation with EDTA-sensitivity tests and ribosome co-IP/mass spectrometry.<br />
+- Test effects of TMA7B knockdown/CRISPR KO on global translation rates (35S-methionine incorporation or SunTag reporters) and polysome profiles; assess initiation versus elongation using harringtonine/CHX run-off assays.<br />
+- Map interaction partners by affinity purification-MS; examine co-association with initiation factors and small ribosomal subunits.<br />
+- Evaluate TMA7B dynamics in ribosome quality-control perturbations (e.g., HBS1L/PELO knockdown) and cellular stress.</p>
+<p>Evidence summary table<br />
+| Study (authors, year) | Organism / system | Key finding (function / phenotype / localization) | Relevance to human TMA7B | Link (URL) &amp; date |<br />
+|---|---|---|---|---|<br />
+| Fleischer et al., 2006 | Saccharomyces cerevisiae (yeast) | TMA7 detected in 40S ribosomal fractions; tma7 deletion → ~95% reduction in 35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin resistance and slow growth — consistent with a role in translation (initiation/efficiency) and ribosome association (fleischer2006systematicidentificationand pages 9-10, fleischer2006systematicidentificationand pages 7-8). | Provides primary experimental evidence that TMA7-family proteins are ribosome-associated and required for normal translation; forms basis for homology-based inference to human TMA7B (fleischer2006systematicidentificationand pages 9-10). | https://doi.org/10.1101/gad.1422006 (May 2006) |<br />
+| Fleischer et al., 2006 (orthology note) | Cross-species / yeast↔mammal complementation | Several yeast TMA proteins have identifiable mammalian homologs; human MCT-1 complements yeast tma20 phenotypes, supporting functional conservation across eukaryotes (fleischer2006systematicidentificationand pages 8-9). | Indicates TMA-family conservation and motivates searching for human homologs (supports plausibility that human TMA7B is a ribosome-associated factor) (fleischer2006systematicidentificationand pages 8-9). | https://doi.org/10.1101/gad.1422006 (May 2006) |<br />
+| Salih et al., 2019 | Arabidopsis thaliana (plant riboproteomics) | AT1G15270 annotated as TMA7 homolog and experimentally co-purifies with 80S cytosolic ribosomes; first direct plant evidence of TMA7-family ribosome association (salih2019refiningthecomposition pages 8-10). | Cross-kingdom proteomic support that TMA7-family proteins associate with cytosolic ribosomes, strengthening homology-based functional inference for human TMA7B (salih2019refiningthecomposition pages 8-10). | https://doi.org/10.1101/764316 (Sep 10, 2019) |<br />
+| Luo et al., 2023 (bioRxiv) | Human patient samples and Hbs1l mouse model (retina proteomics) | HBS1L deficiency (ribosome rescue factor) caused decreased levels of translation machinery-associated 7 homolog (Tma7) protein in retinal proteomics; links TMA7-level changes to ribosome-rescue/quality-control perturbation and retinal dystrophy phenotypes (luo2023geneticdeficiencyof pages 12-15). | Provides recent mammalian-context evidence connecting TMA7-family protein abundance to ribosome quality-control pathways and disease-relevant proteomic changes (supports relevance of TMA7-family in human ribosome biology) (luo2023geneticdeficiencyof pages 12-15). | https://doi.org/10.1101/2023.10.18.562924 (Oct 20, 2023) |<br />
+| Current human-specific evidence (2023–2024) | Homo sapiens (literature/proteomics search) | Direct, peer-reviewed functional studies specifically characterizing human TMA7B (UniProt A0A024R1R8) are limited in retrieved sources; most evidence is homology- or proteomics-based inference from yeast, plant, or mammalian proteomes (fleischer2006systematicidentificationand pages 9-10, salih2019refiningthecomposition pages 8-10, luo2023geneticdeficiencyof pages 12-15). | Conclusion: human TMA7B likely a TMA7-family, ribosome-associated protein by homology and indirect proteomic evidence, but dedicated experimental characterization of human TMA7B remains sparse (supports cautious inference) (fleischer2006systematicidentificationand pages 9-10, salih2019refiningthecomposition pages 8-10, luo2023geneticdeficiencyof pages 12-15). | UniProt accession (user-provided): A0A024R1R8 (verify entry on UniProt) |</p>
+<p><em>Table: Concise, sourced summary of experimental and proteomic evidence linking TMA7-family proteins (including TMA7B) to ribosome association and translation-related roles across yeast, plant, and mammalian systems; useful to assess the strength of human-specific data and homology-based inference.</em></p>
+<p>Citations with URLs and dates<br />
+- Yeast TMA7 function and ribosome association: Fleischer TC et al. Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes. Genes &amp; Development. 2006-05; https://doi.org/10.1101/gad.1422006 (fleischer2006systematicidentificationand pages 7-8, fleischer2006systematicidentificationand pages 10-11, fleischer2006systematicidentificationand pages 9-10).<br />
+- Conservation/orthology context: Fleischer TC et al. 2006-05; human MCT-1 complements yeast tma20, supporting TMA-family conservation; https://doi.org/10.1101/gad.1422006 (fleischer2006systematicidentificationand pages 8-9).<br />
+- Plant TMA7 homolog ribosome association: Salih KJ et al. Refining the composition of the Arabidopsis thaliana 80S cytosolic ribosome. bioRxiv. 2019-09-10; https://doi.org/10.1101/764316 (salih2019refiningthecomposition pages 8-10).<br />
+- Mammalian 2023 study linking TMA7-family levels to ribosome rescue/retinal dystrophy: Luo S et al. Genetic deficiency of ribosomal rescue factor HBS1L causes retinal dystrophy associated with Pelota and EDF1 depletion. bioRxiv. 2023-10-20; https://doi.org/10.1101/2023.10.18.562924 (luo2023geneticdeficiencyof pages 12-15).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(fleischer2006systematicidentificationand pages 7-8): Tracey C. Fleischer, Connie M. Weaver, K. Jill McAfee, Jennifer L. Jennings, and Andrew J. Link. Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes. Genes &amp; development, 20 10:1294-307, May 2006. URL: https://doi.org/10.1101/gad.1422006, doi:10.1101/gad.1422006. This article has 387 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleischer2006systematicidentificationand pages 9-10): Tracey C. Fleischer, Connie M. Weaver, K. Jill McAfee, Jennifer L. Jennings, and Andrew J. Link. Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes. Genes &amp; development, 20 10:1294-307, May 2006. URL: https://doi.org/10.1101/gad.1422006, doi:10.1101/gad.1422006. This article has 387 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleischer2006systematicidentificationand pages 10-11): Tracey C. Fleischer, Connie M. Weaver, K. Jill McAfee, Jennifer L. Jennings, and Andrew J. Link. Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes. Genes &amp; development, 20 10:1294-307, May 2006. URL: https://doi.org/10.1101/gad.1422006, doi:10.1101/gad.1422006. This article has 387 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleischer2006systematicidentificationand pages 8-9): Tracey C. Fleischer, Connie M. Weaver, K. Jill McAfee, Jennifer L. Jennings, and Andrew J. Link. Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes. Genes &amp; development, 20 10:1294-307, May 2006. URL: https://doi.org/10.1101/gad.1422006, doi:10.1101/gad.1422006. This article has 387 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(luo2023geneticdeficiencyof pages 12-15): Shiyu Luo, Bilal Alwattar, Qifei Li, Kiran Bora, Alexandra K. Blomfield, Jasmine Lin, Anne B. Fulton, Jing Chen, and Pankaj B. Agrawal. Genetic deficiency of ribosomal rescue factor hbs1l causes retinal dystrophy associated with pelota and edf1 depletion. bioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.18.562924, doi:10.1101/2023.10.18.562924. This article has 1 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(salih2019refiningthecomposition pages 8-10): Karzan Jalal Salih, Owen Duncan, Lei Li, Josua Troesch, and A. Harvey Millar. Refining the composition of the arabidopsis thaliana 80s cytosolic ribosome. bioRxiv, Sep 2019. URL: https://doi.org/10.1101/764316, doi:10.1101/764316. This article has 6 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fleischer2006systematicidentificationand pages 8-9</li>
+<li>luo2023geneticdeficiencyof pages 12-15</li>
+<li>salih2019refiningthecomposition pages 8-10</li>
+<li>fleischer2006systematicidentificationand pages 9-10</li>
+<li>fleischer2006systematicidentificationand pages 7-8</li>
+<li>fleischer2006systematicidentificationand pages 10-11</li>
+<li>https://doi.org/10.1101/gad.1422006</li>
+<li>https://doi.org/10.1101/764316</li>
+<li>https://doi.org/10.1101/2023.10.18.562924</li>
+<li>https://doi.org/10.1101/gad.1422006,</li>
+<li>https://doi.org/10.1101/2023.10.18.562924,</li>
+<li>https://doi.org/10.1101/764316,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A024R1R8
+gene_symbol: TMA7B
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TMA7B (Translation machinery-associated protein 7B) is a small 64-amino acid protein
+  belonging to the TMA7 family (Pfam: PF09072, InterPro: IPR015157). It is a paralog of
+  human TMA7 (Q9Y2S6). No direct experimental studies characterize human TMA7B specifically;
+  however, function can be inferred from the well-characterized yeast ortholog TMA7
+  (Saccharomyces cerevisiae). In yeast, TMA7 associates with the 40S ribosomal subunit in
+  an EDTA-sensitive manner and is required for efficient cytoplasmic translation. Yeast
+  tma7-null mutants show approximately 95% reduction in protein synthesis (35S-methionine
+  incorporation), reduced polysomes relative to monosomes (indicative of a translation
+  initiation defect), and resistance to the translation inhibitor anisomycin
+  [PMID:16702403]. Cross-species complementation studies demonstrate functional conservation
+  of TMA7 family members across eukaryotes, as human MCT-1 (TMA20 homolog) can rescue yeast
+  tma20 defects [PMID:16702403]. Recent mammalian proteomics studies link TMA7 family
+  protein levels to ribosome quality control pathways (Luo et al. 2023 bioRxiv). Plant
+  ribosome proteomics also identified the Arabidopsis TMA7 homolog co-purifying with
+  80S cytosolic ribosomes (Salih et al. 2019 bioRxiv), supporting conserved ribosome
+  association across eukaryotes.
+
+references:
+  - id: PMID:16702403
+    title: &#34;Systematic identification and functional screens of uncharacterized proteins associated with eukaryotic ribosomal complexes&#34;
+    findings:
+      - statement: &gt;-
+          Yeast TMA7 associates with ribosomes in an EDTA-dependent manner and
+          tma7 null strains show alterations in protein synthesis rates and
+          susceptibility to drugs that inhibit translation.
+        supporting_text: &gt;-
+          null yeast strains harboring deletions for several of the TMA genes had alterations
+          in protein synthesis rates (TMA7 and TMA19), susceptibility to drugs that inhibit
+          translation (TMA7), translation fidelity (TMA20), and polyribosome profiles
+          (TMA7, TMA19, and TMA20)
+      - statement: &gt;-
+          Human MCT-1 (TMA20 homolog) complements yeast tma20 defects, demonstrating
+          functional conservation of TMA family proteins across eukaryotes.
+        supporting_text: &gt;-
+          Expression of human MCT-1 in the Deltatma20 yeast mutant complemented translation-related
+          defects, strongly implying that MCT-1 functions in translation-related processes
+  - id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+    title: &#34;Deep research summary for TMA7B&#34;
+    findings:
+      - statement: &gt;-
+          Yeast TMA7 sediments with the 40S fraction at high salt and tma7 deletion
+          causes ~95% reduction in 35S-methionine incorporation.
+        supporting_text: &gt;-
+          TMA7 detected in 40S ribosomal fractions; tma7 deletion → ~95% reduction in
+          35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin
+          resistance and slow growth — consistent with a role in translation
+      - statement: &gt;-
+          In HBS1L-deficient retina, proteomics revealed reduced levels of Tma7 together
+          with depletion of PELO and EDF1, linking TMA7-family proteins to ribosome
+          quality control pathways.
+        supporting_text: &gt;-
+          HBS1L deficiency (ribosome rescue factor) caused decreased levels of translation
+          machinery-associated 7 homolog (Tma7) protein in retinal proteomics; links
+          TMA7-level changes to ribosome-rescue/quality-control perturbation
+      - statement: &gt;-
+          The Arabidopsis TMA7 homolog (AT1G15270) co-purifies with the 80S cytosolic
+          ribosome, providing cross-kingdom evidence for TMA7 family ribosome association.
+        supporting_text: &gt;-
+          AT1G15270 annotated as TMA7 homolog and experimentally co-purifies with 80S
+          cytosolic ribosomes; first direct plant evidence of TMA7-family ribosome association
+
+existing_annotations:
+  - term:
+      id: GO:0043022
+      label: ribosome binding
+    evidence_type: ISS
+    original_reference_id: PMID:16702403
+    review:
+      summary: &gt;-
+        Ribosome binding is inferred from yeast TMA7 ortholog evidence. Yeast TMA7 shows
+        EDTA-dependent cosedimentation with ribosomes (particularly 40S subunit) in sucrose
+        gradients [PMID:16702403]. This term better reflects the evidence than &#34;structural
+        constituent of ribosome&#34; since TMA7 is an associated factor, not a core component.
+        CAVEAT: Double inference (yeast ortholog → human paralog) reduces confidence.
+      action: NEW
+      reason: &gt;-
+        Biochemical evidence from yeast shows TMA7 co-sediments with ribosomal fractions
+        in an EDTA-dependent manner, indicating physical association with ribosomes.
+        &#34;Ribosome binding&#34; appropriately describes transient association without implying
+        TMA7 is a structural ribosomal component. Requires inference across orthology and
+        paralogy; no direct human TMA7B binding evidence exists.
+      supported_by:
+        - reference_id: PMID:16702403
+          supporting_text: &gt;-
+            Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in
+            sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins
+        - reference_id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+          supporting_text: &gt;-
+            TMA7 detected in 40S ribosomal fractions...The yeast TMA7 association with
+            the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a
+            cytosolic, ribosome-associated localization during translation
+  - term:
+      id: GO:0002181
+      label: cytoplasmic translation
+    evidence_type: ISS
+    original_reference_id: PMID:16702403
+    review:
+      summary: &gt;-
+        This annotation is proposed based on yeast TMA7 ortholog evidence. Yeast tma7-null
+        mutants show alterations in protein synthesis rates and polyribosome profiles,
+        indicating a role in cytoplasmic translation [PMID:16702403]. CAVEAT: This involves
+        a double inference (yeast TMA7 ortholog → human TMA7B paralog), so confidence is
+        moderate. Neither human TMA7 nor TMA7B have been directly characterized experimentally.
+      action: NEW
+      reason: &gt;-
+        Strong functional evidence from yeast: tma7 deletion causes ~95% reduction in
+        protein synthesis and altered polyribosome profiles. However, this annotation
+        requires inference across both orthology (yeast→human) and paralogy (TMA7→TMA7B),
+        which reduces confidence. TMA7 family conservation across eukaryotes (yeast, plant,
+        mammal) supports the inference but direct human TMA7B evidence is lacking.
+      supported_by:
+        - reference_id: PMID:16702403
+          supporting_text: &gt;-
+            null yeast strains harboring deletions for several of the TMA genes had alterations
+            in protein synthesis rates (TMA7 and TMA19), susceptibility to drugs that inhibit
+            translation (TMA7), translation fidelity (TMA20), and polyribosome profiles
+            (TMA7, TMA19, and TMA20)
+        - reference_id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+          supporting_text: &gt;-
+            tma7 deletion → ~95% reduction in 35S-methionine incorporation, reduced
+            polysomes vs monosomes, anisomycin resistance and slow growth — consistent
+            with a role in translation (initiation/efficiency)
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: ISS
+    original_reference_id: PMID:16702403
+    review:
+      summary: &gt;-
+        Cytosolic localization is inferred from yeast TMA7 ortholog evidence. Yeast TMA7
+        shows EDTA-dependent cosedimentation with ribosomes in sucrose gradients. Plant
+        TMA7 homolog also co-purifies with 80S cytosolic ribosomes. CAVEAT: Double inference
+        (yeast ortholog → human paralog) reduces confidence; no direct human TMA7B localization data.
+      action: NEW
+      reason: &gt;-
+        Yeast TMA7 associates with cytosolic ribosomes, and plant TMA7 homolog co-purifies
+        with 80S cytosolic ribosomes. Cytosolic localization is the parsimonious inference
+        for TMA7B given conserved ribosome association across the TMA7 family. However,
+        this requires inference across orthology and paralogy without direct human evidence.
+      supported_by:
+        - reference_id: PMID:16702403
+          supporting_text: &gt;-
+            Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in
+            sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins
+        - reference_id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+          supporting_text: &gt;-
+            The yeast TMA7 association with the 40S fraction and EDTA-sensitive ribosome
+            co-sedimentation argues for a cytosolic, ribosome-associated localization
+            during translation
+  - term:
+      id: GO:0022627
+      label: cytosolic small ribosomal subunit
+    evidence_type: ISS
+    original_reference_id: PMID:16702403
+    review:
+      summary: &gt;-
+        This annotation is proposed based on yeast TMA7 ortholog evidence. Yeast TMA7
+        shows EDTA-dependent cosedimentation with ribosomes [PMID:16702403], and the
+        deep research indicates specific association with the 40S ribosomal subunit.
+        CAVEAT: Lower confidence due to (1) double inference chain (yeast ortholog → human
+        paralog), and (2) TMA7 transiently associates with ribosomes rather than being a
+        stable component - &#34;colocalizes_with&#34; may be more appropriate than &#34;located_in&#34;.
+      action: NEW
+      reason: &gt;-
+        Biochemical evidence from yeast shows TMA7 co-sediments with 40S ribosomal fractions.
+        EDTA sensitivity indicates association with assembled ribosomes. However, TMA7 is
+        an associated factor, not a core ribosomal component, so this annotation may
+        overstate the relationship. Direct human TMA7B evidence is lacking.
+      supported_by:
+        - reference_id: PMID:16702403
+          supporting_text: &gt;-
+            Immunoblotting revealed an EDTA-dependent cosedimentation with ribosomes in
+            sucrose gradients for 11 candidate translation-machinery-associated (TMA) proteins
+        - reference_id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+          supporting_text: &gt;-
+            TMA7 detected in 40S ribosomal fractions...The yeast TMA7 association with
+            the 40S fraction and EDTA-sensitive ribosome co-sedimentation argues for a
+            cytosolic, ribosome-associated localization during translation
+
+core_functions:
+  - description: &gt;-
+      INFERRED FROM YEAST ORTHOLOG (moderate confidence): TMA7B likely functions as a
+      translation machinery-associated protein that transiently associates with the small
+      ribosomal subunit and promotes efficient cytoplasmic translation, particularly at
+      the initiation step. IMPORTANT CAVEATS: (1) No direct human TMA7B experimental
+      evidence exists - function is inferred from yeast TMA7 ortholog via a double
+      inference chain (yeast ortholog → human paralog). (2) TMA7 is not a core ribosomal
+      structural component but an associated factor. (3) Functional redundancy with human
+      TMA7 paralog is unknown. Cross-species complementation studies demonstrate TMA7
+      family conservation, supporting but not confirming this inference.
+    molecular_function:
+      id: GO:0043022
+      label: ribosome binding
+    directly_involved_in:
+      - id: GO:0002181
+        label: cytoplasmic translation
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: file:human/TMA7B/TMA7B-deep-research-falcon.md
+        supporting_text: &gt;-
+          TMA7 detected in 40S ribosomal fractions; tma7 deletion → ~95% reduction in
+          35S-methionine incorporation, reduced polysomes vs monosomes, anisomycin
+          resistance and slow growth — consistent with a role in translation
+
+suggested_questions:
+  - question: &gt;-
+      What is the functional relationship and potential redundancy between human TMA7
+      and TMA7B? Do they have overlapping expression patterns or distinct tissue-specific
+      roles?
+    experts:
+      - Andrew J. Link
+  - question: &gt;-
+      Does human TMA7B, like yeast TMA7, associate with the 40S ribosomal subunit in an
+      EDTA-sensitive manner? What is its precise role in translation initiation versus
+      elongation?
+    experts:
+      - Andrew J. Link
+  - question: &gt;-
+      Is TMA7B involved in ribosome quality control pathways in humans, similar to the
+      connection observed between Tma7 levels and HBS1L/PELO/EDF1 in mammalian systems?
+    experts:
+      - Pankaj B. Agrawal
+
+suggested_experiments:
+  - hypothesis: &gt;-
+      Human TMA7B associates with the 40S ribosomal subunit similar to yeast TMA7.
+    description: &gt;-
+      Perform sucrose gradient fractionation of human cell lysates (e.g., HEK293, HeLa)
+      with and without EDTA treatment. Use western blotting or mass spectrometry to
+      detect TMA7B in ribosomal fractions. EDTA sensitivity would indicate association
+      with assembled ribosomes rather than free subunits.
+    experiment_type: Biochemical fractionation
+  - hypothesis: &gt;-
+      TMA7B knockdown reduces global translation rates in human cells.
+    description: &gt;-
+      Generate TMA7B knockdown (siRNA) or knockout (CRISPR) human cell lines. Measure
+      global protein synthesis using 35S-methionine incorporation, SUnSET assay, or
+      OP-puromycin labeling. Perform polysome profiling to assess effects on translation
+      initiation (polysome to monosome ratio).
+    experiment_type: Functional genomics
+  - hypothesis: &gt;-
+      TMA7 and TMA7B have redundant functions in human cells.
+    description: &gt;-
+      Generate single and double knockouts/knockdowns of TMA7 and TMA7B. Compare
+      phenotypes (cell viability, translation rates, polysome profiles) to assess
+      redundancy. Test whether overexpression of one paralog rescues loss of the other.
+    experiment_type: Genetic complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
