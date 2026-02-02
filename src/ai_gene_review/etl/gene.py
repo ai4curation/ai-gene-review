@@ -366,7 +366,7 @@ def fetch_gene_data(
 
         # Create minimal YAML structure if file doesn't exist
         if not yaml_existed:
-            yaml_data = {
+            yaml_data: Dict[str, Any] = {
                 "id": uniprot_id,
                 "gene_symbol": gene_name,
                 "product_type": "PROTEIN",
