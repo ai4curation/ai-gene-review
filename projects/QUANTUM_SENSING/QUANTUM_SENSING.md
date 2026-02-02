@@ -3,6 +3,22 @@
 ## Scope
 Working definition: biological systems in which quantum effects (spin chemistry, quantum coherence, or tunneling) materially affect a sensing or signal transduction step. The strongest evidence base today is for radical-pair magnetoreception in cryptochromes; other areas are more speculative or are about energy transfer rather than sensing.
 
+## Deep research synthesis (Jan 31, 2026)
+Based on `projects/QUANTUM_SENSING/QUANTUM_SENSING-deep-research-openai.md`, the field splits into three main biological mechanisms:
+- Radical-pair magnetoreception (cryptochromes): strongest mechanistic evidence; light-dependent, spin-chemistry based sensing in birds/insects; still debated in some models (notably Drosophila behavior).
+- Magnetite-based sensing: magnetite crystals act as mechanical transducers; strong evidence in magnetotactic bacteria and growing evidence in some fish/vertebrate tissues; molecular players remain unclear.
+- Induction-based sensing: possible in aquatic animals moving through fields; less protein-specific.
+
+Practical constraints from the literature:
+- Earth-field sensitivity is weak and noisy; most lab demonstrations use stronger fields.
+- Orientation and immobilization of the sensor protein matter for directional sensing.
+- Signal readout and controls are a persistent challenge (risk of false positives).
+
+Application themes that are emerging:
+- Magneto-sensitive reporters (e.g., engineered flavoproteins with ODMR).
+- Magnetogenetics (mixed evidence and reproducibility; careful controls needed).
+- Conservation/behavioral applications (e.g., manipulating magnetic cues for navigation studies).
+
 ## Proteins with evidence for quantum-level sensing
 
 ### Cryptochromes (radical-pair magnetoreception)
@@ -20,6 +36,10 @@ Implication: cryptochromes are the leading protein family for quantum-sensitive 
 ### Engineered LOV-domain proteins (MagLOV; ODMR in living cells)
 - A Nature paper published 21 January 2026 reports optically detected magnetic resonance (ODMR) in living bacterial cells using engineered LOV2-domain magneto-sensitive fluorescent proteins (MagLOV variants). The ODMR and magnetic-field effects are explained by a radical-pair mechanism involving the protein backbone and a bound flavin cofactor, with signal-to-noise sufficient for single-cell detection at room temperature. (Nature 2026)
 - The study uses directed evolution to tune magnetic and radio-frequency responses and demonstrates applications including spatial localization with gradient fields (fluorescence MRI-like), microenvironment sensing, multiplexing/lock-in detection, and mitigation of scattering/autofluorescence. (Nature 2026)
+
+### Magnetite-based systems (classical magnetic sensing, not quantum)
+- Magnetotactic bacteria use magnetosome gene clusters to build magnetite particles that align cells in fields.
+- Vertebrate evidence is suggestive but mixed; recent work points to magnetite-bearing cells in fish olfactory tissues and candidate biomineralization gene signatures.
 
 ## Shortlist: candidate proteins and constructs to pursue
 
@@ -43,6 +63,14 @@ Examples of cryptochrome entries and accessions linked from UniProt-connected re
 - Arabidopsis thaliana CRY2: UniProt Q96524. (InParanoid)
 - Drosophila melanogaster CRY: UniProt O77059. (RCSB PDB/AlphaFold entry)
 UniProt-linked annotations for CRY2 include FAD as a ligand/cofactor, consistent with flavoprotein photochemistry. (Human Protein Atlas)
+
+## Reproducible pipeline (draft)
+I sketched a minimal, reproducible pipeline for candidate triage in `projects/quantum-sensing-bioinformatics/`:
+- Fetch UniProt JSON + FASTA by accession list.
+- Pull RCSB PDB mappings/metadata and ligands (flag FAD).
+- Produce a per-accession summary table for quick screening.
+
+This is intentionally conservative and not a functional claim; it’s meant to surface evidence and prioritize targets.
 
 ### Photosynthetic energy-transfer complexes (quantum coherence; not sensing per se)
 - FMO complex in green sulfur bacteria showed signatures interpreted as wavelike (coherent) energy transfer in ultrafast spectroscopy. (Nature 2007)
@@ -112,3 +140,4 @@ Implication: potential quantum-tunneling or inelastic electron transfer mechanis
 - Swiss-Model Repository: Q43125 (CRY1_ARATH) structures (PDB 1u3d/1u3c).
 - InParanoid: CRY1_ARATH ortholog group lists Q96524 (CRY2).
 - RCSB PDB/AlphaFold: UniProt O77059 (Drosophila cryptochrome).
+- Deep research report: file:projects/QUANTUM_SENSING/QUANTUM_SENSING-deep-research-openai.md
