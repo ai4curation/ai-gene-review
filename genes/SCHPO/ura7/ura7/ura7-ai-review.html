@@ -1,0 +1,3421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ura7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ura7</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O42644" target="_blank" class="term-link">
+                        O42644
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ura7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O42644" data-a="DESCRIPTION: CTP synthase enzyme that catalyzes the ATP-depende..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CTP synthase enzyme that catalyzes the ATP-dependent amination of UTP to CTP using glutamine as nitrogen donor. Essential enzyme required for de novo CTP biosynthesis and cell viability. Forms characteristic cytoophidium filamentous structures that are temperature-sensitive and dynamically regulated during cell cycle.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm localization well-supported by phylogenetic analysis (IBA). The deep research confirms Cts1 is predominantly cytosolic, existing as both diffuse pool and organized filaments. This represents accurate core localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IBA evidence correctly identifies cytoplasmic localization. Deep research corroborates that Cts1 functions as a cytosolic enzyme for CTP synthesis. This is a core cellular component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cts1 is predominantly a cytosolic enzyme, consistent with its role in nucleotide biosynthesis in the cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0042802" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTP synthase forms homotetramers as the active enzyme form, which can further polymerize into filaments. This protein-protein interaction is essential for enzymatic function and represents a core molecular property.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The homotetramer formation is well-established for CTP synthase enzymes across species. This self-association is required for catalytic activity and is a fundamental aspect of enzyme function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functionally, Cts1 operates as a homotetramer. Four identical Cts1 subunits assemble into a ring-shaped tetramer, which is the active form needed for catalysis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003883" target="_blank" class="term-link">
+                                    GO:0003883
+                                </a>
+                            </span>
+                            <span class="term-label">CTP synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0003883" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTP synthase activity is the defining molecular function of this enzyme. IBA correctly identifies this core function based on phylogenetic conservation. Enzyme catalyzes ATP + UTP + glutamine → CTP + ADP + phosphate + glutamate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the primary and essential molecular function of ura7/cts1. The enzyme is well-characterized biochemically across species. This annotation accurately captures the core catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CTP synthase catalyzes the ATP-dependent amination of UTP to form CTP, using L-glutamine as the nitrogen donor... This reaction represents the final and rate-limiting step in de novo CTP biosynthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006241" target="_blank" class="term-link">
+                                    GO:0006241
+                                </a>
+                            </span>
+                            <span class="term-label">CTP biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0006241" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CTP biosynthetic process is the primary biological function of CTP synthase. The enzyme catalyzes the final step of de novo CTP synthesis, converting UTP to CTP. Essential for cell viability as deletion is lethal.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This accurately describes the core biological process mediated by ura7/cts1. The enzyme is essential for CTP production required for nucleic acid synthesis and cell proliferation. Well-supported by phylogenetic and functional evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As the sole CTP synthase in fission yeast, Cts1 is essential for pyrimidine nucleotide biosynthesis. It enables the de novo CTP biosynthetic process (GO:0006241) by producing CTP from UTP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097268" target="_blank" class="term-link">
+                                    GO:0097268
+                                </a>
+                            </span>
+                            <span class="term-label">cytoophidium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0097268" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoophidium formation is well-established for CTP synthase. IBA correctly predicts this based on conservation across species. Direct experimental evidence also exists showing temperature-sensitive cytoophidium assembly in S. pombe.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoophidium formation is a conserved feature of CTP synthase enzymes. Both phylogenetic inference and direct experimental evidence (PMID:31611173) confirm Cts1 forms these filamentous structures in S. pombe.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cts1 exhibits a remarkable ability to assemble into filamentous subcellular structures called cytoophidia... Each fission yeast cell generally contains two Cts1 filaments: a long, thick cytoophidium in the cytoplasm and a shorter, thinner filament associated with the nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019856" target="_blank" class="term-link">
+                                    GO:0019856
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleobase biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0019856" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is broader than CTP biosynthesis, encompassing pyrimidine nucleobase production. While CTP synthase contributes to pyrimidine metabolism, this annotation is somewhat imprecise as the enzyme works with nucleotides, not nucleobases directly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CTP synthase converts UTP to CTP (nucleotide to nucleotide conversion), not directly involved in nucleobase synthesis. The more accurate term would be GO:0006221 (pyrimidine nucleotide biosynthetic process) which correctly describes nucleotide-level metabolism.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006221" target="_blank" class="term-link">
+                                    pyrimidine nucleotide biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">As the enzyme governing CTP levels, Cts1 plays a role in the broader metabolism of pyrimidine nucleotides within the cell</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003883" target="_blank" class="term-link">
+                                    GO:0003883
+                                </a>
+                            </span>
+                            <span class="term-label">CTP synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0003883" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of CTP synthase activity with IEA evidence. The IBA annotation above already correctly captures this core function with stronger evidence. IEA provides supporting computational evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While duplicative with the IBA annotation, this IEA annotation correctly identifies the core molecular function through automated methods. Both annotations are accurate and reinforce the primary enzyme activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CTP synthase activity (GO:0003883) – Cts1 catalyzes the reaction ATP + UTP + glutamine + H₂O → CTP + ADP + phosphate + glutamate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006221" target="_blank" class="term-link">
+                                    GO:0006221
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleotide biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0006221" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate broad biological process annotation. CTP synthase contributes to pyrimidine nucleotide biosynthesis by producing CTP. This correctly captures the metabolic context of the enzyme function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation correctly places CTP synthase in the broader context of pyrimidine nucleotide metabolism. The enzyme produces CTP, a key pyrimidine nucleotide required for RNA and DNA synthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pyrimidine nucleotide metabolic process (GO:0006221) – As the enzyme governing CTP levels, Cts1 plays a role in the broader metabolism of pyrimidine nucleotides within the cell</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006241" target="_blank" class="term-link">
+                                    GO:0006241
+                                </a>
+                            </span>
+                            <span class="term-label">CTP biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0006241" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate annotation of CTP biosynthetic process with IEA evidence from InterPro. Correctly identifies the core biological process. Complements the IBA annotation with computational support.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IEA annotation based on InterPro domain analysis correctly identifies the CTP biosynthetic function. This is accurate and represents the primary biological role of the enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CTP biosynthetic process (de novo CTP biosynthesis) (GO:0006241) – cts1 is involved in the pathway producing CTP from simpler precursors, constituting the last step of de novo pyrimidine ribonucleotide synthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic nucleotide binding annotation based on keyword mapping. While technically correct (enzyme binds ATP, UTP, GTP), this is too broad and uninformative compared to specific substrate/cofactor binding annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While CTP synthase does bind nucleotides (ATP, UTP as substrates; GTP as allosteric regulator), this generic term provides little functional information. More specific terms like ATP binding (GO:0005524) or UTP binding would be more informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The C-terminal domain... binds the substrate UTP and co-substrate ATP... GTP acts as an allosteric activator of CTP synthase, binding to the GAT domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is correct as ATP is a co-substrate in the CTP synthase reaction. However, this annotation alone provides limited functional insight compared to the full enzymatic activity annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is accurate - ATP is required as co-substrate for the amination reaction. While somewhat generic, it correctly identifies a specific nucleotide binding function of the enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CTP synthase catalyzes the ATP-dependent amination of UTP to form CTP... The C-terminal domain constitutes the synthetase domain, which binds the substrate UTP and co-substrate ATP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016874" target="_blank" class="term-link">
+                                    GO:0016874
+                                </a>
+                            </span>
+                            <span class="term-label">ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0016874" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic ligase activity annotation. While CTP synthase is classified as a ligase (EC 6.3.4.2), this broad term is uninformative compared to the specific CTP synthase activity annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This overly broad annotation provides minimal functional information. The specific CTP synthase activity (GO:0003883) annotation already captures the enzyme function precisely. Generic ligase activity adds no value.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=CTP synthase; EC=6.3.4.2... AltName: Full=UTP--ammonia ligase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097268" target="_blank" class="term-link">
+                                    GO:0097268
+                                </a>
+                            </span>
+                            <span class="term-label">cytoophidium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0097268" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate cytoophidium annotation with IEA evidence from ARBA machine learning. Correctly identifies this cellular component. Complements the IBA and IDA evidence for this localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Machine learning models correctly predict cytoophidium formation, which is well-established for CTP synthase. This annotation is accurate and supported by experimental evidence from other sources.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31611173" target="_blank" class="term-link">
+                                        PMID:31611173
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Temperature-sensitive cytoophidium assembly in Schizosaccharomyces pombe... CTPS forms filamentous structures termed cytoophidia</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044210" target="_blank" class="term-link">
+                                    GO:0044210
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; CTP biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0044210" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific and accurate annotation for de novo CTP biosynthesis based on UniPathway mapping. This correctly identifies the enzyme role in synthesizing CTP from precursors rather than salvage pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation accurately captures the specific metabolic pathway - de novo CTP synthesis. CTP synthase catalyzes the final step in de novo CTP production, distinguishing it from salvage pathway enzymes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">This reaction represents the final and rate-limiting step in de novo CTP biosynthesis... It enables the de novo CTP biosynthetic process (GO:0006241) by producing CTP from UTP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097268" target="_blank" class="term-link">
+                                    GO:0097268
+                                </a>
+                            </span>
+                            <span class="term-label">cytoophidium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31611173" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31611173
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Temperature-sensitive cytoophidium assembly in Schizosacchar...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0097268" data-r="PMID:31611173" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for cytoophidium formation in S. pombe. Study demonstrates temperature-sensitive assembly of CTPS filaments, with detailed characterization of their dynamics and regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence directly showing Cts1 forms cytoophidia in S. pombe. Study used CTPS-YFP to visualize filaments and demonstrated their temperature sensitivity, making this a high-quality direct observation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31611173" target="_blank" class="term-link">
+                                        PMID:31611173
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">During the early-to-middle exponential phase (OD600 = 0.1–1.0), cytoophidia were highly abundant, being present in more than 90% of cells... We have previously identified that CTPS forms cytoophidia in S. pombe</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0005737" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct assay showing cytoplasmic localization. Part of large-scale ORFeome study that determined localization of ~90% of S. pombe proteome using YFP tagging.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from systematic protein localization study. HDA provides strong support for cytoplasmic localization, consistent with the enzyme metabolic function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0005829" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol annotation based on manual transfer from orthologs. More specific than cytoplasm, correctly identifying the soluble cytoplasmic fraction where CTP synthesis occurs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ISO evidence correctly identifies cytosolic localization based on ortholog data. This is more specific than general cytoplasm and accurately describes where the enzyme functions in nucleotide metabolism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cts1 is predominantly localized in the cytosol where it carries out CTP synthesis. The majority of Cts1 enzyme resides in the cytoplasmic compartment, often visible as diffuse cytosolic signal or organized into filaments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006207" target="_blank" class="term-link">
+                                    GO:0006207
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; pyrimidine nucleobase biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O42644" data-a="GO:0006207" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation refers to nucleobase biosynthesis, but CTP synthase works at the nucleotide level (UTP to CTP), not nucleobase level. The term is imprecise for this enzyme function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CTP synthase converts nucleotides (UTP→CTP), not nucleobases. The more accurate term would be de novo pyrimidine nucleotide biosynthetic process or specifically de novo CTP biosynthetic process (GO:0044210).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044210" target="_blank" class="term-link">
+                                    &#39;de novo&#39; CTP biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/ura7/ura7-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">This reaction represents the final and rate-limiting step in de novo CTP biosynthesis, producing cytidine 5′-triphosphate (CTP)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes ATP-dependent amination of UTP to CTP using glutamine as nitrogen donor</h3>
+                <span class="vote-buttons" data-g="O42644" data-a="FUNCTION: Catalyzes ATP-dependent amination of UTP to CTP us..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003883" target="_blank" class="term-link">
+                            CTP synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044210" target="_blank" class="term-link">
+                                &#39;de novo&#39; CTP biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:46398" target="_blank" class="term-link">
+                                UTP(4-)
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:15422" target="_blank" class="term-link">
+                                ATP
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:28300" target="_blank" class="term-link">
+                                glutamine
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Assembles into active homotetramers that polymerize into cytoophidia filaments</h3>
+                <span class="vote-buttons" data-g="O42644" data-a="FUNCTION: Assembles into active homotetramers that polymeriz..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                            identical protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006241" target="_blank" class="term-link">
+                                CTP biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097268" target="_blank" class="term-link">
+                                cytoophidium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31611173" target="_blank" class="term-link">
+                            PMID:31611173
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Temperature-sensitive cytoophidium assembly in Schizosaccharomyces pombe.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36087798" target="_blank" class="term-link">
+                            PMID:36087798
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ubiquitination regulates cytoophidium assembly in Schizosaccharomyces pombe.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CTP synthase forms evolutionarily conserved filamentous structures called cytoophidia from bacteria to humans</div>
+                        
+                        <div class="finding-text">"CTP synthase (CTPS), a metabolic enzyme responsible for the de novo synthesis of CTP, can form filamentous structures termed cytoophidia, which are evolutionarily conserved from bacteria to humans."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ubiquitination is essential for maintaining CTPS filamentous structure in fission yeast</div>
+                        
+                        <div class="finding-text">"ubiquitination is important for the maintenance of the CTPS filamentous structure in fission yeast"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Specific ubiquitination regulators significantly affect CTPS filamentation with mapped probable ubiquitination targets</div>
+                        
+                        <div class="finding-text">"We have identified proteins which are in complex with CTPS, including specific ubiquitination regulators which significantly affect CTPS filamentation, and mapped probable ubiquitination targets on CTPS."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deubiquitinating enzymes regulate cytoophidium filamentous morphology</div>
+                        
+                        <div class="finding-text">"Furthermore, we discovered that a cohort of deubiquitinating enzymes is important for the regulation of cytoophidium&#39;s filamentous morphology."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31431504" target="_blank" class="term-link">
+                            PMID:31431504
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The TOR pathway modulates cytoophidium formation in Schizosaccharomyces pombe.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CTP synthase catalyzes ATP-dependent transfer of nitrogen from glutamine to UTP forming glutamate and CTP in the de novo pathway</div>
+                        
+                        <div class="finding-text">"The essential metabolic enzyme CTP synthase (CTPS)2 is critical for the de novo pathway and catalyzes the ATP-dependent transfer of nitrogen from glutamine to UTP, forming glutamate and CTP"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TOR pathway inhibition by rapamycin and everolimus significantly reduces cytoophidium length in S. pombe</div>
+                        
+                        <div class="finding-text">"The average length of cytoophidia was significantly reduced from 2.075 μm (S.D.: ±0.063 μm) in untreated cells to 1.21 μm (S.D.: ±0.064 μm) and 1.25 μm (S.D.: ±0.062 μm) after treatment with rapamycin and everolimus, a reduction of 41.8% (p &lt; 0.0001) and 40% (p &lt; 0.001), respectively"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Both TORC1 and TORC2 complexes regulate cytoophidium formation in S. pombe, unlike mammalian systems</div>
+                        
+                        <div class="finding-text">"In contrast to mammalian systems, not only TORC1 but both TORC1 and TORC2 sub-complexes participate in the regulation of Cts1 cytoophidia formation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">S6K/AGC kinases downstream of both TORC1 and TORC2 mediate cytoophidium regulation</div>
+                        
+                        <div class="finding-text">"We showed that the regulation is mediated by S6K/AGC kinases that act downstream of both TORC1 and TORC2 complexes, contrary to mammalian cells, in which only mTOR1/S6K1 has been shown to play a role"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crf1 transcriptional corepressor is a major regulator of cytoophidium formation via TORC2 pathway</div>
+                        
+                        <div class="finding-text">"deletion of Crf1 transcriptional co-repressor shows 95.3% reduction in cells containing cytoophidia and ∼50% reduction in their average length... Crf1 is a transcriptional corepressor for ribosomal proteins via TOR signaling"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CTPS polymerization may increase enzyme activity in S. pombe based on Crf1 and Gad8 mutant data</div>
+                        
+                        <div class="finding-text">"In S. pombe, reduction of filamentation did not significantly change the CTPS enzymatic activity in the TOR subunit knockout mutants, while it reduced it in the TORC2 downstream effector mutants. This suggests that in the case of Crf1 and Gad8 mutants, CTPS polymerization increases the enzyme&#39;s activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:pombe/ura7/ura7-deep-research.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on ura7/cts1 CTP synthase</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does ura7 contribute to pyrimidine biosynthesis and what determines its enzymatic specificity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="Q: How does ura7 contribute to pyrimidine biosynthesi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the regulatory mechanisms that control ura7 expression in response to pyrimidine availability?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="Q: What are the regulatory mechanisms that control ur..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does ura7 function in the broader context of nucleotide metabolism and cellular growth?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="Q: How does ura7 function in the broader context of n..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What role does ura7 play in cellular responses to nucleotide stress and starvation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="Q: What role does ura7 play in cellular responses to ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Enzyme kinetics analysis to characterize ura7 catalytic properties and substrate specificity</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="EXPERIMENT: Enzyme kinetics analysis to characterize ura7 cata..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Metabolomics analysis of ura7 mutant strains to study pyrimidine metabolism alterations</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="EXPERIMENT: Metabolomics analysis of ura7 mutant strains to st..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> RNA-seq analysis under different nucleotide conditions to study ura7 regulation</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="EXPERIMENT: RNA-seq analysis under different nucleotide condit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Growth analysis of ura7 mutants in different media to assess metabolic requirements</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O42644" data-a="EXPERIMENT: Growth analysis of ura7 mutants in different media..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ura7-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O42644" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-cts1-pombe">Deep Research Report: cts1 (pombe)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="cts1-schizosaccharomyces-pombe-comprehensive-gene-report"><strong>cts1</strong> (Schizosaccharomyces pombe) – Comprehensive Gene Report</h1>
+<h2 id="function-and-molecular-mechanism"><strong>Function and Molecular Mechanism</strong></h2>
+<p>The <em>cts1</em> gene of <em>Schizosaccharomyces pombe</em> encodes a <strong>CTP synthase (CTPS)</strong> enzyme (<a href="https://string-db.org/network/284812.O42644#:~:text=,role%20in%20the%20synthesis%20of">string-db.org</a>). CTP synthase catalyzes the <strong>ATP-dependent amination of UTP to form CTP</strong>, using L-glutamine as the nitrogen donor (<a href="https://string-db.org/network/284812.O42644#:~:text=,role%20in%20the%20synthesis%20of">string-db.org</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). This reaction represents the final and rate-limiting step in de novo CTP biosynthesis, producing cytidine 5′-triphosphate (CTP) and L-glutamate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). The enzyme has a bifunctional mechanism: an N-terminal <strong>glutamine amidotransferase (GAT) domain</strong> hydrolyzes glutamine, and the resulting ammonia is channeled through an intramolecular tunnel to the C-terminal synthetase domain, where it is incorporated into UTP in an ATP-dependent condensation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). Notably, Cts1 can also utilize ammonia directly (in lieu of glutamine) as a substrate for UTP amination (<a href="https://string-db.org/network/284812.O42644#:~:text=,role%20in%20the%20synthesis%20of">string-db.org</a>). </p>
+<p>Regulation of Cts1 activity is crucial for nucleotide homeostasis. <strong>GTP acts as an allosteric activator</strong> of CTP synthase, binding to the GAT domain to stimulate efficient glutamine hydrolysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=domain%20where%20the%20ATP,the%20GAT%20domain%20and%20their">pmc.ncbi.nlm.nih.gov</a>). Conversely, CTP synthases are subject to feedback inhibition by their product CTP, preventing excessive accumulation of CTP. Proper control of CTP levels is vital – an inability to regulate CTP pools is associated with cellular dysfunction and malignancies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>). Thus, Cts1 plays a key role in maintaining nucleotide balance, coupling glutamine metabolism to pyrimidine nucleotide synthesis. The enzyme is typically active as a <strong>homotetramer</strong>, and this oligomeric state is required for its catalytic function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). Overall, <em>cts1</em>’s molecular function is defined by <strong>CTP synthase activity</strong> (GO:0003883), driving de novo CTP production that fuels myriad cellular processes.</p>
+<h2 id="cellular-localization-and-subcellular-components"><strong>Cellular Localization and Subcellular Components</strong></h2>
+<p>Cts1 is predominantly a <strong>cytosolic enzyme</strong>, consistent with its role in nucleotide biosynthesis in the cytoplasm. However, under certain conditions Cts1 exhibits a remarkable ability to assemble into filamentous subcellular structures called <strong>cytoophidia</strong> (“cellular snakes”). Fluorescence-tagging experiments have shown that endogenously tagged Cts1 (Ctp1–YFP) forms filamentous cytoophidia in <em>S. pombe</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>). <strong>Each fission yeast cell generally contains two Cts1 filaments</strong>: a long, thick cytoophidium in the cytoplasm and a shorter, thinner filament associated with the nucleus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>). The nuclear-associated filament (sometimes termed an “N-cytoophidium”) resides at the nuclear periphery or within the nucleus, while the other filament (C-cytoophidium) is in the cytosol (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>). These observations indicate that a fraction of Cts1 localizes to the <strong>nucleus or nuclear envelope region</strong> in addition to the cytosol. In microscopy images, the cytoplasmic filament often lies adjacent to the outside of the nucleus, whereas the nuclear filament is just inside the nuclear envelope (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>). This unique distribution suggests Cts1 may dynamically partition between the cytoplasm and nucleus, forming compartment-specific enzymatic filaments.</p>
+<p>The cytoophidium structures are <strong>dynamic and cell-cycle regulated</strong>. Time-lapse imaging reveals that upon cell division, Cts1 filaments are <strong>asymmetrically inherited</strong> – typically only one of the two daughter cells inherits the cytoophidium (particularly the cytoplasmic filament), while the other daughter often does not (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=match%20at%20L194%20in%20one,two%20daughter%20cells%20or%20the">pmc.ncbi.nlm.nih.gov</a>). This suggests Cts1 assemblies can disassemble and reassemble each cell cycle, or redistribute unevenly between daughters. The physiological significance of this asymmetric inheritance is still under investigation, but it offers a unique example of a metabolic enzyme showing structured segregation during division (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=and%20nucleus%20of%20S,partition%20into%20one%20of%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=in%20one%20cell%20differ%20from,two%20daughter%20cells%20or%20the">pmc.ncbi.nlm.nih.gov</a>). It is clear that Cts1’s location is not uniform: it can exist as a diffuse cytosolic pool or in highly organized filamentous compartments, reflecting a layer of spatial regulation on its activity. In gene ontology terms, Cts1 is localized to the <strong>cytosol</strong> (GO:0005829) and has also been observed in the <strong>nucleus</strong> (GO:0005634) in the form of nuclear filaments.</p>
+<h2 id="biological-processes-and-cellular-roles"><strong>Biological Processes and Cellular Roles</strong></h2>
+<p>As the sole CTP synthase in fission yeast, Cts1 is <strong>essential for pyrimidine nucleotide biosynthesis</strong>. It enables the de novo <strong>CTP biosynthetic process</strong> (GO:0006241) by producing CTP from UTP (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). This biochemical function situates Cts1 at the heart of several broader biological processes. CTP is a critical building block for RNA and DNA synthesis; thus Cts1 activity is indirectly required for <strong>DNA replication</strong> and <strong>transcription</strong> by supplying one of the four ribonucleotides needed for RNA (and ultimately DNA via dCTP) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Nucleotides%20are%20required%20for%20many,is%20among%20the%20most%20overexpressed">pmc.ncbi.nlm.nih.gov</a>). Cells unable to synthesize CTP will deplete their nucleotide pools and arrest in proliferation. Indeed, CTP synthase is considered an “essential” enzyme for cell viability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=In%202010%2C%20three%20groups%20independently,Liu%2C%202010%29%2C%20bacteria">pmc.ncbi.nlm.nih.gov</a>). In <em>S. pombe</em>, deletion of <em>cts1+</em> is lethal (no viable knockout can be recovered), indicating that <strong>Cts1 is required for cell survival</strong>. Consistent with this, Cts1 is sometimes referred to as an essential metabolic enzyme in fission yeast (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=In%202010%2C%20three%20groups%20independently,Liu%2C%202010%29%2C%20bacteria">pmc.ncbi.nlm.nih.gov</a>). When Cts1 function is lost or chemically inhibited, cells cannot sustain DNA/RNA production and will exhibit halted cell cycle progression and loss of viability.</p>
+<p>Beyond nucleic acid synthesis, CTP is also required for various <strong>metabolic pathways</strong>, such as phospholipid biosynthesis. CTP serves as a donor of cytidylyl groups in the synthesis of phosphatidylcholine, CDP-diacylglycerol, and other membrane phospholipids. Thus, Cts1 activity contributes to <strong>membrane biogenesis</strong> and overall lipid metabolism. For example, cardiolipin and phosphatidylcholine pathways rely on CTP, linking Cts1 to the general process of membrane formation. In summary, the biological role of Cts1 can be encapsulated by its involvement in <strong>nucleotide metabolic processes</strong> (providing CTP for nucleic acid synthesis) and by extension in processes like DNA replication, RNA transcription, and membrane lipid production that depend on adequate CTP supply (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Nucleotides%20are%20required%20for%20many,is%20among%20the%20most%20overexpressed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=synthase%20activity%20is%20a%20potentially,or%20its%20nucleoside%20precursor%2C%20cytidine">pubmed.ncbi.nlm.nih.gov</a>). Given these central roles, it is not surprising that <em>S. pombe</em> cells strictly require Cts1 for growth and proliferation.</p>
+<h2 id="protein-domains-and-structural-features"><strong>Protein Domains and Structural Features</strong></h2>
+<p>Cts1 (CTP synthase) is a <strong>~600 amino acid</strong> protein comprised of two major domains with distinct functions. The <strong>N-terminal domain</strong> (~the first 140 residues) is a <strong>glutamine amidotransferase (GATase) domain</strong>, which contains the active site cysteine responsible for glutamine hydrolysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). This domain belongs to the class I amidotransferase family and provides the glutaminase activity: it binds L-glutamine and catalyzes the removal of the amide nitrogen, generating glutamate and ammonia. Key conserved motifs in this domain (including a catalytic Cys-His-Glu triad) facilitate glutamine binding and cleavage, a feature shared with other glutamine-dependent enzymes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>The <strong>C-terminal domain</strong> constitutes the <strong>synthetase domain</strong>, which binds the substrate UTP and co-substrate ATP, and carries out the actual <strong>UTP aminase (ligase)</strong> reaction to produce CTP (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). This domain contains the pockets for UTP and ATP, as well as sites for allosteric regulators. The ammonia released in the GAT domain is funneled through an internal channel to the synthetase active site, where it reacts with the UTP, in a mechanism coordinated with ATP hydrolysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). Structural studies (e.g. cryo-EM of Drosophila CTPS) show that CTPS undergoes conformational changes upon ligand binding—particularly, binding of GTP at an allosteric site on the GAT domain induces a catalytically active conformation that couples the two active sites (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=domain%20where%20the%20ATP,the%20GAT%20domain%20and%20their">pmc.ncbi.nlm.nih.gov</a>). The enzyme’s architecture thus includes a <strong>regulatory allosteric site</strong> (for GTP) and likely a <strong>product inhibition site</strong> (for CTP) that modulate its activity.</p>
+<p>Functionally, Cts1 operates as a <strong>homotetramer</strong>. Four identical Cts1 subunits assemble into a ring-shaped tetramer, which is the active form needed for catalysis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). These tetramers can further polymerize end-to-end into long filaments (cytoophidia) in vivo. No additional protein components are required for cytoophidium formation – it is a polymer of Cts1 itself. Each monomer contributes to extensive inter-subunit interfaces; for example, the tetramerization involves interactions between the synthetase domains of neighboring subunits. Filament assembly likely involves a stacking of tetramers in a helical or linear manner. The <strong>filamentous form</strong> does not represent a distinct domain but is a higher-order structural state. It has been proposed that filament formation can sequester Cts1 in inactive or partially active form, serving as a regulatory mechanism (though in some organisms filaments may retain activity) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20,pombe">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>). In summary, Cts1’s structural features include two catalytic domains (GATase and synthase) and the inherent ability to oligomerize into enzymatically active tetramers and further into filamentous assemblies.</p>
+<h2 id="disease-associations-and-phenotypes"><strong>Disease Associations and Phenotypes</strong></h2>
+<p>Because <em>cts1</em> is a fission yeast gene, it is not directly implicated in human disease. Nevertheless, its function as CTP synthase has clear relevance to human health via its orthologs. <strong>Human CTPS1</strong> (the functional human counterpart of yeast Cts1) is crucial for immune cell proliferation. Loss-of-function mutations in human <em>CTPS1</em> cause a <strong>severe immunodeficiency syndrome</strong>, due to an inability of activated T-lymphocytes and B-lymphocytes to proliferate (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=lymphocytes,or%20its%20nucleoside%20precursor%2C%20cytidine">pubmed.ncbi.nlm.nih.gov</a>). Patients with CTPS1 deficiency have life-threatening immunological defects: their T/B cells cannot expand in response to antigen because they cannot sufficiently synthesize CTP for DNA/RNA, leading to defective clonal expansion (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=lymphocytes,or%20its%20nucleoside%20precursor%2C%20cytidine">pubmed.ncbi.nlm.nih.gov</a>). This underscores the central role of CTP synthase in supporting cell division. The immunodeficiency phenotype can be rescued in vitro by supplementing nucleosides (cytidine) or by reintroducing wild-type CTPS1, confirming that the proliferative defect is specifically due to loss of CTP synthesis capacity (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=events%20and%20responses%20were%20only,drugs%20that%20could%20specifically%20dampen">pubmed.ncbi.nlm.nih.gov</a>). Thus, <strong>CTPS1 is absolutely required for rapidly dividing cells</strong> (like immune blasts), paralleling the essential requirement for Cts1 in dividing yeast cells.</p>
+<p>Beyond rare genetic deficiencies, CTP synthase is also relevant in the context of cancer and antimicrobial therapy. CTPS1 is <strong>overexpressed in many cancers</strong>, as tumor cells have high demand for nucleotide synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>). Dysregulated nucleotide pools can contribute to genomic instability and uncontrolled growth; indeed, CTPS1 is one of the most upregulated metabolic enzymes in certain malignancies (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>). For this reason, CTPS is being explored as a target for anti-cancer drugs (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>). Several inhibitors of CTP synthase (such as 3-deazauridine, cyclopentenyl cytosine, and DON) have shown anti-proliferative effects. In a yeast context, inhibition of Cts1 mimics a “starvation” for CTP and triggers cell cycle arrest. For example, drugs that inhibit CTP synthase or mutations that lower its activity cause <em>S. pombe</em> cells to stop dividing and often enlarge (a typical response to cell cycle arrest in fission yeast). <strong>Phenotypically</strong>, a <em>cts1</em> temperature-sensitive mutant or partial loss-of-function might display slow growth, cell elongation (due to G2 arrest from nucleotide depletion), or sensitivity to DNA-damaging agents (because of impaired dCTP supply for DNA repair). Furthermore, cts1 was identified in a screen for calcineurin-related functions in a distant fungus (<em>Cryptococcus neoformans</em>, though there <em>CTS1</em> refers to a different gene) – this highlights that naming overlaps exist but the <em>S. pombe cts1</em> specifically encodes CTP synthase, not directly tied to calcineurin in yeast. In summary, while <em>cts1</em> per se is a yeast gene, <strong>its homologs are involved in critical disease-related pathways</strong>: immune cell proliferation and cancer cell metabolism. This conservation of function makes Cts1 a potential antifungal target as well – an inhibitor that selectively targets fungal CTP synthase would be lethal to yeast cells while potentially sparing the human enzyme if designed correctly.</p>
+<h2 id="expression-patterns-and-regulation"><strong>Expression Patterns and Regulation</strong></h2>
+<p>Under normal nutrient-rich conditions, <em>cts1</em> is expressed in vegetatively growing <em>S. pombe</em> cells at levels sufficient to meet metabolic needs. It is generally considered a <strong>house-keeping gene</strong>, since a constant supply of CTP is required for ongoing cellular processes. Consistent with this, <em>cts1+</em> mRNA and protein are present throughout the cell cycle and across different growth conditions. In one study, disruption of the TOR (Target of Rapamycin) signaling pathway in <em>S. pombe</em> did <strong>not significantly alter cts1 transcript or protein levels</strong>, suggesting that nutrient signaling does not acutely regulate <em>cts1</em> expression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=yet%20significant%20%28p%20,In">pmc.ncbi.nlm.nih.gov</a>). Specifically, knockout of TORC1/TORC2 subunits shortened Cts1 filaments but the total Cts1–YFP protein level remained relatively unchanged under TOR-inhibited conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=yet%20significant%20%28p%20,In">pmc.ncbi.nlm.nih.gov</a>). This indicates that <em>cts1</em> expression is relatively stable and not strongly down-regulated by TOR, even though TOR affects the enzyme’s assembly state (filament length). </p>
+<p>However, Cts1 <strong>activity and assembly state do respond to growth conditions</strong>. During exponential log-phase growth (nutrient-rich, actively dividing cells), Cts1 is highly active and nearly all cells display cytoophidia, implying abundant enzyme and/or high flux through the pathway (<a href="https://www.mdpi.com/1422-0067/25/18/10092#:~:text=Ura7,Figure%201A%2CB%2CE">www.mdpi.com</a>). By contrast, in stationary phase or nutrient-depleted conditions, <em>S. pombe</em> cells <strong>disassemble Cts1 filaments</strong> – in stationary-phase cultures, the previously prevalent cytoophidia disappear from fission yeast cells (<a href="https://www.mdpi.com/1422-0067/25/18/10092#:~:text=Ura7,Figure%201A%2CB%2CE">www.mdpi.com</a>). This disappearance correlates with a reduced demand for CTP when cells are quiescent. It is likely that <em>cts1</em> expression or Cts1 enzyme activity is down-modulated as cells enter stationary phase or starve, though the filaments’ absence could also result from product feedback (high CTP levels in non-dividing cells may inhibit filament formation, causing Cts1 to remain diffuse). Thus, while <em>cts1</em> mRNA/protein levels don’t dramatically fluctuate in reported experiments, the <strong>functional state of Cts1 is regulated</strong>: active growth promotes Cts1 polymerization (and presumably high enzymatic throughput), whereas nutrient limitation or growth arrest leads to Cts1 depolymerization and possibly reduced activity.</p>
+<p>Regulation of <em>cts1</em> can also be considered in the context of the cell cycle and developmental cues. Entry into S-phase (DNA synthesis) likely requires upregulation of nucleotide biosynthesis genes. Although specific cell-cycle regulation of <em>cts1</em> in fission yeast has not been heavily reported, one can infer parallels from other systems. In human T-cells, <strong>CTPS1 expression is low in resting (G0) cells and is rapidly up-regulated upon mitogenic stimulation</strong> (when cells enter the cell cycle) (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=proliferation%20was%20restored%20in%20CTPS1,could%20specifically%20dampen%20lymphocyte%20activation">pubmed.ncbi.nlm.nih.gov</a>). Likewise, <em>S. pombe</em> likely increases nucleotide biosynthetic capacity when cells commit to division or when apropriate growth signals are present. There may be transcriptional regulators ensuring <em>cts1</em> expression meets demand (for example, in budding yeast, pyrimidine biosynthesis genes are co-regulated by Pyr1/Ppr1, although fission yeast uses different regulatory networks). Overall, <em>cts1</em> exhibits a constitutive expression pattern with adjustments tied to growth state: it is <strong>highly active during rapid growth</strong> and dialed back during quiescence. Post-translational modifications might also regulate Cts1 (in other species, protein kinase A phosphorylation of CTPS has been observed), but such regulation in <em>S. pombe</em> is not yet well characterized.</p>
+<h2 id="evolutionary-conservation"><strong>Evolutionary Conservation</strong></h2>
+<p>CTP synthase is an <strong>ancient and highly conserved enzyme</strong>, reflecting its fundamental role in biology. The <em>cts1</em> gene of fission yeast has clear orthologs in virtually all organisms, from bacteria to humans. At the sequence level, Cts1 shares significant homology with CTP synthases in other species. For instance, <em>S. pombe</em> Cts1 is homologous to <em>E. coli</em> PyrG (CTP synthase) and to the budding yeast enzymes Ura7 and Ura8. (In fact, <strong>budding yeast has two CTP synthase isoforms, Ura7 and Ura8</strong>, due to a genome duplication, whereas <em>S. pombe</em> and most other eukaryotes have a single <em>cts1+</em> gene) (<a href="https://www.mdpi.com/1422-0067/25/18/10092#:~:text=the%20two%20CTPS%20genes%2C%20URA7,5%2C27%5D.%20In%20fission">www.mdpi.com</a>). Despite the duplication, the yeast enzymes perform the same function and even form similar filaments. Key catalytic residues and domain architectures are strictly conserved. For example, the glutamine-binding site cysteine and the ATP/UTP-binding motifs in the synthetase domain are present in all species’ CTPS enzymes. This conservation underscores that the mechanism of CTP biosynthesis and its regulation by GTP/CTP is under strong purifying selection – any major deviation would be detrimental to nucleotide balance.</p>
+<p>The phenomenon of <strong>CTP synthase filamentation (cytoophidia)</strong> is also evolutionarily conserved. Researchers have observed CTPS polymers in bacteria, yeast, flies, and human cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Interestingly%2C%20CTPS%20has%20been%20found,21%29%2C%20cell">pmc.ncbi.nlm.nih.gov</a>). The first discoveries of cytoophidia were made almost simultaneously in bacteria, <em>Drosophila</em>, and budding yeast, and subsequently in mammalian cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=In%202010%2C%20three%20groups%20independently,Liu%2C%202010%29%2C%20bacteria">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=In%202010%2C%20three%20groups%20independently,for%20bacteria%20and%20human%20have">pmc.ncbi.nlm.nih.gov</a>). <em>S. pombe</em> was also shown to form Cts1 filaments, reinforcing that this ability to compartmentalize into filaments is a conserved property of CTPS (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Interestingly%2C%20CTPS%20has%20been%20found,21%29%2C%20cell">pmc.ncbi.nlm.nih.gov</a>). This suggests an important biological function for filamentation has been preserved (possibly related to enzyme regulation or cellular organization of metabolism). Additionally, the requirement of GTP for glutamine-dependent activity is conserved from <em>E. coli</em> to eukaryotes, indicating the allosteric regulation mechanisms appeared early in evolution (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=domain%20where%20the%20ATP,the%20GAT%20domain%20and%20their">pmc.ncbi.nlm.nih.gov</a>). Human CTP synthases (CTPS1 and CTPS2) are about ~60% identical in sequence to yeast Cts1 and can functionally complement yeast mutants, highlighting deep conservation of function. In summary, <em>cts1</em> and its encoded enzyme exemplify evolutionary conservation at multiple levels: <strong>sequence, structure, mechanism, and even higher-order assembly</strong> are all maintained across the tree of life. This makes CTP synthase a useful model for studying enzyme regulation and polymerization in a broad biological context.</p>
+<h2 id="relevant-gene-ontology-go-terms-and-annotations"><strong>Relevant Gene Ontology (GO) Terms and Annotations</strong></h2>
+<p>Based on the characterized functions and properties of <em>cts1</em>, the following Gene Ontology terms are applicable (supported by experimental evidence from the literature):</p>
+<ul>
+<li><strong>Molecular Function</strong>: <strong>CTP synthase activity</strong> (GO:0003883) – <em>Cts1</em> catalyzes the reaction ATP + UTP + glutamine + H₂O → CTP + ADP + phosphate + glutamate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). This defines its enzymatic function in converting UTP to CTP (also known as CTP <strong>synthetase</strong> activity) (<a href="https://string-db.org/network/284812.O42644#:~:text=,role%20in%20the%20synthesis%20of">string-db.org</a>).  </li>
+<li><strong>Biological Process</strong>: <strong>CTP biosynthetic process</strong> (de novo CTP biosynthesis) (GO:0006241) – <em>cts1</em> is involved in the pathway producing CTP from simpler precursors, constituting the last step of de novo pyrimidine ribonucleotide synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). By supplying CTP, <em>cts1</em> contributes to DNA and RNA biosynthesis and thus indirectly to processes like DNA replication and transcription (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Nucleotides%20are%20required%20for%20many,is%20among%20the%20most%20overexpressed">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=synthase%20activity%20is%20a%20potentially,or%20its%20nucleoside%20precursor%2C%20cytidine">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li><strong>Biological Process</strong>: <strong>Pyrimidine nucleotide metabolic process</strong> (GO:0006221) – As the enzyme governing CTP levels, Cts1 plays a role in the broader metabolism of pyrimidine nucleotides within the cell. Proper function of Cts1 is required for maintaining nucleotide pool balance during cell growth (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li><strong>Cellular Component</strong>: <strong>Cytosol</strong> (GO:0005829) – Cts1 is predominantly localized in the cytosol where it carries out CTP synthesis (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>). The majority of Cts1 enzyme resides in the cytoplasmic compartment, often visible as diffuse cytosolic signal or organized into filaments.  </li>
+<li><strong>Cellular Component</strong>: <strong>Nucleus</strong> (GO:0005634) – A portion of Cts1 has been observed in association with the nucleus, forming nuclear filaments (N-cytoophidia) adjacent to or inside the nucleus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>). This suggests Cts1 can localize to the nuclear interior or periphery, possibly to provide CTP for nuclear processes or as a storage form. (While not a classical nuclear protein with defined NLS, the filament evidence justifies a nuclear annotation for the filament form of Cts1.)  </li>
+<li><strong>Cellular Component</strong> (variant/append): <strong>CTP synthase filament</strong> – (Not yet an established GO term, but often described in literature) – the cytoophidium is a novel compartment consisting of polymerized Cts1. If formalized, it would capture Cts1’s residence in these intracellular rods (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>).  </li>
+</ul>
+<p>Each of these GO annotations for <em>cts1</em> can be supported by experimental findings. For instance, the <strong>CTP synthase activity</strong> is supported by biochemical characterization of the enzyme’s reaction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>). The <strong>CTP biosynthetic process</strong> involvement is evidenced by the essential requirement of <em>cts1</em> for nucleotide synthesis and cell replication (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=Nucleotides%20are%20required%20for%20many,is%20among%20the%20most%20overexpressed">pmc.ncbi.nlm.nih.gov</a>). Localization to <strong>cytosol and nucleus</strong> is confirmed by fluorescence microscopy of Cts1–YFP in vivo (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>). These annotations together encapsulate the gene’s role in metabolism (MF/BP) and its intracellular localization (CC), providing a concise summary of <em>cts1</em>’s function for Gene Ontology curation. </p>
+<p><strong>References:</strong> The above information is drawn from a variety of studies and databases. Key references include biochemical analyses of CTP synthase’s activity and mechanism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9138612/#:~:text=Cytidine,well%20as%20the%20covalent%20adduct">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://string-db.org/network/284812.O42644#:~:text=,role%20in%20the%20synthesis%20of">string-db.org</a>), cell biology studies demonstrating Cts1’s filament formation and localization (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=synthase,Since%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4232767/#:~:text=,pombe%20cells">pmc.ncbi.nlm.nih.gov</a>), and medical research highlighting the importance of CTPS in cell proliferation and disease (<a href="https://pubmed.ncbi.nlm.nih.gov/24870241/#:~:text=lymphocytes,or%20its%20nucleoside%20precursor%2C%20cytidine">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6779450/#:~:text=CTP%20synthase%20%28CTPS%29,12%E2%80%93%20%2014">pmc.ncbi.nlm.nih.gov</a>). These sources provide strong evidence for annotating <em>cts1</em> with the GO terms listed, ensuring that each annotation is backed by experimental observations (IDA: Inferred from Direct Assay, and ISS: Inferred from Sequence Similarity where appropriate). This comprehensive understanding of <em>cts1</em> will facilitate its accurate curation in the Gene Ontology database. </p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O42644
+gene_symbol: ura7
+taxon:
+  id: NCBITaxon:4896
+  label: Schizosaccharomyces pombe
+description: CTP synthase enzyme that catalyzes the ATP-dependent amination of UTP
+  to CTP using glutamine as nitrogen donor. Essential enzyme required for de novo
+  CTP biosynthesis and cell viability. Forms characteristic cytoophidium filamentous
+  structures that are temperature-sensitive and dynamically regulated during cell
+  cycle.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Cytoplasm localization well-supported by phylogenetic analysis (IBA).
+      The deep research confirms Cts1 is predominantly cytosolic, existing as both
+      diffuse pool and organized filaments. This represents accurate core localization.
+    action: ACCEPT
+    reason: IBA evidence correctly identifies cytoplasmic localization. Deep research
+      corroborates that Cts1 functions as a cytosolic enzyme for CTP synthesis. This
+      is a core cellular component annotation.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: Cts1 is predominantly a cytosolic enzyme, consistent with its
+        role in nucleotide biosynthesis in the cytoplasm
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CTP synthase forms homotetramers as the active enzyme form, which can
+      further polymerize into filaments. This protein-protein interaction is essential
+      for enzymatic function and represents a core molecular property.
+    action: ACCEPT
+    reason: The homotetramer formation is well-established for CTP synthase enzymes
+      across species. This self-association is required for catalytic activity and
+      is a fundamental aspect of enzyme function.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: Functionally, Cts1 operates as a homotetramer. Four identical
+        Cts1 subunits assemble into a ring-shaped tetramer, which is the active form
+        needed for catalysis
+- term:
+    id: GO:0003883
+    label: CTP synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CTP synthase activity is the defining molecular function of this enzyme.
+      IBA correctly identifies this core function based on phylogenetic conservation.
+      Enzyme catalyzes ATP + UTP + glutamine → CTP + ADP + phosphate + glutamate.
+    action: ACCEPT
+    reason: This is the primary and essential molecular function of ura7/cts1. The
+      enzyme is well-characterized biochemically across species. This annotation accurately
+      captures the core catalytic activity.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: CTP synthase catalyzes the ATP-dependent amination of UTP to
+        form CTP, using L-glutamine as the nitrogen donor... This reaction represents
+        the final and rate-limiting step in de novo CTP biosynthesis
+- term:
+    id: GO:0006241
+    label: CTP biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: CTP biosynthetic process is the primary biological function of CTP synthase.
+      The enzyme catalyzes the final step of de novo CTP synthesis, converting UTP
+      to CTP. Essential for cell viability as deletion is lethal.
+    action: ACCEPT
+    reason: This accurately describes the core biological process mediated by ura7/cts1.
+      The enzyme is essential for CTP production required for nucleic acid synthesis
+      and cell proliferation. Well-supported by phylogenetic and functional evidence.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: As the sole CTP synthase in fission yeast, Cts1 is essential
+        for pyrimidine nucleotide biosynthesis. It enables the de novo CTP biosynthetic
+        process (GO:0006241) by producing CTP from UTP
+- term:
+    id: GO:0097268
+    label: cytoophidium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Cytoophidium formation is well-established for CTP synthase. IBA correctly
+      predicts this based on conservation across species. Direct experimental evidence
+      also exists showing temperature-sensitive cytoophidium assembly in S. pombe.
+    action: ACCEPT
+    reason: Cytoophidium formation is a conserved feature of CTP synthase enzymes.
+      Both phylogenetic inference and direct experimental evidence (PMID:31611173)
+      confirm Cts1 forms these filamentous structures in S. pombe.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: &#39;Cts1 exhibits a remarkable ability to assemble into filamentous
+        subcellular structures called cytoophidia... Each fission yeast cell generally
+        contains two Cts1 filaments: a long, thick cytoophidium in the cytoplasm and
+        a shorter, thinner filament associated with the nucleus&#39;
+- term:
+    id: GO:0019856
+    label: pyrimidine nucleobase biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: This term is broader than CTP biosynthesis, encompassing pyrimidine nucleobase
+      production. While CTP synthase contributes to pyrimidine metabolism, this annotation
+      is somewhat imprecise as the enzyme works with nucleotides, not nucleobases
+      directly.
+    action: MODIFY
+    reason: CTP synthase converts UTP to CTP (nucleotide to nucleotide conversion),
+      not directly involved in nucleobase synthesis. The more accurate term would
+      be GO:0006221 (pyrimidine nucleotide biosynthetic process) which correctly describes
+      nucleotide-level metabolism.
+    proposed_replacement_terms:
+    - id: GO:0006221
+      label: pyrimidine nucleotide biosynthetic process
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: As the enzyme governing CTP levels, Cts1 plays a role in the
+        broader metabolism of pyrimidine nucleotides within the cell
+- term:
+    id: GO:0003883
+    label: CTP synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Duplicate annotation of CTP synthase activity with IEA evidence. The
+      IBA annotation above already correctly captures this core function with stronger
+      evidence. IEA provides supporting computational evidence.
+    action: ACCEPT
+    reason: While duplicative with the IBA annotation, this IEA annotation correctly
+      identifies the core molecular function through automated methods. Both annotations
+      are accurate and reinforce the primary enzyme activity.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: CTP synthase activity (GO:0003883) – Cts1 catalyzes the reaction
+        ATP + UTP + glutamine + H₂O → CTP + ADP + phosphate + glutamate
+- term:
+    id: GO:0006221
+    label: pyrimidine nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: Accurate broad biological process annotation. CTP synthase contributes
+      to pyrimidine nucleotide biosynthesis by producing CTP. This correctly captures
+      the metabolic context of the enzyme function.
+    action: ACCEPT
+    reason: This annotation correctly places CTP synthase in the broader context of
+      pyrimidine nucleotide metabolism. The enzyme produces CTP, a key pyrimidine
+      nucleotide required for RNA and DNA synthesis.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: Pyrimidine nucleotide metabolic process (GO:0006221) – As the
+        enzyme governing CTP levels, Cts1 plays a role in the broader metabolism of
+        pyrimidine nucleotides within the cell
+- term:
+    id: GO:0006241
+    label: CTP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Duplicate annotation of CTP biosynthetic process with IEA evidence from
+      InterPro. Correctly identifies the core biological process. Complements the
+      IBA annotation with computational support.
+    action: ACCEPT
+    reason: IEA annotation based on InterPro domain analysis correctly identifies
+      the CTP biosynthetic function. This is accurate and represents the primary biological
+      role of the enzyme.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: CTP biosynthetic process (de novo CTP biosynthesis) (GO:0006241)
+        – cts1 is involved in the pathway producing CTP from simpler precursors, constituting
+        the last step of de novo pyrimidine ribonucleotide synthesis
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Generic nucleotide binding annotation based on keyword mapping. While
+      technically correct (enzyme binds ATP, UTP, GTP), this is too broad and uninformative
+      compared to specific substrate/cofactor binding annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: While CTP synthase does bind nucleotides (ATP, UTP as substrates; GTP
+      as allosteric regulator), this generic term provides little functional information.
+      More specific terms like ATP binding (GO:0005524) or UTP binding would be more
+      informative.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: The C-terminal domain... binds the substrate UTP and co-substrate
+        ATP... GTP acts as an allosteric activator of CTP synthase, binding to the
+        GAT domain
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: ATP binding is correct as ATP is a co-substrate in the CTP synthase reaction.
+      However, this annotation alone provides limited functional insight compared
+      to the full enzymatic activity annotation.
+    action: ACCEPT
+    reason: ATP binding is accurate - ATP is required as co-substrate for the amination
+      reaction. While somewhat generic, it correctly identifies a specific nucleotide
+      binding function of the enzyme.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: CTP synthase catalyzes the ATP-dependent amination of UTP to
+        form CTP... The C-terminal domain constitutes the synthetase domain, which
+        binds the substrate UTP and co-substrate ATP
+- term:
+    id: GO:0016874
+    label: ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: Generic ligase activity annotation. While CTP synthase is classified
+      as a ligase (EC 6.3.4.2), this broad term is uninformative compared to the specific
+      CTP synthase activity annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This overly broad annotation provides minimal functional information.
+      The specific CTP synthase activity (GO:0003883) annotation already captures
+      the enzyme function precisely. Generic ligase activity adds no value.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: &#39;RecName: Full=CTP synthase; EC=6.3.4.2... AltName: Full=UTP--ammonia
+        ligase&#39;
+- term:
+    id: GO:0097268
+    label: cytoophidium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: Duplicate cytoophidium annotation with IEA evidence from ARBA machine
+      learning. Correctly identifies this cellular component. Complements the IBA
+      and IDA evidence for this localization.
+    action: ACCEPT
+    reason: Machine learning models correctly predict cytoophidium formation, which
+      is well-established for CTP synthase. This annotation is accurate and supported
+      by experimental evidence from other sources.
+    supported_by:
+    - reference_id: PMID:31611173
+      supporting_text: Temperature-sensitive cytoophidium assembly in Schizosaccharomyces
+        pombe... CTPS forms filamentous structures termed cytoophidia
+- term:
+    id: GO:0044210
+    label: &#39;&#39;&#39;de novo&#39;&#39; CTP biosynthetic process&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: Specific and accurate annotation for de novo CTP biosynthesis based on
+      UniPathway mapping. This correctly identifies the enzyme role in synthesizing
+      CTP from precursors rather than salvage pathways.
+    action: ACCEPT
+    reason: This annotation accurately captures the specific metabolic pathway - de
+      novo CTP synthesis. CTP synthase catalyzes the final step in de novo CTP production,
+      distinguishing it from salvage pathway enzymes.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: This reaction represents the final and rate-limiting step in
+        de novo CTP biosynthesis... It enables the de novo CTP biosynthetic process
+        (GO:0006241) by producing CTP from UTP
+- term:
+    id: GO:0097268
+    label: cytoophidium
+  evidence_type: IDA
+  original_reference_id: PMID:31611173
+  review:
+    summary: Direct experimental evidence for cytoophidium formation in S. pombe.
+      Study demonstrates temperature-sensitive assembly of CTPS filaments, with detailed
+      characterization of their dynamics and regulation.
+    action: ACCEPT
+    reason: Strong experimental evidence directly showing Cts1 forms cytoophidia in
+      S. pombe. Study used CTPS-YFP to visualize filaments and demonstrated their
+      temperature sensitivity, making this a high-quality direct observation.
+    supported_by:
+    - reference_id: PMID:31611173
+      supporting_text: During the early-to-middle exponential phase (OD600 = 0.1–1.0),
+        cytoophidia were highly abundant, being present in more than 90% of cells...
+        We have previously identified that CTPS forms cytoophidia in S. pombe
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  review:
+    summary: High-throughput direct assay showing cytoplasmic localization. Part of
+      large-scale ORFeome study that determined localization of ~90% of S. pombe proteome
+      using YFP tagging.
+    action: ACCEPT
+    reason: Direct experimental evidence from systematic protein localization study.
+      HDA provides strong support for cytoplasmic localization, consistent with the
+      enzyme metabolic function.
+    supported_by:
+    - reference_id: PMID:16823372
+      supporting_text: We determined the localization of 4,431 proteins, corresponding
+        to approximately 90% of the fission yeast proteome, by tagging each ORF with
+        the yellow fluorescent protein
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Cytosol annotation based on manual transfer from orthologs. More specific
+      than cytoplasm, correctly identifying the soluble cytoplasmic fraction where
+      CTP synthesis occurs.
+    action: ACCEPT
+    reason: ISO evidence correctly identifies cytosolic localization based on ortholog
+      data. This is more specific than general cytoplasm and accurately describes
+      where the enzyme functions in nucleotide metabolism.
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: Cts1 is predominantly localized in the cytosol where it carries
+        out CTP synthesis. The majority of Cts1 enzyme resides in the cytoplasmic
+        compartment, often visible as diffuse cytosolic signal or organized into filaments
+- term:
+    id: GO:0006207
+    label: &#39;&#39;&#39;de novo&#39;&#39; pyrimidine nucleobase biosynthetic process&#39;
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: This annotation refers to nucleobase biosynthesis, but CTP synthase works
+      at the nucleotide level (UTP to CTP), not nucleobase level. The term is imprecise
+      for this enzyme function.
+    action: MODIFY
+    reason: CTP synthase converts nucleotides (UTP→CTP), not nucleobases. The more
+      accurate term would be de novo pyrimidine nucleotide biosynthetic process or
+      specifically de novo CTP biosynthetic process (GO:0044210).
+    proposed_replacement_terms:
+    - id: GO:0044210
+      label: &#39;&#39;&#39;de novo&#39;&#39; CTP biosynthetic process&#39;
+    supported_by:
+    - reference_id: file:pombe/ura7/ura7-deep-research.md
+      supporting_text: This reaction represents the final and rate-limiting step in
+        de novo CTP biosynthesis, producing cytidine 5′-triphosphate (CTP)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity.
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping.
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission
+    yeast Schizosaccharomyces pombe.
+  findings: []
+- id: PMID:31611173
+  title: Temperature-sensitive cytoophidium assembly in Schizosaccharomyces pombe.
+  findings: []
+- id: PMID:36087798
+  title: Ubiquitination regulates cytoophidium assembly in Schizosaccharomyces pombe.
+  findings:
+  - statement: CTP synthase forms evolutionarily conserved filamentous structures
+      called cytoophidia from bacteria to humans
+    supporting_text: CTP synthase (CTPS), a metabolic enzyme responsible for the de
+      novo synthesis of CTP, can form filamentous structures termed cytoophidia, which
+      are evolutionarily conserved from bacteria to humans.
+    full_text_unavailable: true
+  - statement: Ubiquitination is essential for maintaining CTPS filamentous structure
+      in fission yeast
+    supporting_text: ubiquitination is important for the maintenance of the CTPS filamentous
+      structure in fission yeast
+    full_text_unavailable: true
+  - statement: Specific ubiquitination regulators significantly affect CTPS filamentation
+      with mapped probable ubiquitination targets
+    supporting_text: We have identified proteins which are in complex with CTPS, including
+      specific ubiquitination regulators which significantly affect CTPS filamentation,
+      and mapped probable ubiquitination targets on CTPS.
+    full_text_unavailable: true
+  - statement: Deubiquitinating enzymes regulate cytoophidium filamentous morphology
+    supporting_text: Furthermore, we discovered that a cohort of deubiquitinating
+      enzymes is important for the regulation of cytoophidium&#39;s filamentous morphology.
+    full_text_unavailable: true
+- id: PMID:31431504
+  title: The TOR pathway modulates cytoophidium formation in Schizosaccharomyces pombe.
+  findings:
+  - statement: CTP synthase catalyzes ATP-dependent transfer of nitrogen from glutamine
+      to UTP forming glutamate and CTP in the de novo pathway
+    supporting_text: The essential metabolic enzyme CTP synthase (CTPS)2 is critical
+      for the de novo pathway and catalyzes the ATP-dependent transfer of nitrogen
+      from glutamine to UTP, forming glutamate and CTP
+  - statement: TOR pathway inhibition by rapamycin and everolimus significantly reduces
+      cytoophidium length in S. pombe
+    supporting_text: &#39;The average length of cytoophidia was significantly reduced
+      from 2.075 μm (S.D.: ±0.063 μm) in untreated cells to 1.21 μm (S.D.: ±0.064
+      μm) and 1.25 μm (S.D.: ±0.062 μm) after treatment with rapamycin and everolimus,
+      a reduction of 41.8% (p &lt; 0.0001) and 40% (p &lt; 0.001), respectively&#39;
+  - statement: Both TORC1 and TORC2 complexes regulate cytoophidium formation in S.
+      pombe, unlike mammalian systems
+    supporting_text: In contrast to mammalian systems, not only TORC1 but both TORC1
+      and TORC2 sub-complexes participate in the regulation of Cts1 cytoophidia formation
+  - statement: S6K/AGC kinases downstream of both TORC1 and TORC2 mediate cytoophidium
+      regulation
+    supporting_text: We showed that the regulation is mediated by S6K/AGC kinases
+      that act downstream of both TORC1 and TORC2 complexes, contrary to mammalian
+      cells, in which only mTOR1/S6K1 has been shown to play a role
+  - statement: Crf1 transcriptional corepressor is a major regulator of cytoophidium
+      formation via TORC2 pathway
+    supporting_text: deletion of Crf1 transcriptional co-repressor shows 95.3% reduction
+      in cells containing cytoophidia and ∼50% reduction in their average length...
+      Crf1 is a transcriptional corepressor for ribosomal proteins via TOR signaling
+  - statement: CTPS polymerization may increase enzyme activity in S. pombe based
+      on Crf1 and Gad8 mutant data
+    supporting_text: In S. pombe, reduction of filamentation did not significantly
+      change the CTPS enzymatic activity in the TOR subunit knockout mutants, while
+      it reduced it in the TORC2 downstream effector mutants. This suggests that in
+      the case of Crf1 and Gad8 mutants, CTPS polymerization increases the enzyme&#39;s
+      activity
+- id: file:pombe/ura7/ura7-deep-research.md
+  title: Deep research report on ura7/cts1 CTP synthase
+  findings: []
+core_functions:
+- description: Catalyzes ATP-dependent amination of UTP to CTP using glutamine as
+    nitrogen donor
+  molecular_function:
+    id: GO:0003883
+    label: CTP synthase activity
+  directly_involved_in:
+  - id: GO:0044210
+    label: &#39;&#39;&#39;de novo&#39;&#39; CTP biosynthetic process&#39;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:46398
+    label: UTP(4-)
+  - id: CHEBI:15422
+    label: ATP
+  - id: CHEBI:28300
+    label: glutamine
+- description: Assembles into active homotetramers that polymerize into cytoophidia
+    filaments
+  molecular_function:
+    id: GO:0042802
+    label: identical protein binding
+  directly_involved_in:
+  - id: GO:0006241
+    label: CTP biosynthetic process
+  locations:
+  - id: GO:0097268
+    label: cytoophidium
+suggested_questions:
+- question: How does ura7 contribute to pyrimidine biosynthesis and what determines
+    its enzymatic specificity?
+- question: What are the regulatory mechanisms that control ura7 expression in response
+    to pyrimidine availability?
+- question: How does ura7 function in the broader context of nucleotide metabolism
+    and cellular growth?
+- question: What role does ura7 play in cellular responses to nucleotide stress and
+    starvation?
+suggested_experiments:
+- description: Enzyme kinetics analysis to characterize ura7 catalytic properties
+    and substrate specificity
+- description: Metabolomics analysis of ura7 mutant strains to study pyrimidine metabolism
+    alterations
+- description: RNA-seq analysis under different nucleotide conditions to study ura7
+    regulation
+- description: Growth analysis of ura7 mutants in different media to assess metabolic
+    requirements
+status: COMPLETE
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+    <div class="section">
+        <div class="pathway-link">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="section-title">🔗 Related Resources</h2>
+                <span class="vote-buttons" data-g="O42644" data-a="PATHWAY: ura7 pathways" data-r="" data-act="PATHWAY">
+                    <button class="vote-btn" data-v="up" title="Pathway visualization is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="Pathway visualization needs improvement">👎</button>
+                </span>
+            </div>
+            <p>
+                <a href="ura7-pathway.html" target="_blank" class="btn-link">
+                    📊 View Pathway Visualization
+                </a>
+                <span style="color: #666; font-size: 0.9rem; margin-left: 1rem;">
+                    Interactive pathway diagram with detailed annotations
+                </span>
+            </p>
+        </div>
+    </div>
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

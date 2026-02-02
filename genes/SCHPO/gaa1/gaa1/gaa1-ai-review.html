@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gaa1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gaa1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9US48" target="_blank" class="term-link">
+                        Q9US48
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe 972h-</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gaa1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9US48" data-a="DESCRIPTION: Essential component of the GPI-anchor transamidase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Essential component of the GPI-anchor transamidase complex (GPIT) in the endoplasmic reticulum. Catalyzes the terminal step of GPI anchor attachment by facilitating the transfer of preassembled GPI glycolipids to specific proteins at their C-terminal GPI-anchor signal sequence. Contains a luminal domain homologous to M28 family metallopeptidases that is critical for the transamidation reaction. The multi-pass transmembrane protein anchors the complex in the ER membrane and positions the catalytic machinery for GPI attachment.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016255" target="_blank" class="term-link">
+                                    GO:0016255
+                                </a>
+                            </span>
+                            <span class="term-label">attachment of GPI anchor to protein</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0016255" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core biological process for gaa1. The protein is directly responsible for catalyzing the terminal step of GPI anchor attachment to proteins in the ER.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/gaa1/gaa1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gaa1 is a core component of the GPI:protein transamidase (GPIT) enzyme complex that catalyzes the final step of GPI anchor attachment to proteins in the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042765" target="_blank" class="term-link">
+                                    GO:0042765
+                                </a>
+                            </span>
+                            <span class="term-label">GPI-anchor transamidase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0042765" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular component annotation. Gaa1 is an essential structural and catalytic subunit of this five-protein complex.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/gaa1/gaa1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gaa1 resides in the ER as an integral membrane protein and is a stable structural subunit of the GPIT enzyme complex (GO:0042765)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. Gaa1 is a multi-pass transmembrane protein anchored in the ER membrane where GPI attachment occurs.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/gaa1/gaa1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gaa1 is an integral membrane glycoprotein of the ER. It is a multi-pass membrane protein embedded in the ER membrane as part of the GPIT complex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is correct but less specific than GO:0016255 (attachment of GPI anchor to protein). Gaa1 specifically catalyzes the attachment step, which is part of the broader biosynthetic process.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too generic. The more specific term GO:0005789 (endoplasmic reticulum membrane) is already present and should be used instead.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042765" target="_blank" class="term-link">
+                                    GO:0042765
+                                </a>
+                            </span>
+                            <span class="term-label">GPI-anchor transamidase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0042765" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation for the same term. Accept one, remove this duplicate.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15003443
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A sensitive predictor for potential GPI lipid modification s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0005789" data-r="PMID:15003443" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IEA annotation for the same term. Accept one, remove this duplicate.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link">
+                                        PMID:15003443
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A sensitive predictor for potential GPI lipid modification sites in fungal protein sequences and its application to genome-wide studies for Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces pombe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016255" target="_blank" class="term-link">
+                                    GO:0016255
+                                </a>
+                            </span>
+                            <span class="term-label">attachment of GPI anchor to protein</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15003443
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A sensitive predictor for potential GPI lipid modification s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0016255" data-r="PMID:15003443" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation for the same term. Accept one, remove this duplicate.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link">
+                                        PMID:15003443
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A sensitive predictor for potential GPI lipid modification sites in fungal protein sequences and its application to genome-wide studies for Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces pombe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031505" target="_blank" class="term-link">
+                                    GO:0031505
+                                </a>
+                            </span>
+                            <span class="term-label">fungal-type cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15003443
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A sensitive predictor for potential GPI lipid modification s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0031505" data-r="PMID:15003443" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> While GPI-anchored proteins contribute to cell wall organization in fungi, this is an indirect effect. The direct function of gaa1 is GPI anchor attachment, not cell wall organization itself.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/gaa1/gaa1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In S. pombe (and other fungi), numerous cell wall enzymes and adhesins are GPI-anchored; therefore, Gaa1 is indirectly critical for cell wall assembly and integrity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link">
+                                        PMID:15003443
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A sensitive predictor for potential GPI lipid modification sites in fungal protein sequences and its application to genome-wide studies for Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces pombe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042765" target="_blank" class="term-link">
+                                    GO:0042765
+                                </a>
+                            </span>
+                            <span class="term-label">GPI-anchor transamidase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15003443
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A sensitive predictor for potential GPI lipid modification s...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0042765" data-r="PMID:15003443" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the IBA annotation for the same term. Accept one, remove this duplicate.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link">
+                                        PMID:15003443
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A sensitive predictor for potential GPI lipid modification sites in fungal protein sequences and its application to genome-wide studies for Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces pombe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003923" target="_blank" class="term-link">
+                                    GO:0003923
+                                </a>
+                            </span>
+                            <span class="term-label">GPI-anchor transamidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26563290" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26563290
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biosynthesis of GPI-anchored proteins: special emphasis on G...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0003923" data-r="PMID:26563290" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. This correctly describes the catalytic activity of the GPIT complex that gaa1 is part of. Gaa1 facilitates the transamidation reaction.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:pombe/gaa1/gaa1-deep-research.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">structural and bioinformatic studies revealed that Gaa1&#39;s luminal domain is homologous to M28 family metallo-peptidases, suggesting that Gaa1 itself is the enzyme that catalyzes the second step of the transamidation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26563290" target="_blank" class="term-link">
+                                        PMID:26563290
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Biosynthesis of GPI-anchored proteins: special emphasis on GPI lipid remodeling.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9US48" data-a="GO:0005783" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less specific than GO:0005789 (endoplasmic reticulum membrane). Since gaa1 is a transmembrane protein, the membrane term is more accurate.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Gaa1 is an essential catalytic and structural component of the GPI-anchor transamidase complex in the endoplasmic reticulum. It catalyzes the terminal transamidation step that transfers preassembled GPI glycolipid anchors to specific proteins at their C-terminal signal sequences. The protein contains a luminal domain with M28 metallopeptidase homology that facilitates peptide-lipid bond formation, while multiple transmembrane segments anchor and position the catalytic machinery in the ER membrane.</h3>
+                <span class="vote-buttons" data-g="Q9US48" data-a="FUNCTION: Gaa1 is an essential catalytic and structural comp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003923" target="_blank" class="term-link">
+                            GPI-anchor transamidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016255" target="_blank" class="term-link">
+                                attachment of GPI anchor to protein
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042765" target="_blank" class="term-link">
+                            GPI-anchor transamidase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:pombe/gaa1/gaa1-deep-research.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Gaa1 is a core component of the GPI:protein transamidase (GPIT) enzyme complex that catalyzes the final step of GPI anchor attachment to proteins in the endoplasmic reticulum</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15003443" target="_blank" class="term-link">
+                            PMID:15003443
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A sensitive predictor for potential GPI lipid modification sites in fungal protein sequences and its application to genome-wide studies for Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces pombe.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26563290" target="_blank" class="term-link">
+                            PMID:26563290
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Biosynthesis of GPI-anchored proteins: special emphasis on GPI lipid remodeling.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gaa1-deep-research.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9US48" data-a="DOC: Deep Research" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-gaa1-pombe">Deep Research Report: gaa1 (pombe)</h1>
+<p>Generated using OpenAI Deep Research API</p>
+<hr />
+<h1 id="gaa1-gene-in-schizosaccharomyces-pombe-fission-yeast">GAA1 Gene in <em>Schizosaccharomyces pombe</em> (Fission Yeast)</h1>
+<p><strong>GAA1</strong> (glycosylphosphatidylinositol anchor attachment 1) is a protein-coding gene in <em>S. pombe</em> (systematic ID SPAC1002.11) that encodes a subunit of the GPI (glycosylphosphatidylinositol)-anchor transamidase complex (<a href="https://www.ncbi.nlm.nih.gov/gene/2543268#:~:text=Official%20Symbol%20gaa1%20Official%20Full,11%20Gene%20type">www.ncbi.nlm.nih.gov</a>) (<a href="https://www.ncbi.nlm.nih.gov/gene/2543268#:~:text=">www.ncbi.nlm.nih.gov</a>). This complex is essential for attaching GPI lipid anchors to proteins, a critical post-translational modification conserved in all eukaryotes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=Anchoring%20of%20proteins%20to%20membranes,of%20cells%20to%20attach%20anchors">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=subsequent%20transfer%20to%20proteins%20has,1%20%29%20%28%207">apsjournals.apsnet.org</a>). GAA1 is an essential gene; loss of Gaa1 function prevents GPI anchoring and is lethal to the cell (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=">www.yeastgenome.org</a>). Below is a comprehensive overview of GAA1, including its function, localization, biological roles, disease relevance, protein structure, expression, evolution, and key evidence, with relevant Gene Ontology (GO) terms and supporting literature.</p>
+<h2 id="function-and-molecular-mechanism">Function and Molecular Mechanism</h2>
+<p>Gaa1 is a core component of the GPI:protein transamidase (GPIT) enzyme complex that catalyzes the final step of GPI anchor attachment to proteins in the endoplasmic reticulum (ER). In this reaction, GPIT recognizes a C-terminal GPI-anchor signal sequence on precursor proteins, cleaves the peptide backbone at the ω-site, and covalently links the preformed GPI glycolipid to the new C-terminus (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=modification%20of%20proteins%20that%20has,TA.%20Using">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=Mammalian%20GPI,type%20aminopeptidase">pmc.ncbi.nlm.nih.gov</a>). Gaa1’s role is essential for this terminal transamidation step: <em>S. cerevisiae</em> mutants lacking functional Gaa1 synthesize the complete GPI lipid but fail to attach it to proteins (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>). Overexpression of GAA1 can even rescue the GPI anchoring of substrates with weak attachment signals, underscoring its importance in the reaction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=amide%20linkage,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>). While another subunit (Gpi8/PIG-K) provides the catalytic protease that cleaves the protein’s propeptide, Gaa1 (GPAA1 in mammals) is thought to facilitate formation of the new amide bond between the protein and the GPI’s ethanolamine phosphate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=GPAA1%2C%20PIGT%2C%20PIGS%2C%20and%20PIGU,on%20the%20GPI%20complete%20precursor">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=residue%20to%20generate%20an%20enzyme%E2%80%93substrate,propeller%20structure%20with%20an%20additional">pmc.ncbi.nlm.nih.gov</a>). Structural and bioinformatic studies revealed that Gaa1’s luminal domain is homologous to M28 family metallo-peptidases, suggesting that Gaa1 itself is the <strong>enzyme that catalyzes the second step</strong> of the transamidation – the ligation of the GPI anchor to the protein’s ω-site (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L134%20domain%20of,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L168%20Thus%2C%20there,elaboration%20closer%20to%20the%20C">www.tandfonline.com</a>). In support of this, conserved acidic residues in human GPAA1 (e.g. Asp-250) within the luminal domain are critical for activity, and mutation of these residues abrogates GPI-anchor attachment without destabilizing the protein (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=efficiencies%20of%20those%20mutant%20constructs,expressing%20construct.%20The">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=affect%20GPI,Glu429">pmc.ncbi.nlm.nih.gov</a>). Thus, Gaa1 acts as a pivotal catalyst or scaffold in the GPI transamidase complex, ensuring that GPI anchors are effectively transferred to target proteins.</p>
+<h2 id="cellular-localization-and-complex-association">Cellular Localization and Complex Association</h2>
+<p>Gaa1 is an <strong>integral membrane glycoprotein of the ER</strong>. It is a multi-pass membrane protein embedded in the ER membrane as part of the GPIT complex (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,may%20act%20as%20a%20membrane">www.jbc.org</a>). Topology mapping and epitope tagging experiments in mammalian cells showed that Gaa1’s N-terminus is oriented toward the <strong>cytosol</strong>, while its large central domain and C-terminus reside in the ER <strong>lumen</strong> (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,may%20act%20as%20a%20membrane">www.jbc.org</a>). This implies an odd number of transmembrane spans, such that the protein has a short cytosolic tail at the N-terminus and a lumenal C-terminus. In fact, Gaa1 contains an N-terminal signal-anchor followed by a luminal region and a hydrophobic block of multiple transmembrane segments near the C-end (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=only%20recently.,%7D%2016">pmc.ncbi.nlm.nih.gov</a>). It also has a conserved <em>KK</em> motif at the extreme C-terminus (a potential ER retention signal), consistent with ER residency. Global localization studies in <em>S. pombe</em> using GFP-tagged ORFs have placed Gaa1 in the perinuclear ER membrane, reflecting where GPI-anchor attachment occurs (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Summary%20Subunit%20of%20GPI,is%20putatively%20integral%20to%20membrane">www.yeastgenome.org</a>). Gaa1 does not appear in other organelles; instead, it localizes strictly to the ER, where it assembles with other subunits (Gpi8, Gpi16, Gpi17, etc., known in mammals as PIG-K, PIG-T, PIG-S, PIG-U) to form the <strong>GPI-anchor transamidase complex</strong> (<a href="https://www.yeastgenome.org/go/GO%3A0042765#:~:text=An%20enzyme%20complex%20which%20in,in%20other%20species%20in%20AmiGO">www.yeastgenome.org</a>). Notably, Gaa1 is required for the stable incorporation of these subunits: without any one component, the complex loses activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=Attachment%20of%20GPI%20to%20proteins,Our%20results">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=precursor%20proteins,TA">pmc.ncbi.nlm.nih.gov</a>). Gaa1 itself is strongly membrane-anchored by multiple hydrophobic segments, and experimental deletion of its C-terminal transmembrane domains prevents Gaa1 from functioning, even though it can still bind the other subunits (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=membrane%20glycoprotein%20with%20a%20cytoplasmically,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). This finding suggests that Gaa1’s transmembrane region is needed for proper positioning or conformational activation of the complex in the ER membrane. In summary, Gaa1 resides in the ER as an integral membrane protein and is a stable <strong>structural subunit of the GPIT enzyme complex (GO:0042765)</strong> (<a href="https://www.yeastgenome.org/go/GO%3A0042765#:~:text=An%20enzyme%20complex%20which%20in,in%20other%20species%20in%20AmiGO">www.yeastgenome.org</a>) (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Cellular%20Component">www.yeastgenome.org</a>), helping localize and orient the catalytic machinery for GPI attachment on the luminal side of the ER.</p>
+<h2 id="biological-processes-involvement">Biological Processes Involvement</h2>
+<p><strong>GPI anchor attachment</strong> is the primary biological process that Gaa1 is involved in. It is directly responsible for the GO process <strong>“attachment of GPI anchor to protein” (GO:0016255)</strong> (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Manually%20Curated">www.yeastgenome.org</a>), a form of protein lipidation wherein a preassembled glycolipid is added to specific proteins. Through this role, Gaa1 enables many cell surface proteins to become GPI-anchored, which has downstream effects on cell physiology. In <em>S. pombe</em> (and other fungi), numerous cell wall enzymes and adhesins are GPI-anchored; therefore, Gaa1 is indirectly critical for <strong>cell wall assembly and integrity</strong>. Studies in fungi demonstrate that disabling GPI-anchor biosynthetic genes (including GAA1) leads to severe cell wall defects, abnormal morphology, and loss of viability (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=abundance%20of%20the%20genes%20analyzed,of%20maize%20anthracnose%2C%20Colletotrichum%20graminicola">apsjournals.apsnet.org</a>) (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=Glycosylphosphatidylinositols%20,proteins%2C%20take%20place%20successively%20on">apsjournals.apsnet.org</a>). For example, in the plant-pathogenic fungus <em>Colletotrichum</em>, <em>GAA1</em> was shown to be indispensable for <strong>vegetative growth</strong> and <strong>pathogenicity</strong>, due to its requirement for assembling GPI-anchored cell wall proteins (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=abundance%20of%20the%20genes%20analyzed,of%20maize%20anthracnose%2C%20Colletotrichum%20graminicola">apsjournals.apsnet.org</a>). In yeast, conditional <em>gaa1</em> mutants exhibit phenotypes such as hypersensitivity to cell wall stresses and failure to incorporate GPI-bound mannoproteins into the wall, underscoring its role in cell surface biogenesis. Additionally, Gaa1 has been linked historically to endocytosis and signaling: the gene was first identified in <em>S. cerevisiae</em> as <code>end2</code> – a mutation causing endocytosis defects and mating pheromone response issues (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=SGD%3AS000004078%20Aliases%20END2%20,growth%20defects%20of%20yeast%20thermosensitive">www.yeastgenome.org</a>). This <strong>endocytosis phenotype</strong> is likely a secondary consequence of altered cell-surface composition when GPI anchoring fails (e.g. mislocalization of GPI-anchored receptors or changes in membrane microdomains needed for endocytic uptake). In multicellular organisms, GPI-anchored proteins serve in diverse processes (immune response, neural development, enzymatic catalysis on cell surfaces, etc.), so the GAA1 function impacts many systems. Notably, about 0.5% of human proteins are GPI-anchored and play roles in embryogenesis, neurogenesis, and fertilization (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=Approximately%20one%20in%20every%20200,Here%2C%20we%20report">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=Initially%20identified%20more%20than%20three,APs%20in%20the%20human%20proteome">pmc.ncbi.nlm.nih.gov</a>). Hence, GAA1’s activity is broadly important for <strong>cellular organization, membrane protein localization, and developmental biology</strong> via its indispensable role in post-translational modification of proteins.</p>
+<h2 id="disease-associations-and-phenotypes">Disease Associations and Phenotypes</h2>
+<p>In humans, the GAA1 ortholog <strong>GPAA1</strong> is associated with a class of inherited conditions known as <strong>Inherited GPI deficiency (IGD) syndromes</strong>. Because GPI anchoring is crucial for normal physiology, partial loss-of-function mutations in GPAA1 lead to a spectrum of developmental and neurological abnormalities. A 2017 study identified <strong>biallelic GPAA1 mutations</strong> in multiple patients who presented with <strong>global developmental delay, early-onset seizures (epilepsy), hypotonia (low muscle tone), cerebellar atrophy</strong>, and skeletal defects like <strong>osteopenia</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=%5Bp.Leu290Pro%5D%2C%20c.872T,cerebellum%20and%20the%20skeletal%20system">pmc.ncbi.nlm.nih.gov</a>). These individuals had reduced cell-surface levels of GPI-anchored proteins (e.g., CD16, CD55, CD59) in blood cells and fibroblasts, confirming that the mutations impair GPI anchor attachment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=seizures%2C%20cerebellar%20atrophy%2C%20and%20osteopenia,cerebellum%20and%20the%20skeletal%20system">pmc.ncbi.nlm.nih.gov</a>). Introducing a wild-type GPAA1 gene into patient cells could rescue GPI-AP levels, proving the causal role of GPAA1 deficiency (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=individual%20samples%20showed%20that%20several,cerebellum%20and%20the%20skeletal%20system">pmc.ncbi.nlm.nih.gov</a>). This disorder is now recognized as a subtype of GPI biosynthesis disorder, with clinical features (intellectual disability, seizures, hypotonia, facial dysmorphism, cerebellar hypoplasia, etc.) similar to other PIG gene defects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=Mutations%20in%20the%20GPI,Therefore%2C%20understanding%20the%20molecular">pmc.ncbi.nlm.nih.gov</a>). Aside from congenital diseases, <strong>somatic mutations</strong> in other GPIT subunits (like PIGT) are known in paroxysmal nocturnal hemoglobinuria, but GPAA1 somatic mutations are rare due to its essential role (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=deficiencies%20,significance%20for%20the%20development%20of">pmc.ncbi.nlm.nih.gov</a>). However, <strong>overexpression</strong> or dysregulation of GPAA1 has been noted in cancer biology. GPAA1 is reported to be upregulated in certain tumors – for example, <strong>bladder carcinoma, B-cell lymphoma, breast cancer, and gastric cancer</strong> – where it may promote oncogenic processes by enhancing the display of GPI-anchored proteins (such as the Cd24 immune checkpoint protein) on cancer cell surfaces (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=mutations%20in%20hematopoietic%20stem%20cells,significance%20for%20the%20development%20of">pmc.ncbi.nlm.nih.gov</a>). One study found that high GPAA1 levels in gastric cancer cells led to increased GPI-anchored protein expression and activation of the ERBB signaling pathway, driving cancer progression (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6532258/#:~:text=GPAA1%20promotes%20gastric%20cancer%20progression,CACTGGCAGGACATAGAGGG%20P21%20Forward">pmc.ncbi.nlm.nih.gov</a>). These findings highlight GPAA1 (and by extension yeast GAA1) as a potential therapeutic target: inhibiting GPI transamidase activity could sensitize cancer cells or modulate immune evasion (<a href="https://www.cell.com/cell-reports/fulltext/S2211-1247%2824%2900369-3#:~:text=Targeting%20the%20GPI%20transamidase%20subunit,58">www.cell.com</a>). In summary, <em>S. pombe</em> GAA1 itself is not associated with human disease, but its human counterpart is crucial for normal neurological development and, when misexpressed or mutated, contributes to severe genetic disorders and possibly cancer phenotypes.</p>
+<h2 id="protein-domains-and-structural-features">Protein Domains and Structural Features</h2>
+<p><strong>Gaa1 is a 581-amino-acid membrane protein</strong> characterized by a large luminal domain and multiple transmembrane (TM) segments. Its <strong>domain architecture</strong> can be summarized as: a short cytosolic N-terminal tail, an N-terminal transmembrane anchor, a ~300 amino acid luminal domain, and a hydrophobic C-terminal region containing <strong>six additional TM helices</strong> (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L141%20The%20sequence,of%20taxa%20are%20queried%20with">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=The%20sequence%20architectureCitation,of%20taxa%20are%20queried%20with">www.tandfonline.com</a>). The <strong>luminal domain</strong> (approximately residues ~100–400 of the protein) is the most conserved region and is predicted to fold as an <strong>α/β hydrolase</strong> similar to M28 family metallopeptidases (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=The%20transamidase%20subunit%20GAA1%2FGPAA1%20is,synthetase%20with%20an%20%CE%B1%2F%CE%B2%20hydrolase">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L168%20Thus%2C%20there,elaboration%20closer%20to%20the%20C">www.tandfonline.com</a>). Notably, sequence alignments and structural homology modeling show that Gaa1’s luminal segment has the same core fold as <em>M28 zinc-dependent aminopeptidases</em>, including a characteristic eight-stranded β-sheet flanked by α-helices (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L168%20Thus%2C%20there,elaboration%20closer%20to%20the%20C">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L190%20various%20members,strands%20as">www.tandfonline.com</a>). Within this region, Gaa1/GPAA1 proteins share a set of conserved acidic and polar residues that align with the zinc-binding site of M28 enzymes (often involving aspartate, glutamate, histidine, or tyrosine) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=GAA1%2FGPAA1%2C%204%20of%20the%205,34%7D%20Given%20the%20local%20sequence">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=conclude%2C%20we%20think%20that%20GAA1s%2FGPAA1s,1">www.tandfonline.com</a>). Indeed, bioinformatic analysis identifies one strong putative <strong>metal-binding site (Zn²⁺)</strong> in Gaa1’s luminal domain, formed by residues equivalent to human GPAA1 Asp-153, Glu-226, Asp-188, Tyr-328 (numbering in human) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=GPAA1%2C%20it%20is%20not%20clear,be%20noted%20that%20the%20rescue">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=reported%20that%20Asp153%20and%20Glu226,transient%20expression%20were%20a%20little">pmc.ncbi.nlm.nih.gov</a>). Surprisingly, mutating these Zn-coordinating residues in human cells did not completely abolish GPIT activity, suggesting that bound Zn²⁺ may not be absolutely required for function or that Gaa1’s mechanism is somewhat unique among metallopeptidases (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=reported%20that%20Asp153%20and%20Glu226,transient%20expression%20were%20a%20little">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=efficiencies%20of%20those%20mutant%20constructs,expressing%20construct.%20The">pmc.ncbi.nlm.nih.gov</a>). However, another conserved residue, human Asp-250 (corresponding to a position in the luminal domain), proved essential – its mutation (D250A) drastically reduced GPI attachment activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=efficiencies%20of%20those%20mutant%20constructs,expressing%20construct.%20The">pmc.ncbi.nlm.nih.gov</a>). This implicates that residue (and by extension a corresponding residue in <em>S. pombe</em> Gaa1) as part of the <strong>active site</strong> critical for catalysis or substrate binding. </p>
+<p>The C-terminal half of Gaa1 is extremely hydrophobic, containing <strong>multiple transmembrane helices</strong> that span the ER membrane. Hydropathy analysis and experimental truncations show at least <strong>6 TM segments in the C-terminus</strong>, plus the initial N-terminal span, giving ~7 TM segments total (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L141%20The%20sequence,of%20taxa%20are%20queried%20with">www.tandfonline.com</a>) (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=membrane%20glycoprotein%20with%20a%20cytoplasmically,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). These helices likely cluster together in the membrane, and the final lumenal loop is short – consistent with the C-terminus being lumenal as determined by protease protection assays (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,may%20act%20as%20a%20membrane">www.jbc.org</a>). A di-lysine (<em>KK</em>) motif is present near the C-terminal end of <em>S. pombe</em> Gaa1 (and in other species’ Gaa1/GPAA1), which is a classic ER retrieval signal that helps retain the protein in the ER membrane. Gaa1 is also a <strong>glycoprotein</strong>: it has several predicted N-glycosylation sequons in its luminal domain, and mammalian Gaa1 has been experimentally shown to be N-glycosylated (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,Gaa1%20and%20other%20GPIT%20subunits">www.jbc.org</a>). (In human GPAA1, two N-glycosylation sites at Asn-203 and Asn-517 were identified; mutating them did not impair function, indicating glycosylation is not critical for activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=GPAA1%20or%20the%20D250A%20mutant,Figure%20S2">pmc.ncbi.nlm.nih.gov</a>).) The glycosylation of Gaa1 likely assists proper folding or stability in the ER. </p>
+<p>Taken together, these features suggest that Gaa1 acts as a <strong>transmembrane peptidase-like enzyme</strong> embedded in the ER membrane. The luminal domain of Gaa1 forms the catalytic core (or a co-catalytic module) that performs the peptide–lipid bond formation, while the multiple membrane spans anchor the protein and possibly position the substrate or GPI lipid correctly. The <strong>pfam04114 “Gaa1” domain</strong> (positions ~120–552 in <em>S. pombe</em> Gaa1) corresponds to this conserved luminal region (<a href="https://www.ncbi.nlm.nih.gov/gene/2543268#:~:text=pfam04114%20Location%3A123%20%E2%86%92%20552%20Gaa1%3B,like%2C%20GPI%20transamidase%20component">www.ncbi.nlm.nih.gov</a>). High-resolution structural data for full-length Gaa1 are not yet available, but low-resolution models and cross-linking studies indicate Gaa1 contacts the catalytic subunit Gpi8 (PIG-K) and other subunits via its luminal domain (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=allows%20Gaa1%20to%20interact%20with,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). Indeed, the <strong>Gpi8–Gaa1–Gpi16</strong> subcomplex forms the catalytic core of GPIT and can be isolated biochemically (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=screen.%20The%20sub,purified%20GAA1%2FGPAA1%20suffer%20from%20slow">www.tandfonline.com</a>). The current model is that Gpi8 first cleaves the substrate’s ω-site, forming an acyl-enzyme intermediate, and then Gaa1 facilitates transfer of the substrate to the GPI lipid – acting analogously to a <strong>peptide synthase</strong> or ligase that completes the transamidation (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=domain%20of%20GAA1%2FGPAA1%20has%20a,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=circumstances%2C%20we%20conclude%20that%20the,and%20the%20respective%20phosphoethanolamine%20moiety">www.tandfonline.com</a>). This unique functional domain structure of Gaa1 distinguishes it from typical enzymes and underscores its dual role as a membrane anchor and enzyme in the GPI anchoring machinery.</p>
+<h2 id="expression-patterns-and-regulation">Expression Patterns and Regulation</h2>
+<p><strong>Expression of GAA1 appears constitutive and essential</strong>, consistent with its role in fundamental cell processes. In <em>S. pombe</em>, GAA1 is expressed in vegetative cells under standard growth conditions, and being an essential gene, it is required at basal levels for viability. Large-scale transcriptomic and proteomic analyses have not flagged <em>gaa1</em> as a differentially regulated gene in response to most stresses or developmental cues, implying it functions as a <strong>housekeeping gene</strong>. Indeed, in <em>S. cerevisiae</em>, GAA1 mRNA is present in exponentially growing cells and its protein is moderately abundant (~1,900 molecules per cell on average) (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Median%20Abundance%20%28molecules%2Fcell%29%201932%20%2B%2F,life%20%28hr%29%209.4">www.yeastgenome.org</a>). The protein has a measured half-life of ~9 hours in yeast, indicating it is relatively stable once made (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Median%20Abundance%20%28molecules%2Fcell%29%201932%20%2B%2F,life%20%28hr%29%209.4">www.yeastgenome.org</a>). The promoter of <em>S. pombe</em> gaa1⁺ does not contain obvious stress-responsive elements, and no specific transcription factors are known to target it, further suggesting constitutive expression. During the cell cycle, there is no strong cell-cycle regulation of <em>gaa1</em> transcript; instead, a steady supply of Gaa1 ensures continuous capacity for GPI anchoring as new proteins are synthesized. Experimental overexpression of <em>gaa1</em> has not been reported to have a dramatic phenotype (beyond potentially helping anchor suboptimal substrates (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=amide%20linkage,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>)), implying the normal levels are sufficient and excess is tolerated. Likewise, <em>gaa1</em> is not typically subject to repression – even under nutrient starvation, when cells down-regulate many growth-related genes, essential membrane processes like GPI anchoring remain active. In summary, <em>S. pombe</em> Gaa1 is produced at stable levels in the ER, and its expression is mostly <strong>constitutive</strong> rather than condition-specific, in line with its indispensable cellular function.</p>
+<p>One regulatory aspect of Gaa1 might involve <em>ER-associated degradation (ERAD)</em> or quality control: if the protein misfolds, the cell likely targets it for degradation, as noted by the instability of truncated Gaa1 fragments in experiments (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=allows%20Gaa1%20to%20interact%20with,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). However, when properly folded and assembled in the GPIT complex, Gaa1 is long-lived. There is also evidence that the <strong>N-terminal cytosolic tail of Gaa1 may serve a sorting role</strong>, possibly interacting with the coatomer or other machinery to keep the GPIT complex in the ER or ER exit sites (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=occurs%20via%20the%20large%20lumenal,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). This region is not required for function, but deletion of the N-tail can mislocalize the remaining complex, hinting at a level of post-translational regulation in trafficking within the ER (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=occurs%20via%20the%20large%20lumenal,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). Overall, no major transcriptional regulation is documented for <em>gaa1</em>, but its proper localization and complex assembly are crucial for its function.</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>GAA1 is <strong>highly conserved across eukaryotes</strong>, reflecting the universal importance of GPI anchoring. Homologs of Gaa1 (often named GPAA1 in animals, GAA1 in fungi and protists) are found in organisms ranging from yeasts and protozoan parasites to plants and humans (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=subsequent%20transfer%20to%20proteins%20has,1%20%29%20%28%207">apsjournals.apsnet.org</a>). The conservation is strongest in the luminal domain that carries out the enzymatic function. Even though the overall sequence identity can be modest (for example, <em>S. cerevisiae</em> Gaa1 is 614 amino acids and shares only ~20–30% identity with human GPAA1), the key features (M28 peptidase motifs, transmembrane architecture, and critical residues like the catalytic aspartate) are preserved (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=GAA1%2FGPAA1%2C%204%20of%20the%205,34%7D%20Given%20the%20local%20sequence">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=conclude%2C%20we%20think%20that%20GAA1s%2FGPAA1s,1">www.tandfonline.com</a>). This deep conservation is underscored by functional complementation tests: the human GPAA1 gene can rescue yeast <em>gaa1</em> mutants, indicating that the human protein can assemble with yeast GPIT components and perform the GPI attachment reaction (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Subunit%20of%20the%20GPI%3Aprotein%20transamidase,2%7D%20%20%200">www.yeastgenome.org</a>). Similarly, <em>Trypanosoma brucei</em> (a protozoan) and <em>Drosophila</em> GAA1 homologs fulfill the same role in those organisms’ GPI biosynthesis pathways (<a href="https://pubmed.ncbi.nlm.nih.gov/29100095/#:~:text=Developmental%20Delay%2C%20Epilepsy%2C%20Cerebellar%20Atrophy%2C,PMC">pubmed.ncbi.nlm.nih.gov</a>). Phylogenetic analyses group GPAA1/Gaa1 with the M28 metallopeptidase family, distinct from other PIG (phosphatidylinositol glycan) classes, reinforcing the idea that it evolved as a specialized enzyme for GPI anchoring (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=domain%20of%20GAA1%2FGPAA1%20has%20a,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L168%20Thus%2C%20there,elaboration%20closer%20to%20the%20C">www.tandfonline.com</a>). All eukaryotic lineages examined so far have a GAA1 ortholog, consistent with the fact that <strong>GPI-anchored proteins are ubiquitous</strong> (e.g., hundreds of GPI-APs exist in mammals, and dozens in yeast) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=Approximately%20one%20in%20every%20200,Here%2C%20we%20report">pmc.ncbi.nlm.nih.gov</a>). Even eukaryotes with unusual cell surfaces (like <em>Trypanosoma</em> or <em>Plasmodium</em> parasites, which heavily rely on GPI-anchored surface antigens) use GAA1 in their transamidase complexes (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=subsequent%20transfer%20to%20proteins%20has,1%20%29%20%28%207">apsjournals.apsnet.org</a>). Evolutionarily, GAA1 and GPI8 (PIG-K) were the first subunits of the transamidase to arise, as they form the minimal machinery needed for the reaction (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=To%20emphasize%2C%20GAA1%2FGPAA1%20is%20the,were%20the%20first%20transamidase">www.tandfonline.com</a>). Additional subunits (PIG-S, PIG-T, PIG-U/Gpi17/Gab1) later joined the complex to improve efficiency and substrate specificity. Interestingly, some lower eukaryotes like <em>Giardia</em> (a protozoan parasite) also have identifiable GAA1 homologs, underscoring that the mechanism of GPI attachment emerged early and has been maintained. In summary, GAA1’s function and structure have been <strong>conserved for over a billion years</strong>. Cross-species comparisons reveal strong selective pressure to maintain its active-site architecture and membrane topology. This conservation also means that model organisms such as yeast provide valuable insights into human GPAA1; indeed, yeast <em>gaa1</em> mutants have helped predict effects of human GPAA1 mutations, and vice versa (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=lipid,GPAA1%20have%20yet%20to%20be">pmc.ncbi.nlm.nih.gov</a>). The evolutionary preservation of GAA1 highlights its fundamental role in eukaryotic cell biology.</p>
+<h2 id="key-experimental-evidence-and-literature">Key Experimental Evidence and Literature</h2>
+<ul>
+<li>
+<p><strong>Identification in Yeast (1995):</strong> GAA1 was first discovered in <em>S. cerevisiae</em> through studies of GPI anchoring. Leidich et al. (1995) isolated temperature-sensitive <em>gaa1</em> mutants that failed to attach GPI anchors to proteins at nonpermissive temperature, despite normal GPI lipid production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>). Cloning of <em>GAA1</em> showed it encodes an essential ER membrane protein required for the final step of GPI anchoring (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>). This seminal study established Gaa1 as a necessary factor for GPI-anchored protein synthesis.</p>
+</li>
+<li>
+<p><strong>GPI Transamidase Complex (1990s–2000):</strong> Following GAA1’s identification, additional components of the transamidase were found. Notably, Ohishi et al. (2000) demonstrated that <strong>Gaa1 and Gpi8 form the core of the GPI transamidase</strong> in yeast and mammals (<a href="https://www.nature.com/articles/s41594-022-00726-6#:~:text=Structure%20of%20human%20glycosylphosphatidylinositol%20transamidase,%26%20Conzelmann%2C%20A">www.nature.com</a>). Genetic and biochemical analyses revealed at least five subunits (Gaa1/GPAA1, Gpi8/PIG-K, Gpi17/PIG-S, Gpi16/PIG-T, and Gab1/PIG-U) assemble into a multisubunit ER membrane complex that carries out GPI transfer (<a href="https://www.yeastgenome.org/go/GO%3A0042765#:~:text=An%20enzyme%20complex%20which%20in,in%20other%20species%20in%20AmiGO">www.yeastgenome.org</a>). Gaa1 acquired the alias <strong>End2</strong> in yeast because a mutant allele was found to cause endocytosis defects (Chvatchko <em>et al</em> 1986), but later work clarified Gaa1’s primary role is in GPI anchoring.</p>
+</li>
+<li>
+<p><strong>Structure-Function Analysis (2003–2014):</strong> Gaa1 is the most hydrophobic GPIT subunit, which made it challenging to study. In 2005, a J. Biol. Chem. study by Benghezal <em>et al.</em> performed <strong>structure–function analysis of Gaa1</strong>, mapping its topology and domains (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,may%20act%20as%20a%20membrane">www.jbc.org</a>) (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=membrane%20glycoprotein%20with%20a%20cytoplasmically,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). They used epitope-tagged truncations in mammalian cells to show N<sup>cyto</sup>-C<sup>luminal</sup> orientation and that the luminal domain (between TM1 and TM2) mediates interaction with other subunits (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=membrane%20glycoprotein%20with%20a%20cytoplasmically,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). Removing the last several TMs allowed complex assembly but abolished activity, indicating those helices are required for function (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=membrane%20glycoprotein%20with%20a%20cytoplasmically,an%20endoplasmic%20reticulum%20membrane%20domain">www.jbc.org</a>). These experiments underscored that the <strong>luminal domain of Gaa1 is critical for GPIT activity</strong>, while the TMs are needed for proper complex conformation.</p>
+</li>
+</ul>
+<p>Around the same time, Eisenhaber and colleagues conducted computational analyses that predicted <strong>Gaa1/GPAA1 is a metalloprotein with an M28 peptidase-like active site</strong> (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=domain%20of%20GAA1%2FGPAA1%20has%20a,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L168%20Thus%2C%20there,elaboration%20closer%20to%20the%20C">www.tandfonline.com</a>). In a 2014 <em>Cell Cycle</em> report, they proposed GAA1 as the missing enzyme that forms the peptide bond to the GPI lipid, based on homology modeling and conserved motifs (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=match%20at%20L134%20domain%20of,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=conclude%2C%20we%20think%20that%20GAA1s%2FGPAA1s,1">www.tandfonline.com</a>). This was a crucial insight, shifting the view of Gaa1 from a mere scaffold to an active catalyst in the second step of the transamidation reaction.</p>
+<ul>
+<li>
+<p><strong>Mutagenesis and Mechanism (2021):</strong> Definitive evidence for Gaa1’s catalytic role came from a comprehensive mutagenesis screen by Liu <em>et al.</em> (2021) in mammalian cells (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=Attachment%20of%20GPI%20to%20proteins,Our%20results">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=residue%20to%20generate%20an%20enzyme%E2%80%93substrate,propeller%20structure%20with%20an%20additional">pmc.ncbi.nlm.nih.gov</a>). By testing dozens of point mutants of GPAA1 in GPAA1-knockout human cells, they found one mutant (D338A in human GPAA1, corresponding to Asp-250 in the mature protein) that severely disrupts GPI anchoring (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=efficiencies%20of%20those%20mutant%20constructs,expressing%20construct.%20The">pmc.ncbi.nlm.nih.gov</a>). This residue lies in the predicted luminal active-site, supporting the model that Gaa1’s luminal domain carries catalytic functionality. They also confirmed that known catalytic residues of Gpi8/PIG-K (cysteine protease) are essential (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=GPAA1%2C%20PIGT%2C%20PIGS%2C%20and%20PIGU,on%20the%20GPI%20complete%20precursor">pmc.ncbi.nlm.nih.gov</a>), and that Gpi8 and Gaa1 likely act in tandem – Gpi8 cleaving the substrate and Gaa1 facilitating anchor attachment (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=Mammalian%20GPI,type%20aminopeptidase">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=residue%20to%20generate%20an%20enzyme%E2%80%93substrate,propeller%20structure%20with%20an%20additional">pmc.ncbi.nlm.nih.gov</a>). This study provided strong <strong>functional validation of Gaa1’s enzymatic contribution</strong> to the transamidase.</p>
+</li>
+<li>
+<p><strong>Human Disease Link (2017 &amp; 2020):</strong> The importance of GAA1/GPAA1 for human health was highlighted when Najm <em>et al.</em> (2017) and subsequent reports identified <strong>GPAA1 mutations in patients</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=C%20terminus%20of%20precursor%20proteins,cytometry%20analysis%20of%20five%20available">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=%5Bp.Leu290Pro%5D%2C%20c.872T,cerebellum%20and%20the%20skeletal%20system">pmc.ncbi.nlm.nih.gov</a>). They performed exome sequencing on individuals with syndromic epilepsy and developmental delay and zeroed in on GPAA1. The clinical studies, combined with cellular assays showing reduced GPI-APs on patient cells, established <strong>GPAA1 deficiency as a cause of a neurodevelopmental syndrome</strong> (now classified as IGD23). These findings in patients correspond with the lethal phenotype of <em>gaa1</em> null mutants in yeast (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=">www.yeastgenome.org</a>), reinforcing that GPAA1’s function is non-redundant and vital. Moreover, research into GPAA1’s role in cancer (e.g., HPM Chen <em>et al.</em>, 2022 in gastric cancer; Tricarico <em>et al.</em>, 2020 in ovarian cancer) opened up new avenues where GPI anchoring is seen as a potential therapeutic target (<a href="https://www.cell.com/cell-reports/fulltext/S2211-1247%2824%2900369-3#:~:text=Targeting%20the%20GPI%20transamidase%20subunit,58">www.cell.com</a>).</p>
+</li>
+<li>
+<p><strong>Structural Advances:</strong> While a full crystal or cryo-EM structure of the GPIT complex is still pending, progress has been made. A cryo-EM structure of the human GPIT was published in 2020/2021, resolving some subunits at moderate resolution. It confirmed that GPAA1 (Gaa1) and PIGU (Gab1) form a cradle for the GPI lipid, and that PIGK (Gpi8) contacts GPAA1 near the luminal interface (<a href="https://www.nature.com/articles/s41594-022-00726-6#:~:text=Structural%20%26%20Molecular%20Biology%20www,%26%20Conzelmann%2C%20A">www.nature.com</a>). These structural insights align with earlier predictions: the GPAA1 luminal domain sits adjacent to PIGK’s active site, ideally placed to mediate the lipid transfer. Such structural biology efforts, combined with biochemical data, are key ongoing research areas to fully elucidate Gaa1’s mechanism.</p>
+</li>
+</ul>
+<p>In summary, <strong>key evidence from yeast genetics, biochemistry, human genetics, and structural biology all converge</strong> to establish GAA1/GPAA1 as an essential, conserved ER membrane enzyme that enables GPI anchor attachment. The literature spans from initial yeast mutant phenotypes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>), to identification of the multi-protein complex (<a href="https://www.yeastgenome.org/go/GO%3A0042765#:~:text=An%20enzyme%20complex%20which%20in,in%20other%20species%20in%20AmiGO">www.yeastgenome.org</a>), through mechanistic and structural studies pinpointing how Gaa1 works (<a href="https://www.tandfonline.com/doi/full/10.4161/cc.28761#:~:text=domain%20of%20GAA1%2FGPAA1%20has%20a,of%20the%20GPI%20lipid%20anchor">www.tandfonline.com</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=residue%20to%20generate%20an%20enzyme%E2%80%93substrate,propeller%20structure%20with%20an%20additional">pmc.ncbi.nlm.nih.gov</a>), to medical genetics linking GPAA1 to disease (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5673666/#:~:text=%5Bp.Leu290Pro%5D%2C%20c.872T,cerebellum%20and%20the%20skeletal%20system">pmc.ncbi.nlm.nih.gov</a>). This rich body of work provides a solid foundation for high-confidence Gene Ontology annotations of GAA1.</p>
+<h2 id="relevant-gene-ontology-go-terms">Relevant Gene Ontology (GO) Terms</h2>
+<ul>
+<li>
+<p><strong>Biological Process:</strong> <em>Attachment of GPI anchor to protein</em> (<strong>GO:0016255</strong>) – Gaa1 is directly involved in the GPI anchoring process, catalyzing the transfer of the GPI moiety to proteins (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Manually%20Curated">www.yeastgenome.org</a>). This GO term captures its role in protein post-translational modification (a subset of protein lipidation).</p>
+</li>
+<li>
+<p><strong>Molecular Function:</strong> <em>[No single specific term]</em> – The precise enzymatic function of Gaa1 can be described as “glycosylphosphatidylinositol transferase” or <strong>GPI transamidase activity</strong>, but currently this activity is represented through the biological process rather than a dedicated GO molecular function term (the complex’s protease activity is attributed to Gpi8). Thus, Gaa1 is annotated as an enzyme essential for GPI anchor transfer, even if a standalone GO term for “GPI anchor ligase” is not yet defined (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=,ND">www.yeastgenome.org</a>). Functionally, it acts as a <em>peptide bond-forming transferase</em> within the GPIT.</p>
+</li>
+<li>
+<p><strong>Cellular Component:</strong> <em>GPI-anchor transamidase complex</em> (<strong>GO:0042765</strong>) – Gaa1 is a core component of the GPIT membrane complex in the ER (<a href="https://www.yeastgenome.org/go/GO%3A0042765#:~:text=An%20enzyme%20complex%20which%20in,in%20other%20species%20in%20AmiGO">www.yeastgenome.org</a>). This term denotes the multi-protein complex (Gaa1-Gpi8-Gpi16-Gpi17-Gab1 in yeast) that performs GPI attachment.<br />
+<em>Cellular Component:</em> <em>Endoplasmic reticulum</em> (<strong>GO:0005783</strong>); more specifically, <em>integral component of endoplasmic reticulum membrane</em> – Gaa1 is localized to the ER membrane (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Summary%20Subunit%20of%20GPI,is%20putatively%20integral%20to%20membrane">www.yeastgenome.org</a>) (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Cellular%20Component">www.yeastgenome.org</a>). It spans the membrane and resides in the ER lumen/cytosol interface, and is retained in the ER as part of its functional location.</p>
+</li>
+<li>
+<p><strong>Biological Process (additional):</strong> <em>Cell wall organization</em> – In fungal organisms like <em>S. pombe</em>, proper GPI anchoring (requiring Gaa1) contributes to cell wall biogenesis and maintenance, as many cell wall enzymes are GPI-anchored. Disruption of Gaa1 causes cell wall integrity defects (<a href="https://apsjournals.apsnet.org/doi/10.1094/MPMI-09-16-0175-R#:~:text=abundance%20of%20the%20genes%20analyzed,of%20maize%20anthracnose%2C%20Colletotrichum%20graminicola">apsjournals.apsnet.org</a>). While the primary curated GO for Gaa1 is GPI attachment, this upstream role in cell wall assembly is a notable phenotype.</p>
+</li>
+</ul>
+<p>These GO terms and associations are supported by experimental evidence from multiple studies. For instance, the annotation to “attachment of GPI anchor to protein” is backed by mutant phenotype analysis (IMP) in yeast (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Manually%20Curated">www.yeastgenome.org</a>), and the ER localization and complex terms are supported by direct assays and high-throughput localization studies (<a href="https://www.yeastgenome.org/locus/GAA1#:~:text=Cellular%20Component">www.yeastgenome.org</a>). Curators can use the references cited here (e.g., Leidich 1995 for process (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2120449/#:~:text=enzyme%20in%20this%20process%20is,of%20the%20putative%20GPI%3Aprotein%20transamidase">pmc.ncbi.nlm.nih.gov</a>), Benghezal 2005 for localization (<a href="https://www.jbc.org/article/S0021-9258%2820%2970128-6/fulltext#:~:text=show%20that%20%28i%29%20detergent,may%20act%20as%20a%20membrane">www.jbc.org</a>), Liu 2021 for function (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8465894/#:~:text=residue%20to%20generate%20an%20enzyme%E2%80%93substrate,propeller%20structure%20with%20an%20additional">pmc.ncbi.nlm.nih.gov</a>), etc.) to assign high-confidence GO annotations to <em>S. pombe</em> Gaa1 (SPAC1002.11) and its orthologs.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9US48
+gene_symbol: gaa1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe 972h-
+description: Essential component of the GPI-anchor transamidase complex (GPIT) 
+  in the endoplasmic reticulum. Catalyzes the terminal step of GPI anchor 
+  attachment by facilitating the transfer of preassembled GPI glycolipids to 
+  specific proteins at their C-terminal GPI-anchor signal sequence. Contains a 
+  luminal domain homologous to M28 family metallopeptidases that is critical for
+  the transamidation reaction. The multi-pass transmembrane protein anchors the 
+  complex in the ER membrane and positions the catalytic machinery for GPI 
+  attachment.
+existing_annotations:
+  - term:
+      id: GO:0016255
+      label: attachment of GPI anchor to protein
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: This is the core biological process for gaa1. The protein is 
+        directly responsible for catalyzing the terminal step of GPI anchor 
+        attachment to proteins in the ER.
+      supported_by:
+        - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+          supporting_text: Gaa1 is a core component of the GPI:protein 
+            transamidase (GPIT) enzyme complex that catalyzes the final step of 
+            GPI anchor attachment to proteins in the endoplasmic reticulum
+      action: ACCEPT
+  - term:
+      id: GO:0042765
+      label: GPI-anchor transamidase complex
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    review:
+      summary: Core cellular component annotation. Gaa1 is an essential 
+        structural and catalytic subunit of this five-protein complex.
+      supported_by:
+        - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+          supporting_text: Gaa1 resides in the ER as an integral membrane 
+            protein and is a stable structural subunit of the GPIT enzyme 
+            complex (GO:0042765)
+      action: ACCEPT
+  - term:
+      id: GO:0005789
+      label: endoplasmic reticulum membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: Correct localization. Gaa1 is a multi-pass transmembrane protein 
+        anchored in the ER membrane where GPI attachment occurs.
+      supported_by:
+        - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+          supporting_text: Gaa1 is an integral membrane glycoprotein of the ER. 
+            It is a multi-pass membrane protein embedded in the ER membrane as 
+            part of the GPIT complex
+      action: ACCEPT
+  - term:
+      id: GO:0006506
+      label: GPI anchor biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: This term is correct but less specific than GO:0016255 
+        (attachment of GPI anchor to protein). Gaa1 specifically catalyzes the 
+        attachment step, which is part of the broader biosynthetic process.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: Too generic. The more specific term GO:0005789 (endoplasmic 
+        reticulum membrane) is already present and should be used instead.
+      action: REMOVE
+  - term:
+      id: GO:0042765
+      label: GPI-anchor transamidase complex
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: Duplicate of the IBA annotation for the same term. Accept one, 
+        remove this duplicate.
+      action: REMOVE
+  - term:
+      id: GO:0005789
+      label: endoplasmic reticulum membrane
+    evidence_type: NAS
+    original_reference_id: PMID:15003443
+    review:
+      summary: Duplicate of the IEA annotation for the same term. Accept one, 
+        remove this duplicate.
+      action: REMOVE
+      supported_by:
+        - reference_id: PMID:15003443
+          supporting_text: A sensitive predictor for potential GPI lipid 
+            modification sites in fungal protein sequences and its application 
+            to genome-wide studies for Aspergillus nidulans, Candida albicans, 
+            Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces 
+            pombe.
+  - term:
+      id: GO:0016255
+      label: attachment of GPI anchor to protein
+    evidence_type: NAS
+    original_reference_id: PMID:15003443
+    review:
+      summary: Duplicate of the IBA annotation for the same term. Accept one, 
+        remove this duplicate.
+      action: REMOVE
+      supported_by:
+        - reference_id: PMID:15003443
+          supporting_text: A sensitive predictor for potential GPI lipid 
+            modification sites in fungal protein sequences and its application 
+            to genome-wide studies for Aspergillus nidulans, Candida albicans, 
+            Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces 
+            pombe.
+  - term:
+      id: GO:0031505
+      label: fungal-type cell wall organization
+    evidence_type: NAS
+    original_reference_id: PMID:15003443
+    review:
+      summary: While GPI-anchored proteins contribute to cell wall organization 
+        in fungi, this is an indirect effect. The direct function of gaa1 is GPI
+        anchor attachment, not cell wall organization itself.
+      supported_by:
+        - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+          supporting_text: In S. pombe (and other fungi), numerous cell wall 
+            enzymes and adhesins are GPI-anchored; therefore, Gaa1 is indirectly
+            critical for cell wall assembly and integrity
+        - reference_id: PMID:15003443
+          supporting_text: A sensitive predictor for potential GPI lipid 
+            modification sites in fungal protein sequences and its application 
+            to genome-wide studies for Aspergillus nidulans, Candida albicans, 
+            Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces 
+            pombe.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0042765
+      label: GPI-anchor transamidase complex
+    evidence_type: NAS
+    original_reference_id: PMID:15003443
+    review:
+      summary: Duplicate of the IBA annotation for the same term. Accept one, 
+        remove this duplicate.
+      action: REMOVE
+      supported_by:
+        - reference_id: PMID:15003443
+          supporting_text: A sensitive predictor for potential GPI lipid 
+            modification sites in fungal protein sequences and its application 
+            to genome-wide studies for Aspergillus nidulans, Candida albicans, 
+            Neurospora crassa, Saccharomyces cerevisiae and Schizosaccharomyces 
+            pombe.
+  - term:
+      id: GO:0003923
+      label: GPI-anchor transamidase activity
+    evidence_type: TAS
+    original_reference_id: PMID:26563290
+    review:
+      summary: Core molecular function. This correctly describes the catalytic 
+        activity of the GPIT complex that gaa1 is part of. Gaa1 facilitates the 
+        transamidation reaction.
+      supported_by:
+        - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+          supporting_text: structural and bioinformatic studies revealed that 
+            Gaa1&#39;s luminal domain is homologous to M28 family 
+            metallo-peptidases, suggesting that Gaa1 itself is the enzyme that 
+            catalyzes the second step of the transamidation
+        - reference_id: PMID:26563290
+          supporting_text: &#39;Biosynthesis of GPI-anchored proteins: special emphasis
+            on GPI lipid remodeling.&#39;
+      action: ACCEPT
+  - term:
+      id: GO:0005783
+      label: endoplasmic reticulum
+    evidence_type: HDA
+    original_reference_id: PMID:16823372
+    review:
+      summary: Correct but less specific than GO:0005789 (endoplasmic reticulum 
+        membrane). Since gaa1 is a transmembrane protein, the membrane term is 
+        more accurate.
+      action: KEEP_AS_NON_CORE
+      supported_by:
+        - reference_id: PMID:16823372
+          supporting_text: ORFeome cloning and global analysis of protein 
+            localization in the fission yeast Schizosaccharomyces pombe.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with
+      GO terms.
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular 
+      Location vocabulary mapping, accompanied by conservative changes to GO 
+      terms applied by UniProt.
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods.
+    findings: []
+  - id: PMID:15003443
+    title: A sensitive predictor for potential GPI lipid modification sites in 
+      fungal protein sequences and its application to genome-wide studies for 
+      Aspergillus nidulans, Candida albicans, Neurospora crassa, Saccharomyces 
+      cerevisiae and Schizosaccharomyces pombe.
+    findings: []
+  - id: PMID:16823372
+    title: ORFeome cloning and global analysis of protein localization in the 
+      fission yeast Schizosaccharomyces pombe.
+    findings: []
+  - id: PMID:26563290
+    title: &#39;Biosynthesis of GPI-anchored proteins: special emphasis on GPI lipid remodeling.&#39;
+    findings: []
+core_functions:
+  - description: Gaa1 is an essential catalytic and structural component of the 
+      GPI-anchor transamidase complex in the endoplasmic reticulum. It catalyzes
+      the terminal transamidation step that transfers preassembled GPI 
+      glycolipid anchors to specific proteins at their C-terminal signal 
+      sequences. The protein contains a luminal domain with M28 metallopeptidase
+      homology that facilitates peptide-lipid bond formation, while multiple 
+      transmembrane segments anchor and position the catalytic machinery in the 
+      ER membrane.
+    molecular_function:
+      id: GO:0003923
+      label: GPI-anchor transamidase activity
+    directly_involved_in:
+      - id: GO:0016255
+        label: attachment of GPI anchor to protein
+    locations:
+      - id: GO:0005789
+        label: endoplasmic reticulum membrane
+    in_complex:
+      id: GO:0042765
+      label: GPI-anchor transamidase complex
+    supported_by:
+      - reference_id: file:pombe/gaa1/gaa1-deep-research.md
+        supporting_text: Gaa1 is a core component of the GPI:protein 
+          transamidase (GPIT) enzyme complex that catalyzes the final step of 
+          GPI anchor attachment to proteins in the endoplasmic reticulum
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
