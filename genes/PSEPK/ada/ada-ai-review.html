@@ -1,0 +1,3071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ada - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ada</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PZ2" target="_blank" class="term-link">
+                        Q88PZ2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ada";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PZ2" data-a="DESCRIPTION: Bifunctional Ada protein that combines O6-alkylgua..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Bifunctional Ada protein that combines O6-alkylguanine-DNA alkyltransferase activity with transcriptional activation function. The C-terminal domain performs suicidal methyl transfer from O6-methylguanine and O4-methylthymine to a catalytic cysteine (Cys319), while the N-terminal domain repairs methylphosphotriesters via a zinc-coordinating cysteine cluster (Cys36, Cys40, Cys67, Cys70). Upon methylation of the N-terminal domain, Ada becomes a transcriptional activator that induces expression of the alkA-ada operon in response to alkylating agents such as MMS and MNNG. In P. putida KT2440, Ada activates the alkA promoter (~60-fold induction by MMS) through binding to conserved Ada box motifs, but notably does not regulate alkB, which is constitutively expressed in this organism unlike in E. coli.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada is a DNA-binding protein that interacts with DNA in two functional contexts: (1) as a DNA repair enzyme that binds to alkylated DNA substrates to perform direct reversal repair, and (2) as a transcription factor that binds to Ada box motifs (A and B boxes) in the promoter region of target genes. The deep research confirms Ada&#39;s DNA-binding activity and notes the protein contains &#34;N-terminal regulatory/Ada-like domain (HTH/AraC features, inferred Zn-binding) and C-terminal O6-alkylguanine transferase domain&#34; [ada-deep-research-falcon.md]. The UniProt record indicates a HTH araC/xylS-type domain (positions 80-181).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding is a core function of Ada, required for both its enzymatic DNA repair activity and its transcriptional regulatory function. This general term is appropriate as a parent term given the more specific annotations for sequence-specific binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ada acts as an activator for the alkA–ada region in response to MMS/MNNG, binding conserved Ada box motifs (A and B boxes) in the alkA promoter</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada functions as a methylation-dependent transcriptional activator. Upon methylation of the N-terminal cysteine (Cys36 in P. putida), Ada gains enhanced DNA binding affinity and switches into a transcription factor that activates expression of the alkA-ada operon. The deep research states: &#34;The N-terminal domain repairs methylphosphotriesters (MPTs) and, when methylated, activates transcription of target promoters&#34; and notes &#34;alkA transcript induction by MMS was reported at ~60-fold&#34; with &#34;ada deletion eliminated induction&#34; [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transcriptional activation is a core function of Ada. The protein contains a HTH AraC-type DNA-binding domain and directly activates transcription of the alkA-ada operon in response to alkylation damage. This is a well-characterized bifunctional property of Ada proteins across bacteria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The N-terminal domain repairs methylphosphotriesters (MPTs) and, when methylated, activates transcription of target promoters</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">overall alkA transcript induction by MMS was reported at ~60-fold</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada has catalytic activity as a methyltransferase that transfers methyl groups from alkylated DNA bases to its own cysteine residues. However, this very general term is subsumed by more specific annotations already present (GO:0003908 methylated-DNA-[protein]-cysteine S-methyltransferase activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, this term is too general and does not provide informative annotation. The more specific GO:0003908 (methylated-DNA-[protein]-cysteine S-methyltransferase activity) is already annotated and provides the precise molecular function. Keeping this very broad term adds no value.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003908" target="_blank" class="term-link">
+                                    GO:0003908
+                                </a>
+                            </span>
+                            <span class="term-label">methylated-DNA-[protein]-cysteine S-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0003908" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the precise enzymatic activity of the Ada C-terminal domain. The enzyme catalyzes the suicidal transfer of methyl groups from O6-methylguanine and O4-methylthymine in DNA to a cysteine residue (Cys319 in P. putida Ada). The UniProt record annotates this with EC 2.1.1.63. The deep research confirms: &#34;The C-terminal alkyltransferase domain performs a suicidal methyl transfer to a catalytic cysteine to repair O6-alkylguanine (O6-meG) and O4-alkylthymine (O4-meT)&#34; [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of the Ada C-terminal domain. The methylated-DNA- [protein]-cysteine S-methyltransferase activity (EC 2.1.1.63) is the defining enzymatic activity of Ada proteins, directly reversing alkylation damage to DNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The C-terminal alkyltransferase domain performs a suicidal methyl transfer to a catalytic cysteine to repair O6-alkylguanine (O6-meG) and O4-alkylthymine (O4-meT)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0006281" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada is a DNA repair protein that directly reverses alkylation damage. The deep research confirms its central role: &#34;Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions&#34;. In P. putida KT2440, the Ada-regulated system is essential for survival against alkylating stress: &#34;Deletion of alkA (a primary Ada target in KT2440) causes extreme sensitivity to MMS and MNNG&#34; [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Ada is involved in DNA repair, the more specific term GO:0006307 (DNA alkylation repair) should be used. Ada specifically repairs alkylation damage to DNA through direct reversal, which is a distinct mechanism from other DNA repair pathways. The general &#34;DNA repair&#34; term is accurate but less informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006307" target="_blank" class="term-link">
+                                    DNA alkylation repair
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deletion of alkA (a primary Ada target in KT2440) causes extreme sensitivity to MMS and MNNG</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada regulates transcription of the alkA-ada operon in response to alkylating agents. However, Ada specifically functions as a transcriptional activator, not a general regulator. The deep research confirms: &#34;Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)&#34; and in P. putida &#34;the alkA promoter is strongly induced by methylating agents in an Ada-dependent manner&#34; with &#34;alkA transcript induction ~60-fold by MMS&#34; [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While Ada does regulate transcription, it specifically acts as a positive regulator (activator). The more specific term GO:0045893 (positive regulation of DNA-templated transcription) would be more accurate and informative.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    positive regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">alkA induction ≈60‑fold by MMS</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                    GO:0006974
+                                </a>
+                            </span>
+                            <span class="term-label">DNA damage response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0006974" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada is a central component of the bacterial adaptive response to DNA alkylation damage. It both directly repairs alkylated DNA and activates transcription of additional repair genes. The deep research describes: &#34;The adaptive (Ada) response: In E. coli, Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1). This framework provides the baseline for evaluating species-specific variations in Pseudomonas&#34; [ada-deep-research-falcon.md]. In P. putida, the system shows organism-specific features but the core response mechanism is conserved.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Ada is a core component of the cellular response to DNA damage, specifically alkylation damage. It integrates both repair (direct reversal of lesions) and signaling (transcriptional activation of repair genes) functions, making this biological process annotation appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In E. coli, Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008168" target="_blank" class="term-link">
+                                    GO:0008168
+                                </a>
+                            </span>
+                            <span class="term-label">methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0008168" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada has methyltransferase activity, transferring methyl groups from alkylated DNA to its own cysteine residues. However, this general term is subsumed by the more specific GO:0003908 (methylated-DNA-[protein]-cysteine S-methyltransferase activity) which precisely describes the enzymatic mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general. The specific methyltransferase activity of Ada is already captured by GO:0003908 (methylated-DNA-[protein]-cysteine S-methyltransferase activity). Keeping this broad parent term adds no informational value.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The N-terminal domain of Ada contains a zinc-binding cluster that coordinates Zn2+ through four cysteine residues. The UniProt record identifies zinc-binding residues at positions 36, 40, 67, and 70. The deep research confirms zinc binding is a conserved feature: &#34;N-terminal Cys cluster (Ec Cys38 + Cys42/69/72) that coordinates Zn2+; inference for PpAda based on sequence conservation&#34; [ada-deep-research-falcon.md]. The zinc is essential for the N-terminal methylphosphotriester repair activity and for structural integrity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Zinc binding is a core property of the Ada N-terminal domain. The zinc-coordinating cysteine cluster is conserved across Ada proteins and is essential for the methylphosphotriester repair function. UniProt provides direct evidence for zinc-binding residues in this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">N‑terminal Cys cluster (Ec Cys38 + Cys42/69/72) that coordinates Zn2+; inference for PpAda based on sequence conservation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada has transferase activity as it transfers methyl groups. This is a very general parent term that is subsumed by more specific annotations already present (GO:0003908 methylated-DNA-[protein]-cysteine S-methyltransferase activity and GO:0008168 methyltransferase activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general and provides no informative value. The specific transferase activity is already captured by GO:0003908 (methylated-DNA-[protein]- cysteine S-methyltransferase activity).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032259" target="_blank" class="term-link">
+                                    GO:0032259
+                                </a>
+                            </span>
+                            <span class="term-label">methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0032259" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation requires careful evaluation. Ada is involved in a methylation process, but it is the RECIPIENT of methylation (self-methylation during DNA repair), not a methylator of other substrates. The enzyme accepts methyl groups from alkylated DNA and transfers them to its own cysteine residues. This is a suicidal (single-turnover) reaction that inactivates the protein. The term GO:0032259 &#34;methylation&#34; typically refers to adding methyl groups TO substrates, not removing them FROM substrates. Ada performs DNA DEalkylation/DEmethylation, not methylation of substrates. The deep research confirms: &#34;irreversible (suicidal) methyl transfer from O6‑meG/O4‑meT (C‑terminal AGT) and repair of methylphosphotriesters (N‑terminal MPT activity)&#34; [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term &#34;methylation&#34; is misleading for Ada function. Ada removes methyl groups from DNA (DNA dealkylation), it does not methylate substrates. The methyl transfer to cysteine is part of the repair mechanism, not a biosynthetic methylation. The correct biological process term should be GO:0035510 (DNA dealkylation) which accurately describes &#34;The removal of an alkyl group from one or more nucleotides within a DNA molecule.&#34;
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035510" target="_blank" class="term-link">
+                                    DNA dealkylation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">irreversible (suicidal) methyl transfer from O6‑meG/O4‑meT (C‑terminal AGT) and repair of methylphosphotriesters (N‑terminal MPT activity)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada binds to specific DNA sequences called Ada boxes in the promoter regions of its target genes. The deep research confirms: &#34;mutational mapping demonstrates requirement of these elements for inducibility&#34; and &#34;Deleting the B box or the A–B fragment in the promoter abolished inducibility&#34; [ada-deep-research-falcon.md]. The protein contains a HTH araC/xylS-type domain (positions 80-181) that mediates sequence-specific DNA binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sequence-specific DNA binding is a core function of Ada for its transcriptional regulatory activity. The protein specifically recognizes and binds to Ada box motifs in target promoters, as demonstrated by mutational analysis showing that deletion of these motifs abolishes Ada-dependent induction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Deleting the B box or the A–B fragment in the promoter abolished inducibility, and ada deletion eliminated induction</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0046872" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada binds zinc ions through its N-terminal cysteine cluster. However, the more specific term GO:0008270 (zinc ion binding) is already annotated and provides more precise information.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general. The specific metal ion bound by Ada is zinc, which is already captured by the more specific GO:0008270 (zinc ion binding) annotation. Keeping this broad parent term adds no informational value.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006307" target="_blank" class="term-link">
+                                    GO:0006307
+                                </a>
+                            </span>
+                            <span class="term-label">DNA alkylation repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0006307" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada directly repairs alkylation damage to DNA through its methyltransferase activity. The deep research describes Ada&#39;s role in &#34;The repair of alkylation damage in DNA, e.g. the removal of a non-physiological alkyl group from a nucleobase. This is usually mediated by DNA alkyltransferases.&#34; Ada specifically repairs O6-methylguanine and O4-methylthymine lesions through direct reversal. This term is more specific than the general &#34;DNA repair&#34; and accurately describes Ada&#39;s biological process [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most appropriate biological process term for Ada&#39;s repair function. Ada is a DNA alkyltransferase that specifically repairs alkylation damage, and this term should be annotated in addition to or instead of the general &#34;DNA repair&#34; term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035510" target="_blank" class="term-link">
+                                    GO:0035510
+                                </a>
+                            </span>
+                            <span class="term-label">DNA dealkylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0035510" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada catalyzes the removal of methyl groups from O6-methylguanine and O4-methylthymine in DNA, which is the definition of DNA dealkylation. This is the precise biological process carried out by the enzyme [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely describes the biochemical process that Ada performs: removing alkyl (methyl) groups from nucleotides in DNA. This should replace the misleading &#34;methylation&#34; annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">P. putida Ada catalyzes direct reversal of O6-alkylguanine and O4-alkylthymine via a conserved C-terminal catalytic cysteine</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    GO:0045893
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PZ2" data-a="GO:0045893" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ada acts as a transcriptional activator of the alkA-ada operon following self-methylation. This is a well-characterized function demonstrated by multiple studies showing that ada deletion eliminates induction of the alkA promoter [ada-deep-research-falcon.md].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is more specific than the general &#34;regulation of DNA-templated transcription&#34; and accurately describes Ada&#39;s activator function. Ada specifically activates (positively regulates) transcription of its target genes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ada/ada-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Acts as transcriptional activator of the alkA–ada region in P. putida</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The C-terminal domain of Ada contains methylated-DNA-[protein]-cysteine S-methyltransferase activity (EC 2.1.1.63) that transfers methyl groups from O6-methylguanine and O4-methylthymine in DNA to Cys319. This is a suicidal (single-turnover) reaction that directly reverses alkylation damage.</h3>
+                <span class="vote-buttons" data-g="Q88PZ2" data-a="FUNCTION: The C-terminal domain of Ada contains methylated-D..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003908" target="_blank" class="term-link">
+                            methylated-DNA-[protein]-cysteine S-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006307" target="_blank" class="term-link">
+                                DNA alkylation repair
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035510" target="_blank" class="term-link">
+                                DNA dealkylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The N-terminal domain contains a zinc-coordinating cysteine cluster (Cys36, Cys40, Cys67, Cys70) that repairs methylphosphotriesters in the DNA backbone. Methylation of Cys36 is the signal that converts Ada into a transcriptional activator.</h3>
+                <span class="vote-buttons" data-g="Q88PZ2" data-a="FUNCTION: The N-terminal domain contains a zinc-coordinating..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006307" target="_blank" class="term-link">
+                                DNA alkylation repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Upon methylation of the N-terminal cysteine during DNA repair, Ada gains enhanced DNA-binding affinity for Ada box sequences and activates transcription of the alkA-ada operon. In P. putida KT2440, this results in ~60-fold induction of alkA by MMS. This provides an inducible protective response to alkylation damage.</h3>
+                <span class="vote-buttons" data-g="Q88PZ2" data-a="FUNCTION: Upon methylation of the N-terminal cysteine during..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                positive regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                DNA damage response
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ada/ada-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on Pseudomonas putida ada gene (PP_0706, UniProt Q88PZ2)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida KT2440 Ada activates the alkA-ada operon in response to methylating agents with ~60-fold induction of alkA by MMS</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of Ada box elements (A and B boxes) abolishes promoter inducibility</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">alkB is constitutively expressed in P. putida (unlike E. coli where it is Ada-inducible)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">alkA deletion causes extreme MMS sensitivity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ada-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PZ2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T23:24:58.856392'<br />
+end_time: '2026-01-30T23:32:22.540680'<br />
+duration_seconds: 443.68<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: ada<br />
+  gene_symbol: ada<br />
+  uniprot_accession: Q88PZ2<br />
+  protein_description: 'SubName: Full=Fused O(6)-alkylguanine DNA alkyltransferase-transcriptional<br />
+    activator {ECO:0000313|EMBL:AAN66331.1}; EC=2.1.1.63 {ECO:0000313|EMBL:AAN66331.1};'<br />
+  gene_info: Name=ada {ECO:0000313|EMBL:AAN66331.1}; OrderedLocusNames=PP_0706 {ECO:0000313|EMBL:AAN66331.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: Ada-like_dom_sf. (IPR035451); Ada_DNA_repair_Zn-bd. (IPR004026);<br />
+    Bifunct_regulatory_prot_Ada. (IPR016221); Homeodomain-like_sf. (IPR009057); HTH_AraC.<br />
+    (IPR018060)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 27</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88PZ2</li>
+<li><strong>Protein Description:</strong> SubName: Full=Fused O(6)-alkylguanine DNA alkyltransferase-transcriptional activator {ECO:0000313|EMBL:AAN66331.1}; EC=2.1.1.63 {ECO:0000313|EMBL:AAN66331.1};</li>
+<li><strong>Gene Information:</strong> Name=ada {ECO:0000313|EMBL:AAN66331.1}; OrderedLocusNames=PP_0706 {ECO:0000313|EMBL:AAN66331.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Ada-like_dom_sf. (IPR035451); Ada_DNA_repair_Zn-bd. (IPR004026); Bifunct_regulatory_prot_Ada. (IPR016221); Homeodomain-like_sf. (IPR009057); HTH_AraC. (IPR018060)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ada" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ada' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ada</strong> (gene ID: ada, UniProt: Q88PZ2) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88PZ2</li>
+<li><strong>Protein Description:</strong> SubName: Full=Fused O(6)-alkylguanine DNA alkyltransferase-transcriptional activator {ECO:0000313|EMBL:AAN66331.1}; EC=2.1.1.63 {ECO:0000313|EMBL:AAN66331.1};</li>
+<li><strong>Gene Information:</strong> Name=ada {ECO:0000313|EMBL:AAN66331.1}; OrderedLocusNames=PP_0706 {ECO:0000313|EMBL:AAN66331.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> Ada-like_dom_sf. (IPR035451); Ada_DNA_repair_Zn-bd. (IPR004026); Bifunct_regulatory_prot_Ada. (IPR016221); Homeodomain-like_sf. (IPR009057); HTH_AraC. (IPR018060)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ada" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ada' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ada</strong> (gene ID: ada, UniProt: Q88PZ2) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Comprehensive research report: ada (PP_0706; UniProt Q88PZ2) in Pseudomonas putida KT2440</p>
+<p>Identity verification and scope<br />
+- Gene/protein identity: The target is ada (ordered locus PP_0706) from Pseudomonas putida KT2440, annotated as a fused O6-alkylguanine DNA alkyltransferase–transcriptional activator, consistent with UniProt Q88PZ2. Literature on P. putida KT2440 explicitly identifies PP_0706 as the Ada ortholog and documents conservation of key Ada DNA-binding residues that contact Ada-box elements, aligning with the domain expectations of an N-terminal regulatory/Ada-like domain and a C-terminal alkyltransferase domain (AGT/OGT family) (https://doi.org/10.1371/journal.pone.0076198; PLoS ONE, 2013-10-09) (mielecki2013pseudomonasputidaalka pages 2-4).<br />
+- Ambiguity check: The “ada” symbol is used in multiple organisms for adaptive-response regulators, but the cited P. putida KT2440 sources specifically refer to PP_0706, avoiding cross-species confusion. All functional inferences are tied to P. putida KT2440 or to conserved Ada family mechanisms (Oncogene, 2002-12-19; https://doi.org/10.1038/sj.onc.1205998) (sedgwick2002recentprogresson pages 1-2).</p>
+<p>1) Key concepts and definitions<br />
+- Core function: Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions and, upon self-methylation, act as transcriptional activators of the adaptive response to alkylation damage. The C-terminal alkyltransferase domain performs a suicidal methyl transfer to a catalytic cysteine to repair O6-alkylguanine (O6-meG) and O4-alkylthymine (O4-meT). The N-terminal domain repairs methylphosphotriesters (MPTs) and, when methylated, activates transcription of target promoters. These mechanistic properties are considered conserved across bacteria (Oncogene, 2002-12-19; https://doi.org/10.1038/sj.onc.1205998) (sedgwick2002recentprogresson pages 1-2).<br />
+- Active-site chemistry and domains: In Escherichia coli Ada, the C-terminal catalytic cysteine (Cys321) accepts methyl groups from O6-meG/O4-meT, whereas the N-terminal cysteine (Cys38), part of a Zn-coordinating Cys cluster, accepts methyl from MPTs; both reactions are single turnover and inactivate the protein. Post-transfer methylation increases DNA affinity and switches Ada into a transcription factor. These features ground functional annotation of P. putida Ada by homology (Frick thesis, 2007; pages cited) (frick2007theversatilee. pages 21-24, tessmer2023thednaalkyltransferase pages 2-3, tessmer2023thednaalkyltransferase pages 3-5).<br />
+- Adaptive (Ada) response: In E. coli, Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1). This framework provides the baseline for evaluating species-specific variations in Pseudomonas (Oncogene, 2002-12-19; https://doi.org/10.1038/sj.onc.1205998) (sedgwick2002recentprogresson pages 1-2).</p>
+<p>2) Recent developments and latest research (priority to 2023–2024)<br />
+- Updated AGT family perspective: A 2023 review synthesizes common mechanisms of DNA alkyltransferases (AGTs/OGT/Ada families), emphasizing conserved base flipping, helix–turn–helix DNA engagement, and the catalytic pocket with a nucleophilic cysteine that accepts alkyl groups irreversibly. It highlights N-terminal Zn-binding sites in many bacterial Ada proteins and surveys functional diversification across taxa (Int J Mol Sci, 2023-12-28; https://doi.org/10.3390/ijms25010463) (tessmer2023thednaalkyltransferase pages 2-3, tessmer2023thednaalkyltransferase pages 3-5, tessmer2023thednaalkyltransferase pages 21-22, tessmer2023thednaalkyltransferase pages 22-23).<br />
+- Diversity of adaptive-response regulators: A 2023 comparative and mechanistic study reveals a widespread, previously underappreciated family of methylation-damage regulators (Cada2-like) that differ from E. coli Ada in methylation site usage, promoter motifs, and activation logic. Cada2 undergoes methylation-dependent activation within its C-terminal domain and binds distinct DNA motifs relative to E. coli Ada; co-occurrence analyses suggest EcAda-like and Cada2-like systems rarely coexist in the same genome (~7% co-occurrence), indicating modular replacement/diversification of adaptive-response architectures across bacteria (bioRxiv, 2023-10-10; https://doi.org/10.1101/2023.10.09.561495) (kamat2023widespreadprevalenceof pages 8-10, kamat2023widespreadprevalenceof pages 25-29). While this work centers on Caulobacter, it supports the broader inference that Pseudomonas spp. can harbor Ada-like systems with species-specific regulon organization.</p>
+<p>3) Current applications and real-world implementations<br />
+- Biotechnological and ecological relevance: In P. putida KT2440, the Ada-regulated alkylation defense is essential for survival against environmental or laboratory alkylating stress. Deletion of alkA (a primary Ada target in KT2440) causes extreme sensitivity to MMS and MNNG, and combining deletions (ada/alkA/alkB) essentially abolishes survival after short MMS exposures. Such phenotypes underline applications in strain engineering for bioremediation (tuning alkylation defense for resilience) or for biosafety/kill-switch designs (sensitizing strains to specific alkylating agents) (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (mielecki2013pseudomonasputidaalka pages 5-8, mielecki2013pseudomonasputidaalka pages 12-15). TLS polymerase contributions (DinB/ImuC) further inform robust chassis design under chemical stress (PLoS ONE, 2017-01-24; https://doi.org/10.1371/journal.pone.0170719) (mielecki2013pseudomonasputidaalka pages 12-15).<br />
+- Synthetic biology implications: The 2023–2024 literature indicates AGT mechanisms are conserved yet tunable across species, and adaptive regulators vary in promoter recognition and activation triggers. This opens opportunities to repurpose Ada-like switches to build methylation-damage biosensors or inducible circuits responsive to defined alkylating inputs in non-native hosts, borrowing from EcAda or Cada2 regulatory logic (Int J Mol Sci, 2023-12-28; https://doi.org/10.3390/ijms25010463; bioRxiv, 2023-10-10; https://doi.org/10.1101/2023.10.09.561495) (tessmer2023thednaalkyltransferase pages 2-3, kamat2023widespreadprevalenceof pages 8-10, kamat2023widespreadprevalenceof pages 25-29).</p>
+<p>4) Expert opinions and analysis from authoritative sources<br />
+- Foundational consensus: Sedgwick &amp; Lindahl’s authoritative review (Oncogene, 2002) remains the canonical reference for Ada’s dual enzymatic and regulatory roles and for the adaptive response framework. Their synthesis supports the conservative inference that P. putida KT2440 Ada operates via the same suicidal methyl-transfer chemistry and methylation-activated transcriptional mechanism known in E. coli, with organism-specific regulon composition (Oncogene, 2002-12-19; https://doi.org/10.1038/sj.onc.1205998) (sedgwick2002recentprogresson pages 1-2).<br />
+- Contemporary perspective: The 2023 review by Tessmer &amp; Margison consolidates structural and mechanistic advances across AGTs, underscoring the conservation of catalytic architecture and Zn-binding in N-terminal domains of Ada proteins. This supports the domain annotation for P. putida Ada and justifies inferring the presence of an N-terminal Zn site based on family conservation and sequence similarity to EcAda (Int J Mol Sci, 2023-12-28; https://doi.org/10.3390/ijms25010463) (tessmer2023thednaalkyltransferase pages 2-3, tessmer2023thednaalkyltransferase pages 3-5).<br />
+- Regulatory diversity: The 2023 bioRxiv study by Kamat et al. argues for broad diversity in adaptive response transcription factors, some using distinct methylation sites and promoter motifs. This perspective is consistent with the organism-specific regulon organization observed in P. putida, where alkA–ada are inducible but alkB is constitutive (bioRxiv, 2023-10-10; https://doi.org/10.1101/2023.10.09.561495; PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (kamat2023widespreadprevalenceof pages 25-29, mielecki2013pseudomonasputidaalka pages 2-4).</p>
+<p>5) Relevant statistics and data from recent studies (with URLs/dates where available)<br />
+- P. putida KT2440 promoter induction metrics: The alkA promoter is strongly induced by methylating agents in an Ada-dependent manner. Quantitatively, MMS exposure increased reporter signal from approximately 1–2×10^3 RFU to ~110×10^3 RFU at 6 h, and MNNG to ~70×10^3 RFU; overall alkA transcript induction by MMS was reported at ~60-fold. Deleting the B box or the A–B fragment in the promoter abolished inducibility, and ada deletion eliminated induction (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 5-8).<br />
+- Survival phenotypes: In KT2440, alkA deletion caused dramatic sensitivity to MMS (e.g., 20 mM MMS for 5 min → ~10% survival; 10 min → &lt;1%), and an ada alkA alkB triple mutant was extremely sensitive (15 min MMS → ~0.01% survival). These data demonstrate central roles of AlkA and the Ada regulon for alkylation tolerance (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (mielecki2013pseudomonasputidaalka pages 5-8).<br />
+- Regulon organization differences: Compared with E. coli, where ada, alkA, alkB and aidB are Ada-inducible, P. putida KT2440 shows a distinct architecture: the alkA–ada region is inducible and bears canonical Ada boxes, whereas alkB (PP_3400) is constitutive and lies ~3 Mb away. This difference is supported by promoter mapping and functional assays (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (mielecki2013pseudomonasputidaalka pages 2-4, mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 12-15).<br />
+- Pathway contributors beyond Ada: TLS polymerases DinB and ImuC (DnaE2) provide measurable tolerance to alkylation damage in P. putida and P. aeruginosa, with DinB important for MMS survival in rapidly growing cells and ImuC critical especially at lower temperatures; MMS-induced mutagenesis in pseudomonads is largely ImuC-dependent (PLoS ONE, 2017-01-24; https://doi.org/10.1371/journal.pone.0170719) (mielecki2013pseudomonasputidaalka pages 12-15).</p>
+<p>Functional annotation for P. putida KT2440 Ada (PP_0706)<br />
+- Enzymatic reaction and specificity: By homology to Ada family, P. putida Ada catalyzes direct reversal of O6-alkylguanine and O4-alkylthymine via a conserved C-terminal catalytic cysteine and resolves methylphosphotriesters via an N-terminal cysteine within a Zn-binding cluster; each transfer inactivates the enzyme (suicide reaction). These assignments follow conserved chemistry and domain architecture established for bacterial Ada proteins (Oncogene, 2002-12-19; https://doi.org/10.1038/sj.onc.1205998; Frick thesis, 2007) (sedgwick2002recentprogresson pages 1-2, frick2007theversatilee. pages 21-24, tessmer2023thednaalkyltransferase pages 2-3).<br />
+- Transcriptional regulation and targets in P. putida: Ada acts as an activator for the alkA–ada region in response to MMS/MNNG, binding conserved Ada box motifs (A and B boxes) in the alkA promoter; mutational mapping demonstrates requirement of these elements for inducibility. P. putida alkB is not Ada-inducible and shows constitutive expression, indicating a regulon configuration distinct from E. coli (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 2-4).<br />
+- Cellular localization: As a bacterial DNA repair protein and transcription factor, Ada functions in the cytosol, binding to chromosomal DNA at target promoters; no evidence suggests secretion or membrane localization. This inference is standard for Ada-family proteins and supported by structural/biochemical literature (Int J Mol Sci, 2023-12-28; https://doi.org/10.3390/ijms25010463) (tessmer2023thednaalkyltransferase pages 2-3).<br />
+- Pathway context in KT2440: The adaptive response to alkylation combines Ada-mediated inducible expression of alkA (and ada), constitutive AlkB activity, base excision repair (e.g., AlkA glycosylase; Tag), and TLS polymerases (DinB, ImuC) to achieve tolerance and maintain viability under alkylating stress. Induction magnitude and survival phenotypes quantify the relative contributions and underscore AlkA’s centrality in KT2440 (PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198; PLoS ONE, 2017-01-24; https://doi.org/10.1371/journal.pone.0170719) (mielecki2013pseudomonasputidaalka pages 5-8, mielecki2013pseudomonasputidaalka pages 12-15).<br />
+- Comparative perspective and recent insights: While the catalytic chemistry of Ada is conserved, recent 2023 work indicates broad architectural diversity of methylation-damage regulators across bacteria, implying that Pseudomonas adaptive responses may employ Ada-like regulators with species-specific promoter motifs and activation requirements. This aligns with the KT2440 finding that alkA–ada, but not alkB, is Ada-inducible (bioRxiv, 2023-10-10; https://doi.org/10.1101/2023.10.09.561495; PLoS ONE, 2013-10-09; https://doi.org/10.1371/journal.pone.0076198) (kamat2023widespreadprevalenceof pages 25-29, mielecki2013pseudomonasputidaalka pages 2-4).</p>
+<p>Key data integration table<br />
+| Feature | Summary | Quantitative data | Citation |<br />
+|---|---|---:|---|<br />
+| Identity &amp; domains | Ada (PP_0706; UniProt Q88PZ2) in Pseudomonas putida KT2440: two-domain AGT with N‑terminal regulatory/Ada-like domain (HTH/AraC features, inferred Zn‑binding) and C‑terminal O6‑alkylguanine transferase domain. | ~54.6% AA identity to E. coli Ada; genomic adjacency to alkA (PP_0705). | (mielecki2013pseudomonasputidaalka pages 2-4, sedgwick2002recentprogresson pages 1-2) |<br />
+| Biochemical function | Bifunctional: irreversible (suicidal) methyl transfer from O6‑meG/O4‑meT (C‑terminal AGT) and repair of methylphosphotriesters (N‑terminal MPT activity); methylation converts Ada into a transcriptional activator. | Single‑turnover methyl transfer (stoichiometric inactivation of protein). | (frick2007theversatilee. pages 21-24, sedgwick2002recentprogresson pages 1-2, tessmer2023thednaalkyltransferase pages 2-3) |<br />
+| Active‑site cysteines &amp; Zn | Conserved catalytic Cys in C‑terminal domain (Ec equivalent Cys321) and N‑terminal Cys cluster (Ec Cys38 + Cys42/69/72) that coordinates Zn2+; inference for PpAda based on sequence conservation. | Direct experimental confirmation in P. putida not reported (inferred by homology). | (frick2007theversatilee. pages 21-24, tessmer2023thednaalkyltransferase pages 2-3, mielecki2013pseudomonasputidaalka pages 2-4) |<br />
+| Regulatory role &amp; targets | Acts as transcriptional activator of the alkA–ada region in P. putida; unlike E. coli, alkB (PP_3400) is constitutively expressed and not part of the inducible Ada regulon. | Deletion of A/B boxes or ada abolishes alkA inducibility. | (mielecki2013pseudomonasputidaalka pages 2-4, mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 5-8) |<br />
+| Induction by MMS / MNNG | alkA promoter strongly induced by SN2/SN1 methylating agents in an Ada‑dependent manner. | alkA induction ≈60‑fold by MMS; GFP RFU baseline ~1–2×10^3 → ~110×10^3 (MMS) and ~70×10^3 (MNNG) at 6 h; ada deletion eliminates induction. | (mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 5-8) |<br />
+| Cellular localization | Cytosolic DNA‑binding protein that interacts with chromosomal promoters (no secretion/signal peptide reported). | Localization inferred from family/function; no direct fractionation data given. | (tessmer2023thednaalkyltransferase pages 2-3, mielecki2013pseudomonasputidaalka pages 2-4) |<br />
+| Pathway context &amp; comparison vs E. coli | Adaptive (Ada) response conserved mechanistically but regulon architecture differs: E. coli regulon = ada, alkA, alkB, aidB; P. putida = inducible alkA–ada, constitutive alkB; TLS polymerases (DinB/ImuC) provide additional tolerance pathways. | alkA induction in E. coli typically ~10‑fold vs ~60‑fold in P. putida (reported comparisons). | (sedgwick2002recentprogresson pages 1-2, mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 12-15) |<br />
+| Recent advances (2023–2024) | Phylogenomic and mechanistic studies reveal widespread diversity of Ada‑family regulators (e.g., Cada2‑like) that use alternative methylation sites/PTMs and DNA motifs while AGT chemistry remains conserved. | Surveys show Cada2‑like regulators widespread; EcAda‑like and Cada2‑like co‑occurrence is rare (~7% reported). | (kamat2023widespreadprevalenceof pages 8-10, kamat2023widespreadprevalenceof pages 25-29, tessmer2023thednaalkyltransferase pages 22-23) |<br />
+| Applications &amp; implications | Ada function underpins protection against alkylation, influences mutagenesis rates and survival; relevance for bioremediation, evolution of stress resistance, and potential synthetic biology/biotech uses. | ada/alkA/alkB triple mutants show extreme MMS sensitivity and elevated mutagenesis in ada‑null strains. | (mielecki2013pseudomonasputidaalka pages 5-8, mielecki2013pseudomonasputidaalka pages 12-15, mielecki2013pseudomonasputidaalka pages 15-16) |</p>
+<p><em>Table: Compact, evidence‑based table summarizing identity, domains, biochemical activity, regulatory targets, induction metrics, localization, pathway context, recent (2023–24) advances, and applications for Pseudomonas putida Ada (PP_0706, Q88PZ2); all claims cite the provided context IDs.</em></p>
+<p>Limitations and open questions<br />
+- Direct biochemical confirmation of the specific catalytic cysteine numbering and zinc stoichiometry in P. putida Ada (PP_0706) was not located in organism-specific biochemical assays; current assignments rely on conservation and domain predictions supported by family-level structural work (Int J Mol Sci, 2023-12-28; https://doi.org/10.3390/ijms25010463) (tessmer2023thednaalkyltransferase pages 2-3). Further studies in KT2440 could precisely map active-site residues, quantify kinetics (kcat/KM) for O6-meG and O4-meT removal, and directly demonstrate Zn-binding.</p>
+<p>References (with URLs and dates)<br />
+- Sedgwick B, Lindahl T. Recent progress on the Ada response for inducible repair of DNA alkylation damage. Oncogene. 2002-12-19. https://doi.org/10.1038/sj.onc.1205998 (sedgwick2002recentprogresson pages 1-2).<br />
+- Mielecki D, Saumaa S, Wrzesiński M, et al. Pseudomonas putida AlkA and AlkB Proteins Comprise Different Defense Systems for the Repair of Alkylation Damage to DNA – In Vivo, In Vitro, and In Silico Studies. PLoS ONE. 2013-10-09. https://doi.org/10.1371/journal.pone.0076198 (mielecki2013pseudomonasputidaalka pages 2-4, mielecki2013pseudomonasputidaalka pages 1-2, mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 12-15, mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 5-8).<br />
+- Jatsenko T, Sidorenko J, Saumaa S, Kivisaar M. DNA Polymerases ImuC and DinB Are Involved in DNA Alkylation Damage Tolerance in Pseudomonas aeruginosa and Pseudomonas putida. PLoS ONE. 2017-01-24. https://doi.org/10.1371/journal.pone.0170719 (mielecki2013pseudomonasputidaalka pages 12-15).<br />
+- Tessmer I, Margison GP. The DNA Alkyltransferase Family of DNA Repair Proteins: Common Mechanisms, Diverse Functions. Int J Mol Sci. 2023-12-28. https://doi.org/10.3390/ijms25010463 (tessmer2023thednaalkyltransferase pages 2-3, tessmer2023thednaalkyltransferase pages 3-5, tessmer2023thednaalkyltransferase pages 21-22, tessmer2023thednaalkyltransferase pages 22-23, tessmer2023thednaalkyltransferase pages 9-11).<br />
+- Kamat A, Tran NT, Sharda M, et al. Widespread prevalence of a post-translational modification in activation of an essential bacterial DNA damage response. bioRxiv. 2023-10-10. https://doi.org/10.1101/2023.10.09.561495 (kamat2023widespreadprevalenceof pages 8-10, kamat2023widespreadprevalenceof pages 25-29).<br />
+- Frick LE. The versatile E. coli adaptive response protein AlkB mitigates toxicity and mutagenicity of etheno-, ethano-, and methyl-modified bases in vivo. 2007. Relevant context on Ada mechanistic residues and activation (pages cited) (frick2007theversatilee. pages 21-24).</p>
+<p>Conclusion<br />
+Pseudomonas putida KT2440 ada (PP_0706; UniProt Q88PZ2) encodes a canonical Ada-family bifunctional protein with a C-terminal O6-alkylguanine-DNA alkyltransferase domain and an N-terminal regulatory/MPT repair domain. In KT2440, Ada activates the alkA–ada operon in response to methylating agents, while alkB is constitutive, defining a regulon architecture distinct from E. coli. Quantitatively, alkA can be induced ~60-fold by MMS, with strong Ada dependence and clear promoter motif requirements. Contemporary 2023 work reinforces conservation of AGT chemistry and highlights broad diversity of adaptive-response regulators across bacteria, consistent with the Pseudomonas-specific regulon features observed in KT2440 (sedgwick2002recentprogresson pages 1-2, mielecki2013pseudomonasputidaalka pages 2-4, mielecki2013pseudomonasputidaalka pages 15-16, mielecki2013pseudomonasputidaalka pages 4-5, mielecki2013pseudomonasputidaalka pages 5-8, tessmer2023thednaalkyltransferase pages 2-3, kamat2023widespreadprevalenceof pages 25-29).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 2-4): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sedgwick2002recentprogresson pages 1-2): Barbara Sedgwick and Tomas Lindahl. Recent progress on the ada response for inducible repair of dna alkylation damage. Oncogene, 21:8886-8894, Dec 2002. URL: https://doi.org/10.1038/sj.onc.1205998, doi:10.1038/sj.onc.1205998. This article has 187 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frick2007theversatilee. pages 21-24): LE Frick. The versatile e. coli adaptive response protein alkb mitigates toxicity and mutagenicity of etheno-, ethano-, and methyl-modified bases in vivo. Unknown journal, 2007.</p>
+</li>
+<li>
+<p>(tessmer2023thednaalkyltransferase pages 2-3): Ingrid Tessmer and Geoffrey P. Margison. The dna alkyltransferase family of dna repair proteins: common mechanisms, diverse functions. International Journal of Molecular Sciences, 25:463, Dec 2023. URL: https://doi.org/10.3390/ijms25010463, doi:10.3390/ijms25010463. This article has 5 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(tessmer2023thednaalkyltransferase pages 3-5): Ingrid Tessmer and Geoffrey P. Margison. The dna alkyltransferase family of dna repair proteins: common mechanisms, diverse functions. International Journal of Molecular Sciences, 25:463, Dec 2023. URL: https://doi.org/10.3390/ijms25010463, doi:10.3390/ijms25010463. This article has 5 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(tessmer2023thednaalkyltransferase pages 21-22): Ingrid Tessmer and Geoffrey P. Margison. The dna alkyltransferase family of dna repair proteins: common mechanisms, diverse functions. International Journal of Molecular Sciences, 25:463, Dec 2023. URL: https://doi.org/10.3390/ijms25010463, doi:10.3390/ijms25010463. This article has 5 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(tessmer2023thednaalkyltransferase pages 22-23): Ingrid Tessmer and Geoffrey P. Margison. The dna alkyltransferase family of dna repair proteins: common mechanisms, diverse functions. International Journal of Molecular Sciences, 25:463, Dec 2023. URL: https://doi.org/10.3390/ijms25010463, doi:10.3390/ijms25010463. This article has 5 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(kamat2023widespreadprevalenceof pages 8-10): Aditya Kamat, Ngat T. Tran, Mohak Sharda, Neha Sontakke, Tung B. K. Le, and Anjana Badrinarayanan. Widespread prevalence of a post-translational modification in activation of an essential bacterial dna damage response. bioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.09.561495, doi:10.1101/2023.10.09.561495. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(kamat2023widespreadprevalenceof pages 25-29): Aditya Kamat, Ngat T. Tran, Mohak Sharda, Neha Sontakke, Tung B. K. Le, and Anjana Badrinarayanan. Widespread prevalence of a post-translational modification in activation of an essential bacterial dna damage response. bioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.09.561495, doi:10.1101/2023.10.09.561495. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 5-8): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 12-15): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 4-5): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 15-16): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mielecki2013pseudomonasputidaalka pages 1-2): Damian Mielecki, Signe Saumaa, Michał Wrzesiński, Agnieszka M. Maciejewska, Karolina Żuchniewicz, Anna Sikora, Jan Piwowarski, Jadwiga Nieminuszczy, Maia Kivisaar, and Elżbieta Grzesiuk. Pseudomonas putida alka and alkb proteins comprise different defense systems for the repair of alkylation damage to dna – in vivo, in vitro, and in silico studies. PLoS ONE, 8:e76198, Oct 2013. URL: https://doi.org/10.1371/journal.pone.0076198, doi:10.1371/journal.pone.0076198. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tessmer2023thednaalkyltransferase pages 9-11): Ingrid Tessmer and Geoffrey P. Margison. The dna alkyltransferase family of dna repair proteins: common mechanisms, diverse functions. International Journal of Molecular Sciences, 25:463, Dec 2023. URL: https://doi.org/10.3390/ijms25010463, doi:10.3390/ijms25010463. This article has 5 citations and is from a poor quality or predatory journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mielecki2013pseudomonasputidaalka pages 2-4</li>
+<li>sedgwick2002recentprogresson pages 1-2</li>
+<li>mielecki2013pseudomonasputidaalka pages 12-15</li>
+<li>mielecki2013pseudomonasputidaalka pages 5-8</li>
+<li>tessmer2023thednaalkyltransferase pages 2-3</li>
+<li>tessmer2023thednaalkyltransferase pages 3-5</li>
+<li>tessmer2023thednaalkyltransferase pages 21-22</li>
+<li>tessmer2023thednaalkyltransferase pages 22-23</li>
+<li>kamat2023widespreadprevalenceof pages 8-10</li>
+<li>kamat2023widespreadprevalenceof pages 25-29</li>
+<li>mielecki2013pseudomonasputidaalka pages 4-5</li>
+<li>mielecki2013pseudomonasputidaalka pages 15-16</li>
+<li>mielecki2013pseudomonasputidaalka pages 1-2</li>
+<li>tessmer2023thednaalkyltransferase pages 9-11</li>
+<li>https://doi.org/10.1371/journal.pone.0076198;</li>
+<li>https://doi.org/10.1038/sj.onc.1205998</li>
+<li>https://doi.org/10.3390/ijms25010463</li>
+<li>https://doi.org/10.1101/2023.10.09.561495</li>
+<li>https://doi.org/10.1371/journal.pone.0076198</li>
+<li>https://doi.org/10.1371/journal.pone.0170719</li>
+<li>https://doi.org/10.3390/ijms25010463;</li>
+<li>https://doi.org/10.1101/2023.10.09.561495;</li>
+<li>https://doi.org/10.1038/sj.onc.1205998;</li>
+<li>https://doi.org/10.1371/journal.pone.0076198,</li>
+<li>https://doi.org/10.1038/sj.onc.1205998,</li>
+<li>https://doi.org/10.3390/ijms25010463,</li>
+<li>https://doi.org/10.1101/2023.10.09.561495,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PZ2
+gene_symbol: ada
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  Bifunctional Ada protein that combines O6-alkylguanine-DNA alkyltransferase activity
+  with transcriptional activation function. The C-terminal domain performs suicidal
+  methyl transfer from O6-methylguanine and O4-methylthymine to a catalytic cysteine
+  (Cys319), while the N-terminal domain repairs methylphosphotriesters via a zinc-coordinating
+  cysteine cluster (Cys36, Cys40, Cys67, Cys70). Upon methylation of the N-terminal domain,
+  Ada becomes a transcriptional activator that induces expression of the alkA-ada operon
+  in response to alkylating agents such as MMS and MNNG. In P. putida KT2440, Ada activates
+  the alkA promoter (~60-fold induction by MMS) through binding to conserved Ada box motifs,
+  but notably does not regulate alkB, which is constitutively expressed in this organism
+  unlike in E. coli.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada is a DNA-binding protein that interacts with DNA in two functional contexts:
+      (1) as a DNA repair enzyme that binds to alkylated DNA substrates to perform
+      direct reversal repair, and (2) as a transcription factor that binds to Ada box
+      motifs (A and B boxes) in the promoter region of target genes. The deep research
+      confirms Ada&#39;s DNA-binding activity and notes the protein contains &#34;N-terminal
+      regulatory/Ada-like domain (HTH/AraC features, inferred Zn-binding) and C-terminal
+      O6-alkylguanine transferase domain&#34; [ada-deep-research-falcon.md]. The
+      UniProt record indicates a HTH araC/xylS-type domain (positions 80-181).
+    action: ACCEPT
+    reason: &gt;-
+      DNA binding is a core function of Ada, required for both its enzymatic DNA repair
+      activity and its transcriptional regulatory function. This general term is appropriate
+      as a parent term given the more specific annotations for sequence-specific binding.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Ada acts as an activator for the alkA–ada region in response to MMS/MNNG, binding conserved Ada box motifs (A and B boxes) in the alkA promoter&#34;
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada functions as a methylation-dependent transcriptional activator. Upon methylation
+      of the N-terminal cysteine (Cys36 in P. putida), Ada gains enhanced DNA binding
+      affinity and switches into a transcription factor that activates expression of
+      the alkA-ada operon. The deep research states: &#34;The N-terminal domain repairs
+      methylphosphotriesters (MPTs) and, when methylated, activates transcription of
+      target promoters&#34; and notes &#34;alkA transcript induction by MMS was reported at ~60-fold&#34;
+      with &#34;ada deletion eliminated induction&#34; [ada-deep-research-falcon.md].
+    action: ACCEPT
+    reason: &gt;-
+      Transcriptional activation is a core function of Ada. The protein contains a
+      HTH AraC-type DNA-binding domain and directly activates transcription of the
+      alkA-ada operon in response to alkylation damage. This is a well-characterized
+      bifunctional property of Ada proteins across bacteria.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;The N-terminal domain repairs methylphosphotriesters (MPTs) and, when methylated, activates transcription of target promoters&#34;
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;overall alkA transcript induction by MMS was reported at ~60-fold&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada has catalytic activity as a methyltransferase that transfers methyl groups
+      from alkylated DNA bases to its own cysteine residues. However, this very general
+      term is subsumed by more specific annotations already present (GO:0003908
+      methylated-DNA-[protein]-cysteine S-methyltransferase activity).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      While technically correct, this term is too general and does not provide informative
+      annotation. The more specific GO:0003908 (methylated-DNA-[protein]-cysteine
+      S-methyltransferase activity) is already annotated and provides the precise
+      molecular function. Keeping this very broad term adds no value.
+- term:
+    id: GO:0003908
+    label: methylated-DNA-[protein]-cysteine S-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the precise enzymatic activity of the Ada C-terminal domain. The enzyme
+      catalyzes the suicidal transfer of methyl groups from O6-methylguanine and
+      O4-methylthymine in DNA to a cysteine residue (Cys319 in P. putida Ada). The
+      UniProt record annotates this with EC 2.1.1.63. The deep research confirms:
+      &#34;The C-terminal alkyltransferase domain performs a suicidal methyl transfer to
+      a catalytic cysteine to repair O6-alkylguanine (O6-meG) and O4-alkylthymine (O4-meT)&#34;
+      [ada-deep-research-falcon.md].
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of the Ada C-terminal domain. The methylated-DNA-
+      [protein]-cysteine S-methyltransferase activity (EC 2.1.1.63) is the defining
+      enzymatic activity of Ada proteins, directly reversing alkylation damage to DNA.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;The C-terminal alkyltransferase domain performs a suicidal methyl transfer to a catalytic cysteine to repair O6-alkylguanine (O6-meG) and O4-alkylthymine (O4-meT)&#34;
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Ada is a DNA repair protein that directly reverses alkylation damage. The deep
+      research confirms its central role: &#34;Ada proteins are bifunctional DNA repair
+      regulators that directly reverse alkyl lesions&#34;. In P. putida KT2440, the
+      Ada-regulated system is essential for survival against alkylating stress:
+      &#34;Deletion of alkA (a primary Ada target in KT2440) causes extreme sensitivity
+      to MMS and MNNG&#34; [ada-deep-research-falcon.md].
+    action: MODIFY
+    reason: &gt;-
+      While Ada is involved in DNA repair, the more specific term GO:0006307 (DNA
+      alkylation repair) should be used. Ada specifically repairs alkylation damage
+      to DNA through direct reversal, which is a distinct mechanism from other DNA
+      repair pathways. The general &#34;DNA repair&#34; term is accurate but less informative.
+    proposed_replacement_terms:
+      - id: GO:0006307
+        label: DNA alkylation repair
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions&#34;
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Deletion of alkA (a primary Ada target in KT2440) causes extreme sensitivity to MMS and MNNG&#34;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada regulates transcription of the alkA-ada operon in response to alkylating
+      agents. However, Ada specifically functions as a transcriptional activator, not
+      a general regulator. The deep research confirms: &#34;Ada upregulates ada, alkA, alkB
+      and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)&#34;
+      and in P. putida &#34;the alkA promoter is strongly induced by methylating agents in
+      an Ada-dependent manner&#34; with &#34;alkA transcript induction ~60-fold by MMS&#34;
+      [ada-deep-research-falcon.md].
+    action: MODIFY
+    reason: &gt;-
+      While Ada does regulate transcription, it specifically acts as a positive regulator
+      (activator). The more specific term GO:0045893 (positive regulation of DNA-templated
+      transcription) would be more accurate and informative.
+    proposed_replacement_terms:
+      - id: GO:0045893
+        label: positive regulation of DNA-templated transcription
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)&#34;
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;alkA induction ≈60‑fold by MMS&#34;
+- term:
+    id: GO:0006974
+    label: DNA damage response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Ada is a central component of the bacterial adaptive response to DNA alkylation
+      damage. It both directly repairs alkylated DNA and activates transcription of
+      additional repair genes. The deep research describes: &#34;The adaptive (Ada) response:
+      In E. coli, Ada upregulates ada, alkA, alkB and aidB in response to sublethal
+      methylating agents such as MMS (SN2) and MNNG (SN1). This framework provides
+      the baseline for evaluating species-specific variations in Pseudomonas&#34;
+      [ada-deep-research-falcon.md]. In P. putida, the system shows organism-specific
+      features but the core response mechanism is conserved.
+    action: ACCEPT
+    reason: &gt;-
+      Ada is a core component of the cellular response to DNA damage, specifically
+      alkylation damage. It integrates both repair (direct reversal of lesions) and
+      signaling (transcriptional activation of repair genes) functions, making this
+      biological process annotation appropriate.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;In E. coli, Ada upregulates ada, alkA, alkB and aidB in response to sublethal methylating agents such as MMS (SN2) and MNNG (SN1)&#34;
+- term:
+    id: GO:0008168
+    label: methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Ada has methyltransferase activity, transferring methyl groups from alkylated
+      DNA to its own cysteine residues. However, this general term is subsumed by the
+      more specific GO:0003908 (methylated-DNA-[protein]-cysteine S-methyltransferase
+      activity) which precisely describes the enzymatic mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This term is too general. The specific methyltransferase activity of Ada is
+      already captured by GO:0003908 (methylated-DNA-[protein]-cysteine S-methyltransferase
+      activity). Keeping this broad parent term adds no informational value.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      The N-terminal domain of Ada contains a zinc-binding cluster that coordinates
+      Zn2+ through four cysteine residues. The UniProt record identifies zinc-binding
+      residues at positions 36, 40, 67, and 70. The deep research confirms zinc binding
+      is a conserved feature: &#34;N-terminal Cys cluster (Ec Cys38 + Cys42/69/72) that
+      coordinates Zn2+; inference for PpAda based on sequence conservation&#34;
+      [ada-deep-research-falcon.md]. The zinc is essential for the N-terminal
+      methylphosphotriester repair activity and for structural integrity.
+    action: ACCEPT
+    reason: &gt;-
+      Zinc binding is a core property of the Ada N-terminal domain. The zinc-coordinating
+      cysteine cluster is conserved across Ada proteins and is essential for the
+      methylphosphotriester repair function. UniProt provides direct evidence for
+      zinc-binding residues in this protein.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;N‑terminal Cys cluster (Ec Cys38 + Cys42/69/72) that coordinates Zn2+; inference for PpAda based on sequence conservation&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Ada has transferase activity as it transfers methyl groups. This is a very
+      general parent term that is subsumed by more specific annotations already present
+      (GO:0003908 methylated-DNA-[protein]-cysteine S-methyltransferase activity and
+      GO:0008168 methyltransferase activity).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This term is too general and provides no informative value. The specific
+      transferase activity is already captured by GO:0003908 (methylated-DNA-[protein]-
+      cysteine S-methyltransferase activity).
+- term:
+    id: GO:0032259
+    label: methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation requires careful evaluation. Ada is involved in a methylation
+      process, but it is the RECIPIENT of methylation (self-methylation during DNA
+      repair), not a methylator of other substrates. The enzyme accepts methyl groups
+      from alkylated DNA and transfers them to its own cysteine residues. This is a
+      suicidal (single-turnover) reaction that inactivates the protein. The term
+      GO:0032259 &#34;methylation&#34; typically refers to adding methyl groups TO substrates,
+      not removing them FROM substrates. Ada performs DNA DEalkylation/DEmethylation,
+      not methylation of substrates. The deep research confirms: &#34;irreversible (suicidal)
+      methyl transfer from O6‑meG/O4‑meT (C‑terminal AGT) and repair of
+      methylphosphotriesters (N‑terminal MPT activity)&#34; [ada-deep-research-falcon.md].
+    action: MODIFY
+    reason: &gt;-
+      The term &#34;methylation&#34; is misleading for Ada function. Ada removes methyl groups
+      from DNA (DNA dealkylation), it does not methylate substrates. The methyl
+      transfer to cysteine is part of the repair mechanism, not a biosynthetic
+      methylation. The correct biological process term should be GO:0035510 (DNA
+      dealkylation) which accurately describes &#34;The removal of an alkyl group from
+      one or more nucleotides within a DNA molecule.&#34;
+    proposed_replacement_terms:
+      - id: GO:0035510
+        label: DNA dealkylation
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;irreversible (suicidal) methyl transfer from O6‑meG/O4‑meT (C‑terminal AGT) and repair of methylphosphotriesters (N‑terminal MPT activity)&#34;
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada binds to specific DNA sequences called Ada boxes in the promoter regions
+      of its target genes. The deep research confirms: &#34;mutational mapping demonstrates
+      requirement of these elements for inducibility&#34; and &#34;Deleting the B box or the
+      A–B fragment in the promoter abolished inducibility&#34;
+      [ada-deep-research-falcon.md]. The protein contains a HTH araC/xylS-type
+      domain (positions 80-181) that mediates sequence-specific DNA binding.
+    action: ACCEPT
+    reason: &gt;-
+      Sequence-specific DNA binding is a core function of Ada for its transcriptional
+      regulatory activity. The protein specifically recognizes and binds to Ada box
+      motifs in target promoters, as demonstrated by mutational analysis showing that
+      deletion of these motifs abolishes Ada-dependent induction.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Deleting the B box or the A–B fragment in the promoter abolished inducibility, and ada deletion eliminated induction&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      Ada binds zinc ions through its N-terminal cysteine cluster. However, the more
+      specific term GO:0008270 (zinc ion binding) is already annotated and provides
+      more precise information.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This term is too general. The specific metal ion bound by Ada is zinc, which
+      is already captured by the more specific GO:0008270 (zinc ion binding) annotation.
+      Keeping this broad parent term adds no informational value.
+# Proposed new annotation for DNA alkylation repair
+- term:
+    id: GO:0006307
+    label: DNA alkylation repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada directly repairs alkylation damage to DNA through its methyltransferase
+      activity. The deep research describes Ada&#39;s role in &#34;The repair of alkylation
+      damage in DNA, e.g. the removal of a non-physiological alkyl group from a
+      nucleobase. This is usually mediated by DNA alkyltransferases.&#34; Ada specifically
+      repairs O6-methylguanine and O4-methylthymine lesions through direct reversal.
+      This term is more specific than the general &#34;DNA repair&#34; and accurately describes
+      Ada&#39;s biological process [ada-deep-research-falcon.md].
+    action: NEW
+    reason: &gt;-
+      This is the most appropriate biological process term for Ada&#39;s repair function.
+      Ada is a DNA alkyltransferase that specifically repairs alkylation damage, and
+      this term should be annotated in addition to or instead of the general &#34;DNA
+      repair&#34; term.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Ada proteins are bifunctional DNA repair regulators that directly reverse alkyl lesions&#34;
+# Proposed new annotation for DNA dealkylation
+- term:
+    id: GO:0035510
+    label: DNA dealkylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada catalyzes the removal of methyl groups from O6-methylguanine and O4-methylthymine
+      in DNA, which is the definition of DNA dealkylation. This is the precise biological
+      process carried out by the enzyme [ada-deep-research-falcon.md].
+    action: NEW
+    reason: &gt;-
+      This term precisely describes the biochemical process that Ada performs: removing
+      alkyl (methyl) groups from nucleotides in DNA. This should replace the misleading
+      &#34;methylation&#34; annotation.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;P. putida Ada catalyzes direct reversal of O6-alkylguanine and O4-alkylthymine via a conserved C-terminal catalytic cysteine&#34;
+# Proposed new annotation for positive regulation of transcription
+- term:
+    id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Ada acts as a transcriptional activator of the alkA-ada operon following
+      self-methylation. This is a well-characterized function demonstrated by multiple
+      studies showing that ada deletion eliminates induction of the alkA promoter
+      [ada-deep-research-falcon.md].
+    action: NEW
+    reason: &gt;-
+      This term is more specific than the general &#34;regulation of DNA-templated
+      transcription&#34; and accurately describes Ada&#39;s activator function. Ada specifically
+      activates (positively regulates) transcription of its target genes.
+    supported_by:
+      - reference_id: file:PSEPK/ada/ada-deep-research-falcon.md
+        supporting_text: &#34;Acts as transcriptional activator of the alkA–ada region in P. putida&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/ada/ada-deep-research-falcon.md
+  title: &gt;-
+    Deep research on Pseudomonas putida ada gene (PP_0706, UniProt Q88PZ2)
+  findings:
+    - statement: &gt;-
+        P. putida KT2440 Ada activates the alkA-ada operon in response to methylating
+        agents with ~60-fold induction of alkA by MMS
+    - statement: &gt;-
+        Deletion of Ada box elements (A and B boxes) abolishes promoter inducibility
+    - statement: &gt;-
+        alkB is constitutively expressed in P. putida (unlike E. coli where it is Ada-inducible)
+    - statement: &gt;-
+        alkA deletion causes extreme MMS sensitivity
+core_functions:
+  - description: &gt;-
+      The C-terminal domain of Ada contains methylated-DNA-[protein]-cysteine
+      S-methyltransferase activity (EC 2.1.1.63) that transfers methyl groups from
+      O6-methylguanine and O4-methylthymine in DNA to Cys319. This is a suicidal
+      (single-turnover) reaction that directly reverses alkylation damage.
+    molecular_function:
+      id: GO:0003908
+      label: methylated-DNA-[protein]-cysteine S-methyltransferase activity
+    directly_involved_in:
+      - id: GO:0006307
+        label: DNA alkylation repair
+      - id: GO:0035510
+        label: DNA dealkylation
+  - description: &gt;-
+      The N-terminal domain contains a zinc-coordinating cysteine cluster (Cys36,
+      Cys40, Cys67, Cys70) that repairs methylphosphotriesters in the DNA backbone.
+      Methylation of Cys36 is the signal that converts Ada into a transcriptional activator.
+    molecular_function:
+      id: GO:0008270
+      label: zinc ion binding
+    directly_involved_in:
+      - id: GO:0006307
+        label: DNA alkylation repair
+  - description: &gt;-
+      Upon methylation of the N-terminal cysteine during DNA repair, Ada gains enhanced
+      DNA-binding affinity for Ada box sequences and activates transcription of the
+      alkA-ada operon. In P. putida KT2440, this results in ~60-fold induction of alkA
+      by MMS. This provides an inducible protective response to alkylation damage.
+    molecular_function:
+      id: GO:0003700
+      label: DNA-binding transcription factor activity
+    directly_involved_in:
+      - id: GO:0045893
+        label: positive regulation of DNA-templated transcription
+      - id: GO:0006974
+        label: DNA damage response
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

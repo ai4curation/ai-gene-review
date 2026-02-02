@@ -1,0 +1,3548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buffy - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Buffy</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8T8Y5" target="_blank" class="term-link">
+                        Q8T8Y5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Buffy";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8T8Y5" data-a="DESCRIPTION: Buffy is a Drosophila melanogaster Bcl-2 family pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Buffy is a Drosophila melanogaster Bcl-2 family protein that functions primarily as an anti-apoptotic regulator. Unlike its paralog Debcl (the pro-apoptotic Bcl-2 family member), Buffy predominantly localizes to the endoplasmic reticulum via a C-terminal membrane anchor and antagonizes Debcl-driven mitochondrial apoptosis. Buffy modulates the Debcl-Drp1 axis that regulates mitochondrial fission, ROS generation, and JNK-mediated caspase activation. While primarily pro-survival in vivo, Buffy exhibits context-dependent activity and can promote cell death in specific contexts such as microchaete glial cell death. Buffy also participates in autophagy regulation during starvation responses.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0005741" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation from phylogenetic inference. While Bcl-2 family proteins typically localize to mitochondrial outer membrane, experimental evidence in Drosophila shows Buffy predominantly localizes to the endoplasmic reticulum (ER), not mitochondria, in contrast to its paralog Debcl which targets mitochondria (PMID:17205077).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental localization studies demonstrate that &#34;these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)&#34; (PMID:17205077). The C-terminal positively charged residues present in Debcl that target it to mitochondria are absent in Buffy. While an IDA annotation to GO:0005739 (mitochondrion) exists, the primary localization is ER. The IBA annotation likely reflects ancestral Bcl-2 family localization that was lost in the Buffy lineage.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    endoplasmic reticulum
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link">
+                                        PMID:17205077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015267" target="_blank" class="term-link">
+                                    GO:0015267
+                                </a>
+                            </span>
+                            <span class="term-label">channel activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0015267" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation based on phylogenetic inference from Bcl-2 family proteins. Bcl-2 family proteins can form channels in membranes. However, no direct experimental evidence demonstrates channel activity for Drosophila Buffy specifically.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While direct channel activity has not been demonstrated for Buffy specifically, this is a conserved molecular function of Bcl-2 family proteins. The IBA annotation is reasonable given the evolutionary conservation of channel-forming capability in this protein family. Buffy contains the conserved Bcl-2 domain architecture required for channel formation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000033
+                                    
+                                </span>
+                                
+                                <div class="support-text">Annotation inferences using phylogenetic trees [Bcl-2 family conserved channel activity]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0055085" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on logical inference from channel activity. Since Buffy has channel activity annotation (GO:0015267), transmembrane transport follows logically as channels mediate transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is a logical consequence of the channel activity annotation. If Buffy has channel activity (as annotated via IBA), then it participates in transmembrane transport by definition. This is an appropriate transitive closure annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    GO_REF:0000108
+                                    
+                                </span>
+                                
+                                <div class="support-text">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0006915" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB keyword mapping (Apoptosis keyword). This annotation conflates regulation of apoptosis with participation in the apoptotic process itself. Buffy is a REGULATOR of apoptosis (primarily anti-apoptotic), not a core apoptotic machinery component (PMID:12853472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a classic case of conflating regulation with participation. Buffy does not execute apoptosis - it REGULATES the apoptotic process. The literature is clear: &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein&#34; and &#34;overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis&#34; (PMID:12853472). Buffy acts upstream to modulate whether apoptosis occurs, not as part of the apoptotic execution machinery. The appropriate term is GO:0043066 (negative regulation of apoptotic process) for the primary anti-apoptotic function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    negative regulation of apoptotic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link">
+                                        PMID:12853472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein. Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProtKB subcellular location vocabulary mapping. Buffy is indeed a membrane protein with a C-terminal transmembrane anchor (PMID:17205077).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but very general annotation. Buffy is a single-pass membrane protein localized primarily to ER membranes. While more specific terms exist (GO:0005783), this general membrane annotation is not incorrect, just less informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link">
+                                        PMID:17205077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The MA in both proteins is required for the correct targeting and proapoptotic activities of these proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042981" target="_blank" class="term-link">
+                                    GO:0042981
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0042981" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro record association. This is accurate - Buffy does regulate the apoptotic process - but is less specific than the available evidence supports.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While technically correct, experimental evidence strongly supports Buffy&#39;s primary role as an ANTI-apoptotic regulator (negative regulation). &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein&#34; (PMID:12853472). The term GO:0043066 (negative regulation of apoptotic process) is more specific and better reflects the core function. The generic &#34;regulation&#34; term obscures Buffy&#39;s actual role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    negative regulation of apoptotic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link">
+                                        PMID:12853472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12853472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Buffy, a Drosophila Bcl-2 protein, has anti-apoptotic and ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0005739" data-r="PMID:12853472" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for mitochondrial localization. While Buffy can associate with mitochondria under certain conditions, the primary localization is to endoplasmic reticulum. Subsequent detailed localization studies (PMID:17205077) showed Buffy predominantly localizes to ER.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The more detailed localization study (PMID:17205077) established that &#34;BUFFY to endoplasmic reticula (ER)&#34; is the primary localization, while &#34;DEBCL predominantly to mitochondria.&#34; Buffy may transiently associate with mitochondria or be detected there under specific conditions (which may explain the original IDA), but ER is the predominant location. This annotation is not wrong but represents secondary rather than primary localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link">
+                                        PMID:17205077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097136" target="_blank" class="term-link">
+                                    GO:0097136
+                                </a>
+                            </span>
+                            <span class="term-label">Bcl-2 family protein complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36727601" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36727601
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence for existence of an apoptosis-inducing BH3-only pro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0097136" data-r="PMID:36727601" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation based on physical interaction with the BH3-only protein Sayonara. The study demonstrated that Buffy interacts biochemically with Sayonara as part of the Bcl-2 regulatory network, forming complexes with both Sayonara and Debcl (PMID:36727601).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is well-supported. The study showed &#34;Synr interacts with both BCL-2 proteins&#34; (Buffy and Debcl) and demonstrated that &#34;GST-Synr pulls down both Flag-Buffy and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr, Buffy and Debcl&#34; (PMID:36727601). This is core to Buffy&#39;s function as a Bcl-2 family regulator.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36727601" target="_blank" class="term-link">
+                                        PMID:36727601
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GST-Synr pulls down both Flag-Buffy and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr, Buffy and Debcl</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17205077
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular determinants of the subcellular localization of th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0005783" data-r="PMID:17205077" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for ER localization based on direct colocalization studies with ER markers. This is the primary localization site for Buffy, distinguishing it from the mitochondrial Debcl (PMID:17205077).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core localization annotation, directly demonstrated experimentally. &#34;Colocalization is observed with ER markers (Calnexin, ER-Tracker) and not with MitoTracker, distinguishing Buffy from mitochondrial Debcl&#34; (deep research citing PMID:17205077). The C-terminal membrane anchor lacking the basic residues present in Debcl allows Buffy to target ER rather than mitochondria.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link">
+                                        PMID:17205077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035234" target="_blank" class="term-link">
+                                    GO:0035234
+                                </a>
+                            </span>
+                            <span class="term-label">ectopic germ cell programmed cell death</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23523076" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23523076
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alternative germ cell death pathway in Drosophila involves H...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0035234" data-r="PMID:23523076" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in ectopic germ cell programmed cell death. The study identified components of the alternative germ cell death pathway in Drosophila (PMID:23523076). However, Buffy is not mentioned prominently in this study.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The PMID:23523076 abstract focuses on HtrA2/Omi, lysosomes, and Dronc in germ cell death. I could not find direct evidence for Buffy&#39;s involvement in this specific process from the available text. The annotation may be based on data within the paper not visible in the abstract/summary. Without access to the full text experimental details, I cannot confirm this annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23523076" target="_blank" class="term-link">
+                                        PMID:23523076
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In both flies and mammals, almost one-third of the newly emerging male germ cells are spontaneously eliminated before entering meiosis. Here, we show that in Drosophila, germ cell death (GCD) involves the initiator caspase Dronc independently of the apoptosome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009267" target="_blank" class="term-link">
+                                    GO:0009267
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to starvation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18794330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18794330
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Effector caspase Dcp-1 and IAP protein Bruce regulate starva...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0009267" data-r="PMID:18794330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for involvement in cellular response to starvation. The study identified Buffy among six cell death genes with a role in autophagy regulation during starvation (PMID:18794330).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The study explicitly identified Buffy as one of &#34;six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation in D. melanogaster cultured cells&#34; during starvation conditions. This reflects Buffy&#39;s pleiotropic role beyond core apoptotic regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18794330" target="_blank" class="term-link">
+                                        PMID:18794330
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We discovered that six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation in D. melanogaster cultured cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016239" target="_blank" class="term-link">
+                                    GO:0016239
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of macroautophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18794330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18794330
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Effector caspase Dcp-1 and IAP protein Bruce regulate starva...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0016239" data-r="PMID:18794330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for positive regulation of macroautophagy based on the starvation-induced autophagy study. Buffy was identified as having a role in autophagy regulation (PMID:18794330).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The systematic study of cell death genes in autophagy regulation identified Buffy as having a role in starvation-induced autophagy. This is consistent with the crosstalk between Bcl-2 family proteins and autophagy regulation observed in both Drosophila and mammals. The annotation reflects Buffy&#39;s pleiotropic functions beyond apoptosis regulation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18794330" target="_blank" class="term-link">
+                                        PMID:18794330
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12853472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Buffy, a Drosophila Bcl-2 protein, has anti-apoptotic and ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0043066" data-r="PMID:12853472" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for the core anti-apoptotic function of Buffy. This is the primary biological function of Buffy based on extensive genetic and molecular evidence (PMID:12853472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the CORE function annotation for Buffy. The foundational study demonstrated that &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein. Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis.&#34; Buffy genetically and physically interacts with Debcl to suppress Debcl-induced cell death.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link">
+                                        PMID:12853472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein. Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis. Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                    GO:0043066
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12853472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Buffy, a Drosophila Bcl-2 protein, has anti-apoptotic and ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0043066" data-r="PMID:12853472" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation based on genetic interaction with Debcl. Buffy antagonizes Debcl-induced apoptosis through genetic interaction (PMID:12853472).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures the genetic interaction evidence that Buffy suppresses Debcl-induced apoptosis. &#34;Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death&#34; and &#34;Genetic interactions suggest that Buffy acts downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc.&#34;
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link">
+                                        PMID:12853472
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death. Genetic interactions suggest that Buffy acts downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043068" target="_blank" class="term-link">
+                                    GO:0043068
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of programmed cell death</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20558283
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    grim promotes programmed cell death of Drosophila microchaet...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0043068" data-r="PMID:20558283" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for a context-specific pro-apoptotic role of Buffy in microchaete glial cell death. This represents a context-dependent reversal of Buffy&#39;s typical anti-apoptotic function (PMID:20558283).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation captures a well-documented context-dependent pro-apoptotic role. The study found that &#34;Loss of buffy led to microchaete glial cell survival and suppressed death in the eye induced by ectopic Grim. This is the first example of a developmental PCD process influenced by buffy, and places buffy in a proapoptotic role.&#34; This demonstrates Buffy&#39;s context-dependent activity and should be retained as a non-core annotation reflecting this specific context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link">
+                                        PMID:20558283
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Loss of buffy led to microchaete glial cell survival and suppressed death in the eye induced by ectopic Grim. This is the first example of a developmental PCD process influenced by buffy, and places buffy in a proapoptotic role.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043068" target="_blank" class="term-link">
+                                    GO:0043068
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of programmed cell death</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20558283
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    grim promotes programmed cell death of Drosophila microchaet...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8T8Y5" data-a="GO:0043068" data-r="PMID:20558283" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IGI annotation based on genetic interaction with Grim in microchaete glial cell death. Buffy shows context-dependent pro-apoptotic activity in this specific developmental context (PMID:20558283).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The genetic interaction with Grim places Buffy in a pro-apoptotic role in this specific context. &#34;Grim associates with mitochondria and has been shown to activate a mitochondrial death pathway distinct from IAP antagonization; therefore, the Drosophila bcl-2 genes buffy and debcl were investigated for genetic interaction with grim.&#34; This annotation appropriately captures the context-dependent nature of Buffy&#39;s function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link">
+                                        PMID:20558283
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the Drosophila bcl-2 genes buffy and debcl were investigated for genetic interaction with grim. Loss of buffy led to microchaete glial cell survival and suppressed death in the eye induced by ectopic Grim.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Buffy is primarily an anti-apoptotic Bcl-2 family protein. Ablation causes ectopic apoptosis; overexpression suppresses developmental and irradiation-induced apoptosis. Antagonizes Debcl-driven mitochondrial apoptosis by modulating Drp1 axis.</h3>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="FUNCTION: Buffy is primarily an anti-apoptotic Bcl-2 family ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015267" target="_blank" class="term-link">
+                            channel activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043066" target="_blank" class="term-link">
+                                negative regulation of apoptotic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                endoplasmic reticulum
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097136" target="_blank" class="term-link">
+                            Bcl-2 family protein complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Bcl-2 family InterPro domain associated with regulation of apoptotic process</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference of Bcl-2 family conserved functions</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Apoptosis keyword mapped to apoptotic process (should be regulation term)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Membrane protein annotation based on UniProt localization data</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Transmembrane transport inferred from channel activity</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12853472" target="_blank" class="term-link">
+                            PMID:12853472
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Buffy, a Drosophila Bcl-2 protein, has anti-apoptotic and cell cycle inhibitory functions.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Buffy is a pro-survival Bcl-2 family protein</div>
+                        
+                        <div class="finding-text">"Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression inhibits developmental and irradiation-induced apoptosis</div>
+                        
+                        <div class="finding-text">"overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Physically and genetically interacts with Debcl to suppress cell death</div>
+                        
+                        <div class="finding-text">"Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Acts downstream of Rpr, Grim, Hid and upstream of Dronc</div>
+                        
+                        <div class="finding-text">"Genetic interactions suggest that Buffy acts downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17205077" target="_blank" class="term-link">
+                            PMID:17205077
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular determinants of the subcellular localization of the Drosophila Bcl-2 homologues DEBCL and BUFFY.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Buffy localizes to endoplasmic reticulum, not mitochondria</div>
+                        
+                        <div class="finding-text">"these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Debcl localizes to mitochondria</div>
+                        
+                        <div class="finding-text">"DEBCL predominantly to mitochondria"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">C-terminal membrane anchor required for localization</div>
+                        
+                        <div class="finding-text">"The MA in both proteins is required for the correct targeting"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Lack of basic residues in Buffy MA allows ER targeting</div>
+                        
+                        <div class="finding-text">"The C-terminal positively charged residues present in DEBCL are absent in BUFFY, which allows for its localization to ER"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18794330" target="_blank" class="term-link">
+                            PMID:18794330
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Effector caspase Dcp-1 and IAP protein Bruce regulate starvation-induced autophagy during Drosophila melanogaster oogenesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Buffy identified as regulator of starvation-induced autophagy</div>
+                        
+                        <div class="finding-text">"six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link">
+                            PMID:20558283
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">grim promotes programmed cell death of Drosophila microchaete glial cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Buffy has context-dependent pro-apoptotic role</div>
+                        
+                        <div class="finding-text">"This is the first example of a developmental PCD process influenced by buffy, and places buffy in a proapoptotic role"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of Buffy causes glial cell survival in microchaete lineage</div>
+                        
+                        <div class="finding-text">"Loss of buffy led to microchaete glial cell survival"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23523076" target="_blank" class="term-link">
+                            PMID:23523076
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Alternative germ cell death pathway in Drosophila involves HtrA2/Omi, lysosomes, and a caspase-9 counterpart.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes alternative germ cell death pathway involving Dronc, HtrA2, lysosomes</div>
+                        
+                        <div class="finding-text">"germ cell death (GCD) involves the initiator caspase Dronc independently of the apoptosome and the main executioner caspases"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36727601" target="_blank" class="term-link">
+                            PMID:36727601
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evidence for existence of an apoptosis-inducing BH3-only protein, sayonara, in Drosophila.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Sayonara is first Drosophila BH3-only protein</div>
+                        
+                        <div class="finding-text">"Here, we identify the first Drosophila BH3-only protein and name it sayonara"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Interacts genetically and biochemically with Buffy and Debcl</div>
+                        
+                        <div class="finding-text">"Sayonara induces apoptosis in a BH3 motif-dependent manner and interacts genetically and biochemically with the BCL-2 homologous proteins, Buffy and Debcl"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Forms complexes with both Bcl-2 proteins</div>
+                        
+                        <div class="finding-text">"GST-Synr pulls down both Flag-Buffy and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr, Buffy and Debcl"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the structural basis for Buffy&#39;s context-dependent switch between anti-apoptotic and pro-apoptotic activities?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="Q: What is the structural basis for Buffy&#39;s context-d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does Buffy&#39;s ER localization contribute to its anti-apoptotic function, given that most Bcl-2 regulation occurs at mitochondria?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="Q: How does Buffy&#39;s ER localization contribute to its..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What post-translational modifications regulate Buffy activity in different cellular contexts?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="Q: What post-translational modifications regulate Buf..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> High-resolution imaging to determine whether Buffy translocates to mitochondria under specific stress conditions</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Buffy may transiently relocalize to mitochondria during specific apoptotic stimuli</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="EXPERIMENT: High-resolution imaging to determine whether Buffy..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structural analysis of Buffy-Sayonara-Debcl complex formation</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Complex stoichiometry determines pro-survival vs pro-death outcome</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="EXPERIMENT: Structural analysis of Buffy-Sayonara-Debcl comple..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Tissue-specific transcriptomics to understand context-dependent pro-death vs pro-survival roles</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Tissue-specific factors determine Buffy&#39;s functional polarity</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8T8Y5" data-a="EXPERIMENT: Tissue-specific transcriptomics to understand cont..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Buffy-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8T8Y5" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-30T20:47:51.273393'<br />
+end_time: '2026-01-30T20:52:45.197407'<br />
+duration_seconds: 293.92<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: DROME<br />
+  gene_id: Buffy<br />
+  gene_symbol: Buffy<br />
+  uniprot_accession: Q8T8Y5<br />
+  protein_description: 'SubName: Full=AT16536p {ECO:0000313|EMBL:AAL68086.1}; SubName:<br />
+    Full=Buffy {ECO:0000313|EMBL:AAF58628.3};'<br />
+  gene_info: Name=Buffy {ECO:0000313|EMBL:AAL68086.1, ECO:0000313|FlyBase:FBgn0040491};<br />
+    Synonyms=Bcl-2-48AE {ECO:0000313|EMBL:AAF58628.3}, BUFFY {ECO:0000313|EMBL:AAF58628.3},<br />
+    buffy {ECO:0000313|EMBL:AAF58628.3}, Buffy/Borg2 {ECO:0000313|EMBL:AAF58628.3},<br />
+    Buffy/DBorg-2 {ECO:0000313|EMBL:AAF58628.3}, Buffy/dBorg-2 {ECO:0000313|EMBL:AAF58628.3},<br />
+    dBorg-2 {ECO:0000313|EMBL:AAF58628.3}, dBORG-2/BUFFY {ECO:0000313|EMBL:AAF58628.3},<br />
+    dBorg2 {ECO:0000313|EMBL:AAF58628.3}, dbuffy {ECO:0000313|EMBL:AAF58628.3}, Dbx<br />
+    {ECO:0000313|EMBL:AAF58628.3}, Dmel\CG8238 {ECO:0000313|EMBL:AAF58628.3}, Drob2<br />
+    {ECO:0000313|EMBL:AAF58628.3}; ORFNames=CG8238 {ECO:0000313|EMBL:AAF58628.3, ECO:0000313|FlyBase:FBgn0040491},<br />
+    Dmel_CG8238 {ECO:0000313|EMBL:AAF58628.3};<br />
+  organism_full: Drosophila melanogaster (Fruit fly).<br />
+  protein_family: Belongs to the Bcl-2 family.<br />
+  protein_domains: Bcl-2-like_sf. (IPR036834); Bcl-2_BH1-3. (IPR046371); Bcl-2_fam.<br />
+    (IPR026298); Bcl2-like. (IPR002475); Bcl-2 (PF00452)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 19</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8T8Y5</li>
+<li><strong>Protein Description:</strong> SubName: Full=AT16536p {ECO:0000313|EMBL:AAL68086.1}; SubName: Full=Buffy {ECO:0000313|EMBL:AAF58628.3};</li>
+<li><strong>Gene Information:</strong> Name=Buffy {ECO:0000313|EMBL:AAL68086.1, ECO:0000313|FlyBase:FBgn0040491}; Synonyms=Bcl-2-48AE {ECO:0000313|EMBL:AAF58628.3}, BUFFY {ECO:0000313|EMBL:AAF58628.3}, buffy {ECO:0000313|EMBL:AAF58628.3}, Buffy/Borg2 {ECO:0000313|EMBL:AAF58628.3}, Buffy/DBorg-2 {ECO:0000313|EMBL:AAF58628.3}, Buffy/dBorg-2 {ECO:0000313|EMBL:AAF58628.3}, dBorg-2 {ECO:0000313|EMBL:AAF58628.3}, dBORG-2/BUFFY {ECO:0000313|EMBL:AAF58628.3}, dBorg2 {ECO:0000313|EMBL:AAF58628.3}, dbuffy {ECO:0000313|EMBL:AAF58628.3}, Dbx {ECO:0000313|EMBL:AAF58628.3}, Dmel\CG8238 {ECO:0000313|EMBL:AAF58628.3}, Drob2 {ECO:0000313|EMBL:AAF58628.3}; ORFNames=CG8238 {ECO:0000313|EMBL:AAF58628.3, ECO:0000313|FlyBase:FBgn0040491}, Dmel_CG8238 {ECO:0000313|EMBL:AAF58628.3};</li>
+<li><strong>Organism (full):</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Protein Family:</strong> Belongs to the Bcl-2 family.</li>
+<li><strong>Key Domains:</strong> Bcl-2-like_sf. (IPR036834); Bcl-2_BH1-3. (IPR046371); Bcl-2_fam. (IPR026298); Bcl2-like. (IPR002475); Bcl-2 (PF00452)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Buffy" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Buffy' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Buffy</strong> (gene ID: Buffy, UniProt: Q8T8Y5) in DROME.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q8T8Y5</li>
+<li><strong>Protein Description:</strong> SubName: Full=AT16536p {ECO:0000313|EMBL:AAL68086.1}; SubName: Full=Buffy {ECO:0000313|EMBL:AAF58628.3};</li>
+<li><strong>Gene Information:</strong> Name=Buffy {ECO:0000313|EMBL:AAL68086.1, ECO:0000313|FlyBase:FBgn0040491}; Synonyms=Bcl-2-48AE {ECO:0000313|EMBL:AAF58628.3}, BUFFY {ECO:0000313|EMBL:AAF58628.3}, buffy {ECO:0000313|EMBL:AAF58628.3}, Buffy/Borg2 {ECO:0000313|EMBL:AAF58628.3}, Buffy/DBorg-2 {ECO:0000313|EMBL:AAF58628.3}, Buffy/dBorg-2 {ECO:0000313|EMBL:AAF58628.3}, dBorg-2 {ECO:0000313|EMBL:AAF58628.3}, dBORG-2/BUFFY {ECO:0000313|EMBL:AAF58628.3}, dBorg2 {ECO:0000313|EMBL:AAF58628.3}, dbuffy {ECO:0000313|EMBL:AAF58628.3}, Dbx {ECO:0000313|EMBL:AAF58628.3}, Dmel\CG8238 {ECO:0000313|EMBL:AAF58628.3}, Drob2 {ECO:0000313|EMBL:AAF58628.3}; ORFNames=CG8238 {ECO:0000313|EMBL:AAF58628.3, ECO:0000313|FlyBase:FBgn0040491}, Dmel_CG8238 {ECO:0000313|EMBL:AAF58628.3};</li>
+<li><strong>Organism (full):</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Protein Family:</strong> Belongs to the Bcl-2 family.</li>
+<li><strong>Key Domains:</strong> Bcl-2-like_sf. (IPR036834); Bcl-2_BH1-3. (IPR046371); Bcl-2_fam. (IPR026298); Bcl2-like. (IPR002475); Bcl-2 (PF00452)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "Buffy" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Drosophila melanogaster (Fruit fly).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'Buffy' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>Buffy</strong> (gene ID: Buffy, UniProt: Q8T8Y5) in DROME.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan overview<br />
+Objectives: (1) verify identity and domains; (2) compile foundational and recent (2023–2024) literature; (3) extract molecular function, partners, localization, and pathway roles; (4) synthesize applications, expert views, and quantitative data; (5) present a concise evidence table; (6) write a comprehensive, fully cited report.</p>
+<p>Comprehensive research report: Drosophila melanogaster Buffy (CG8238; UniProt Q8T8Y5)</p>
+<p>Identity verification and domain context<br />
+- Gene/protein identity: Buffy is a Drosophila melanogaster Bcl‑2 family protein encoded by CG8238 (also referred to as dBorg-2/BUFFY), consistent with the UniProt entry for Q8T8Y5 and the Bcl‑2 family/domain architecture noted in primary literature and reviews (Bcl‑2-like fold with BH motifs) (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Organism and family: Studies explicitly examine Drosophila Buffy and its paralog Debcl (the pro-apoptotic Bcl‑2 family member) within the fly apoptotic machinery, confirming organism and family alignment (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2, clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Key concepts and definitions (current understanding)<br />
+- Buffy is a Bcl‑2 family member that regulates apoptosis and other stress responses in Drosophila. Unlike mammalian Bcl‑2 homologs that predominantly act at mitochondria, Buffy often localizes to the endoplasmic reticulum (ER) via a C‑terminal membrane anchor, and exhibits context-dependent pro‑survival and pro‑death activities (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Debcl is the pro-apoptotic fly Bcl‑2 family protein with mitochondrial outer membrane targeting; Buffy frequently antagonizes Debcl to modulate mitochondrial fragmentation, ROS, JNK activation, and caspase-mediated cell death (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Molecular function, partners, and pathway roles<br />
+- Molecular function: Buffy functions primarily as an anti-apoptotic factor in many in vivo contexts, protecting from stress- or pro-apoptotic gene–induced death; however, overexpression can induce apoptosis in cultured cells, indicating context-dependent activity (clavier2016apoptosisindrosophila pages 7-9, doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2).<br />
+- Partners and genetic interactions: Buffy physically and genetically opposes Debcl; co-expression experiments and genetic epistasis indicate modulation of a Debcl–Drp1 axis that regulates mitochondrial fission, ROS generation, JNK activation, and downstream apoptosis (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9). Reviews also note that the pro-apoptotic Grim peptide binds both Buffy and Debcl, linking Buffy to RHG-factor pathways (clavier2016apoptosisindrosophila pages 7-9). In aging/neurodegeneration models, Buffy modifies Drp1-dependent phenotypes, further supporting functional linkage to mitochondrial dynamics (hasan2024bcl2orthologuesbuffy pages 1-2, hasan2024bcl2orthologuesbuffy pages 14-15).<br />
+- Pathway placement: In Rbf1-triggered apoptosis, Buffy downregulation contributes to activation of a Debcl/Drp1-dependent mitochondrial pathway that produces ROS, activates JNK, and culminates in caspase-dependent cell death; Buffy antagonism of Debcl/Drp1 interactions places it upstream as a pro-survival brake (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Subcellular localization and determinants<br />
+- Primary localization: Buffy predominantly localizes to ER membranes in fly and insect cells. Colocalization is observed with ER markers (Calnexin, ER-Tracker) and not with MitoTracker, distinguishing Buffy from mitochondrial Debcl (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2).<br />
+- Determinants: A C‑terminal hydrophobic membrane anchor (MA) is required for membrane targeting and pro-death activity in BG2 cells; deleting the MA mislocalizes Buffy (including nuclear accumulation) and abolishes its killing activity in this assay (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2). An N-terminal basic nuclear localization signal (e.g., KRRLRR) can drive nuclear targeting in fusion constructs, but in the intact protein the C‑terminal MA dominates localization (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2). Debcl’s MA is flanked by basic residues that favor the mitochondrial outer membrane, which Buffy lacks, explaining distinct localization (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2).</p>
+<p>Roles in apoptosis in Drosophila and mechanistic details<br />
+- Stress-induced apoptosis: Genetic analyses show Drosophila Bcl‑2 proteins (Buffy and Debcl) participate in stress-induced apoptosis but are not essential for normal development; single and double mutants are viable, indicating developmental redundancy with core RHG-caspase pathways (doumanis2007moleculardeterminantsof pages 1-2). In irradiation paradigms, buffy mutants show modest increases in apoptotic cells, whereas debcl mutants show fewer, consistent with Buffy’s predominant pro-survival and Debcl’s pro-death roles (clavier2016apoptosisindrosophila pages 6-7).<br />
+- Mitochondrial dynamics and signaling: Debcl promotes Drp1 mitochondrial localization and mitochondrial fragmentation; Rbf1-induced apoptosis requires Debcl and Drp1 and generates ROS that drive JNK activation. Buffy antagonizes these interactions, reducing mitochondrial fragmentation and downstream death signaling (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).<br />
+- RHG and Grim linkage: Buffy and Debcl have reported interactions with Grim, linking Bcl‑2 family control to RHG-induced apoptosis, though the exact molecular interfaces in vivo remain an active area (clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Loss- and gain-of-function phenotypes and model systems<br />
+- Loss-of-function: buffy mutants are viable, with sensitization to specific stressors (e.g., irradiation), consistent with a modulatory role rather than an essential developmental requirement (doumanis2007moleculardeterminantsof pages 1-2, clavier2016apoptosisindrosophila pages 6-7).<br />
+- Gain-of-function: Buffy overexpression can suppress Debcl-induced apoptosis in tissues such as wing and eye, and counteract Rpr/Hid/Grim-induced degeneration in the eye; however, Buffy overexpression can also induce apoptosis in BG2 cells and enhance degeneration in some polyglutamine models, illustrating context dependence (clavier2016apoptosisindrosophila pages 7-9, doumanis2007moleculardeterminantsof pages 2-4).<br />
+- Neurodegeneration and aging models: Altering Drp1 recapitulates age-related locomotor decline and lifespan defects; Buffy overexpression partially rescues climbing defects and lifespan reductions caused by Drp1 overexpression, and improves locomotion defects caused by Drp1 knockdown—supporting a pro-survival, mitochondria-modulating role of Buffy in neuronal contexts (hasan2024bcl2orthologuesbuffy pages 1-2, hasan2024bcl2orthologuesbuffy pages 14-15).</p>
+<p>Recent developments and latest research (2023–2024)<br />
+- 2024: Buffy and Debcl modulate Drp1-dependent age-related phenotypes in Drosophila. Overexpressed Buffy suppresses locomotor decline and lifespan reductions from Drp1 overexpression, and improves locomotor deficits from Drp1 knockdown in selective neurons (Ddc-Gal4). Debcl knockdown also suppresses Drp1 overexpression phenotypes, consistent with antagonistic functions between Buffy and Debcl in mitochondrial stress contexts (Biomolecules 14:1089, published Aug 30, 2024; URL/DOI: https://doi.org/10.3390/biom14091089) (hasan2024bcl2orthologuesbuffy pages 1-2, hasan2024bcl2orthologuesbuffy pages 14-15).</p>
+<p>Current applications and real-world implementations<br />
+- Genetic modifier in neurodegeneration models: Buffy is used as a genetic tool to mitigate mitochondrial dysfunction and neurodegenerative phenotypes in fly models (e.g., Drp1-linked ALS/Parkinson’s model contexts), enabling screens for pathway components and therapeutic modifiers (hasan2024bcl2orthologuesbuffy pages 1-2, clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Pathway dissection of mitochondrial apoptosis: The Buffy–Debcl–Drp1 axis provides a tractable system to parse mitochondrial fragmentation, ROS-driven JNK signaling, and caspase activation in vivo, with fly genetics allowing temporal/spatial control (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Expert opinions and synthesis from authoritative sources<br />
+- Reviews emphasize that Drosophila Bcl‑2 proteins display context-dependent roles and are not strictly essential for development, but critically modulate stress-induced death and mitochondrial signaling. Buffy generally exhibits pro-survival activity in vivo and antagonizes Debcl-driven mitochondrial apoptosis; yet, cellular overexpression studies reveal potential pro-apoptotic activity, underscoring the importance of cellular context, subcellular localization, and expression levels (clavier2016apoptosisindrosophila pages 7-9, doumanis2007moleculardeterminantsof pages 1-2).</p>
+<p>Relevant statistics and data points (from recent and key studies)<br />
+- Drp1 perturbation phenotypes: In 2024, neuronal Drp1 overexpression reduced median lifespan and caused age-progressive locomotor deficits; Buffy co-overexpression suppressed both lifespan and locomotor impairments, while Debcl knockdown similarly suppressed Drp1 overexpression phenotypes; Drp1 knockdown caused chronic locomotor impairment that was alleviated by Buffy overexpression (qualitative trends reported; article-level data available at the DOI) (hasan2024bcl2orthologuesbuffy pages 1-2, hasan2024bcl2orthologuesbuffy pages 14-15).<br />
+- Cellular assays of localization and function: ER localization of Buffy and requirement of its C‑terminal MA for pro-death activity in BG2 cells were demonstrated by marker co-localization and loss-of-function MA deletions; Debcl’s mitochondrial targeting depends on basic residues flanking its transmembrane segment (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2).</p>
+<p>Limitations and open questions<br />
+- The biochemical interfaces by which Buffy antagonizes Debcl–Drp1 interactions are not fully resolved; evidence is strong for genetic and functional antagonism, but high-resolution structural/biophysical binding data remain limited in flies (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Context dependence suggests that subcellular localization, expression level, and tissue state tune Buffy’s activity; further in vivo quantitative analyses would clarify conditions yielding pro-death versus pro-survival outcomes (clavier2016apoptosisindrosophila pages 7-9, doumanis2007moleculardeterminantsof pages 2-4).</p>
+<p>Verification of the mandatory identity checks<br />
+- Symbol and description: Literature explicitly refers to Buffy as the Drosophila Bcl‑2 family protein consistent with CG8238 and the UniProt Q8T8Y5 entry (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Organism: All cited primary studies and reviews are in Drosophila melanogaster systems (doumanis2007moleculardeterminantsof pages 2-4, clavier2015thedrosophilaretinoblastoma pages 1-2, doumanis2007moleculardeterminantsof pages 1-2, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Family/domains: Buffy is consistently classified as a Bcl‑2 family member with Bcl‑2-like domain architecture and BH motifs; localization and function depend on a conserved C‑terminal membrane anchor consistent with Bcl‑2 family topology (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9).<br />
+- Ambiguity: No conflicting gene symbol usage was found within the Drosophila literature; “Buffy” in these sources corresponds to the fly Bcl‑2 family protein and not to unrelated genes in other organisms (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9).</p>
+<p>Key sources with URLs and publication dates<br />
+- Doumanis J, Dorstyn L, Kumar S. Molecular determinants of the subcellular localization of the Drosophila Bcl‑2 homologues DEBCL and BUFFY. Cell Death Differ. 14:907–915. Published May 2007. URL: https://doi.org/10.1038/sj.cdd.4402082 (doumanis2007moleculardeterminantsof pages 2-4, doumanis2007moleculardeterminantsof pages 1-2).<br />
+- Clavier A, Ruby V, Rincheval-Arnold A, Mignotte B, Guénal I. The Drosophila retinoblastoma protein, Rbf1, induces a Debcl‑ and Drp1‑dependent mitochondrial apoptosis. J Cell Sci. 128:3239–3249. Published Sep 2015. URL: https://doi.org/10.1242/jcs.169896 (clavier2015thedrosophilaretinoblastoma pages 1-2).<br />
+- Clavier A, Rincheval-Arnold A, Colin J, Mignotte B, Guénal I. Apoptosis in Drosophila: which role for mitochondria? Apoptosis. 21:239–251. Published Dec 2016. URL: https://doi.org/10.1007/s10495-015-1209-y (clavier2016apoptosisindrosophila pages 7-9, clavier2016apoptosisindrosophila pages 6-7).<br />
+- Sevrioukov EA, et al. Drosophila Bcl‑2 proteins participate in stress-induced apoptosis, but are not required for normal development. genesis. 45:184–193. Published Apr 2007. URL: https://doi.org/10.1002/dvg.20279 (doumanis2007moleculardeterminantsof pages 1-2).<br />
+- Hasan A, Staveley BE. Bcl‑2 Orthologues, Buffy and Debcl, Can Suppress Drp1‑Dependent Age‑Related Phenotypes in Drosophila. Biomolecules. 14:1089. Published Aug 30, 2024. URL: https://doi.org/10.3390/biom14091089 (hasan2024bcl2orthologuesbuffy pages 1-2, hasan2024bcl2orthologuesbuffy pages 14-15).<br />
+- Nakazawa M, et al. The Human Bcl‑2 Family Member Bcl‑rambo Localizes to Mitochondria and Induces Apoptosis and Morphological Aberrations in Drosophila. PLoS ONE. 11:e0157823. Published Jun 2016. URL: https://doi.org/10.1371/journal.pone.0157823 (nakazawa2016thehumanbcl2 pages 23-23).</p>
+<p>Embedded evidence summary<br />
+| Topic | Key Findings | Primary Sources (with DOI URLs) | Publication Year |<br />
+|---|---|---|---|<br />
+| Identity verification | Buffy is a Drosophila melanogaster Bcl-2 family protein (gene CG8238) described as an anti-apoptotic Bcl-2 homologue in flies. | Doumanis J. et al., "Molecular determinants of the subcellular localization of the Drosophila Bcl-2 homologues DEBCL and BUFFY" https://doi.org/10.1038/sj.cdd.4402082; Clavier A. et al., "The Drosophila retinoblastoma protein, Rbf1..." https://doi.org/10.1242/jcs.169896 (doumanis2007moleculardeterminantsof pages 2-4, clavier2015thedrosophilaretinoblastoma pages 1-2) | 2007, 2015 |<br />
+| Domains / Family | Buffy belongs to the Bcl-2 family with BH motifs (Bcl-2-like domains) consistent with pro-/anti-apoptotic regulatory roles. | Clavier A. et al., Apoptosis review https://doi.org/10.1007/s10495-015-1209-y; Doumanis J. et al. https://doi.org/10.1038/sj.cdd.4402082 (clavier2016apoptosisindrosophila pages 7-9, doumanis2007moleculardeterminantsof pages 2-4) | 2016, 2007 |<br />
+| Subcellular localization &amp; determinants | Buffy localizes primarily to endoplasmic reticulum (ER) via a C-terminal membrane anchor (MA); MA deletion shifts localization (nuclear/cytosolic) and abolishes activity; contrasts with Debcl which targets mitochondria. | Doumanis J. et al., Cell Death Differ. https://doi.org/10.1038/sj.cdd.4402082 (doumanis2007moleculardeterminantsof pages 2-4) | 2007 |<br />
+| Molecular function &amp; pathway role | Buffy acts context-dependently as anti-apoptotic (protects against irradiation, Diap1 loss, rpr/hid/grim) but can be pro-death when overexpressed; it modulates mitochondrial apoptosis by antagonizing Debcl–Drp1–mediated mitochondrial fragmentation, ROS and JNK activation. | Clavier A. et al., J Cell Sci. https://doi.org/10.1242/jcs.169896; Clavier A. et al., Apoptosis review https://doi.org/10.1007/s10495-015-1209-y (clavier2015thedrosophilaretinoblastoma pages 1-2, clavier2016apoptosisindrosophila pages 7-9) | 2015, 2016 |<br />
+| Key genetic / biochemical interactions | Buffy antagonizes the pro-apoptotic Debcl; Buffy and Debcl co-expression enhances or modulates cell death outcomes; Debcl interacts with Drp1 to promote mitochondrial fragmentation; Buffy can inhibit Debcl–Drp1 interaction; Buffy also reported to interact with Grim. | Clavier A. et al., J Cell Sci. https://doi.org/10.1242/jcs.169896; Doumanis J. et al. https://doi.org/10.1038/sj.cdd.4402082; Clavier Apoptosis review https://doi.org/10.1007/s10495-015-1209-y (clavier2015thedrosophilaretinoblastoma pages 1-2, doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9) | 2015, 2007, 2016 |<br />
+| Loss- and gain-of-function phenotypes | buffy mutants are viable but show increased sensitivity to stress (e.g., irradiation); overexpression can induce apoptosis in cultured cells and modify neurodegeneration models; Buffy overexpression can suppress Drp1-induced locomotor and lifespan defects. | Doumanis J. et al. https://doi.org/10.1038/sj.cdd.4402082; Clavier A. et al., Apoptosis review https://doi.org/10.1007/s10495-015-1209-y; Hasan A. &amp; Staveley B.E., Biomolecules https://doi.org/10.3390/biom14091089 (doumanis2007moleculardeterminantsof pages 2-4, clavier2016apoptosisindrosophila pages 7-9, hasan2024bcl2orthologuesbuffy pages 1-2) | 2007, 2016, 2024 |<br />
+| 2023–2024 findings | Recent (2024) work reports Buffy (anti-apoptotic) can suppress Drp1-dependent age-related, neurodegeneration-like phenotypes in Drosophila (improves climbing, rescues lifespan deficits) and modulates Drp1/Bcl-2 pathway interactions in aging/neurodegeneration models. | Hasan A. &amp; Staveley B.E., "Bcl-2 Orthologues, Buffy and Debcl, Can Suppress Drp1-Dependent Age-Related Phenotypes in Drosophila" https://doi.org/10.3390/biom14091089 (hasan2024bcl2orthologuesbuffy pages 1-2) | 2024 |</p>
+<p><em>Table: Concise summary of identity, domains, localization, function, interactions, phenotypes, and 2023–2024 findings for Drosophila Buffy (CG8238; UniProt Q8T8Y5), with primary-source DOIs and context citations for traceability.</em></p>
+<p>Conclusions<br />
+Buffy (CG8238; UniProt Q8T8Y5) is a Drosophila Bcl‑2 family protein that localizes predominantly to the ER via a C‑terminal membrane anchor and modulates apoptosis in a context-dependent manner. In vivo, Buffy is largely pro‑survival, antagonizing Debcl-driven mitochondrial apoptosis linked to Drp1, ROS, and JNK signaling, while specific overexpression contexts can render it pro-apoptotic in cells. Recent 2024 data show Buffy can ameliorate Drp1‑dependent locomotor and lifespan phenotypes in fly aging/neurodegeneration models, underscoring its role as a genetic modifier of mitochondrial dysfunction and a useful tool for dissecting apoptosis–mitochondria cross-talk in vivo (doumanis2007moleculardeterminantsof pages 2-4, clavier2015thedrosophilaretinoblastoma pages 1-2, doumanis2007moleculardeterminantsof pages 1-2, clavier2016apoptosisindrosophila pages 7-9, hasan2024bcl2orthologuesbuffy pages 1-2).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(doumanis2007moleculardeterminantsof pages 2-4): J. Doumanis, L. Dorstyn, and S. Kumar. Molecular determinants of the subcellular localization of the drosophila bcl-2 homologues debcl and buffy. Cell Death and Differentiation, 14:907-915, May 2007. URL: https://doi.org/10.1038/sj.cdd.4402082, doi:10.1038/sj.cdd.4402082. This article has 39 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(clavier2016apoptosisindrosophila pages 7-9): Amandine Clavier, Aurore Rincheval-Arnold, Jessie Colin, Bernard Mignotte, and Isabelle Guénal. Apoptosis in drosophila: which role for mitochondria? Apoptosis, 21:239-251, Dec 2016. URL: https://doi.org/10.1007/s10495-015-1209-y, doi:10.1007/s10495-015-1209-y. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(doumanis2007moleculardeterminantsof pages 1-2): J. Doumanis, L. Dorstyn, and S. Kumar. Molecular determinants of the subcellular localization of the drosophila bcl-2 homologues debcl and buffy. Cell Death and Differentiation, 14:907-915, May 2007. URL: https://doi.org/10.1038/sj.cdd.4402082, doi:10.1038/sj.cdd.4402082. This article has 39 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(clavier2015thedrosophilaretinoblastoma pages 1-2): Amandine Clavier, Vincent Ruby, Aurore Rincheval-Arnold, Bernard Mignotte, and Isabelle Guénal. The drosophila retinoblastoma protein, rbf1, induces a debcl- and drp1-dependent mitochondrial apoptosis. Journal of Cell Science, 128:3239-3249, Sep 2015. URL: https://doi.org/10.1242/jcs.169896, doi:10.1242/jcs.169896. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hasan2024bcl2orthologuesbuffy pages 1-2): Azra Hasan and Brian E. Staveley. Bcl-2 orthologues, buffy and debcl, can suppress drp1-dependent age-related phenotypes in drosophila. Biomolecules, 14:1089, Aug 2024. URL: https://doi.org/10.3390/biom14091089, doi:10.3390/biom14091089. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(hasan2024bcl2orthologuesbuffy pages 14-15): Azra Hasan and Brian E. Staveley. Bcl-2 orthologues, buffy and debcl, can suppress drp1-dependent age-related phenotypes in drosophila. Biomolecules, 14:1089, Aug 2024. URL: https://doi.org/10.3390/biom14091089, doi:10.3390/biom14091089. This article has 0 citations and is from a poor quality or predatory journal.</p>
+</li>
+<li>
+<p>(clavier2016apoptosisindrosophila pages 6-7): Amandine Clavier, Aurore Rincheval-Arnold, Jessie Colin, Bernard Mignotte, and Isabelle Guénal. Apoptosis in drosophila: which role for mitochondria? Apoptosis, 21:239-251, Dec 2016. URL: https://doi.org/10.1007/s10495-015-1209-y, doi:10.1007/s10495-015-1209-y. This article has 73 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakazawa2016thehumanbcl2 pages 23-23): Mako Nakazawa, Hisanori Matsubara, Yuka Matsushita, Megumi Watanabe, Nicole Vo, Hideki Yoshida, Masamitsu Yamaguchi, and Takao Kataoka. The human bcl-2 family member bcl-rambo localizes to mitochondria and induces apoptosis and morphological aberrations in drosophila. PLoS ONE, 11:e0157823, Jun 2016. URL: https://doi.org/10.1371/journal.pone.0157823, doi:10.1371/journal.pone.0157823. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>clavier2016apoptosisindrosophila pages 7-9</li>
+<li>doumanis2007moleculardeterminantsof pages 1-2</li>
+<li>clavier2016apoptosisindrosophila pages 6-7</li>
+<li>clavier2015thedrosophilaretinoblastoma pages 1-2</li>
+<li>doumanis2007moleculardeterminantsof pages 2-4</li>
+<li>https://doi.org/10.3390/biom14091089</li>
+<li>https://doi.org/10.1038/sj.cdd.4402082</li>
+<li>https://doi.org/10.1242/jcs.169896</li>
+<li>https://doi.org/10.1007/s10495-015-1209-y</li>
+<li>https://doi.org/10.1002/dvg.20279</li>
+<li>https://doi.org/10.1371/journal.pone.0157823</li>
+<li>https://doi.org/10.1038/sj.cdd.4402082;</li>
+<li>https://doi.org/10.1007/s10495-015-1209-y;</li>
+<li>https://doi.org/10.1242/jcs.169896;</li>
+<li>https://doi.org/10.1038/sj.cdd.4402082,</li>
+<li>https://doi.org/10.1007/s10495-015-1209-y,</li>
+<li>https://doi.org/10.1242/jcs.169896,</li>
+<li>https://doi.org/10.3390/biom14091089,</li>
+<li>https://doi.org/10.1371/journal.pone.0157823,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8T8Y5
+gene_symbol: Buffy
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  Buffy is a Drosophila melanogaster Bcl-2 family protein that functions primarily as an
+  anti-apoptotic regulator. Unlike its paralog Debcl (the pro-apoptotic Bcl-2 family member),
+  Buffy predominantly localizes to the endoplasmic reticulum via a C-terminal membrane anchor
+  and antagonizes Debcl-driven mitochondrial apoptosis. Buffy modulates the Debcl-Drp1 axis
+  that regulates mitochondrial fission, ROS generation, and JNK-mediated caspase activation.
+  While primarily pro-survival in vivo, Buffy exhibits context-dependent activity and can
+  promote cell death in specific contexts such as microchaete glial cell death. Buffy also
+  participates in autophagy regulation during starvation responses.
+existing_annotations:
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation from phylogenetic inference. While Bcl-2 family proteins typically localize
+      to mitochondrial outer membrane, experimental evidence in Drosophila shows Buffy predominantly
+      localizes to the endoplasmic reticulum (ER), not mitochondria, in contrast to its paralog
+      Debcl which targets mitochondria (PMID:17205077).
+    action: MODIFY
+    reason: &gt;-
+      Experimental localization studies demonstrate that &#34;these two proteins localize to distinct
+      intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic
+      reticula (ER)&#34; (PMID:17205077). The C-terminal positively charged residues present in
+      Debcl that target it to mitochondria are absent in Buffy. While an IDA annotation to
+      GO:0005739 (mitochondrion) exists, the primary localization is ER. The IBA annotation
+      likely reflects ancestral Bcl-2 family localization that was lost in the Buffy lineage.
+    proposed_replacement_terms:
+      - id: GO:0005783
+        label: endoplasmic reticulum
+    additional_reference_ids:
+      - PMID:17205077
+    supported_by:
+      - reference_id: PMID:17205077
+        supporting_text: &#34;these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)&#34;
+
+- term:
+    id: GO:0015267
+    label: channel activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation based on phylogenetic inference from Bcl-2 family proteins. Bcl-2 family
+      proteins can form channels in membranes. However, no direct experimental evidence
+      demonstrates channel activity for Drosophila Buffy specifically.
+    action: ACCEPT
+    reason: &gt;-
+      While direct channel activity has not been demonstrated for Buffy specifically, this
+      is a conserved molecular function of Bcl-2 family proteins. The IBA annotation is
+      reasonable given the evolutionary conservation of channel-forming capability in this
+      protein family. Buffy contains the conserved Bcl-2 domain architecture required for
+      channel formation.
+    supported_by:
+      - reference_id: GO_REF:0000033
+        supporting_text: &#34;Annotation inferences using phylogenetic trees [Bcl-2 family conserved channel activity]&#34;
+
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      IEA annotation based on logical inference from channel activity. Since Buffy has
+      channel activity annotation (GO:0015267), transmembrane transport follows logically
+      as channels mediate transport.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is a logical consequence of the channel activity annotation. If Buffy
+      has channel activity (as annotated via IBA), then it participates in transmembrane
+      transport by definition. This is an appropriate transitive closure annotation.
+    supported_by:
+      - reference_id: GO_REF:0000108
+        supporting_text: &#34;Automatic assignment of GO terms using logical inference, based on inter-ontology links&#34;
+
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB keyword mapping (Apoptosis keyword). This annotation
+      conflates regulation of apoptosis with participation in the apoptotic process itself.
+      Buffy is a REGULATOR of apoptosis (primarily anti-apoptotic), not a core apoptotic
+      machinery component (PMID:12853472).
+    action: MODIFY
+    reason: &gt;-
+      This is a classic case of conflating regulation with participation. Buffy does not
+      execute apoptosis - it REGULATES the apoptotic process. The literature is clear:
+      &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein&#34; and
+      &#34;overexpression of buffy results in the inhibition of developmental programmed cell
+      death and gamma irradiation-induced apoptosis&#34; (PMID:12853472). Buffy acts upstream
+      to modulate whether apoptosis occurs, not as part of the apoptotic execution machinery.
+      The appropriate term is GO:0043066 (negative regulation of apoptotic process) for the
+      primary anti-apoptotic function.
+    proposed_replacement_terms:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+    additional_reference_ids:
+      - PMID:12853472
+    supported_by:
+      - reference_id: PMID:12853472
+        supporting_text: &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein. Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis.&#34;
+
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation from UniProtKB subcellular location vocabulary mapping. Buffy is indeed
+      a membrane protein with a C-terminal transmembrane anchor (PMID:17205077).
+    action: ACCEPT
+    reason: &gt;-
+      This is a valid but very general annotation. Buffy is a single-pass membrane protein
+      localized primarily to ER membranes. While more specific terms exist (GO:0005783),
+      this general membrane annotation is not incorrect, just less informative.
+    supported_by:
+      - reference_id: PMID:17205077
+        supporting_text: &#34;The MA in both proteins is required for the correct targeting and proapoptotic activities of these proteins&#34;
+
+- term:
+    id: GO:0042981
+    label: regulation of apoptotic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation from InterPro record association. This is accurate - Buffy does regulate
+      the apoptotic process - but is less specific than the available evidence supports.
+    action: MODIFY
+    reason: &gt;-
+      While technically correct, experimental evidence strongly supports Buffy&#39;s primary
+      role as an ANTI-apoptotic regulator (negative regulation). &#34;Buffy, the second Drosophila
+      Bcl-2-like protein, is a pro-survival protein&#34; (PMID:12853472). The term GO:0043066
+      (negative regulation of apoptotic process) is more specific and better reflects the
+      core function. The generic &#34;regulation&#34; term obscures Buffy&#39;s actual role.
+    proposed_replacement_terms:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+    additional_reference_ids:
+      - PMID:12853472
+    supported_by:
+      - reference_id: PMID:12853472
+        supporting_text: &#34;overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis&#34;
+
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:12853472
+  review:
+    summary: &gt;-
+      IDA annotation for mitochondrial localization. While Buffy can associate with mitochondria
+      under certain conditions, the primary localization is to endoplasmic reticulum. Subsequent
+      detailed localization studies (PMID:17205077) showed Buffy predominantly localizes to ER.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The more detailed localization study (PMID:17205077) established that &#34;BUFFY to endoplasmic
+      reticula (ER)&#34; is the primary localization, while &#34;DEBCL predominantly to mitochondria.&#34;
+      Buffy may transiently associate with mitochondria or be detected there under specific
+      conditions (which may explain the original IDA), but ER is the predominant location.
+      This annotation is not wrong but represents secondary rather than primary localization.
+    additional_reference_ids:
+      - PMID:17205077
+    supported_by:
+      - reference_id: PMID:17205077
+        supporting_text: &#34;these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)&#34;
+
+- term:
+    id: GO:0097136
+    label: Bcl-2 family protein complex
+  evidence_type: IPI
+  original_reference_id: PMID:36727601
+  review:
+    summary: &gt;-
+      IPI annotation based on physical interaction with the BH3-only protein Sayonara. The
+      study demonstrated that Buffy interacts biochemically with Sayonara as part of the
+      Bcl-2 regulatory network, forming complexes with both Sayonara and Debcl (PMID:36727601).
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is well-supported. The study showed &#34;Synr interacts with both BCL-2
+      proteins&#34; (Buffy and Debcl) and demonstrated that &#34;GST-Synr pulls down both Flag-Buffy
+      and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr,
+      Buffy and Debcl&#34; (PMID:36727601). This is core to Buffy&#39;s function as a Bcl-2 family
+      regulator.
+    supported_by:
+      - reference_id: PMID:36727601
+        supporting_text: &#34;GST-Synr pulls down both Flag-Buffy and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr, Buffy and Debcl&#34;
+
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:17205077
+  review:
+    summary: &gt;-
+      IDA annotation for ER localization based on direct colocalization studies with ER markers.
+      This is the primary localization site for Buffy, distinguishing it from the mitochondrial
+      Debcl (PMID:17205077).
+    action: ACCEPT
+    reason: &gt;-
+      This is a core localization annotation, directly demonstrated experimentally. &#34;Colocalization
+      is observed with ER markers (Calnexin, ER-Tracker) and not with MitoTracker, distinguishing
+      Buffy from mitochondrial Debcl&#34; (deep research citing PMID:17205077). The C-terminal
+      membrane anchor lacking the basic residues present in Debcl allows Buffy to target ER
+      rather than mitochondria.
+    supported_by:
+      - reference_id: PMID:17205077
+        supporting_text: &#34;We show that these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)&#34;
+
+- term:
+    id: GO:0035234
+    label: ectopic germ cell programmed cell death
+  evidence_type: IMP
+  original_reference_id: PMID:23523076
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in ectopic germ cell programmed cell death. The study
+      identified components of the alternative germ cell death pathway in Drosophila
+      (PMID:23523076). However, Buffy is not mentioned prominently in this study.
+    action: UNDECIDED
+    reason: &gt;-
+      The PMID:23523076 abstract focuses on HtrA2/Omi, lysosomes, and Dronc in germ cell death.
+      I could not find direct evidence for Buffy&#39;s involvement in this specific process from
+      the available text. The annotation may be based on data within the paper not visible
+      in the abstract/summary. Without access to the full text experimental details, I cannot
+      confirm this annotation.
+    supported_by:
+      - reference_id: PMID:23523076
+        supporting_text: &#34;In both flies and mammals, almost one-third of the newly emerging male germ cells are spontaneously eliminated before entering meiosis. Here, we show that in Drosophila, germ cell death (GCD) involves the initiator caspase Dronc independently of the apoptosome&#34;
+
+- term:
+    id: GO:0009267
+    label: cellular response to starvation
+  evidence_type: IMP
+  original_reference_id: PMID:18794330
+  review:
+    summary: &gt;-
+      IMP annotation for involvement in cellular response to starvation. The study identified
+      Buffy among six cell death genes with a role in autophagy regulation during starvation
+      (PMID:18794330).
+    action: ACCEPT
+    reason: &gt;-
+      The study explicitly identified Buffy as one of &#34;six cell death genes--death caspase-1
+      (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein
+      kinase signaling pathway components had a role in autophagy regulation in D. melanogaster
+      cultured cells&#34; during starvation conditions. This reflects Buffy&#39;s pleiotropic role
+      beyond core apoptotic regulation.
+    supported_by:
+      - reference_id: PMID:18794330
+        supporting_text: &#34;We discovered that six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation in D. melanogaster cultured cells.&#34;
+
+- term:
+    id: GO:0016239
+    label: positive regulation of macroautophagy
+  evidence_type: IMP
+  original_reference_id: PMID:18794330
+  review:
+    summary: &gt;-
+      IMP annotation for positive regulation of macroautophagy based on the starvation-induced
+      autophagy study. Buffy was identified as having a role in autophagy regulation
+      (PMID:18794330).
+    action: ACCEPT
+    reason: &gt;-
+      The systematic study of cell death genes in autophagy regulation identified Buffy as
+      having a role in starvation-induced autophagy. This is consistent with the crosstalk
+      between Bcl-2 family proteins and autophagy regulation observed in both Drosophila
+      and mammals. The annotation reflects Buffy&#39;s pleiotropic functions beyond apoptosis
+      regulation.
+    supported_by:
+      - reference_id: PMID:18794330
+        supporting_text: &#34;six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation&#34;
+
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:12853472
+  review:
+    summary: &gt;-
+      IMP annotation for the core anti-apoptotic function of Buffy. This is the primary
+      biological function of Buffy based on extensive genetic and molecular evidence
+      (PMID:12853472).
+    action: ACCEPT
+    reason: &gt;-
+      This is the CORE function annotation for Buffy. The foundational study demonstrated
+      that &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein.
+      Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression
+      of buffy results in the inhibition of developmental programmed cell death and gamma
+      irradiation-induced apoptosis.&#34; Buffy genetically and physically interacts with Debcl
+      to suppress Debcl-induced cell death.
+    supported_by:
+      - reference_id: PMID:12853472
+        supporting_text: &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein. Ablation of Buffy by RNA interference leads to ectopic apoptosis, whereas overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis. Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death.&#34;
+
+- term:
+    id: GO:0043066
+    label: negative regulation of apoptotic process
+  evidence_type: IGI
+  original_reference_id: PMID:12853472
+  review:
+    summary: &gt;-
+      IGI annotation based on genetic interaction with Debcl. Buffy antagonizes Debcl-induced
+      apoptosis through genetic interaction (PMID:12853472).
+    action: ACCEPT
+    reason: &gt;-
+      This annotation captures the genetic interaction evidence that Buffy suppresses
+      Debcl-induced apoptosis. &#34;Buffy interacts genetically and physically with Debcl to
+      suppress Debcl-induced cell death&#34; and &#34;Genetic interactions suggest that Buffy acts
+      downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc.&#34;
+    supported_by:
+      - reference_id: PMID:12853472
+        supporting_text: &#34;Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death. Genetic interactions suggest that Buffy acts downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc.&#34;
+
+- term:
+    id: GO:0043068
+    label: positive regulation of programmed cell death
+  evidence_type: IMP
+  original_reference_id: PMID:20558283
+  review:
+    summary: &gt;-
+      IMP annotation for a context-specific pro-apoptotic role of Buffy in microchaete
+      glial cell death. This represents a context-dependent reversal of Buffy&#39;s typical
+      anti-apoptotic function (PMID:20558283).
+    action: ACCEPT
+    reason: &gt;-
+      This annotation captures a well-documented context-dependent pro-apoptotic role. The
+      study found that &#34;Loss of buffy led to microchaete glial cell survival and suppressed
+      death in the eye induced by ectopic Grim. This is the first example of a developmental
+      PCD process influenced by buffy, and places buffy in a proapoptotic role.&#34; This
+      demonstrates Buffy&#39;s context-dependent activity and should be retained as a non-core
+      annotation reflecting this specific context.
+    supported_by:
+      - reference_id: PMID:20558283
+        supporting_text: &#34;Loss of buffy led to microchaete glial cell survival and suppressed death in the eye induced by ectopic Grim. This is the first example of a developmental PCD process influenced by buffy, and places buffy in a proapoptotic role.&#34;
+
+- term:
+    id: GO:0043068
+    label: positive regulation of programmed cell death
+  evidence_type: IGI
+  original_reference_id: PMID:20558283
+  review:
+    summary: &gt;-
+      IGI annotation based on genetic interaction with Grim in microchaete glial cell death.
+      Buffy shows context-dependent pro-apoptotic activity in this specific developmental
+      context (PMID:20558283).
+    action: ACCEPT
+    reason: &gt;-
+      The genetic interaction with Grim places Buffy in a pro-apoptotic role in this specific
+      context. &#34;Grim associates with mitochondria and has been shown to activate a mitochondrial
+      death pathway distinct from IAP antagonization; therefore, the Drosophila bcl-2 genes
+      buffy and debcl were investigated for genetic interaction with grim.&#34; This annotation
+      appropriately captures the context-dependent nature of Buffy&#39;s function.
+    supported_by:
+      - reference_id: PMID:20558283
+        supporting_text: &#34;the Drosophila bcl-2 genes buffy and debcl were investigated for genetic interaction with grim. Loss of buffy led to microchaete glial cell survival and suppressed death in the eye induced by ectopic Grim.&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: Bcl-2 family InterPro domain associated with regulation of apoptotic process
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+    - statement: Phylogenetic inference of Bcl-2 family conserved functions
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Apoptosis keyword mapped to apoptotic process (should be regulation term)
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+    - statement: Membrane protein annotation based on UniProt localization data
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference
+  findings:
+    - statement: Transmembrane transport inferred from channel activity
+- id: PMID:12853472
+  title: Buffy, a Drosophila Bcl-2 protein, has anti-apoptotic and cell cycle inhibitory functions.
+  findings:
+    - statement: Buffy is a pro-survival Bcl-2 family protein
+      supporting_text: &#34;Buffy, the second Drosophila Bcl-2-like protein, is a pro-survival protein&#34;
+    - statement: Overexpression inhibits developmental and irradiation-induced apoptosis
+      supporting_text: &#34;overexpression of buffy results in the inhibition of developmental programmed cell death and gamma irradiation-induced apoptosis&#34;
+    - statement: Physically and genetically interacts with Debcl to suppress cell death
+      supporting_text: &#34;Buffy interacts genetically and physically with Debcl to suppress Debcl-induced cell death&#34;
+    - statement: Acts downstream of Rpr, Grim, Hid and upstream of Dronc
+      supporting_text: &#34;Genetic interactions suggest that Buffy acts downstream of Rpr, Grim and Hid, and upstream of the apical caspase Dronc&#34;
+- id: PMID:17205077
+  title: Molecular determinants of the subcellular localization of the Drosophila Bcl-2 homologues DEBCL and BUFFY.
+  findings:
+    - statement: Buffy localizes to endoplasmic reticulum, not mitochondria
+      supporting_text: &#34;these two proteins localize to distinct intracellular membranes, DEBCL predominantly to mitochondria and BUFFY to endoplasmic reticula (ER)&#34;
+    - statement: Debcl localizes to mitochondria
+      supporting_text: &#34;DEBCL predominantly to mitochondria&#34;
+    - statement: C-terminal membrane anchor required for localization
+      supporting_text: &#34;The MA in both proteins is required for the correct targeting&#34;
+    - statement: Lack of basic residues in Buffy MA allows ER targeting
+      supporting_text: &#34;The C-terminal positively charged residues present in DEBCL are absent in BUFFY, which allows for its localization to ER&#34;
+- id: PMID:18794330
+  title: Effector caspase Dcp-1 and IAP protein Bruce regulate starvation-induced autophagy during Drosophila melanogaster oogenesis.
+  findings:
+    - statement: Buffy identified as regulator of starvation-induced autophagy
+      supporting_text: &#34;six cell death genes--death caspase-1 (Dcp-1), hid, Bruce, Buffy, debcl, and p53-as well as Ras-Raf-mitogen activated protein kinase signaling pathway components had a role in autophagy regulation&#34;
+- id: PMID:20558283
+  title: grim promotes programmed cell death of Drosophila microchaete glial cells.
+  findings:
+    - statement: Buffy has context-dependent pro-apoptotic role
+      supporting_text: &#34;This is the first example of a developmental PCD process influenced by buffy, and places buffy in a proapoptotic role&#34;
+    - statement: Loss of Buffy causes glial cell survival in microchaete lineage
+      supporting_text: &#34;Loss of buffy led to microchaete glial cell survival&#34;
+- id: PMID:23523076
+  title: Alternative germ cell death pathway in Drosophila involves HtrA2/Omi, lysosomes, and a caspase-9 counterpart.
+  findings:
+    - statement: Describes alternative germ cell death pathway involving Dronc, HtrA2, lysosomes
+      supporting_text: &#34;germ cell death (GCD) involves the initiator caspase Dronc independently of the apoptosome and the main executioner caspases&#34;
+- id: PMID:36727601
+  title: Evidence for existence of an apoptosis-inducing BH3-only protein, sayonara, in Drosophila.
+  findings:
+    - statement: Sayonara is first Drosophila BH3-only protein
+      supporting_text: &#34;Here, we identify the first Drosophila BH3-only protein and name it sayonara&#34;
+    - statement: Interacts genetically and biochemically with Buffy and Debcl
+      supporting_text: &#34;Sayonara induces apoptosis in a BH3 motif-dependent manner and interacts genetically and biochemically with the BCL-2 homologous proteins, Buffy and Debcl&#34;
+    - statement: Forms complexes with both Bcl-2 proteins
+      supporting_text: &#34;GST-Synr pulls down both Flag-Buffy and HA-Debcl simultaneously, suggesting a possibility of complex formation among Synr, Buffy and Debcl&#34;
+
+core_functions:
+  - description: &gt;-
+      Buffy is primarily an anti-apoptotic Bcl-2 family protein. Ablation causes ectopic
+      apoptosis; overexpression suppresses developmental and irradiation-induced apoptosis.
+      Antagonizes Debcl-driven mitochondrial apoptosis by modulating Drp1 axis.
+    molecular_function:
+      id: GO:0015267
+      label: channel activity
+    directly_involved_in:
+      - id: GO:0043066
+        label: negative regulation of apoptotic process
+    locations:
+      - id: GO:0005783
+        label: endoplasmic reticulum
+    in_complex:
+      id: GO:0097136
+      label: Bcl-2 family protein complex
+
+proposed_new_terms: []
+
+suggested_questions:
+  - question: What is the structural basis for Buffy&#39;s context-dependent switch between anti-apoptotic and pro-apoptotic activities?
+  - question: How does Buffy&#39;s ER localization contribute to its anti-apoptotic function, given that most Bcl-2 regulation occurs at mitochondria?
+  - question: What post-translational modifications regulate Buffy activity in different cellular contexts?
+
+suggested_experiments:
+  - description: High-resolution imaging to determine whether Buffy translocates to mitochondria under specific stress conditions
+    hypothesis: Buffy may transiently relocalize to mitochondria during specific apoptotic stimuli
+  - description: Structural analysis of Buffy-Sayonara-Debcl complex formation
+    hypothesis: Complex stoichiometry determines pro-survival vs pro-death outcome
+  - description: Tissue-specific transcriptomics to understand context-dependent pro-death vs pro-survival roles
+    hypothesis: Tissue-specific factors determine Buffy&#39;s functional polarity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

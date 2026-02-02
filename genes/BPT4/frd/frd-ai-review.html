@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>frd - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>frd</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04382" target="_blank" class="term-link">
+                        P04382
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "frd";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04382" data-a="DESCRIPTION: T4 bacteriophage dihydrofolate reductase (DHFR), e..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>T4 bacteriophage dihydrofolate reductase (DHFR), encoded by the frd gene, catalyzes the reduction of dihydrofolate to tetrahydrofolate using NADPH as hydride donor (EC 1.5.1.3). The 193 amino acid protein (21.7 kDa monomer) functions as a homodimer and is essential for phage DNA precursor synthesis by regenerating reduced folate cofactors required by thymidylate synthase. T4 DHFR exists in two forms: a soluble enzymatic form in infected cells and a structural component embedded in the virion baseplate. The enzyme interacts with thymidylate synthase and dCMP hydroxymethyltransferase as part of a dNTP synthetase complex that coordinates nucleotide precursor synthesis during phage replication.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004146" target="_blank" class="term-link">
+                                    GO:0004146
+                                </a>
+                            </span>
+                            <span class="term-label">dihydrofolate reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0004146" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> T4 frd encodes a bona fide dihydrofolate reductase that catalyzes the reduction of 7,8-dihydrofolate to 5,6,7,8-tetrahydrofolate using NADPH as cofactor. This is the core enzymatic function of the gene product, supported by extensive biochemical characterization and structural data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DHFR activity is the primary molecular function of this enzyme. The annotation is well-supported by IDA evidence (PMID:4936128) and structural characterization. The enzyme belongs to the DHFR family with conserved domain architecture (IPR001796, IPR017925).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10818362" target="_blank" class="term-link">
+                                        PMID:10818362
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dihydrofolate reductase (DHFR) from bacteriophage T4 is a homodimer consisting of 193-residue subunits</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006730" target="_blank" class="term-link">
+                                    GO:0006730
+                                </a>
+                            </span>
+                            <span class="term-label">one-carbon metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0006730" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> T4 DHFR regenerates tetrahydrofolate, which carries one-carbon units for biosynthetic reactions including thymidylate synthesis. The enzyme is part of a one-carbon metabolic pathway that supports DNA precursor production during phage infection.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DHFR catalyzes a key reaction in folate-mediated one-carbon metabolism. The product tetrahydrofolate serves as a one-carbon carrier essential for thymidylate synthesis. The deep research confirms that frd-driven FH4 regeneration sustains thymidylate synthase conversion of dUMP to dTMP during infection.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">frd-driven FH4 regeneration sustains thymidylate synthase (td) conversion of dUMP to dTMP during infection</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0016491" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DHFR is an oxidoreductase that catalyzes the transfer of electrons from NADPH to dihydrofolate. This is a correct but general annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct - DHFR is an oxidoreductase (EC 1.5.1.3). However, the more specific term GO:0004146 (dihydrofolate reductase activity) is also present and is the preferred annotation. This general term is acceptable as a parent annotation that captures the broader enzymatic class.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031427" target="_blank" class="term-link">
+                                    GO:0031427
+                                </a>
+                            </span>
+                            <span class="term-label">response to methotrexate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0031427" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from the UniProt keyword &#34;Methotrexate resistance&#34; (KW-0487). T4 DHFR is competitively inhibited by methotrexate and other antifolates at the substrate binding site. However, the phage enzyme does not confer resistance to methotrexate and the phage does not &#34;respond to&#34; methotrexate as a biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation represents a conflation of &#34;being inhibited by a drug&#34; with &#34;responding to&#34; that drug as a biological process. Methotrexate is a competitive inhibitor of T4 DHFR with respect to dihydrofolate. The enzyme is a TARGET of this drug, not a biological responder. The GO term &#34;response to methotrexate&#34; implies a coordinated cellular response pathway, which is inappropriate for: (1) a phage-encoded enzyme, and (2) an enzyme that is simply inhibited by the compound. The UniProt keyword &#34;Methotrexate resistance&#34; refers to the fact that DHFR is the target of methotrexate and mutations can confer resistance - but this phage enzyme is wild-type and simply subject to inhibition.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Competitive inhibition by methotrexate, aminopterin, and trimethoprim with respect to FH2 has been documented for T-even phage DHFRs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046654" target="_blank" class="term-link">
+                                    GO:0046654
+                                </a>
+                            </span>
+                            <span class="term-label">tetrahydrofolate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0046654" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> T4 DHFR catalyzes the reduction of dihydrofolate to tetrahydrofolate, which is the final step in THF biosynthesis. This is a core function of the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DHFR catalyzes the conversion of 7,8-dihydrofolate to 5,6,7,8-tetrahydrofolate, which is essential for providing reduced folate cofactors. UniProt explicitly states the pathway role. This is a direct annotation of the enzyme&#39;s biosynthetic role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                    GO:0046677
+                                </a>
+                            </span>
+                            <span class="term-label">response to antibiotic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0046677" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation derives from UniProt keywords &#34;Antibiotic resistance&#34; (KW-0046) and &#34;Trimethoprim resistance&#34; (KW-0817). T4 DHFR is inhibited by the antibiotic trimethoprim (and other antifolates), but the phage enzyme does not participate in an &#34;antibiotic response&#34; biological process. Recent phylogenomic analysis explicitly showed that phage-encoded DHFRs do NOT confer antibiotic resistance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a clear example of inappropriate SPKW-based over-annotation. The annotation conflates two distinct concepts: (1) DHFR being a known target of antifolate antibiotics, and (2) organisms mounting a biological &#34;response&#34; to antibiotics. A 2020 phylogenomics study explicitly concluded that phage-encoded DHFRs do NOT confer trimethoprim resistance despite homology and that phage folA genes primarily serve phage nucleotide metabolism rather than resistance. The GO term &#34;response to antibiotic&#34; implies a coordinated biological response pathway - phages do not have antibiotic response pathways, and this particular enzyme is simply an enzymatic target that gets inhibited by certain drugs. The fact that an enzyme CAN BE INHIBITED by an antibiotic does not mean the organism &#34;responds to&#34; that antibiotic.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:BPT4/frd/frd-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">phage-encoded DHFRs (found on cryptic plasmids/phages) do not confer trimethoprim resistance despite homology, and that only a small fraction of complete phage genomes carry functional antibiotic-resistance determinants. This supports the view that phage folA genes primarily serve phage nucleotide metabolism rather than resistance</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004146" target="_blank" class="term-link">
+                                    GO:0004146
+                                </a>
+                            </span>
+                            <span class="term-label">dihydrofolate reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4936128" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4936128
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    T4 bacteriophage-specific dihydrofolate reductase: purificat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P04382" data-a="GO:0004146" data-r="PMID:4936128" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for DHFR activity. The 1971 publication by Erickson and Mathews purified T4 DHFR to homogeneity by affinity chromatography and characterized its enzymatic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This IDA annotation is the primary experimental evidence for DHFR activity. The enzyme was purified and its activity directly demonstrated. This is the core molecular function annotation for frd and should be retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4936128" target="_blank" class="term-link">
+                                        PMID:4936128
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>T4 DHFR catalyzes the NADPH-dependent reduction of 7,8-dihydrofolate to 5,6,7,8-tetrahydrofolate. This is supported by direct enzymatic assays [PMID:4936128], crystal structure with bound NADPH [PMID:10818362], and sequence/domain analysis showing conserved DHFR family residues.</h3>
+                <span class="vote-buttons" data-g="P04382" data-a="FUNCTION: T4 DHFR catalyzes the NADPH-dependent reduction of..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004146" target="_blank" class="term-link">
+                            dihydrofolate reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046654" target="_blank" class="term-link">
+                                tetrahydrofolate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:BPT4/frd/frd-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations for oxidoreductase activity, one-carbon metabolic process, response to methotrexate, and response to antibiotic</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of IEA annotations for DHFR activity and tetrahydrofolate biosynthetic process based on InterPro domains</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/4936128" target="_blank" class="term-link">
+                            PMID:4936128
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">First purification and enzymatic characterization of T4 DHFR</div>
+                        
+                        <div class="finding-text">"T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10818362" target="_blank" class="term-link">
+                            PMID:10818362
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Overexpression, crystallization and preliminary X-ray crystallographic analysis of dihydrofolate reductase from bacteriophage T4</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure determination and confirmation of homodimer structure</div>
+                        
+                        <div class="finding-text">"Dihydrofolate reductase (DHFR) from bacteriophage T4 is a homodimer consisting of 193-residue subunits"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6327673" target="_blank" class="term-link">
+                            PMID:6327673
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nucleotide sequence reveals overlap between T4 phage genes encoding dihydrofolate reductase and thymidylate synthase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">frd gene encodes 193 amino acid DHFR and overlaps with thymidylate synthase gene</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1560001" target="_blank" class="term-link">
+                            PMID:1560001
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Specific associations of T4 bacteriophage proteins with immobilized deoxycytidylate hydroxymethylase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DHFR interacts with deoxycytidylate 5-hydroxymethyltransferase as part of dNTP synthetase complex</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:BPT4/frd/frd-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for T4 phage frd (DHFR)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">T4 DHFR catalyzes reduction of dihydrofolate to tetrahydrofolate using NADPH</div>
+                        
+                        <div class="finding-text">"T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phage DHFRs do not confer antibiotic resistance</div>
+                        
+                        <div class="finding-text">"phage-encoded DHFRs (found on cryptic plasmids/phages) do not confer trimethoprim resistance despite homology"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the structural and functional role of DHFR in the T4 virion baseplate? The enzyme is present in latent form in the baseplate - does it have a catalytic role during early infection or is it purely structural?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P04382" data-a="Q: What is the structural and functional role of DHFR..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Detailed steady-state kinetic characterization of T4 DHFR with modern methods to establish precise Km values for dihydrofolate and NADPH, and Ki values for antifolate inhibitors.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: While inhibition by antifolates is documented, precise kinetic parameters under modern conditions are not well-characterized in available literature.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P04382" data-a="EXPERIMENT: Detailed steady-state kinetic characterization of ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(frd-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04382" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-01-31T13:31:18.288839'<br />
+end_time: '2026-01-31T13:40:10.740350'<br />
+duration_seconds: 532.45<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: BPT4<br />
+  gene_id: frd<br />
+  gene_symbol: frd<br />
+  uniprot_accession: P04382<br />
+  protein_description: 'RecName: Full=Dihydrofolate reductase; Short=DHFR; EC=1.5.1.3;'<br />
+  gene_info: Name=frd;<br />
+  organism_full: Enterobacteria phage T4 (Bacteriophage T4).<br />
+  protein_family: Belongs to the dihydrofolate reductase family.<br />
+  protein_domains: DHFR-like_dom_sf. (IPR024072); DHFR_CS. (IPR017925); DHFR_dom.<br />
+    (IPR001796); DHFR_1 (PF00186)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 11</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P04382</li>
+<li><strong>Protein Description:</strong> RecName: Full=Dihydrofolate reductase; Short=DHFR; EC=1.5.1.3;</li>
+<li><strong>Gene Information:</strong> Name=frd;</li>
+<li><strong>Organism (full):</strong> Enterobacteria phage T4 (Bacteriophage T4).</li>
+<li><strong>Protein Family:</strong> Belongs to the dihydrofolate reductase family.</li>
+<li><strong>Key Domains:</strong> DHFR-like_dom_sf. (IPR024072); DHFR_CS. (IPR017925); DHFR_dom. (IPR001796); DHFR_1 (PF00186)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "frd" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Enterobacteria phage T4 (Bacteriophage T4).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'frd' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>frd</strong> (gene ID: frd, UniProt: P04382) in BPT4.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P04382</li>
+<li><strong>Protein Description:</strong> RecName: Full=Dihydrofolate reductase; Short=DHFR; EC=1.5.1.3;</li>
+<li><strong>Gene Information:</strong> Name=frd;</li>
+<li><strong>Organism (full):</strong> Enterobacteria phage T4 (Bacteriophage T4).</li>
+<li><strong>Protein Family:</strong> Belongs to the dihydrofolate reductase family.</li>
+<li><strong>Key Domains:</strong> DHFR-like_dom_sf. (IPR024072); DHFR_CS. (IPR017925); DHFR_dom. (IPR001796); DHFR_1 (PF00186)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "frd" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Enterobacteria phage T4 (Bacteriophage T4).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'frd' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>frd</strong> (gene ID: frd, UniProt: P04382) in BPT4.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<p>Plan status (abridged):<br />
+- Verified identity and organism for frd (T4 DHFR) and aligned with DHFR family/domain expectations (completed). <br />
+- Collected primary literature on function, structure, localization, regulation, and inhibition; plus recent perspectives on phage DHFR distribution and resistance (completed). <br />
+- Created a summary artifact of key facts (completed). </p>
+<p>Comprehensive research report: Enterobacteria phage T4 frd (DHFR; UniProt P04382)</p>
+<p>Gene/protein identity verification and scope<br />
+- Identity and organism: The T4 frd gene encodes dihydrofolate reductase (DHFR; EC 1.5.1.3), an early T4 gene product essential for folate recycling and DNA precursor synthesis in Enterobacteria phage T4 (Bacteriophage T4) (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 1-7, wang1989organizationoft4 pages 37-42). Sequence analysis mapped frd as a 579-nt ORF encoding a 193-aa protein (~21.6 kDa subunit) that assembles as a homodimer of ~42–45 kDa, consistent with biochemical measurements (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 25-31). These features confirm concordance with the canonical DHFR family and domain architecture inferred from comparative analysis of conserved DHFR residues and fold elements (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, purohit1984bacteriophaget4codeddihydrofolate pages 132-138).<br />
+- Ambiguity check: The symbol frd can denote other functions in bacteria, but in T4 it unequivocally encodes DHFR; multiple genetic and biochemical studies (including frd mutants) establish this identity. We did not proceed with literature on other frd symbols (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, wang1989organizationoft4 pages 37-42).</p>
+<p>Key concepts and definitions: function, reaction, and specificity<br />
+- Catalytic reaction: T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor, thereby regenerating reduced folate necessary for one-carbon transfer reactions including thymidylate synthesis (EC 1.5.1.3) (purohit1984bacteriophaget4codeddihydrofolate pages 31-37, purohit1984bacteriophaget4codeddihydrofolatea pages 31-37). The enzymatic product (1,4‑THF) is the same as that of host E. coli DHFR (erickson1972studiesoftheactive pages 42-48).<br />
+- Substrate and cofactor specificity: NADPH is the primary cofactor; related T-even phage DHFRs (e.g., T6) can use NADH at lower efficiency, highlighting pyridine nucleotide specificity plasticity among T-even phages (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, wang1989organizationoft4 pages 37-42). Substrate specificity is for FH2; the enzyme replenishes FH4 for thymidylate synthase and broader folate-dependent biosynthesis (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, erickson1972studiesoftheactive pages 42-48).<br />
+- Inhibitor sensitivity: Folate antagonists methotrexate, aminopterin, and trimethoprim competitively inhibit the T4 enzyme with respect to FH2; T4 DHFR is notably sensitive to aminopterin compared with some other T-even phages (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19). Ligand-binding/affinity capture with N-formylaminopterin has been used in purification and characterization (purohit1984bacteriophaget4codeddihydrofolatea pages 31-37). Classic studies also report trimethoprim sensitivity among T-even phage DHFRs (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19).</p>
+<p>Structural and sequence features, domains, and conserved residues<br />
+- Fold and quaternary structure: T4 DHFR conforms to the conserved DHFR fold, featuring an eight-stranded β-sheet with α-helices, and forms a homodimer in solution (~44.5 kDa) (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, wang1989organizationoft4 pages 37-42). Although many bacterial/vertebrate DHFRs are monomeric, the T4 enzyme is multimeric (dimeric), a distinguishing quaternary feature among DHFRs (purohit1984bacteriophaget4codeddihydrofolate pages 25-31).<br />
+- Conserved/active-site residues: Comparative sequence analysis places conserved residues for cofactor/substrate/inhibitor binding primarily in the N‑terminal region, including residues corresponding to Ile13, Gly14, Trp21, an acidic residue akin to Asp26/27 (E. coli Asp27) contacting the pteridine N1, plus Gly98–Gly99 and Phe103, among others implicated in NADPH and methotrexate/folate analog binding (purohit1984bacteriophaget4codeddihydrofolate pages 25-31).</p>
+<p>Cellular vs. virion localization and integration into phage biology<br />
+- Dual localization and structural role: T4 DHFR exists as a soluble enzymatic protein in infected cells and as a structural protein embedded within the virion baseplate. Activity is latent in intact particles and can be revealed by mild denaturation; antisera to DHFR can neutralize infectivity. Genetic swaps (e.g., frd substitution from T6) alter physical properties of the virion, linking frd genotype to baseplate traits (kozloff1977bacteriophaget4virion pages 2-4, kozloff1977bacteriophaget4virion pages 1-2, purohit1984bacteriophaget4codeddihydrofolatea pages 31-37). Journal of Virology article with URL: https://doi.org/10.1128/jvi.23.3.637-644.1977 (Sep 1977) (kozloff1977bacteriophaget4virion pages 1-2).<br />
+- Association with thymidylate synthase (TS): DHFR and TS co-occur in the baseplate and show genetic/physical linkage; baseplates carry associated folate (dihydropteroyl hexaglutamate) (kozloff1977bacteriophaget4virion pages 2-4, kozloff1977bacteriophaget4virion pages 1-2). Early work detected both enzymes as virion components and demonstrated co-variation of particle properties with mutations in frd and td (kozloff1977bacteriophaget4virion pages 1-2).</p>
+<p>Role in folate metabolism, dTMP production, and the dNTP-synthesizing complex<br />
+- Pathway integration: frd-driven FH4 regeneration sustains thymidylate synthase (td) conversion of dUMP to dTMP during infection, underpinning robust DNA synthesis. When DHFR is compromised, reduced folate pools fall, dUMP accumulates, and characteristic plaque phenotypes appear (white-halo), indicating a bottleneck at TS (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19). The frd/td pair is part of a broader T4 DNA precursor biosynthesis module, often forming a multienzyme assembly with other nucleotide metabolism enzymes (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, shen2006proteinproteininteractionsin pages 56-64). Protein–protein capture indicates frd co-associates with td and dCMP hydroxymethylase in a dNTP synthesis complex, consistent with metabolon-like organization to elevate local dNTP availability (shen2006proteinproteininteractionsin pages 56-64).</p>
+<p>Genomic context, regulation, and expression timing<br />
+- Genomic arrangement: frd is immediately adjacent to td, with a four-nucleotide overlap suggestive of translational coupling. Promoter-like elements upstream of frd and internal Pribnow-like sequences are present; reports support cotranscription of frd and td in a ~1.6-kb transcript (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 132-138, purohit1984bacteriophaget4codeddihydrofolate pages 1-7).<br />
+- Temporal regulation: frd is an early gene; synthesis begins within minutes post-infection, reaches ~50% of maximum by ~2 minutes, and shuts off by ~10 minutes in classic assays. Overall activity increases on the order of 10–20× compared to uninfected cells, indicating strong early-phase expression driven by host RNA polymerase (erickson1972studiesoftheactive pages 42-48). Early gene overproduction is also noted in DNA replication–defective mutants, consistent with E-early gene regulation (purohit1984bacteriophaget4codeddihydrofolate pages 31-37).</p>
+<p>Inhibitor sensitivity and quantitative properties<br />
+- Antifolate profile: Competitive inhibition by methotrexate, aminopterin, and trimethoprim with respect to FH2 has been documented for T-even phage DHFRs, with T4 among the most aminopterin-sensitive enzymes in comparative studies (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19). Purification by affinity to folate analogs (e.g., N-formylaminopterin) further supports conserved antifolate binding determinants (purohit1984bacteriophaget4codeddihydrofolatea pages 31-37). Specific steady-state kinetic constants (kcat/Km) were not present in the gathered excerpts; historical tables are referenced but not viewable here (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, purohit1984bacteriophaget4codeddihydrofolate pages 1-7).</p>
+<p>Recent developments and latest research (2015–2024) on phage-encoded DHFR<br />
+- Distribution and signatures: Comparative genomics show that DHFR homologs are represented in bacteriophage genomes, frequently adjacent to thymidylate synthase genes, constituting a conserved folate-dTMP module in some groups. In Spounavirinae, DHFR and a type 1 TS (TS1) act as signature genes of a Bastille-like phage group, suggesting long-term maintenance and functional relevance of the module (BMC Genomics, Aug 2015; https://doi.org/10.1186/s12864-015-1757-0) (asare2015putativetype1 pages 11-12, asare2015putativetype1 pages 10-11).<br />
+- Antibiotic resistance relevance: A 2020 phylogenomics study concluded that several phage-encoded DHFRs (found on cryptic plasmids/phages) do not confer trimethoprim resistance despite homology, and that only a small fraction of complete phage genomes carry functional antibiotic-resistance determinants. This supports the view that phage folA genes primarily serve phage nucleotide metabolism rather than resistance; rare cases of partial resistance due to overexpression have been noted (Microbial Genomics, Nov 2020; https://doi.org/10.1099/mgen.0.000440) (sanchezosuna2020explorationintothe pages 9-11, sanchezosuna2020explorationintothe pages 1-2).</p>
+<p>Current applications and real-world implementations<br />
+- Phage biology and synthetic biology: The frd–td module illustrates how phages can encode and organize host pathway duplicates to prioritize dNTP synthesis. Physical co-association of DHFR with TS and other nucleotide enzymes suggests a metabolon paradigm that could be exploited in synthetic biology for pathway channeling or antiviral targeting (shen2006proteinproteininteractionsin pages 56-64, purohit1984bacteriophaget4codeddihydrofolate pages 13-19). In phage engineering and therapy, presence/absence of DHFR and TS modules may influence replication dynamics and could serve as genomic markers when selecting or modifying phages, as supported by the Bastille-like signature concept (asare2015putativetype1 pages 11-12, asare2015putativetype1 pages 10-11).</p>
+<p>Expert opinions and synthesis<br />
+- Canonical role in T4: Authoritative reviews and genome overviews consistently place frd among auxiliary genes that duplicate host functions to guarantee elevated precursor supply for DNA replication, and they frequently co-mention frd with td and nrd genes in T4’s DNA precursor program (Microbiol. Mol. Biol. Rev., Mar 2003; https://doi.org/10.1128/mmbr.67.1.86-156.2003) (erickson1972studiesoftheactive pages 42-48, wang1989organizationoft4 pages 37-42). Classic virion studies argue for a structural/functional role of DHFR and TS in the baseplate, potentially aiding early infection steps, although activity is latent in intact virions (Journal of Virology, Sep 1977; https://doi.org/10.1128/jvi.23.3.637-644.1977) (kozloff1977bacteriophaget4virion pages 1-2, kozloff1977bacteriophaget4virion pages 2-4). Protein–protein association data support inclusion of DHFR in a dNTP synthetase complex that could spatially coordinate dTMP production during infection (shen2006proteinproteininteractionsin pages 56-64).</p>
+<p>Relevant statistics and data points<br />
+- Gene/protein size: frd ORF 579 nt; protein 193 aa, ~21.6 kDa monomer; ~42–45 kDa homodimer (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 25-31, wang1989organizationoft4 pages 37-42).<br />
+- Expression dynamics: ~10–20× elevation of DHFR activity post-infection; early synthesis peaks within ~2–10 min after infection (erickson1972studiesoftheactive pages 42-48, purohit1984bacteriophaget4codeddihydrofolate pages 13-19).<br />
+- Genomic context: four-nucleotide overlap with td; evidence of cotranscription (~1.6 kb transcript) and translational coupling (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 132-138).<br />
+- Inhibition: Competitive inhibition by methotrexate, aminopterin, and trimethoprim with respect to FH2; T4 particularly aminopterin-sensitive among T-even phage DHFRs in comparative testing (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19).</p>
+<p>Knowledge gaps and future directions<br />
+- Quantitative enzymology: Explicit steady-state kinetic constants (Km for FH2 and NADPH; kcat; Ki for antifolates) for T4 DHFR were referenced but not found in accessible excerpts. Targeted assays under modern conditions would refine catalytic parameters and inhibitor profiles. Integrative structural biology of DHFR within the baseplate or in complex with TS and bound folate could resolve mechanistic questions about virion-associated roles (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, shen2006proteinproteininteractionsin pages 56-64).</p>
+<p>Embedded summary artifact:<br />
+| Feature | Evidence/Details | Key sources |<br />
+|---|---|---|<br />
+| Identity (gene name, UniProt, length/quaternary) | frd encodes Dihydrofolate reductase (DHFR), UniProt P04382; ORF 579 nt → 193 aa; subunit ~21.6 kDa, homodimer ~42–45 kDa. (sequence &amp; biochemical characterization) | Purohit 1984 (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 25-31) |<br />
+| Catalytic reaction and cofactor | Catalyzes FH2 → FH4 (dihydrofolate to tetrahydrofolate), EC 1.5.1.3; uses NADPH as primary hydride donor. | Purohit 1984; Mathews/Purohit data (purohit1984bacteriophaget4codeddihydrofolate pages 31-37, purohit1984bacteriophaget4codeddihydrofolatea pages 31-37) |<br />
+| Substrate specificity | Substrate: dihydrofolate (FH2); product: tetrahydrofolate (FH4); supplies one‑carbon folate pools for TS and purine/amino‑acid biosynthesis; pteridine-binding site conserved. | Purohit 1984, Erickson 1972 (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, erickson1972studiesoftheactive pages 42-48) |<br />
+| Inhibitor sensitivity | Competitive inhibition by methotrexate/aminopterin and trimethoprim (TMP); T4 DHFR notably sensitive to aminopterin; TMP sensitivity reported but varies by phage. | Purohit 1984; Kozloff et al. 1977 (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 31-37, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19) |<br />
+| Structural/sequence features (family, domains, conserved residues) | Conserved DHFR fold (≈8 β‑strands + 4 α‑helices); conserved/cofactor–inhibitor contact residues in N‑terminal half (examples: Ile13, Gly14, Trp21, Asp26/27 analogs, Gly98–99, Phe103); DHFR family/domain annotations align with UniProt entries. | Purohit 1984 sequence analyses (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, purohit1984bacteriophaget4codeddihydrofolate pages 132-138) |<br />
+| Expression timing/regulation | frd is an early phage gene: synthesis begins minutes after infection, reaches substantial levels within ~2–10 min and is highly overexpressed (reported ~10–20×); promoters and ribosome sites upstream identified. | Erickson 1972; Purohit 1984 (erickson1972studiesoftheactive pages 42-48, purohit1984bacteriophaget4codeddihydrofolate pages 1-7) |<br />
+| Genomic context with td (overlap/cotranscription) | frd lies adjacent to/overlaps thymidylate synthase gene (td) by a short overlap (four bases); evidence for cotranscription and translational coupling of frd–td. | Purohit 1984; sequence mapping (purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 132-138) |<br />
+| Localization (soluble vs virion baseplate) | Both: a soluble enzymatic form in infected cells and a virion‑associated structural form embedded in the tail/baseplate (activity latent in particles; recoverable by mild denaturation); anti‑DHFR antiserum can neutralize infectivity. | Kozloff et al. 1977; Purohit 1984; Mosher/Mosher data (kozloff1977bacteriophaget4virion pages 2-4, purohit1984bacteriophaget4codeddihydrofolate pages 31-37, kozloff1977bacteriophaget4virion pages 1-2) |<br />
+| Role in folate/dTMP synthesis and dNTP complex association | Regenerates THF for TS to produce dTMP; part of a phage nucleotide‑precursor multienzyme complex with physical/functional association to thymidylate synthase and other dNTP synthesis enzymes. | Purohit 1984; Shen 2006 (protein–protein associations) (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, shen2006proteinproteininteractionsin pages 56-64, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19) |<br />
+| Cofactor usage (NADPH vs NADH) | Primarily uses NADPH; some related phage DHFRs (e.g., T6) can use NADH with lower efficiency. | Purohit 1984; Wang 1989 notes NADH/NADPH variability (purohit1984bacteriophaget4codeddihydrofolate pages 13-19, wang1989organizationoft4 pages 37-42) |<br />
+| Recent (2015–2024) perspectives on phage DHFR distribution and TMP resistance | Genomic surveys show DHFR homologs occur in phage genomes often adjacent to TS (a conserved module); DHFR can be a signature in some phage groups (e.g., Bastille‑like); experimental tests indicate many phage DHFRs do NOT confer clinical trimethoprim resistance, though exceptions/partial effects reported. | Sánchez‑Osuna et al. 2020; Asare et al. 2015 (sanchezosuna2020explorationintothe pages 9-11, asare2015putativetype1 pages 11-12, asare2015putativetype1 pages 10-11) |<br />
+| Notable knowledge gaps (quantitative kinetics) | Published excerpts document inhibitor binding and some properties, but detailed modern steady‑state kinetics (kcat, Km for FH2 and NADPH) for T4 DHFR are not well represented in the provided sources—fresh biochemical assays would fill this gap. | Purohit 1984 notes tables but modern kinetic data lacking in excerpts (purohit1984bacteriophaget4codeddihydrofolate pages 25-31, purohit1984bacteriophaget4codeddihydrofolate pages 1-7) |</p>
+<p><em>Table: Compact summary table of functional, structural and genomic evidence for Enterobacteria phage T4 frd (DHFR, UniProt P04382), with primary source mappings to the gathered context IDs for verification and follow‑up.</em></p>
+<p>References (context IDs cite the specific excerpts used; URLs/dates provided where available)<br />
+- Kozloff LM et al., J Virol 1977; baseplate localization of TS and DHFR; URL: https://doi.org/10.1128/jvi.23.3.637-644.1977 (Sep 1977) (kozloff1977bacteriophaget4virion pages 2-4, kozloff1977bacteriophaget4virion pages 1-2).<br />
+- Erickson JS, 1972; early expression kinetics; product identity (erickson1972studiesoftheactive pages 42-48).<br />
+- Purohit S, 1984; cloning/sequencing of frd, quaternary structure, overlap with td, promoter/RBS mapping, inhibitor sensitivity, and structural residue conservation (purohit1984bacteriophaget4codeddihydrofolate pages 7-13, purohit1984bacteriophaget4codeddihydrofolate pages 25-31, purohit1984bacteriophaget4codeddihydrofolate pages 150-156, purohit1984bacteriophaget4codeddihydrofolate pages 132-138, purohit1984bacteriophaget4codeddihydrofolate pages 1-7, purohit1984bacteriophaget4codeddihydrofolate pages 13-19, purohit1984bacteriophaget4codeddihydrofolatea pages 31-37, purohit1984bacteriophaget4codeddihydrofolatea pages 13-19).<br />
+- Wang Y, 1989; organization of DNA precursor genes; DHFR dimeric state; NADH/NADPH usage; virion evidence (wang1989organizationoft4 pages 37-42).<br />
+- Shen R, 2006; protein–protein interactions in the T4 dNTP synthetase complex; DHFR associations (shen2006proteinproteininteractionsin pages 56-64).<br />
+- Miller ES et al., Microbiol Mol Biol Rev 2003; T4 genome overview and placement of frd among auxiliary DNA precursor genes; URL: https://doi.org/10.1128/mmbr.67.1.86-156.2003 (Mar 2003) (erickson1972studiesoftheactive pages 42-48).<br />
+- Sánchez‑Osuna M et al., Microbial Genomics 2020; distribution of phage DHFR genes and limited TMP resistance; URL: https://doi.org/10.1099/mgen.0.000440 (Nov 2020) (sanchezosuna2020explorationintothe pages 9-11, sanchezosuna2020explorationintothe pages 1-2).<br />
+- Asare PT et al., BMC Genomics 2015; DHFR and TS1 as signature genes in Bastille-like phages; URL: https://doi.org/10.1186/s12864-015-1757-0 (Aug 2015) (asare2015putativetype1 pages 11-12, asare2015putativetype1 pages 10-11).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 150-156): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 1-7): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(wang1989organizationoft4 pages 37-42): Y Wang. Organization of t4 bacteriophage genes and gene products involved in dna precursor biosynthesis. Unknown journal, 1989.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 25-31): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 132-138): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 31-37): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolatea pages 31-37): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(erickson1972studiesoftheactive pages 42-48): JS Erickson. Studies of the'active site'region of dihydrofolate reductase specified by t4-bacteriophage. Unknown journal, 1972.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 13-19): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolatea pages 13-19): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+<li>
+<p>(kozloff1977bacteriophaget4virion pages 2-4): L. M. Kozloff, M. Lute, and L. K. Crosby. Bacteriophage t4 virion baseplate thymidylate synthetase and dihydrofolate reductase. Journal of Virology, 23:637-644, Sep 1977. URL: https://doi.org/10.1128/jvi.23.3.637-644.1977, doi:10.1128/jvi.23.3.637-644.1977. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kozloff1977bacteriophaget4virion pages 1-2): L. M. Kozloff, M. Lute, and L. K. Crosby. Bacteriophage t4 virion baseplate thymidylate synthetase and dihydrofolate reductase. Journal of Virology, 23:637-644, Sep 1977. URL: https://doi.org/10.1128/jvi.23.3.637-644.1977, doi:10.1128/jvi.23.3.637-644.1977. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shen2006proteinproteininteractionsin pages 56-64): R Shen. Protein-protein interactions in the bacteriophage t4 dntp synthetase complex. Unknown journal, 2006.</p>
+</li>
+<li>
+<p>(asare2015putativetype1 pages 11-12): Paul Tetteh Asare, Tae-Yong Jeong, Sangryeol Ryu, Jochen Klumpp, Martin J. Loessner, Bryan D. Merrill, and Kwang-Pyo Kim. Putative type 1 thymidylate synthase and dihydrofolate reductase as signature genes of a novel bastille-like group of phages in the subfamily spounavirinae. BMC Genomics, Aug 2015. URL: https://doi.org/10.1186/s12864-015-1757-0, doi:10.1186/s12864-015-1757-0. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(asare2015putativetype1 pages 10-11): Paul Tetteh Asare, Tae-Yong Jeong, Sangryeol Ryu, Jochen Klumpp, Martin J. Loessner, Bryan D. Merrill, and Kwang-Pyo Kim. Putative type 1 thymidylate synthase and dihydrofolate reductase as signature genes of a novel bastille-like group of phages in the subfamily spounavirinae. BMC Genomics, Aug 2015. URL: https://doi.org/10.1186/s12864-015-1757-0, doi:10.1186/s12864-015-1757-0. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchezosuna2020explorationintothe pages 9-11): Miquel Sánchez-Osuna, Pilar Cortés, Montserrat Llagostera, Jordi Barbé, and Ivan Erill. Exploration into the origins and mobilization of di-hydrofolate reductase genes and the emergence of clinical resistance to trimethoprim. Microbial Genomics, Nov 2020. URL: https://doi.org/10.1099/mgen.0.000440, doi:10.1099/mgen.0.000440. This article has 51 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchezosuna2020explorationintothe pages 1-2): Miquel Sánchez-Osuna, Pilar Cortés, Montserrat Llagostera, Jordi Barbé, and Ivan Erill. Exploration into the origins and mobilization of di-hydrofolate reductase genes and the emergence of clinical resistance to trimethoprim. Microbial Genomics, Nov 2020. URL: https://doi.org/10.1099/mgen.0.000440, doi:10.1099/mgen.0.000440. This article has 51 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(purohit1984bacteriophaget4codeddihydrofolate pages 7-13): S Purohit. Bacteriophage t4-coded dihydrofolate reductase: cloning and structural analysis of its gene and organization of flanking regions. Unknown journal, 1984.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>erickson1972studiesoftheactive pages 42-48</li>
+<li>shen2006proteinproteininteractionsin pages 56-64</li>
+<li>sanchezosuna2020explorationintothe pages 9-11</li>
+<li>sanchezosuna2020explorationintothe pages 1-2</li>
+<li>https://doi.org/10.1128/jvi.23.3.637-644.1977</li>
+<li>https://doi.org/10.1186/s12864-015-1757-0</li>
+<li>https://doi.org/10.1099/mgen.0.000440</li>
+<li>https://doi.org/10.1128/mmbr.67.1.86-156.2003</li>
+<li>https://doi.org/10.1128/jvi.23.3.637-644.1977,</li>
+<li>https://doi.org/10.1186/s12864-015-1757-0,</li>
+<li>https://doi.org/10.1099/mgen.0.000440,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04382
+gene_symbol: frd
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &gt;-
+  T4 bacteriophage dihydrofolate reductase (DHFR), encoded by the frd gene, catalyzes the
+  reduction of dihydrofolate to tetrahydrofolate using NADPH as hydride donor (EC 1.5.1.3).
+  The 193 amino acid protein (21.7 kDa monomer) functions as a homodimer and is essential for
+  phage DNA precursor synthesis by regenerating reduced folate cofactors required by thymidylate
+  synthase. T4 DHFR exists in two forms: a soluble enzymatic form in infected cells and a
+  structural component embedded in the virion baseplate. The enzyme interacts with thymidylate
+  synthase and dCMP hydroxymethyltransferase as part of a dNTP synthetase complex that
+  coordinates nucleotide precursor synthesis during phage replication.
+existing_annotations:
+- term:
+    id: GO:0004146
+    label: dihydrofolate reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      T4 frd encodes a bona fide dihydrofolate reductase that catalyzes the reduction of
+      7,8-dihydrofolate to 5,6,7,8-tetrahydrofolate using NADPH as cofactor. This is the
+      core enzymatic function of the gene product, supported by extensive biochemical
+      characterization and structural data.
+    action: ACCEPT
+    reason: &gt;-
+      DHFR activity is the primary molecular function of this enzyme. The annotation is
+      well-supported by IDA evidence (PMID:4936128) and structural characterization.
+      The enzyme belongs to the DHFR family with conserved domain architecture
+      (IPR001796, IPR017925).
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor&#34;
+      - reference_id: PMID:10818362
+        supporting_text: &#34;Dihydrofolate reductase (DHFR) from bacteriophage T4 is a homodimer consisting of 193-residue subunits&#34;
+        full_text_unavailable: true
+
+- term:
+    id: GO:0006730
+    label: one-carbon metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      T4 DHFR regenerates tetrahydrofolate, which carries one-carbon units for biosynthetic
+      reactions including thymidylate synthesis. The enzyme is part of a one-carbon metabolic
+      pathway that supports DNA precursor production during phage infection.
+    action: ACCEPT
+    reason: &gt;-
+      DHFR catalyzes a key reaction in folate-mediated one-carbon metabolism. The product
+      tetrahydrofolate serves as a one-carbon carrier essential for thymidylate synthesis.
+      The deep research confirms that frd-driven FH4 regeneration sustains thymidylate
+      synthase conversion of dUMP to dTMP during infection.
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;frd-driven FH4 regeneration sustains thymidylate synthase (td) conversion of dUMP to dTMP during infection&#34;
+
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      DHFR is an oxidoreductase that catalyzes the transfer of electrons from NADPH to
+      dihydrofolate. This is a correct but general annotation.
+    action: ACCEPT
+    reason: &gt;-
+      The annotation is correct - DHFR is an oxidoreductase (EC 1.5.1.3). However, the
+      more specific term GO:0004146 (dihydrofolate reductase activity) is also present
+      and is the preferred annotation. This general term is acceptable as a parent
+      annotation that captures the broader enzymatic class.
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor&#34;
+
+- term:
+    id: GO:0031427
+    label: response to methotrexate
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from the UniProt keyword &#34;Methotrexate resistance&#34; (KW-0487).
+      T4 DHFR is competitively inhibited by methotrexate and other antifolates at the
+      substrate binding site. However, the phage enzyme does not confer resistance to
+      methotrexate and the phage does not &#34;respond to&#34; methotrexate as a biological process.
+    action: REMOVE
+    reason: &gt;-
+      This annotation represents a conflation of &#34;being inhibited by a drug&#34; with &#34;responding
+      to&#34; that drug as a biological process. Methotrexate is a competitive inhibitor of T4
+      DHFR with respect to dihydrofolate. The enzyme is a TARGET of this drug, not a biological
+      responder. The GO term &#34;response to methotrexate&#34; implies a coordinated cellular response
+      pathway, which is inappropriate for: (1) a phage-encoded enzyme, and (2) an enzyme that
+      is simply inhibited by the compound. The UniProt keyword &#34;Methotrexate resistance&#34; refers
+      to the fact that DHFR is the target of methotrexate and mutations can confer resistance -
+      but this phage enzyme is wild-type and simply subject to inhibition.
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;Competitive inhibition by methotrexate, aminopterin, and trimethoprim with respect to FH2 has been documented for T-even phage DHFRs&#34;
+
+- term:
+    id: GO:0046654
+    label: tetrahydrofolate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      T4 DHFR catalyzes the reduction of dihydrofolate to tetrahydrofolate, which is the
+      final step in THF biosynthesis. This is a core function of the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      DHFR catalyzes the conversion of 7,8-dihydrofolate to 5,6,7,8-tetrahydrofolate, which
+      is essential for providing reduced folate cofactors. UniProt explicitly states the
+      pathway role. This is a direct annotation of the enzyme&#39;s biosynthetic role.
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4)&#34;
+
+- term:
+    id: GO:0046677
+    label: response to antibiotic
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;-
+      This annotation derives from UniProt keywords &#34;Antibiotic resistance&#34; (KW-0046) and
+      &#34;Trimethoprim resistance&#34; (KW-0817). T4 DHFR is inhibited by the antibiotic trimethoprim
+      (and other antifolates), but the phage enzyme does not participate in an &#34;antibiotic
+      response&#34; biological process. Recent phylogenomic analysis explicitly showed that
+      phage-encoded DHFRs do NOT confer antibiotic resistance.
+    action: REMOVE
+    reason: &gt;-
+      This is a clear example of inappropriate SPKW-based over-annotation. The annotation
+      conflates two distinct concepts: (1) DHFR being a known target of antifolate antibiotics,
+      and (2) organisms mounting a biological &#34;response&#34; to antibiotics. A 2020 phylogenomics
+      study explicitly concluded that phage-encoded DHFRs do NOT confer trimethoprim resistance
+      despite homology and that phage folA genes primarily serve phage nucleotide metabolism
+      rather than resistance. The GO term &#34;response to antibiotic&#34; implies a coordinated
+      biological response pathway - phages do not have antibiotic response pathways, and this
+      particular enzyme is simply an enzymatic target that gets inhibited by certain drugs.
+      The fact that an enzyme CAN BE INHIBITED by an antibiotic does not mean the organism
+      &#34;responds to&#34; that antibiotic.
+    supported_by:
+      - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+        supporting_text: &#34;phage-encoded DHFRs (found on cryptic plasmids/phages) do not confer trimethoprim resistance despite homology, and that only a small fraction of complete phage genomes carry functional antibiotic-resistance determinants. This supports the view that phage folA genes primarily serve phage nucleotide metabolism rather than resistance&#34;
+
+- term:
+    id: GO:0004146
+    label: dihydrofolate reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:4936128
+  review:
+    summary: &gt;-
+      Direct experimental evidence for DHFR activity. The 1971 publication by Erickson and
+      Mathews purified T4 DHFR to homogeneity by affinity chromatography and characterized
+      its enzymatic activity.
+    action: ACCEPT
+    reason: &gt;-
+      This IDA annotation is the primary experimental evidence for DHFR activity. The enzyme
+      was purified and its activity directly demonstrated. This is the core molecular function
+      annotation for frd and should be retained.
+    supported_by:
+      - reference_id: PMID:4936128
+        supporting_text: &#34;T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography&#34;
+        full_text_unavailable: true
+
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+    - statement: Source of IEA annotations for oxidoreductase activity, one-carbon metabolic process, response to methotrexate, and response to antibiotic
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+    - statement: Source of IEA annotations for DHFR activity and tetrahydrofolate biosynthetic process based on InterPro domains
+- id: PMID:4936128
+  title: &#39;T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography.&#39;
+  full_text_unavailable: true
+  findings:
+    - statement: First purification and enzymatic characterization of T4 DHFR
+      supporting_text: &#34;T4 bacteriophage-specific dihydrofolate reductase: purification to homogeneity by affinity chromatography&#34;
+- id: PMID:10818362
+  title: Overexpression, crystallization and preliminary X-ray crystallographic analysis of dihydrofolate reductase from bacteriophage T4
+  full_text_unavailable: true
+  findings:
+    - statement: Crystal structure determination and confirmation of homodimer structure
+      supporting_text: &#34;Dihydrofolate reductase (DHFR) from bacteriophage T4 is a homodimer consisting of 193-residue subunits&#34;
+- id: PMID:6327673
+  title: Nucleotide sequence reveals overlap between T4 phage genes encoding dihydrofolate reductase and thymidylate synthase
+  full_text_unavailable: true
+  findings:
+    - statement: frd gene encodes 193 amino acid DHFR and overlaps with thymidylate synthase gene
+- id: PMID:1560001
+  title: Specific associations of T4 bacteriophage proteins with immobilized deoxycytidylate hydroxymethylase
+  full_text_unavailable: true
+  findings:
+    - statement: DHFR interacts with deoxycytidylate 5-hydroxymethyltransferase as part of dNTP synthetase complex
+- id: file:BPT4/frd/frd-deep-research-falcon.md
+  title: Deep research summary for T4 phage frd (DHFR)
+  findings:
+    - statement: T4 DHFR catalyzes reduction of dihydrofolate to tetrahydrofolate using NADPH
+      supporting_text: &#34;T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor&#34;
+    - statement: Phage DHFRs do not confer antibiotic resistance
+      supporting_text: &#34;phage-encoded DHFRs (found on cryptic plasmids/phages) do not confer trimethoprim resistance despite homology&#34;
+
+core_functions:
+- molecular_function:
+    id: GO:0004146
+    label: dihydrofolate reductase activity
+  description: &gt;-
+    T4 DHFR catalyzes the NADPH-dependent reduction of 7,8-dihydrofolate to
+    5,6,7,8-tetrahydrofolate. This is supported by direct enzymatic assays [PMID:4936128],
+    crystal structure with bound NADPH [PMID:10818362], and sequence/domain analysis
+    showing conserved DHFR family residues.
+  directly_involved_in:
+    - id: GO:0046654
+      label: tetrahydrofolate biosynthetic process
+  supported_by:
+    - reference_id: file:BPT4/frd/frd-deep-research-falcon.md
+      supporting_text: &#34;T4 DHFR catalyzes the two-electron reduction of dihydrofolate (FH2) to tetrahydrofolate (FH4), using NADPH as the hydride donor&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: &gt;-
+    What is the structural and functional role of DHFR in the T4 virion baseplate?
+    The enzyme is present in latent form in the baseplate - does it have a catalytic
+    role during early infection or is it purely structural?
+
+suggested_experiments:
+- description: &gt;-
+    Detailed steady-state kinetic characterization of T4 DHFR with modern methods to
+    establish precise Km values for dihydrofolate and NADPH, and Ki values for
+    antifolate inhibitors.
+  hypothesis: &gt;-
+    While inhibition by antifolates is documented, precise kinetic parameters under
+    modern conditions are not well-characterized in available literature.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
